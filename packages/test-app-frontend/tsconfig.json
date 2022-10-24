@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [ "DOM", "DOM.Iterable", "ESNext" ],
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": [ "src" ],
+  "references": [ { "path": "./tsconfig.node.json" } ]
+}

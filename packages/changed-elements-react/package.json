@@ -1,0 +1,43 @@
+{
+  "name": "@itwin/changed-elements-react",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "https://www.bentley.com"
+  },
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/esm/index.d.ts",
+  "scripts": {
+    "build": "run-p build:*",
+    "build:cjs": "tsc --project ./tsconfig.build.json --outDir ./lib/cjs --module CommonJS",
+    "build:esm": "tsc --project ./tsconfig.build.json --outDir ./lib/esm --module ES2020",
+    "test": "vitest run",
+    "test:cover": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "files": [
+    "lib/"
+  ],
+  "devDependencies": {
+    "@testing-library/react": "^12.1.5",
+    "@types/react": "^18.0.17",
+    "@vitejs/plugin-react": "^2.1.0",
+    "happy-dom": "^7.6.0",
+    "npm-run-all": "^4.1.5",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "typescript": "^4.8.4",
+    "vite": "^3.1.0",
+    "vitest": "^0.24.3"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0"
+  },
+  "dependencies": {
+    "@itwin/changed-elements-client": "^0.0.1"
+  }
+}
