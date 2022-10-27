@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      matrix:
+        node-version: [16]
+
+    name: Build and run tests
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2.0.1
+      with:
+        version: 7.14.2
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: "pnpm"
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: ESLint
+      run: npm run lint
+
+    - name: Typecheck
+      run: npm run typecheck
+
+    - name: Check changed-elements-client unit test coverage
+      run: npm run test:cover --prefix ./packages/changed-elements-client
+
+    - name: Check changed-elements-react unit test coverage
+      run: npm run test:cover --prefix ./packages/changed-elements-react
