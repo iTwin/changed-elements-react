@@ -3,5 +3,5 @@
 ## Installing
 
 ```shell
-npm install @itwin/changed-elements-client
+npm install @itwin/changed-elements-react
 ```
