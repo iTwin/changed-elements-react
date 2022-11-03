@@ -35,7 +35,7 @@ jobs:
       run: pnpm install
 
     - name: ESLint
-      run: npm run lint
+      run: npm run lint -- --max-warnings 0
 
     - name: Typecheck
       run: npm run typecheck
