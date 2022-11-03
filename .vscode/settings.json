@@ -1,0 +1,34 @@
+{
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.trimAutoWhitespace": true,
+
+  "files.exclude": {
+    "**/coverage": true,
+    "**/node_modules": true,
+  },
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+
+  "json.format.enable": true,
+  "json.format.keepLines": true,
+
+  "typescript.format.semicolons": "insert",
+  "typescript.reportStyleChecksAsWarnings": true,
+
+  "[javascript][typescript][typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+  },
+
+  "[json][jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+  },
+
+  "importSorter.importStringConfiguration.maximumNumberOfImportExpressionsPerLine.count": 120,
+  "importSorter.importStringConfiguration.quoteMark": "double",
+  "importSorter.importStringConfiguration.tabSize": 2,
+  "importSorter.importStringConfiguration.trailingComma": "multiLine",
+  "importSorter.sortConfiguration.customOrderingRules.defaultNumberOfEmptyLinesAfterGroup": 0,
+  "importSorter.sortConfiguration.removeUnusedImports": true,
+}

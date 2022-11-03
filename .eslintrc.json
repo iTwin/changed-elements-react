@@ -1,0 +1,28 @@
+{
+  "root": true,
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "project": [ "./tsconfig.json" ]
+  },
+  "plugins": [ "@typescript-eslint" ],
+  "rules": {
+    "consistent-return": "warn",
+    "eqeqeq": "warn",
+    "no-alert": "warn",
+    "no-console": "warn",
+    "no-eval": "error",
+    "@typescript-eslint/no-confusing-void-expression": [ "warn", { "ignoreArrowShorthand": true } ],
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/brace-style": "warn",
+    "@typescript-eslint/comma-dangle": [ "warn", "always-multiline" ],
+    "@typescript-eslint/member-delimiter-style": [ "warn", { "singleline": { "requireLast": true } } ],
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/quotes": "warn",
+    "@typescript-eslint/return-await": "warn"
+  }
+}
