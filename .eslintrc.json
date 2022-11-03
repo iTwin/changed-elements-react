@@ -6,13 +6,10 @@
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": [
-      "./tsconfig.json"
-    ]
+    "ecmaVersion": "latest",
+    "project": [ "./tsconfig.json" ]
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
+  "plugins": [ "@typescript-eslint" ],
   "rules": {
     "consistent-return": "warn",
     "eqeqeq": "warn",
