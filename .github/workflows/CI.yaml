@@ -40,8 +40,5 @@ jobs:
     - name: Typecheck
       run: npm run typecheck
 
-    - name: Check changed-elements-client unit test coverage
-      run: npm run test:cover --prefix ./packages/changed-elements-client
-
     - name: Check changed-elements-react unit test coverage
       run: npm run test:cover --prefix ./packages/changed-elements-react
