@@ -20,23 +20,8 @@ importers:
       npm-run-all: 4.1.5
       typescript: 4.8.4
 
-  packages/changed-elements-client:
-    specifiers:
-      '@vitest/coverage-c8': ^0.24.3
-      happy-dom: ^7.6.0
-      npm-run-all: ^4.1.5
-      typescript: ^4.8.4
-      vitest: ^0.24.3
-    devDependencies:
-      '@vitest/coverage-c8': 0.24.3_happy-dom@7.6.0
-      happy-dom: 7.6.0
-      npm-run-all: 4.1.5
-      typescript: 4.8.4
-      vitest: 0.24.3_happy-dom@7.6.0
-
   packages/changed-elements-react:
     specifiers:
-      '@itwin/changed-elements-client': ^0.0.1
       '@testing-library/react': ^12.1.5
       '@types/react': ^18.0.17
       '@vitejs/plugin-react': ^2.1.0
@@ -48,8 +33,6 @@ importers:
       typescript: ^4.8.4
       vite: ^3.1.0
       vitest: ^0.24.3
-    dependencies:
-      '@itwin/changed-elements-client': link:../changed-elements-client
     devDependencies:
       '@testing-library/react': 12.1.5_sfoxds7t5ydpegc3knd667wn6m
       '@types/react': 18.0.21

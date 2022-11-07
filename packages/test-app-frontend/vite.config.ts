@@ -11,7 +11,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@itwin/changed-elements-client": "@itwin/changed-elements-client/index.ts",
       "@itwin/changed-elements-react": "@itwin/changed-elements-react/index.ts",
       stream: path.resolve("./src/stubs/stream"),
     },
