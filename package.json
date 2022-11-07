@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "start": "run-p --silent start:*",
     "start:backend": "npm start --prefix packages/test-app-backend",
@@ -11,7 +12,8 @@
     "typecheck": "run-p --silent typecheck:*",
     "typecheck:components": "npm run typecheck --prefix packages/changed-elements-react",
     "typecheck:backend": "npm run typecheck --prefix packages/test-app-backend",
-    "typecheck:frontend": "npm run typecheck --prefix packages/test-app-frontend"
+    "typecheck:frontend": "npm run typecheck --prefix packages/test-app-frontend",
+    "release": "ts-node --esm scripts/release.ts"
   },
   "engines": {
     "pnpm": ">=7",
@@ -19,12 +21,14 @@
     "node": ">=16"
   },
   "dependencies": {
+    "@types/node": "^16.0.0",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
     "@typescript-eslint/parser": "^5.40.1",
     "eslint": "^8.25.0",
     "eslint-plugin-react": "^7.31.10",
     "eslint-plugin-react-hooks": "^4.6.0",
     "npm-run-all": "^4.1.5",
+    "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   }
 }
