@@ -187,7 +187,6 @@ export function SignInCallback(): ReactElement {
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<OAuthError>();
 
-
   useEffect(
     () => {
       const params = new URLSearchParams(window.location.search);
