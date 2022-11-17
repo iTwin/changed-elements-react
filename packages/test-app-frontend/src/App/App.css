@@ -3,6 +3,20 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-body {
-  margin: 0;
+.signin-prompt {
+  display: flex;
+  justify-content: center;
+}
+
+.signin-prompt > div {
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 22px;
+}
+
+.signin-prompt svg {
+  height: calc(11px * 12);
+  fill: var(--iui-color-icon);
 }
