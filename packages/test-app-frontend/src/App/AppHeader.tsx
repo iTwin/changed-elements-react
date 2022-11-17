@@ -2,13 +2,38 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ReactElement } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SvgDeveloper } from "@itwin/itwinui-icons-react";
-import { Button, Header, HeaderLogo, IconButton } from "@itwin/itwinui-react";
+import {
+  Button, DropdownMenu, getUserColor, Header, HeaderLogo, IconButton, MenuItem, UserIcon,
+} from "@itwin/itwinui-react";
+import { AuthorizationState, useAuthorization } from "./Authorization";
+import { getUserProfile, GetUserProfileResult } from "./ITwinApi";
 
 export function AppHeader(): ReactElement {
+  const { state, signIn, signOut, userAuthorizationClient } = useAuthorization();
   const navigate = useNavigate();
+
+  const [user, setUser] = useState<UserProfile>();
+  useEffect(
+    () => {
+      if (state !== AuthorizationState.SignedIn) {
+        return;
+      }
+
+      let disposed = false;
+      void (async () => {
+        const profile = await getUserProfile({ authorizationClient: userAuthorizationClient });
+        if (!disposed) {
+          setUser(profile?.user);
+        }
+      })();
+
+      return () => { disposed = true; };
+    },
+    [state, userAuthorizationClient],
+  );
 
   const actions = [
     <IconButton
@@ -20,14 +45,45 @@ export function AppHeader(): ReactElement {
     >
       <GitHubLogo />
     </IconButton>,
-    <Button key="signin" styleType="borderless">Sign In</Button>,
   ];
+  if (state === AuthorizationState.SignedOut) {
+    actions.push(<Button key="signin" styleType="borderless" onClick={signIn}>Sign In</Button>);
+  }
+
+  const userIcon = (state === AuthorizationState.SignedIn && user !== undefined)
+    ? <HeaderUserIcon profile={user} signOut={signOut} />
+    : null;
 
   return (
     <Header
       appLogo={<HeaderLogo logo={<SvgDeveloper />} onClick={() => navigate("/")}>Changed Elements Test App</HeaderLogo>}
       actions={actions}
+      userIcon={userIcon}
     />
+  );
+}
+
+interface HeaderUserIconProps {
+  profile: UserProfile | undefined;
+  signOut: () => void;
+}
+
+type UserProfile = GetUserProfileResult["user"];
+
+function HeaderUserIcon(props: HeaderUserIconProps): ReactElement | null {
+  const { profile, signOut } = props;
+  const preferredName = profile?.displayName || profile?.givenName;
+  const initials = (profile?.givenName && profile?.surname)
+    ? profile.givenName[0] + profile.surname[0]
+    : (preferredName ?? "?").substring(0, 2);
+  const displayName = preferredName ?? "Unknown Account";
+
+  return (
+    <DropdownMenu menuItems={() => [<MenuItem key="signout" onClick={signOut}>Sign Out</MenuItem>]}>
+      <IconButton styleType="borderless" title="Account Actions">
+        <UserIcon title={displayName} abbreviation={initials} backgroundColor={getUserColor(displayName)} />
+      </IconButton>
+    </DropdownMenu>
   );
 }
 
