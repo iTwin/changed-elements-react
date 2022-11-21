@@ -33,7 +33,6 @@ export function getUserProfile(requestArgs: RequestArgs): Promise<GetUserProfile
 
 export interface GetRecentITwinsResult {
   iTwins: Array<{
-
     id: string;
     class: string;
     subClass: string;
