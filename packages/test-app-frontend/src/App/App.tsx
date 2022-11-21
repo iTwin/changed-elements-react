@@ -65,7 +65,8 @@ function Main(): ReactElement {
 }
 
 const AuthorizationProvider = clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx"
-  ? (props: PropsWithChildren) => <>{props.children}</>
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  ? (props: PropsWithChildren<{}>) => <>{props.children}</>
   : createAuthorizationProvider({
     authority: applyUrlPrefix("https://ims.bentley.com"),
     client_id: clientId,

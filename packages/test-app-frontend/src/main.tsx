@@ -4,13 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 import "./index.css";
 import "@itwin/itwinui-layouts-css/styles.css";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { render } from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App/App";
 
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <StrictMode>
-    <BrowserRouter><App /></BrowserRouter>
-  </StrictMode>,
-);
+render(<BrowserRouter><App /></BrowserRouter>, document.getElementById("root") as HTMLElement);
