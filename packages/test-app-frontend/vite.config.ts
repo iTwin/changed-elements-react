@@ -15,4 +15,7 @@ export default defineConfig({
       stream: path.resolve("./src/stubs/stream"),
     },
   },
+  server: {
+    port: 2363,
+  },
 });
