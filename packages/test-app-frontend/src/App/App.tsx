@@ -15,6 +15,8 @@ import {
 } from "./Authorization";
 import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";
+import { IModelBrowser } from "./imodel-browser/IModelBrowser";
+import { ITwinBrowser } from "./imodel-browser/ITwinBrowser";
 
 export function App(): ReactElement {
   return (
@@ -54,6 +56,10 @@ function Main(): ReactElement {
   return (
     <Routes>
       <Route index element={<Navigate replace to="/browse/iTwins" />} />
+      <Route path="browse/iTwins">
+        <Route index element={<ITwinBrowser />} />
+        <Route path=":iTwinId" element={<IModelBrowser />} />
+      </Route>
     </Routes>
   );
 }

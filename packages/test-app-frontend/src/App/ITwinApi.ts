@@ -31,6 +31,92 @@ export function getUserProfile(requestArgs: RequestArgs): Promise<GetUserProfile
   );
 }
 
+export interface GetRecentITwinsResult {
+  iTwins: Array<{
+    id: string;
+    class: string;
+    subClass: string;
+    type: string | null;
+    displayName: string;
+    number: string;
+    dataCenterLocation: string;
+    status: "Active" | "Inactive" | "Trial";
+    parentId: string | null;
+    createdDateTime: string;
+    createdBy: string | null;
+  }>;
+  _links: HalLinks<["self", "next"?, "prev"?]>;
+}
+
+export async function getRecentITwins(requestArgs: RequestArgs): Promise<GetRecentITwinsResult | undefined> {
+  return callITwinApi(
+    {
+      endpoint: "itwins/recents?subclass=Project",
+      additionalHeaders: { Prefer: "return=representation" },
+      postProcess: async (response) => response.json(),
+    },
+    requestArgs,
+  );
+}
+
+export interface GetProjectIModelsArgs {
+  iTwinId: string;
+}
+
+export interface GetITwinIModelsResult {
+  iModels: Array<{
+
+    id: string;
+    displayName: string;
+    name: string;
+    description: string | null;
+    state: string;
+    createdDateTime: string;
+    iTwinId: string;
+    extent: {
+      southWest: GeoCoordinates;
+      northEast: GeoCoordinates;
+    } | null;
+    _links: HalLinks<["creator", "changesets", "namedVersions"]>;
+  }>;
+  _links: HalLinks<["self", "prev"?, "next"?]>;
+}
+
+interface GeoCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export async function getITwinIModels(
+  args: GetProjectIModelsArgs,
+  requestArgs: RequestArgs,
+): Promise<GetITwinIModelsResult | undefined> {
+  return callITwinApi(
+    {
+      endpoint: `imodels/?iTwinId=${args.iTwinId}`,
+      additionalHeaders: { Prefer: "return=representation" },
+      apiVersion: 2,
+      postProcess: async (response) => response.json(),
+    },
+    requestArgs,
+  );
+}
+
+export async function getIModelThumbnail(iModelId: string, requestArgs: RequestArgs): Promise<Blob | undefined> {
+  return callITwinApi(
+    {
+      endpoint: `imodels/${iModelId}/thumbnail?size=small`,
+      immutable: true,
+      postProcess: async (response) => response.blob(),
+    },
+    requestArgs,
+  );
+}
+
+export type HalLinks<T extends Array<string | undefined>> = {
+  [K in keyof T as T[K] & string]: { href: string; };
+};
+
 interface CallITwinApiArgs<T> {
   endpoint: string;
   additionalHeaders?: Record<string, string>;
