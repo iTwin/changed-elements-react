@@ -22,13 +22,15 @@
     "@typescript-eslint/member-delimiter-style": [ "warn", { "singleline": { "requireLast": true } } ],
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/quotes": "warn",
-    "@typescript-eslint/return-await": "warn"
+    "@typescript-eslint/return-await": "warn",
+    "@typescript-eslint/switch-exhaustiveness-check": "warn"
   },
   "overrides": [
     {
       "files": [ "*.test.ts", "*.test.tsx" ],
       "rules": {
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-non-null-assertion": "off"
       }
     },
     {

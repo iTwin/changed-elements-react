@@ -1,0 +1,20 @@
+{
+  "versionCompare": {
+    "changeset": "Changeset",
+    "compare": "Compare",
+    "comparing": "Comparing:",
+    "current": "Current",
+    "currentChangeset": "Current Changeset",
+    "latestChangeset": "Latest Changeset",
+    "manageNamedVersions": "Manage named versions",
+    "noDescription": "No description",
+    "noNamedVersions": "No named versions found in iModel to do comparison.",
+    "processingVersion": "This named version is currently being processed. Should be available later.",
+    "versions": "Versions",
+    "waiting": "Waiting...",
+    "with": "With:"
+  },
+  "versionSelectDialog": {
+    "title": "Version Compare"
+  }
+}

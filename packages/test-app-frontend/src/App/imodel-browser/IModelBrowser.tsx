@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { ReactElement, ReactNode, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AuthorizationClient } from "@itwin/core-common";
 import { FluidGrid, PageLayout } from "@itwin/itwinui-layouts-react";
 import { Text, Tile } from "@itwin/itwinui-react";
@@ -66,6 +66,7 @@ export interface IModelTileProps {
 }
 
 export function IModelTile(props: IModelTileProps): ReactElement {
+  const navigate = useNavigate();
   const [thumbnail, setThumbnail] = useState<string>();
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -109,7 +110,7 @@ export function IModelTile(props: IModelTileProps): ReactElement {
           : <div ref={divRef} id="imodel-thumbnail-placeholder" />
       }
       isActionable
-      onClick={() => { }}
+      onClick={() => navigate(`/open-imodel/${props.iTwinId}/${props.iModelId}`)}
     />
   );
 }

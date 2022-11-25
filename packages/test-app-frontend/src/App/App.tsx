@@ -3,8 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import "./App.css";
-import { PropsWithChildren, ReactElement } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { SvgUser } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Button, Surface } from "@itwin/itwinui-react";
@@ -17,6 +17,8 @@ import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";
 import { IModelBrowser } from "./imodel-browser/IModelBrowser";
 import { ITwinBrowser } from "./imodel-browser/ITwinBrowser";
+
+import type { ITwinJsApp } from "./ITwinJsApp/ITwinJsApp";
 
 export function App(): ReactElement {
   return (
@@ -36,6 +38,8 @@ export function App(): ReactElement {
 }
 
 function Main(): ReactElement {
+  const iTwinJsApp = useBackgroundITwinJsAppLoading();
+
   const { state, signIn } = useAuthorization();
   if (state === AuthorizationState.Offline) {
     return <SetupEnvHint />;
@@ -60,6 +64,7 @@ function Main(): ReactElement {
         <Route index element={<ITwinBrowser />} />
         <Route path=":iTwinId" element={<IModelBrowser />} />
       </Route>
+      <Route path="open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
     </Routes>
   );
 }
@@ -97,4 +102,42 @@ function SignInPrompt(props: SignInPromptProps): ReactElement {
       </Surface>
     </div>
   );
+}
+
+function useBackgroundITwinJsAppLoading(): typeof ITwinJsApp | undefined {
+  const [itwinJsApp, setITwinJsApp] = useState<typeof ITwinJsApp>();
+  useEffect(
+    () => {
+      let disposed = false;
+      void (async () => {
+        const { ITwinJsApp, initializeITwinJsApp } = await import("./ITwinJsApp/ITwinJsApp");
+        await initializeITwinJsApp();
+        if (!disposed) {
+          setITwinJsApp(() => ITwinJsApp);
+        }
+      })();
+
+      return () => { disposed = true; };
+    },
+    [],
+  );
+  return itwinJsApp;
+}
+
+interface OpenIModelProps {
+  iTwinJsApp: typeof ITwinJsApp | undefined;
+}
+
+function OpenIModel(props: OpenIModelProps): ReactElement | null {
+  const { userAuthorizationClient } = useAuthorization();
+  const { iTwinId, iModelId } = useParams<{ iTwinId: string; iModelId: string; }>();
+  if (iTwinId === undefined || iModelId === undefined) {
+    return null;
+  }
+
+  if (props.iTwinJsApp === undefined || userAuthorizationClient === undefined) {
+    return <LoadingScreen>Initializing...</LoadingScreen>;
+  }
+
+  return <props.iTwinJsApp iTwinId={iTwinId} iModelId={iModelId} authorizationClient={userAuthorizationClient} />;
 }
