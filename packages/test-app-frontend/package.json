@@ -24,6 +24,7 @@
     "@itwin/core-i18n": "^3.4.4",
     "@itwin/core-orbitgt": "^3.4.4",
     "@itwin/core-quantity": "^3.4.4",
+    "@itwin/core-react": "^3.4.4",
     "@itwin/imodels-access-frontend": "^2.2.1",
     "@itwin/itwinui-icons-react": "^1.16.0",
     "@itwin/itwinui-illustrations-react": "^1.3.1",
