@@ -2,12 +2,16 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
-import { fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { VersionSelectDialog } from "./VersionSelectDialog";
 
 describe("VersionSelectDialog", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("redners", () => {
     const handleOk = vi.fn();
     const {getByText} = render(
