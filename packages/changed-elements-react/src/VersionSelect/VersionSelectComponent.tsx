@@ -14,7 +14,8 @@ export interface VersionSelectComponentProps {
   changesets: string[];
   changesetStatus: GetChangesetsResult["changesetStatus"];
   namedVersions: NamedVersion[];
-  onVersionSelected?: (currentVersion: NamedVersion | undefined, targetVersion: NamedVersion) => void;
+  onVersionSelected?: (currentVersion: NamedVersion | undefined, targetVersion: NamedVersion) => void | undefined;
+  manageNamedVersionsUrl?: string | undefined;
 }
 
 interface VersionSelectComponentState {
@@ -235,10 +236,6 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
     );
   };
 
-  private _getVersionsURL(): string {
-    return "";
-  }
-
   public override render(): ReactElement {
     const currentVersionState = this.state.entries
       && this.state.entries.length !== 0 ? this.state.entries[0] : undefined;
@@ -275,11 +272,14 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
             </div>
           </div>
         </div>
-        <div className="itwin-changed-elements__vs-manage-versions-link">
-          <a href={this._getVersionsURL()} target="_blank" rel="noopener noreferrer">
-            {this.props.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
-          </a>
-        </div>
+        {
+          this.props.manageNamedVersionsUrl &&
+          <div className="itwin-changed-elements__vs-manage-versions-link">
+            <a href={this.props.manageNamedVersionsUrl} target="_blank" rel="noopener noreferrer">
+              {this.props.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
+            </a>
+          </div>
+        }
       </div>
     );
   }
