@@ -4,14 +4,10 @@
 *--------------------------------------------------------------------------------------------*/
 
 /** Prepends URL hostname with urlPrefix. */
-export function applyUrlPrefix(url: string): string {
-  if (!urlPrefix) {
-    return url;
-  }
-
-  const modifierUrl = new URL(url);
-  modifierUrl.hostname = urlPrefix + modifierUrl.hostname;
-  return modifierUrl.toString();
+export function applyUrlPrefix(base: string, url = ""): string {
+  const normalizedUrl = new URL(url, base);
+  normalizedUrl.hostname = urlPrefix + normalizedUrl.hostname;
+  return normalizedUrl.toString();
 }
 
 export const clientId = import.meta.env.VITE_CLIENT_ID;
