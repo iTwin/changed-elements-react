@@ -86,6 +86,20 @@ describe("VersionSelectComponent", () => {
     expect(queryByText("VersionCompare:versionCompare.noDescription")).not.toBeNull;
   });
 
+  it("shows Manage named versions link when the URL is provided", () => {
+    const { queryByText } = render(
+      <VersionSelectComponent
+        localization={localization}
+        changesetId="0"
+        changesetStatus={[]}
+        changesets={["0"]}
+        namedVersions={[]}
+        manageNamedVersionsUrl="test_url"
+      />,
+    );
+    expect(queryByText("VersionCompare:versionCompare.manageNamedVersions")).not.toBeNull();
+  });
+
   describe("when changesets are not ready", () => {
     it("disallows selecting version", () => {
       const onVersionSelected = vi.fn();

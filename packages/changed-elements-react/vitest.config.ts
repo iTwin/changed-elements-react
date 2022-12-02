@@ -18,7 +18,7 @@ export default defineConfig({
     coverage: {
       statements: 99.73,
       branches: 100,
-      functions: 95.65,
+      functions: 95.55,
       lines: 99.73,
     },
   },
