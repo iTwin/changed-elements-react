@@ -16,6 +16,7 @@ import { LoadingScreen } from "../common/LoadingScreen";
 import {
   getIModelChangesets, GetIModelChangesetsResult, GetIModelNamedVersionResult, getIModelNamedVersions,
 } from "../ITwinApi";
+import { applyUrlPrefix } from "../../environment";
 
 export interface ITwinJsAppProps {
   iTwinId: string;
@@ -69,7 +70,10 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
       void (async () => {
         const result = await getChangesets(
           { iTwinId: props.iTwinId, iModelId: props.iModelId },
-          { accessToken: await props.authorizationClient.getAccessToken(), baseUrl: "https://qa-api.bentley.com/changedelements" },
+          {
+            accessToken: await props.authorizationClient.getAccessToken(),
+            baseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
+          },
         );
         if (!disposed) {
           setChangesetStatus(result.changesetStatus);
