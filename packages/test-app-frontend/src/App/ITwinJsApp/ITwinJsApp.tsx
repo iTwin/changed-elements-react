@@ -99,7 +99,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
       localization={IModelApp.localization}
       iTwinId={props.iTwinId}
       iModelId={props.iModelId}
-      changesetId={changesets[21].id}
+      changesetId={lastChangeset.id}
       changesets={changesets.map((changeset) => changeset.id).reverse()}
       changesetStatus={changesetStatus}
       namedVersions={namedVersions}
