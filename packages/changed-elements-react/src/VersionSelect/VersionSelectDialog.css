@@ -2,13 +2,11 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { describe, expect, it } from "vitest";
-import { render } from "@testing-library/react";
-import { TestComponent } from "./TestComponent";
 
-describe("TestComponent", () => {
-  it("Renders text", () => {
-    const { queryByText } = render(<TestComponent />);
-    expect(queryByText("Test")).not.toBeNull();
-  });
-});
+.itwin-changed-elements__version-select-dialog {
+  width: 750px;
+  height: 600px;
+  max-width: 50%;
+  display: grid;
+  grid: auto minmax(0, 1fr) auto / 1fr;
+}

@@ -25,7 +25,8 @@ export interface AuthorizationProviderConfig {
 }
 
 /** Creates a context provider for authorization state. */
-export function createAuthorizationProvider(config: AuthorizationProviderConfig): ComponentType<PropsWithChildren> {
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function createAuthorizationProvider(config: AuthorizationProviderConfig): ComponentType<PropsWithChildren<{}>> {
   const userManager = new UserManager({
     authority: config.authority,
     client_id: config.client_id,
@@ -58,7 +59,8 @@ export function createAuthorizationProvider(config: AuthorizationProviderConfig)
   };
   const signOut = async () => userManager.signoutRedirect();
 
-  return function AuthorizationProvider(props: PropsWithChildren): ReactElement {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  return function AuthorizationProvider(props: PropsWithChildren<{}>): ReactElement {
     const [authorizationContextValue, setAuthorizationContextValue] = useState<AuthorizationContext>({
       userManager,
       state: AuthorizationState.Pending,

@@ -59,7 +59,7 @@ export async function getRecentITwins(requestArgs: RequestArgs): Promise<GetRece
   );
 }
 
-export interface GetProjectIModelsArgs {
+export interface GetITwinIModelsArgs {
   iTwinId: string;
 }
 
@@ -88,7 +88,7 @@ interface GeoCoordinates {
 }
 
 export async function getITwinIModels(
-  args: GetProjectIModelsArgs,
+  args: GetITwinIModelsArgs,
   requestArgs: RequestArgs,
 ): Promise<GetITwinIModelsResult | undefined> {
   return callITwinApi(
@@ -97,6 +97,71 @@ export async function getITwinIModels(
       additionalHeaders: { Prefer: "return=representation" },
       apiVersion: 2,
       postProcess: async (response) => response.json(),
+    },
+    requestArgs,
+  );
+}
+
+export interface GetIModelChangesetsArgs {
+  iModelId: string;
+}
+
+export interface GetIModelChangesetsResult {
+  changesets: Array<{
+    id: string;
+    displayName: string;
+    description: string | null;
+    index: number;
+    parentId: string | null;
+    creatorId: string;
+    pushDateTime: string;
+    state: string;
+    containingChanges: number;
+    fileSize: number;
+    briefcaseId: number;
+    _links: HalLinks<["creator", "self"]>;
+  }>;
+  _links: HalLinks<["self", "prev"?, "next"?]>;
+}
+
+export async function getIModelChangesets(args: GetIModelChangesetsArgs, requestArgs: RequestArgs): Promise<GetIModelChangesetsResult | undefined> {
+  return callITwinApi(
+    {
+      endpoint: `imodels/${args.iModelId}/changesets`,
+      additionalHeaders: { Prefer: "return=minimal" },
+      apiVersion: 2,
+      postProcess: (response) => response.json(),
+    },
+    requestArgs,
+  );
+}
+
+export interface GetIModelNamedVersionsArgs {
+  iModelId: string;
+}
+
+export interface GetIModelNamedVersionResult {
+  namedVersions: Array<{
+    id: string;
+    displayName: string;
+    changesetId: string | null;
+    changesetIndex: number;
+    name: string;
+    description: string;
+    createdDateTime: string;
+    state: string;
+    application: { id: string; name: string; };
+    _links: HalLinks<["creator", "changeset"]>;
+  }>;
+}
+
+export async function getIModelNamedVersions(args: GetIModelNamedVersionsArgs, requestArgs: RequestArgs): Promise<GetIModelNamedVersionResult | undefined> {
+  return callITwinApi(
+    {
+      endpoint: `imodels/${args.iModelId}/namedversions`,
+      additionalHeaders: { Prefer: "return=representation" },
+      apiVersion: 2,
+      postProcess: (response) => response.json(),
     },
     requestArgs,
   );
