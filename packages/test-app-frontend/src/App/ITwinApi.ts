@@ -131,7 +131,7 @@ export interface RequestArgs {
 
 async function callITwinApi<T>(args: CallITwinApiArgs<T>, requestArgs: RequestArgs): Promise<T | undefined> {
   const iTwinApiUrl = "https://api.bentley.com";
-  const url = applyUrlPrefix(iTwinApiUrl) + args.endpoint;
+  const url = applyUrlPrefix(iTwinApiUrl, args.endpoint);
   const headers = {
     ...args.additionalHeaders,
     Authorization: await requestArgs.authorizationClient.getAccessToken(),
