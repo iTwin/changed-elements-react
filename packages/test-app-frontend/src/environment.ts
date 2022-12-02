@@ -5,9 +5,9 @@
 
 /** Prepends URL hostname with urlPrefix. */
 export function applyUrlPrefix(base: string, url = ""): string {
-  const modifierUrl = new URL(url, base);
-  modifierUrl.hostname = urlPrefix + modifierUrl.hostname;
-  return modifierUrl.toString();
+  const normalizedUrl = new URL(url, base);
+  normalizedUrl.hostname = urlPrefix + normalizedUrl.hostname;
+  return normalizedUrl.toString();
 }
 
 export const clientId = import.meta.env.VITE_CLIENT_ID;
