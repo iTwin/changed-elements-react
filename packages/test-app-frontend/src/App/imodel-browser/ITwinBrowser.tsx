@@ -44,7 +44,7 @@ export function ITwinBrowser(): ReactElement {
       <PageLayout.TitleArea>
         <Text variant="headline">Projects</Text>
       </PageLayout.TitleArea>
-      <Surface style={{ padding: "var(--iui-size-m)" }} elevation={1}>
+      <Surface style={{ padding: 24 }} elevation={1}>
         <Grid>
           <Grid.Item columnSpan={12}>
             <Text variant="title">Recent</Text>

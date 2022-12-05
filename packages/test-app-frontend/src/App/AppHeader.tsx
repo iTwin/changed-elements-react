@@ -4,9 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import { ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SvgDeveloper } from "@itwin/itwinui-icons-react";
+import { SvgDeveloper, SvgMoon, SvgSun } from "@itwin/itwinui-icons-react";
 import {
-  Button, DropdownMenu, getUserColor, Header, HeaderLogo, IconButton, MenuItem, UserIcon,
+  Button, DropdownMenu, getUserColor, Header, HeaderLogo, IconButton, MenuItem, ThemeType, UserIcon, useTheme,
 } from "@itwin/itwinui-react";
 import { AuthorizationState, useAuthorization } from "./Authorization";
 import { getUserProfile, GetUserProfileResult } from "./ITwinApi";
@@ -36,6 +36,7 @@ export function AppHeader(): ReactElement {
   );
 
   const actions = [
+    <ThemeButton key="Theme Toggle" />,
     <IconButton
       key="Repository"
       as="a"
@@ -93,7 +94,7 @@ interface GitHubLogoProps {
 
 function GitHubLogo(props: GitHubLogoProps): ReactElement {
   return (
-    <svg className={props.className} style={{ fill: "#1b1817" }} viewBox="0 0 44 44">
+    <svg className={props.className} style={{ fill: "currentColor" }} viewBox="0 0 44 44">
       <path
         d="M21.998.009C9.85.009 0 9.859 0 22.009c0 9.72 6.303 17.966 15.045 20.876 1.101.202 1.502-.478 1.502-1.061 0
 -.522-.019-1.906-.03-3.741-6.119 1.329-7.41-2.95-7.41-2.95-1-2.54-2.443-3.217-2.443-3.217-1.998-1.365.15-1.338.15-1.338
@@ -104,5 +105,20 @@ function GitHubLogo(props: GitHubLogoProps): ReactElement {
 .396 1.273 1.513 1.059C37.702 39.967 44 31.727 44 22.01 44 9.859 34.149.009 21.998.009"
       />
     </svg>
+  );
+}
+
+function ThemeButton(): ReactElement {
+  const [theme, setTheme] = useState<ThemeType>("light");
+  useTheme(theme);
+
+  const handleClick = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
+  return (
+    <IconButton styleType="borderless" onClick={handleClick}>
+      {theme === "light" ? <SvgMoon /> : <SvgSun />}
+    </IconButton>
   );
 }

@@ -126,8 +126,8 @@ importers:
       '@itwin/imodels-access-frontend': ^2.2.1
       '@itwin/itwinui-icons-react': ^1.16.0
       '@itwin/itwinui-illustrations-react': ^1.3.1
-      '@itwin/itwinui-layouts-css': ^0.2.0
-      '@itwin/itwinui-layouts-react': ^0.2.0
+      '@itwin/itwinui-layouts-css': ^0.1.3
+      '@itwin/itwinui-layouts-react': ^0.1.3
       '@itwin/itwinui-react': ^1.42.0
       '@itwin/webgl-compatibility': ^3.4.4
       '@types/react': ^17.0.0
@@ -155,8 +155,8 @@ importers:
       '@itwin/imodels-access-frontend': 2.2.1_x3wnemksslhcpfin7a6lisq2ju
       '@itwin/itwinui-icons-react': 1.16.0_sfoxds7t5ydpegc3knd667wn6m
       '@itwin/itwinui-illustrations-react': 1.3.1_sfoxds7t5ydpegc3knd667wn6m
-      '@itwin/itwinui-layouts-css': 0.2.0
-      '@itwin/itwinui-layouts-react': 0.2.0_sfoxds7t5ydpegc3knd667wn6m
+      '@itwin/itwinui-layouts-css': 0.1.3
+      '@itwin/itwinui-layouts-react': 0.1.3_sfoxds7t5ydpegc3knd667wn6m
       '@itwin/itwinui-react': 1.48.1_sfoxds7t5ydpegc3knd667wn6m
       '@itwin/webgl-compatibility': 3.4.5
       '@types/react': 17.0.52
@@ -1124,19 +1124,19 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
 
-  /@itwin/itwinui-layouts-css/0.2.0:
-    resolution: {integrity: sha512-grConweXD1Q+yJt8i1Urqf2XAQc4RlBO/+xXo06hx8uV2ros6+wjjbWhDN0n9VdXogEEGJu+GNdxkWgjUEqIzw==}
+  /@itwin/itwinui-layouts-css/0.1.3:
+    resolution: {integrity: sha512-9ccilF2zBhqX/u7ZnZnh+98T85SSGFuNft921/gMvp1mta6+IDCvULxUYXbb9QGzRGADTxp7WkCl6FKVyvzdLA==}
     dependencies:
-      '@itwin/itwinui-variables': 1.0.0
+      '@itwin/itwinui-css': 0.63.1
     dev: false
 
-  /@itwin/itwinui-layouts-react/0.2.0_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-nMaSNas1iApFbcaO68lOhK6HuYXAzRb8I+KcSfPbD9Xhq3ZBsyHi0Dvw4pFeqB1MWhrpmxLrQdojWcoDn3F8rA==}
+  /@itwin/itwinui-layouts-react/0.1.3_sfoxds7t5ydpegc3knd667wn6m:
+    resolution: {integrity: sha512-5wT/05e8yiNwz2G1iBXGQgGo4Xm9hoN3yWYGdoUD84KdQC8ko7HLhAAnIQFty/hvZAOZCkpNLIdlWUtyDGhl6Q==}
     peerDependencies:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
     dependencies:
-      '@itwin/itwinui-layouts-css': 0.2.0
+      '@itwin/itwinui-layouts-css': 0.1.3
       classnames: 2.3.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -1176,10 +1176,6 @@ packages:
       react-table: 7.8.0_react@17.0.2
       react-transition-group: 4.4.5_sfoxds7t5ydpegc3knd667wn6m
       tippy.js: 6.3.7
-    dev: false
-
-  /@itwin/itwinui-variables/1.0.0:
-    resolution: {integrity: sha512-f78S401k1romzL6jgJuNZTe8P0/PCtrKUDVZwMsIJHLlgwyMKGR7nqDWQBV03tY2/TF/qMLt9S96Tej4f1Xrtg==}
     dev: false
 
   /@itwin/object-storage-azure/1.4.0:
@@ -1815,7 +1811,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.2
       magic-string: 0.26.7
       react-refresh: 0.14.0
-      vite: 3.2.4_sass@1.56.1
+      vite: 3.2.4
     transitivePeerDependencies:
       - supports-color
 
@@ -3554,6 +3550,7 @@ packages:
 
   /immutable/4.1.0:
     resolution: {integrity: sha512-oNkuqVTA8jqG1Q6c+UglTOD1xhC1BtjKI7XkCXRkZHrN5m18/XsnUp8Q89GkQO/z+0WjonSvl0FLhDYftp46nQ==}
+    dev: false
 
   /import-fresh/3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
@@ -4904,6 +4901,7 @@ packages:
       chokidar: 3.5.3
       immutable: 4.1.0
       source-map-js: 1.0.2
+    dev: false
 
   /sax/1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
@@ -5617,7 +5615,6 @@ packages:
       rollup: 2.79.1
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /vite/3.2.4_@types+node@18.11.9:
     resolution: {integrity: sha512-Z2X6SRAffOUYTa+sLy3NQ7nlHFU100xwanq1WDwqaiFiCe+25zdxP1TfCS5ojPV2oDDcXudHIoPnI1Z/66B7Yw==}
@@ -5685,6 +5682,7 @@ packages:
       sass: 1.56.1
     optionalDependencies:
       fsevents: 2.3.2
+    dev: false
 
   /vitest/0.24.5_happy-dom@7.7.0:
     resolution: {integrity: sha512-zw6JhPUHtLILQDe5Q39b/SzoITkG+R7hcFjuthp4xsi6zpmfQPOZcHodZ+3bqoWl4EdGK/p1fuMiEwdxgbGLOA==}
