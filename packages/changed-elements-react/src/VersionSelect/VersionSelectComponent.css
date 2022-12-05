@@ -49,8 +49,8 @@
 }
 
 .itwin-changed-elements__vs-current-version-badge {
-  color: #fff;
-  background-color: #56aa1c;
+  color: var(--iui-color-foreground-accessory);
+  background-color: var(--iui-color-background-positive);
   border-radius: 4px;
   text-align: center;
   user-select: none;
@@ -71,7 +71,7 @@
 
 .itwin-changed-elements__vs-versions-table {
   grid-area: version-list;
-  border: 1px solid #9ba5ae;
+  border: 1px solid var(--iui-color-background-border);
   display: grid;
   grid: 38px 1fr / 32px 1fr min-content;
   grid-template-areas:
@@ -94,7 +94,7 @@
 .itwin-changed-elements__vs-versions-list {
   grid-area: table-entries;
   align-self: start;
-  border-top: 1px solid #9ba5ae;
+  border-top: 1px solid var(--iui-color-background-border);
   height: 100%;
   overflow: auto;
   cursor: default;
@@ -110,11 +110,11 @@
   grid: 1fr / min-content 1fr max-content;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid #dce0e3;
+  border-bottom: 1px solid var(--iui-color-background-border);
 }
 
 .itwin-changed-elements__vs-versions-list-entry[data-selected=true] {
-  background-color: #cce8f9;
+  background-color: rgba(var(--iui-color-foreground-primary-rgb), var(--iui-opacity-5));
 }
 
 .itwin-changed-elements__vs-versions-list-entry > .itwin-changed-elements__vs-date-and-current {
@@ -136,5 +136,5 @@
 }
 
 .itwin-changed-elements__vs-manage-versions-link > a {
-  color: rgb(0, 139, 225);
+  color: var(--iui-color-foreground-primary);
 }

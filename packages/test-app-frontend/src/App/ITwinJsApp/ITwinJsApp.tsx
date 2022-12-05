@@ -12,11 +12,13 @@ import { IModelApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
 import { FrontendIModelsAccess } from "@itwin/imodels-access-frontend";
+import { PageLayout } from "@itwin/itwinui-layouts-react";
+import { Button } from "@itwin/itwinui-react";
+import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
 import {
   getIModelChangesets, GetIModelChangesetsResult, GetIModelNamedVersionResult, getIModelNamedVersions,
 } from "../ITwinApi";
-import { applyUrlPrefix } from "../../environment";
 
 export interface ITwinJsAppProps {
   iTwinId: string;
@@ -85,6 +87,8 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
     [props.authorizationClient, props.iModelId, props.iTwinId],
   );
 
+  const [showDialog, setShowDialog] = useState(true);
+
   if (changesets === undefined || namedVersions === undefined || changesetStatus === undefined) {
     return <LoadingScreen>Loading changesets...</LoadingScreen>;
   }
@@ -94,18 +98,28 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
     return null;
   }
 
+  if (showDialog) {
+    return (
+      <VersionSelectDialog
+        localization={IModelApp.localization}
+        iTwinId={props.iTwinId}
+        iModelId={props.iModelId}
+        changesetId={lastChangeset.id}
+        changesets={changesets.map((changeset) => changeset.id).reverse()}
+        changesetStatus={changesetStatus}
+        namedVersions={namedVersions}
+        onOk={() => { }}
+        onCancel={() => setShowDialog(false)}
+      />
+    );
+  }
+
   return (
-    <VersionSelectDialog
-      localization={IModelApp.localization}
-      iTwinId={props.iTwinId}
-      iModelId={props.iModelId}
-      changesetId={lastChangeset.id}
-      changesets={changesets.map((changeset) => changeset.id).reverse()}
-      changesetStatus={changesetStatus}
-      namedVersions={namedVersions}
-      onOk={() => { }}
-      onCancel={() => { }}
-    />
+    <PageLayout.Content>
+      <div style={{ display: "grid", placeItems: "center", height: "100%" }}>
+        <Button styleType="cta" onClick={() => setShowDialog(true)}>Open Version Select dialog</Button>
+      </div>
+    </PageLayout.Content>
   );
 }
 
