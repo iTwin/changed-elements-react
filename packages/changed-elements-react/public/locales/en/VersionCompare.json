@@ -1,7 +1,6 @@
 {
-  "versionCompare": {
+  "versionSelectComponent": {
     "changeset": "Changeset",
-    "compare": "Compare",
     "comparing": "Comparing:",
     "current": "Current",
     "currentChangeset": "Current Changeset",
@@ -15,6 +14,7 @@
     "with": "With:"
   },
   "versionSelectDialog": {
+    "compare": "Compare",
     "title": "Version Compare"
   }
 }

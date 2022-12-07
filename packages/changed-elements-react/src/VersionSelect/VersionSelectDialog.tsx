@@ -62,7 +62,7 @@ export class VersionSelectDialog extends Component<VersionSelectDialogProps, Ver
         />
         <ModalButtonBar>
           <Button styleType="high-visibility" disabled={!this.state.targetVersion} onClick={this.props.onOk}>
-            {this.props.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
+            {this.props.localization.getLocalizedString("VersionCompare:versionSelectDialog.compare")}
           </Button>
           <Button onClick={this.props.onCancel}>
             {this.props.localization.getLocalizedString("UiCore:dialog.cancel")}

@@ -48,7 +48,7 @@ describe("VersionSelectComponent", () => {
         namedVersions={[]}
       />,
     );
-    expect(queryByText("VersionCompare:versionCompare.noNamedVersions")).not.toBeNull();
+    expect(queryByText("VersionCompare:versionSelectComponent.noNamedVersions")).not.toBeNull();
   });
 
   it("renders no named versions state when there are no past named versions", () => {
@@ -61,7 +61,7 @@ describe("VersionSelectComponent", () => {
         namedVersions={[createNamedVersion("0"), createNamedVersion("1")]}
       />,
     );
-    expect(queryByText("VersionCompare:versionCompare.noNamedVersions")).not.toBeNull();
+    expect(queryByText("VersionCompare:versionSelectComponent.noNamedVersions")).not.toBeNull();
   });
 
   it("inserts default description text when it is not supplied", () => {
@@ -83,7 +83,7 @@ describe("VersionSelectComponent", () => {
         onVersionSelected={onVersionSelected}
       />,
     );
-    expect(queryByText("VersionCompare:versionCompare.noDescription")).not.toBeNull;
+    expect(queryByText("VersionCompare:versionSelectComponent.noDescription")).not.toBeNull;
   });
 
   it("shows Manage named versions link when the URL is provided", () => {
@@ -97,7 +97,7 @@ describe("VersionSelectComponent", () => {
         manageNamedVersionsUrl="test_url"
       />,
     );
-    expect(queryByText("VersionCompare:versionCompare.manageNamedVersions")).not.toBeNull();
+    expect(queryByText("VersionCompare:versionSelectComponent.manageNamedVersions")).not.toBeNull();
   });
 
   describe("when changesets are not ready", () => {
@@ -137,7 +137,7 @@ describe("VersionSelectComponent", () => {
       );
       const loadingIndicator = within(container.querySelector(".itwin-changed-elements__vs-loading-percentage")!);
       expect(loadingIndicator.queryByText("50")).not.toBeNull();
-      expect(queryByText("VersionCompare:versionCompare.waiting")).not.toBeNull();
+      expect(queryByText("VersionCompare:versionSelectComponent.waiting")).not.toBeNull();
     });
   });
 

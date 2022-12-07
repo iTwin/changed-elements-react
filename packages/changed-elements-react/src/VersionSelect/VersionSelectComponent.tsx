@@ -165,7 +165,7 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
         case VersionProcessedState.Processed:
           return "";
         case VersionProcessedState.Processing:
-          return this.props.localization.getLocalizedString("VersionCompare:versionCompare.processingVersion");
+          return this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.processingVersion");
       }
     };
     const getProcessSpinner = () => {
@@ -188,7 +188,7 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
           {
             version.current &&
             <Text className="itwin-changed-elements__vs-current-version-badge" variant="small">
-              {this.props.localization.getLocalizedString("VersionCompare:versionCompare.current")}
+              {this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.current")}
             </Text>
           }
         </div>
@@ -220,7 +220,7 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
           <Text isMuted={!isProcessed} variant="small">
             {
               !version.version.description
-                ? this.props.localization.getLocalizedString("VersionCompare:versionCompare.noDescription")
+                ? this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.noDescription")
                 : version.version.description
             }
           </Text>
@@ -230,7 +230,7 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
             ? getAvailableDate()
             : isPreviousAvailable
               ? getProcessSpinner()
-              : <div>{this.props.localization.getLocalizedString("VersionCompare:versionCompare.waiting")}</div>
+              : <div>{this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.waiting")}</div>
         }
       </div>
     );
@@ -244,15 +244,15 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
         {
           currentVersionState &&
           <div className="itwin-changed-elements__vs-comparison-base">
-            <Text>{this.props.localization.getLocalizedString("VersionCompare:versionCompare.comparing")}</Text>
+            <Text>{this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.comparing")}</Text>
             {this._createEntry(currentVersionState, currentVersionState, "itwin-changed-elements__vs-current-version")}
           </div>
         }
         <div className="itwin-changed-elements__vs-comparison-targets">
-          <Text>{this.props.localization.getLocalizedString("VersionCompare:versionCompare.with")}</Text>
+          <Text>{this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.with")}</Text>
           <div className="itwin-changed-elements__vs-versions-table">
-            <Text>{this.props.localization.getLocalizedString("VersionCompare:versionCompare.versions")}</Text>
-            <Text>{this.props.localization.getLocalizedString("VersionCompare:versionCompare.changeset")}</Text>
+            <Text>{this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.versions")}</Text>
+            <Text>{this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.changeset")}</Text>
             <div className="itwin-changed-elements__vs-versions-list">
               {
                 this.state.entries.length > 1
@@ -265,7 +265,7 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
                   )
                   : (
                     <div className="itwin-changed-elements__vs-no-named-versions itwin-changed-elements__center-items">
-                      {this.props.localization.getLocalizedString("VersionCompare:versionCompare.noNamedVersions")}
+                      {this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.noNamedVersions")}
                     </div>
                   )
               }
@@ -276,7 +276,7 @@ export class VersionSelectComponent extends Component<VersionSelectComponentProp
           this.props.manageNamedVersionsUrl &&
           <div className="itwin-changed-elements__vs-manage-versions-link">
             <a href={this.props.manageNamedVersionsUrl} target="_blank" rel="noopener noreferrer">
-              {this.props.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
+              {this.props.localization.getLocalizedString("VersionCompare:versionSelectComponent.manageNamedVersions")}
             </a>
           </div>
         }
@@ -345,8 +345,8 @@ export class NamedVersionContainer {
     if (versionIndex === -1) {
       const isLatestChangeset = allChangesets[0] === currentChangeSetId;
       const name = isLatestChangeset
-        ? localization.getLocalizedString("VersionCompare:versionCompare.latestChangeset")
-        : localization.getLocalizedString("VersionCompare:versionCompare.currentChangeset");
+        ? localization.getLocalizedString("VersionCompare:versionSelectComponent.latestChangeset")
+        : localization.getLocalizedString("VersionCompare:versionSelectComponent.currentChangeset");
       this.version = {
         name,
         changesetId: currentChangeSetId,
