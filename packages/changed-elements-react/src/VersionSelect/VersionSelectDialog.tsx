@@ -19,7 +19,7 @@ export interface VersionSelectDialogProps {
   changesetStatus: GetChangesetsResult["changesetStatus"];
   namedVersions: NamedVersion[];
   onViewOpened?: BeEvent<(args?: unknown) => void>;
-  onOk: () => void;
+  onOk: (currentVersion: NamedVersion, targetVersion: NamedVersion) => void;
   onCancel: () => void;
 }
 
@@ -45,10 +45,18 @@ export class VersionSelectDialog extends Component<VersionSelectDialogProps, Ver
   };
 
   public override render(): ReactElement {
+    const handleCompareClick = () => {
+      if (!this.state.currentVersion || !this.state.targetVersion) {
+        return;
+      }
+
+      this.props.onOk(this.state.currentVersion, this.state.targetVersion);
+    }
+
     return (
       <Modal
         className="itwin-changed-elements__version-select-dialog"
-        title={this.props.localization.getLocalizedString("VersionCompare:versionSelectDialog.title")}
+        title={this.props.localization.getLocalizedString("VersionCompare:title")}
         isOpen
         onClose={this.props.onCancel}
       >
@@ -61,8 +69,8 @@ export class VersionSelectDialog extends Component<VersionSelectDialogProps, Ver
           onVersionSelected={this._onVersionSelected}
         />
         <ModalButtonBar>
-          <Button styleType="high-visibility" disabled={!this.state.targetVersion} onClick={this.props.onOk}>
-            {this.props.localization.getLocalizedString("VersionCompare:versionSelectDialog.compare")}
+          <Button styleType="high-visibility" disabled={!this.state.targetVersion} onClick={handleCompareClick}>
+            {this.props.localization.getLocalizedString("VersionCompare:compare")}
           </Button>
           <Button onClick={this.props.onCancel}>
             {this.props.localization.getLocalizedString("UiCore:dialog.cancel")}

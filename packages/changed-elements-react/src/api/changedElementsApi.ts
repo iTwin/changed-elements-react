@@ -112,37 +112,39 @@ export interface GetComparisonArgs {
 }
 
 export interface GetComparisonResult {
-  changedElements: {
-    /** Array of changed element Ids. */
-    elements: string[];
+  changedElements: ChangedElements;
+}
 
-    /** Array of changed element class Ids. */
-    classIds: string[];
+export interface ChangedElements {
+  /** Array of changed element Ids. */
+  elements: string[];
 
-    /** Array of changed element model Ids. */
-    modelIds: string[];
+  /** Array of changed element class Ids. */
+  classIds: string[];
 
-    /** Array of changed element parent Ids. */
-    parendIds: string[];
+  /** Array of changed element model Ids. */
+  modelIds: string[];
 
-    /** Array of changed element parent class Ids. */
-    parentClassIds: string[];
+  /** Array of changed element parent Ids. */
+  parentIds: string[];
 
-    /** Array of changed element operation codes. */
-    opcodes: Opcode[];
+  /** Array of changed element parent class Ids. */
+  parentClassIds: string[];
 
-    /** Array of changed element types of change. */
-    type: TypeOfChange[];
+  /** Array of changed element operation codes. */
+  opcodes: Opcode[];
 
-    /** Array of changed elements' array of changed properties. */
-    properties: string[][];
+  /** Array of changed element types of change. */
+  type: TypeOfChange[];
 
-    /** Array of changed elements' array of old checksums for each property. */
-    oldChecksums: number[][];
+  /** Array of changed elements' array of changed properties. */
+  properties: string[][];
 
-    /** Array of changed elements' array of new checksums for each property. */
-    newChecksums: number[][];
-  };
+  /** Array of changed elements' array of old checksums for each property. */
+  oldChecksums: number[][];
+
+  /** Array of changed elements' array of new checksums for each property. */
+  newChecksums: number[][];
 }
 
 export enum Opcode {

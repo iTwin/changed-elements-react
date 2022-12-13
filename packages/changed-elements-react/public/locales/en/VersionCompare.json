@@ -1,4 +1,65 @@
 {
+  "compare": "Compare",
+  "changedElementsInspector": {
+    "added": "Added",
+    "changes": "Changes",
+    "elements": "elements",
+    "filter": "Filter",
+    "hideAll": "Hide All",
+    "invertDisplay": "Invert Display",
+    "loadingModelNodes": "Loading Model Nodes",
+    "modified": "Modified",
+    "noResults": "No results found for current filters.",
+    "removed": "Removed",
+    "searchInProgress": "Search in progress",
+    "searchingRemaining": "Searching remaining",
+    "searchResults": "Search Results",
+    "showAll": "Show All",
+    "unchanged": "Unchanged"
+  },
+  "changedElementsManager": {
+    "computingChangedModels": "Computing changed models",
+    "computingUnchangedModels": "Computing unchanged models"
+  },
+  "changedElementsWidget": {
+    "comparisonNotActive": "No version comparison active.",
+    "getStarted": "Click on the \"+\" comparison button to get started.",
+    "inspectProperties": "Inspect Properties",
+    "loadingComparison": "Loading version comparison",
+    "stopComparison": "Stop comparison",
+    "title": "Version Compare"
+  },
+  "searchBar": {
+    "clear": "Clear",
+    "close": "Close",
+    "closeSearchBar": "Close search bar",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "searchFor": "Search for"
+  },
+  "typeOfChange": {
+    "advanvedFiltering": "Advanced Filtering...",
+    "childrenAdded": "Children were added",
+    "childrenChanges": "Children changes",
+    "childrenRemoved": "Children were removed",
+    "elementAdded": "Element was added",
+    "elementDeleted": "Element was deleted",
+    "geometry": "Geometry",
+    "hiddenProperty": "Hidden Properties",
+    "noChanges": "No changes",
+    "placement": "Placement",
+    "property": "Properties",
+    "title": "Element changes: "
+  },
+  "versionCompareManager": {
+    "msg_openingTarget": "Opening target iModel",
+    "msg_getChangedElements": "Requesting changed elements",
+    "msg_initializingComparison": "Initializing comparison",
+    "msg_findingAssemblies": "Finding top assemblies",
+    "error_versionCompare": "Version Compare Error",
+    "error_cantStart": "Could not start comparison against version"
+  },
   "versionSelectComponent": {
     "changeset": "Changeset",
     "comparing": "Comparing:",

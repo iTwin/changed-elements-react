@@ -83,7 +83,7 @@ describe("getComparison", () => {
         elements: [""],
         classIds: [""],
         modelIds: [""],
-        parendIds: [""],
+        parentIds: [""],
         parentClassIds: [""],
         opcodes: [Opcode.Delete],
         type: [TypeOfChange.Geometry],

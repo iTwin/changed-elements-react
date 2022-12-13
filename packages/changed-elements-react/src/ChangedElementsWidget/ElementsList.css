@@ -2,9 +2,14 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-export { VersionSelectDialog } from "./src/VersionSelect/VersionSelectDialog";
-export * from "./src/api/changedElementsApi";
-export * from "./src/ChangedElementsWidget/ChangedElementsWidget";
-export * from "./src/VersionCompareManager";
-export * from "./src/VersionCompare";
-export * from "./src/VersionSelect/VersionSelectComponent";
+
+.itwin-changed-elements-react__element-list {
+  margin-top: 4px;
+  display: grid;
+}
+
+.itwin-changed-elements-react__element-list-no-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

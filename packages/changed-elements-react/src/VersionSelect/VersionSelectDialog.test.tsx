@@ -32,7 +32,7 @@ describe("VersionSelectDialog", () => {
     );
 
     fireEvent.click(getByText("Changeset0"));
-    fireEvent.click(getByText("VersionCompare:versionSelectDialog.compare"))
+    fireEvent.click(getByText("VersionCompare:compare"))
     expect(handleOk).toHaveBeenCalledOnce();
   });
 });
