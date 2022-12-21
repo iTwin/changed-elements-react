@@ -1,0 +1,58 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.itwin-changed-elements-react__element-list-container {
+  display: grid;
+  grid: auto 1fr / 1fr;
+}
+
+.itwin-changed-elements-react__filter-header-separator {
+  width: 1px;
+  height: 20px;
+  margin: 0 10px 0 6px;
+  background: var(--iui-color-background-border);
+}
+
+.itwin-changed-elements-react__vc-filter-header-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.iui-toggle-switch-wrapper > input {
+  background-color: #85929d;
+  opacity: 1;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.iui-toggle-switch-wrapper > input::after {
+  background-color: #ffffff;
+  opacity: 1;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.iui-toggle-switch-wrapper > input:checked {
+  opacity: 1;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.iui-toggle-switch-wrapper > input:checked::after {
+  background-color: #ffffff;
+  opacity: 1;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.itwin-changed-elements-react__vc-unchanged.iui-toggle-switch-wrapper > input:checked {
+  background-color: #000000;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.itwin-changed-elements-react__vc-deleted.iui-toggle-switch-wrapper > input:checked {
+  background-color: #cc0000;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.itwin-changed-elements-react__vc-added.iui-toggle-switch-wrapper > input:checked {
+  background-color: #57aa1c;
+}
+
+.itwin-changed-elements-react__vc-color-toggle.itwin-changed-elements-react__vc-modified.iui-toggle-switch-wrapper > input:checked {
+  background-color: #008be1;
+}

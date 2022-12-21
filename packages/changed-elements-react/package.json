@@ -36,10 +36,15 @@
     "@itwin/core-react": "^3.4.4",
     "@itwin/imodel-components-react": "^3.4.4",
     "@itwin/presentation-common": "^3.4.4",
+    "@itwin/presentation-components": "^3.4.4",
     "@itwin/presentation-frontend": "^3.4.4",
     "@itwin/webgl-compatibility": "^3.4.4",
     "@testing-library/react": "^12.1.5",
     "@types/react": "^17.0.0",
+    "@types/react-table": "^7.2.0",
+    "@types/react-virtualized-auto-sizer": "^1.0.1",
+    "@types/react-window": "^1.8.5",
+    "@types/react-window-infinite-loader": "^1.0.6",
     "@vitejs/plugin-react": "^2.1.0",
     "@vitest/coverage-c8": "^0.24.3",
     "happy-dom": "^7.6.0",
@@ -68,6 +73,7 @@
     "@itwin/core-react": "^3.4.4",
     "@itwin/imodel-components-react": "^3.4.4",
     "@itwin/presentation-common": "^3.4.4",
+    "@itwin/presentation-components": "^3.4.4",
     "@itwin/presentation-frontend": "^3.4.4",
     "@itwin/webgl-compatibility": "^3.4.4",
     "react": "^17.0.0 || ^18.0.0",
@@ -76,6 +82,11 @@
     "redux": "^4.1.0"
   },
   "dependencies": {
-    "@itwin/itwinui-react": "^1.48.1"
+    "@itwin/itwinui-icons-react": "^1.16.0",
+    "@itwin/itwinui-react": "^1.42.0",
+    "react-table": "^7.8.0",
+    "react-virtualized-auto-sizer": "^1.0.7",
+    "react-window": "^1.8.8",
+    "react-window-infinite-loader": "^1.0.8"
   }
 }

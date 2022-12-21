@@ -16,8 +16,15 @@
     "@itwin/core-bentley": "^3.4.4",
     "@itwin/core-common": "^3.4.4",
     "@itwin/core-geometry": "^3.4.4",
+    "@itwin/core-quantity": "^3.4.4",
     "@itwin/express-server": "^3.4.4",
+    "@itwin/imodels-access-backend": "^2.2.1",
+    "@itwin/imodels-client-authoring": "^2.2.1",
+    "@itwin/presentation-backend": "^3.4.5",
+    "@itwin/presentation-common": "^3.4.4",
+    "@types/dotenv-flow": "^3.2.0",
     "@types/node": "^16.0.0",
+    "dotenv-flow": "^3.2.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^4.8.4"
   }

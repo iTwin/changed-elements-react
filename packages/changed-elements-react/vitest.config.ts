@@ -15,11 +15,5 @@ export default defineConfig({
   },
   test: {
     environment: "happy-dom",
-    coverage: {
-      statements: 99.73,
-      branches: 100,
-      functions: 95.55,
-      lines: 99.73,
-    },
   },
 });
