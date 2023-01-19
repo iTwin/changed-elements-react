@@ -1,0 +1,125 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
+
+.property-comparison-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .property-comparison-table {
+    > .header {
+      display: flex;
+      padding: $uicore-s;
+      align-items: center;
+      background-color: $buic-background-widget;
+
+      > .slider-container {
+        display: flex;
+        justify-content: center;
+        margin: auto;
+        padding-left: $uicore-s;
+        width: 50%;
+
+        > .slider-overrides {
+          padding-left: $uicore-s;
+          padding-right: $uicore-s;
+          margin-top: auto;
+          margin-bottom: auto;
+          width: 50%;
+        }
+
+        > .slider-label {
+          @include uicore-font-family;
+          font-size: $uicore-font-size-leading;
+          color: $buic-text-color;
+          padding: $uicore-s;
+          margin: auto;
+        }
+      }
+
+      > .element-picker {
+        padding: $uicore-s;
+        padding-right: $uicore-l;
+        width: 15%;
+
+        > .select-picker {
+          width: 100%;
+          vertical-align: top;
+        }
+      }
+
+      > .header-element-label {
+        padding-left: $uicore-s;
+
+        > .header-element-label-text {
+          @include uicore-font-family;
+          font-size: $uicore-font-size-leading;
+          color: $buic-text-color;
+          padding-bottom: $uicore-s;
+          text-overflow: ellipsis;
+        }
+
+        > .header-change-type {
+          @include uicore-font-family;
+          font-size: $uicore-font-size-small;
+          color: $buic-text-color;
+          text-align: left;
+          padding-bottom: $uicore-xs;
+          padding-top: 0;
+          white-space: break-spaces;
+          text-overflow: ellipsis;
+        }
+      }
+
+      > .go-left {
+        margin-left: auto;
+      }
+
+      > .chevron-button {
+        cursor: pointer;
+        padding: $uicore-s;
+      }
+    }
+  }
+}
+
+.header-inspect-mode-button {
+  margin-right: $uicore-m;
+}
+
+.header-toggle-label {
+  @include uicore-font-family;
+  font-size: $uicore-font-size;
+  color: $buic-text-color;
+  text-align: left;
+  margin-right: $uicore-m;
+  padding: $uicore-s;
+}
+
+.pc-loading-spinner {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.pc-table-container {
+  flex: 1;
+}
+
+.pc-no-changed-properties {
+  display: flex;
+  height: 80%; // Compensate for footer bar
+  width: 100%;
+
+  > .pc-table-message {
+    @include uicore-font-family;
+    flex: 1 0 0;
+    font-size: $uicore-font-size-leading;
+    color: $buic-text-color;
+    text-align: center;
+    margin: auto;
+  }
+}

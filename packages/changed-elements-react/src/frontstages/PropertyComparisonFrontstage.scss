@@ -1,0 +1,11 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+.nz-toolbar-toolbar.ViewsToolbar {
+  > .nz-expanded.nz-panels {
+    > .nz-item {
+      justify-content: left;
+    }
+  }
+}

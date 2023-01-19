@@ -2,16 +2,17 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import "./App.css";
-import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
-import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { SvgUser } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Button, Surface } from "@itwin/itwinui-react";
+import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
+
 import { applyUrlPrefix, clientId } from "../environment";
+import "./App.css";
 import { AppHeader } from "./AppHeader";
 import {
-  AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, useAuthorization,
+  AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, useAuthorization
 } from "./Authorization";
 import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";

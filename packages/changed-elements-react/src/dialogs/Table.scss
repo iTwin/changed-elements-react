@@ -1,0 +1,140 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+@import "~@itwin/core-react/lib/cjs/core-react/index";
+
+$table-header-background: $buic-background-3;
+$table-header-sorted: $buic-background-table-header;
+
+.themedTableContainer {
+  background: $buic-background-control;
+  box-sizing: border-box;
+  height: 100%;
+  border: 1px solid $buic-background-divider;
+}
+
+.themedTable {
+  height: 100%;
+  color: $buic-foreground-body;
+  background-color: $buic-background-control;
+  display: flex;
+  flex-direction: column;
+}
+
+.themedTableHr:first-child {
+  display: none !important;
+}
+
+.themedTableTh {
+  border-bottom: 0;
+  position: relative;
+  background: $table-header-background;
+  display: flex;
+  align-items: center;
+
+  > div {
+    padding: 0.75em 0.5em;
+  }
+
+  &:hover {
+    background: $buic-row-selection;
+  }
+
+  &.styledTableHeaderCellSorted {
+    background: $table-header-sorted;
+  }
+
+  &.styledTableHeaderCellSticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+}
+
+.sortIndicator {
+  position: absolute;
+  right: $uicore-sm;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+.themedTableTbody {
+  flex: 1;
+  // overflow-y: auto;
+  // overflow-x: hidden;
+  // overflow: overlay;
+
+  > div > div {
+    @include uicore-scrollbar();
+    overflow: overlay !important;
+  }
+}
+
+.themedTableTr {
+  border-bottom: 1px solid $buic-background-divider;
+  box-sizing: border-box;
+}
+
+.themedTableTr:hover {
+  background-color: $buic-row-hover;
+}
+
+.themedTableTrSelected {
+  background: $buic-row-selection;
+}
+
+.themedTableTd {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0.5em;
+}
+
+.themedTableTrSkeleton {
+  height: 37px;
+  border-bottom-color: $buic-background-divider;
+  padding: 4px 30px 4px 12px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  box-sizing: border-box;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    right: 24px;
+    bottom: 6px;
+    background: $buic-background-3;
+  }
+}
+
+.themedTableFooter {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  width: 100%;
+}
+
+.themedTableFooterTr {
+  border-top: 1px solid $buic-background-divider;
+  box-sizing: border-box;
+  background: $table-header-background;
+}
+
+.themedTableFooterTd {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1em 0.5em;
+}
