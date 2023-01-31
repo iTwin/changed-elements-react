@@ -546,7 +546,7 @@ const VersionCompareSelectorInner = React.forwardRef<
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
         </div>
       )}
-      {props.entries.length > 1 && props.currentVersion ? (
+      {props.entries.length > 0 && props.currentVersion ? (
         <VersionList
           entries={props.entries}
           currentVersion={props.currentVersion}
