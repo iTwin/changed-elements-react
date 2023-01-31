@@ -7,8 +7,7 @@ import { AuthorizationClient } from "@itwin/core-common";
 import { Code } from "@itwin/itwinui-react";
 import { User, UserManager, WebStorageStateStore } from "oidc-client-ts";
 import {
-  ComponentType, createContext, Fragment, PropsWithChildren, ReactElement, ReactNode, useContext, useEffect, useRef,
-  useState
+  ComponentType, createContext, Fragment, PropsWithChildren, ReactElement, ReactNode, useContext, useEffect, useRef, useState
 } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -60,8 +59,7 @@ export function createAuthorizationProvider(config: AuthorizationProviderConfig)
   };
   const signOut = async () => userManager.signoutRedirect();
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  return function AuthorizationProvider(props: PropsWithChildren<{}>): ReactElement {
+  return function AuthorizationProvider(props: PropsWithChildren<unknown>): ReactElement {
     const [authorizationContextValue, setAuthorizationContextValue] = useState<AuthorizationContext>({
       userManager,
       state: AuthorizationState.Pending,
@@ -84,46 +82,24 @@ export function createAuthorizationProvider(config: AuthorizationProviderConfig)
           });
         };
 
+        const handleUserUnloaded = () => {
+          setAuthorizationContextValue({
+            userManager,
+            state: AuthorizationState.SignedOut,
+            user: undefined,
+            userAuthorizationClient: undefined,
+            signIn,
+            signOut,
+          });
+        }
+
         userManager.events.addUserLoaded(handleUserLoaded);
+        userManager.events.addUserUnloaded(handleUserUnloaded);
 
         return () => {
           userManager.events.removeUserLoaded(handleUserLoaded);
+          userManager.events.removeUserUnloaded(handleUserUnloaded);
         };
-      },
-      [],
-    );
-
-    const firstRun = useRef(true);
-    useEffect(
-      () => {
-        if (!firstRun || window.self !== window.top) {
-          // It could be that parent document has already initiated silent sign-in in an invisible iframe, and now the
-          // identity provider has redirected the iframe back to the app.
-          return;
-        }
-
-        firstRun.current = false;
-        let disposed = false;
-        void (async () => {
-          try {
-            await userManager.signinSilent();
-            await userManager.clearStaleState();
-          } catch (error) {
-            if (disposed) {
-              return;
-            }
-
-            setAuthorizationContextValue({
-              userManager,
-              state: AuthorizationState.SignedOut,
-              user: undefined,
-              userAuthorizationClient: undefined,
-              signIn,
-              signOut,
-            });
-          }
-        })();
-        return () => { disposed = true; };
       },
       [],
     );
@@ -303,7 +279,7 @@ function getTroubleshootingText(userManager: UserManager): ReactNode {
 }
 
 /** Finalizes signin process for silent authorization when iframe is redirected back to the application. */
-export function SignInSilent(): ReactElement {
+export function SignInSilentCallback(): ReactElement {
   const { userManager } = useAuthorization();
   useEffect(
     () => {
@@ -317,6 +293,43 @@ export function SignInSilent(): ReactElement {
       })();
     },
     [userManager],
+  );
+
+  return <></>;
+}
+
+export function SignInSilent(): ReactElement {
+  const { userManager, state } = useAuthorization();
+  const inProgress = useRef(false);
+
+  useEffect(
+    () => {
+      if (inProgress.current || state !== AuthorizationState.Pending || window.self !== window.top) {
+        // It could be that parent document has already initiated silent sign-in in an invisible iframe, and now the
+        // identity provider has redirected the iframe back to the app.
+        return;
+      }
+
+      inProgress.current = true;
+      let disposed = false;
+      void (async () => {
+        try {
+          await userManager.signinSilent();
+        } catch (error) {
+          if (disposed) {
+            return;
+          }
+
+          userManager.events.unload();
+        } finally {
+          inProgress.current = false;
+        }
+
+        await userManager.clearStaleState();
+      })();
+      return () => { disposed = true; };
+    },
+    [state, userManager],
   );
 
   return <></>;

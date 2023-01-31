@@ -222,7 +222,7 @@ importers:
       '@types/react': 17.0.52
       '@types/react-dom': 17.0.18
       '@vitejs/plugin-react-swc': 3.0.1_vite@4.0.4
-      oidc-client-ts: 2.1.0
+      oidc-client-ts: 2.2.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-redux: 7.2.2_ykxqnxanlq42xavzz22bjdrwni
@@ -4637,8 +4637,8 @@ packages:
       es-abstract: 1.20.4
     dev: false
 
-  /oidc-client-ts/2.1.0:
-    resolution: {integrity: sha512-Rmfl/10g7tTLy8cXezn0Ek+Wa3bKwNnW7oRzLB/hU5EK/DC1D/W1d0GCjGf23WYd6b4Ifa8ud/NzgsMOnbNp8Q==}
+  /oidc-client-ts/2.2.1:
+    resolution: {integrity: sha512-g/W+DsUVeHZ8A7xUSTeK4bI6BNs9ROtMiiOOo+0M6IiTHxueJ757GD8e/8nPBL+k/o6bkfM5mWg4cZcSI8Iosw==}
     engines: {node: '>=12.13.0'}
     dependencies:
       crypto-js: 4.1.1
