@@ -10,31 +10,34 @@ import {
 import { LoadingSpinner, SpinnerSize } from "@itwin/core-react";
 import { MinimalChangeset, NamedVersion, NamedVersionState } from "@itwin/imodels-client-management";
 import { Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, Radio } from "@itwin/itwinui-react";
-import * as React from "react";
+import {
+  Component, createRef, forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState
+} from "react";
 
 import type { ChangedElementsApiClient, ChangesetChunk, ChangesetStatus } from "../api/ChangedElementsApiClient";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
 import { VersionCompare } from "../api/VersionCompare";
 import "./VersionCompareSelectWidget.scss";
 
-/** Options for VersionCompareSelectComponent */
+/** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
-  /** IModel Connection that is being visualized */
+  /** IModel Connection that is being visualized. */
   iModelConnection?: IModelConnection;
-  /** Optional handler for when a version is selected */
-  onVersionSelected?: (
-    currentVersion: NamedVersion,
-    targetVersion: NamedVersion,
-    chunks?: ChangesetChunk[]
-  ) => void;
-  /** Whether to show a title for the component or not */
+
+  /** Optional handler for when a version is selected. */
+  onVersionSelected?: (currentVersion: NamedVersion, targetVersion: NamedVersion, chunks?: ChangesetChunk[]) => void;
+
+  /** Whether to show a title for the component or not. */
   wantTitle?: boolean;
-  /** Configure the 'Manage Named Versions' URL */
+
+  /** Configure the 'Manage Named Versions' URL. */
   getManageVersionsUrl?: (iModelConnection?: IModelConnection) => string;
-  /** Show start button, useful for non-ninezone applications using the component */
+
+  /** Show start button, useful for non-ninezone applications using the component. */
   wantCompareButton?: boolean;
-  /** Compare button react node that will be added to the footer of this component */
-  compareButton?: (onClick: () => void) => React.ReactNode;
+
+  /** Compare button react node that will be added to the footer of this component. */
+  compareButton?: (onClick: () => void) => ReactNode;
 }
 
 interface VersionCompareSelectComponentAttributes {
@@ -45,80 +48,85 @@ interface VersionCompareSelectComponentAttributes {
  * Component that let's the user select which named version to compare to. Will automatically call
  * VersionCompare.manager.startComparison with the proper inputs when user presses OK.
  */
-export const VersionCompareSelectComponent = React.forwardRef<
+export const VersionCompareSelectComponent = forwardRef<
   VersionCompareSelectComponentAttributes,
   VersionCompareSelectorProps
->(function VersionCompareSelectComponent(props, ref): React.ReactElement {
-  const [targetVersion, setTargetVersion] = React.useState<NamedVersion>();
+>(
+  function VersionCompareSelectComponent(props, ref): ReactElement {
+    const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
-  const versionsUrl = React.useMemo(() => {
-    if (props.getManageVersionsUrl) {
-      return props.getManageVersionsUrl(props.iModelConnection);
-    }
+    const versionsUrl = useMemo(
+      () => {
+        if (props.getManageVersionsUrl) {
+          return props.getManageVersionsUrl(props.iModelConnection);
+        }
 
-    const projectId = props.iModelConnection?.iTwinId;
-    const iModelId = props.iModelConnection?.iModelId;
-    if (!projectId || !iModelId) {
-      return "";
-    }
+        const projectId = props.iModelConnection?.iTwinId;
+        const iModelId = props.iModelConnection?.iModelId;
+        if (!projectId || !iModelId) {
+          return "";
+        }
 
-    return `https://${process.env.IMJS_URL_PREFIX ?? ""
-      }connect-imodelhubwebsite.bentley.com//Project/${projectId}/iModel/${iModelId}/Progress#Changes`;
-  }, [props.getManageVersionsUrl, props.iModelConnection]);
+        return `https://${process.env.IMJS_URL_PREFIX ?? ""
+          }connect-imodelhubwebsite.bentley.com//Project/${projectId}/iModel/${iModelId}/Progress#Changes`;
+      },
+      [props.getManageVersionsUrl, props.iModelConnection],
+    );
 
-  const versionSelector = (
-    namedVersions: NamedVersions | undefined,
-    handleStartComparison: (targetVersion: NamedVersion | undefined) => void,
-  ) => {
-    if (!namedVersions) {
+    const versionSelector = (
+      namedVersions: NamedVersions | undefined,
+      handleStartComparison: (targetVersion: NamedVersion | undefined) => void,
+    ) => {
+      if (!namedVersions) {
+        return (
+          <div className="vc-spinner">
+            <LoadingSpinner />
+          </div>
+        );
+      }
+
+      const handleVersionClicked = (targetVersion: NamedVersion) => {
+        setTargetVersion(targetVersion);
+        props.onVersionSelected?.(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          namedVersions.currentVersion!.version,
+          targetVersion,
+        );
+      };
+
       return (
-        <div className="vc-spinner">
-          <LoadingSpinner />
-        </div>
-      );
-    }
-
-    const handleVersionClicked = (targetVersion: NamedVersion) => {
-      setTargetVersion(targetVersion);
-      props.onVersionSelected?.(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        namedVersions.currentVersion!.version,
-        targetVersion,
+        <VersionCompareSelectorInner
+          ref={ref}
+          entries={namedVersions.entries}
+          currentVersion={namedVersions.currentVersion}
+          selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
+          onVersionClicked={handleVersionClicked}
+          onStartComparison={() => handleStartComparison(targetVersion)}
+          wantTitle={props.wantTitle}
+          wantCompareButton={props.wantCompareButton}
+          compareButton={props.compareButton}
+          versionsUrl={versionsUrl}
+        />
       );
     };
 
     return (
-      <VersionCompareSelectorInner
-        ref={ref}
-        entries={namedVersions.entries}
-        currentVersion={namedVersions.currentVersion}
-        selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
-        onVersionClicked={handleVersionClicked}
-        onStartComparison={() => handleStartComparison(targetVersion)}
-        wantTitle={props.wantTitle}
-        wantCompareButton={props.wantCompareButton}
-        compareButton={props.compareButton}
-        versionsUrl={versionsUrl}
-      />
+      <PagedNamedVersionProvider iModelConnection={props.iModelConnection}>
+        {versionSelector}
+      </PagedNamedVersionProvider>
     );
-  };
-
-  return (
-    <PagedNamedVersionProvider iModelConnection={props.iModelConnection}>
-      {versionSelector}
-    </PagedNamedVersionProvider>
-  );
-});
+  },
+);
 
 interface PagedNamedVersionProviderProps {
   iModelConnection: IModelConnection | undefined;
   children: (
     namedVersions: NamedVersions | undefined,
     onStartComparison: (targetVersion: NamedVersion | undefined) => void
-  ) => React.ReactElement;
+  ) => ReactElement;
 }
 
-function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React.ReactElement {
+function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): ReactElement {
   const result = usePagedNamedVersionLoader(props.iModelConnection);
   const handleStartComparison = async (targetVersion: NamedVersion | undefined) => {
     if (VersionCompare.manager?.isComparing) {
@@ -141,18 +149,9 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
       }
 
       VersionCompare.manager
-        ?.startComparison(
-          props.iModelConnection,
-          currentVersion,
-          targetVersion,
-          undefined,
-          chunks,
-        )
+        ?.startComparison(props.iModelConnection, currentVersion, targetVersion, undefined, chunks)
         .catch((e) => {
-          Logger.logError(
-            VersionCompare.logCategory,
-            "Could not start version comparison: " + e,
-          );
+          Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
         });
     }
   };
@@ -163,6 +162,7 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
 interface UsePagedNamedVersionLoaderResult {
   /** Named versions to display in the list. */
   namedVersions: NamedVersions;
+
   /** Changesets in descending index order. */
   changesets: MinimalChangeset[];
 }
@@ -181,48 +181,24 @@ interface PagedNamedVersionLoaderStateCache {
   result: UsePagedNamedVersionLoaderResult;
 }
 
-let pagedNamedVersionLoaderStateCache:
-  | PagedNamedVersionLoaderStateCache
-  | undefined;
+let pagedNamedVersionLoaderStateCache: PagedNamedVersionLoaderStateCache | undefined;
 
 function usePagedNamedVersionLoader(
   iModelConnection: IModelConnection | undefined,
 ): UsePagedNamedVersionLoaderResult | undefined {
   // The cache is stored in a global variable but it can only have one owner
-  const cache = React.useRef(pagedNamedVersionLoaderStateCache);
+  const cache = useRef(pagedNamedVersionLoaderStateCache);
   pagedNamedVersionLoaderStateCache = undefined;
 
-  const [result, setResult] =
-    React.useState<UsePagedNamedVersionLoaderResult>();
+  const [result, setResult] = useState<UsePagedNamedVersionLoaderResult>();
 
-  React.useEffect(() => {
-    const iTwinId = iModelConnection?.iTwinId;
-    const iModelId = iModelConnection?.iModelId;
-    const changesetId = iModelConnection?.changeset.id;
-    const manager = VersionCompare.manager;
-    if (!iTwinId || !iModelId || !changesetId || !manager) {
-      setResult({
-        namedVersions: { entries: [], currentVersion: undefined },
-        changesets: [],
-      });
-      return;
-    }
-
-    let disposed = false;
-    void (async () => {
-      const [namedVersions, changesets] = await Promise.all([
-        manager.changesetCache.getVersions(iModelId),
-        // Changesets are assumed to be in descending index order
-        manager.changesetCache.getOrderedChangesets(iModelId),
-      ]);
-      if (disposed) {
-        return;
-      }
-
-      // Each changeset has an index property, but here we retrieve a changeset index in backwards-sorted array
-      const currentChangesetGlobalReverseIndex = changesets.findIndex(({ id }) => id === changesetId);
-      if (currentChangesetGlobalReverseIndex === -1) {
-        // Early exit due to bad data
+  useEffect(
+    () => {
+      const iTwinId = iModelConnection?.iTwinId;
+      const iModelId = iModelConnection?.iModelId;
+      const changesetId = iModelConnection?.changeset.id;
+      const manager = VersionCompare.manager;
+      if (!iTwinId || !iModelId || !changesetId || !manager) {
         setResult({
           namedVersions: { entries: [], currentVersion: undefined },
           changesets: [],
@@ -230,139 +206,143 @@ function usePagedNamedVersionLoader(
         return;
       }
 
-      // Changesets that are applied after the current changeset are irrelevant
-      changesets.splice(0, currentChangesetGlobalReverseIndex);
-      const changesetIdToReverseIndex = new Map(changesets.map((changeset, index) => [changeset.id, index]));
-
-      // Reorder and filter named versions based on changeset order
-      const sortedNamedVersions: Array<{
-        namedVersion: NamedVersion;
-        changesetReverseIndex: number;
-      }> = [];
-      for (const namedVersion of namedVersions) {
-        const reverseIndex = namedVersion.changesetId
-          ? changesetIdToReverseIndex.get(namedVersion.changesetId)
-          : undefined;
-        if (reverseIndex !== undefined) {
-          sortedNamedVersions.push({
-            namedVersion,
-            changesetReverseIndex: reverseIndex,
-          });
-        }
-      }
-
-      sortedNamedVersions.sort((a, b) => a.changesetReverseIndex - b.changesetReverseIndex);
-
-      // Obtain current named version or manufacture an entry for one
-      let currentVersion: NamedVersion;
-      if (sortedNamedVersions[0].namedVersion.changesetId === changesetId) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        currentVersion = sortedNamedVersions.shift()!.namedVersion;
-      } else {
-        currentVersion = {
-          id: "",
-          displayName: IModelApp.localization.getLocalizedString(
-            currentChangesetGlobalReverseIndex === 0
-              ? "VersionCompare:versionCompare.latestChangeset"
-              : "VersionCompare:versionCompare.currentChangeset",
-          ),
-          changesetId: changesetId,
-          changesetIndex: -1,
-          name: "",
-          description: null,
-          createdDateTime: "",
-          _links: { changeset: null, creator: null },
-          state: NamedVersionState.Hidden,
-          application: null,
-          getCreator: async () => undefined,
-          getChangeset: async () => undefined,
-        };
-      }
-
-      const currentVersionState: VersionState = {
-        version: currentVersion,
-        state: VersionProcessedState.Processed,
-        numberNeededChangesets: 0,
-        numberProcessedChangesets: 0,
-      };
-
-      // Initialize iteration if we cannot continue from cache
-      if (
-        !cache.current ||
-        cache.current.iTwinId !== iTwinId ||
-        cache.current.iModelId !== iModelId ||
-        cache.current.changesetId !== changesetId
-      ) {
-        const client =
-          VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
-        const pageIterator = client.getChangesetsPaged({
-          iTwinId,
-          iModelId,
-          skip: changesets.length,
-          backwards: true,
-        });
-        const splitChangesets = splitBeforeEach(
-          flatten(map(pageIterator, (changeset) => changeset.reverse())),
-          (changeset) => changeset.id,
-          [
-            currentVersion.changesetId,
-            ...sortedNamedVersions.map(({ namedVersion }) => namedVersion.changesetId),
-          ],
-        );
-        cache.current = {
-          iTwinId,
-          iModelId,
-          changesetId,
-          changesetStatusIterable: suspendable(skip(splitChangesets, 1)),
-          currentNamedVersionIndex: 0,
-          result: {
-            namedVersions: {
-              entries: sortedNamedVersions.map(({ namedVersion }) => ({
-                version: namedVersion,
-                state: VersionProcessedState.Verifying,
-                numberNeededChangesets: 0,
-                numberProcessedChangesets: 0,
-              })),
-              currentVersion: currentVersionState,
-            },
-            changesets,
-          },
-        };
-      }
-
-      // We have obtained the current state, notify component
-      const currentState = cache.current;
-      setResult(currentState.result);
-      if (sortedNamedVersions.length === 0) {
-        return;
-      }
-
-      let result: IteratorResult<ChangesetStatus[]>;
-      while (
-        ((result = await currentState.changesetStatusIterable.get()),
-          !result.done)
-      ) {
-        // We must avoid modifying the current state cache if component is unmounted
+      let disposed = false;
+      void (async () => {
+        const [namedVersions, changesets] = await Promise.all([
+          manager.changesetCache.getVersions(iModelId),
+          // Changesets are assumed to be in descending index order
+          manager.changesetCache.getOrderedChangesets(iModelId),
+        ]);
         if (disposed) {
           return;
         }
 
-        const changesets = result.value;
-        const numProcessedChangesets = changesets.reduce(
-          (acc, curr) => acc + Number(curr.ready),
-          0,
-        );
-        const isProcessed = changesets.length === numProcessedChangesets;
-        const newEntries = currentState.result.namedVersions.entries.map(
-          (entry, index) => {
+        // Each changeset has an index property, but here we retrieve a changeset index in backwards-sorted array
+        const currentChangesetGlobalReverseIndex = changesets.findIndex(({ id }) => id === changesetId);
+        if (currentChangesetGlobalReverseIndex === -1) {
+          // Early exit due to bad data
+          setResult({
+            namedVersions: { entries: [], currentVersion: undefined },
+            changesets: [],
+          });
+          return;
+        }
+
+        // Changesets that are applied after the current changeset are irrelevant
+        changesets.splice(0, currentChangesetGlobalReverseIndex);
+        const changesetIdToReverseIndex = new Map(changesets.map((changeset, index) => [changeset.id, index]));
+
+        // Reorder and filter named versions based on changeset order
+        const sortedNamedVersions: Array<{ namedVersion: NamedVersion; changesetReverseIndex: number; }> = [];
+        for (const namedVersion of namedVersions) {
+          const reverseIndex = namedVersion.changesetId
+            ? changesetIdToReverseIndex.get(namedVersion.changesetId)
+            : undefined;
+          if (reverseIndex !== undefined) {
+            sortedNamedVersions.push({ namedVersion, changesetReverseIndex: reverseIndex });
+          }
+        }
+
+        sortedNamedVersions.sort((a, b) => a.changesetReverseIndex - b.changesetReverseIndex);
+
+        // Obtain current named version or manufacture an entry for one
+        let currentVersion: NamedVersion;
+        if (sortedNamedVersions[0].namedVersion.changesetId === changesetId) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          currentVersion = sortedNamedVersions.shift()!.namedVersion;
+        } else {
+          currentVersion = {
+            id: "",
+            displayName: IModelApp.localization.getLocalizedString(
+              currentChangesetGlobalReverseIndex === 0
+                ? "VersionCompare:versionCompare.latestChangeset"
+                : "VersionCompare:versionCompare.currentChangeset",
+            ),
+            changesetId: changesetId,
+            changesetIndex: -1,
+            name: "",
+            description: null,
+            createdDateTime: "",
+            _links: { changeset: null, creator: null },
+            state: NamedVersionState.Hidden,
+            application: null,
+            getCreator: async () => undefined,
+            getChangeset: async () => undefined,
+          };
+        }
+
+        const currentVersionState: VersionState = {
+          version: currentVersion,
+          state: VersionProcessedState.Processed,
+          numberNeededChangesets: 0,
+          numberProcessedChangesets: 0,
+        };
+
+        // Initialize iteration if we cannot continue from cache
+        if (
+          !cache.current ||
+          cache.current.iTwinId !== iTwinId ||
+          cache.current.iModelId !== iModelId ||
+          cache.current.changesetId !== changesetId
+        ) {
+          const client = VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
+          const pageIterator = client.getChangesetsPaged({
+            iTwinId,
+            iModelId,
+            skip: changesets.length,
+            backwards: true,
+          });
+          const splitChangesets = splitBeforeEach(
+            flatten(map(pageIterator, (changeset) => changeset.reverse())),
+            (changeset) => changeset.id,
+            [
+              currentVersion.changesetId,
+              ...sortedNamedVersions.map(({ namedVersion }) => namedVersion.changesetId),
+            ],
+          );
+          cache.current = {
+            iTwinId,
+            iModelId,
+            changesetId,
+            changesetStatusIterable: suspendable(skip(splitChangesets, 1)),
+            currentNamedVersionIndex: 0,
+            result: {
+              namedVersions: {
+                entries: sortedNamedVersions.map(({ namedVersion }) => ({
+                  version: namedVersion,
+                  state: VersionProcessedState.Verifying,
+                  numberNeededChangesets: 0,
+                  numberProcessedChangesets: 0,
+                })),
+                currentVersion: currentVersionState,
+              },
+              changesets,
+            },
+          };
+        }
+
+        // We have obtained the current state, notify component
+        const currentState = cache.current;
+        setResult(currentState.result);
+        if (sortedNamedVersions.length === 0) {
+          return;
+        }
+
+        let result: IteratorResult<ChangesetStatus[]>;
+        while (result = await currentState.changesetStatusIterable.get(), !result.done) {
+          // We must avoid modifying the current state cache if component is unmounted
+          if (disposed) {
+            return;
+          }
+
+          const changesets = result.value;
+          const numProcessedChangesets = changesets.reduce((acc, curr) => acc + Number(curr.ready), 0);
+          const isProcessed = changesets.length === numProcessedChangesets;
+          const newEntries = currentState.result.namedVersions.entries.map((entry, index) => {
             if (index === currentState.currentNamedVersionIndex) {
               return {
-                version:
-                  sortedNamedVersions[currentState.currentNamedVersionIndex]
-                    .namedVersion,
-                state: isProcessed
-                  ? VersionProcessedState.Processed
-                  : VersionProcessedState.Processing,
+                version: sortedNamedVersions[currentState.currentNamedVersionIndex].namedVersion,
+                state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
               };
@@ -378,46 +358,39 @@ function usePagedNamedVersionLoader(
             }
 
             return entry;
-          },
-        );
+          });
 
-        currentState.result = {
-          namedVersions: {
-            currentVersion: currentVersionState,
-            entries: newEntries,
-          },
-          changesets: currentState.result.changesets,
-        };
-        setResult(currentState.result);
+          currentState.result = {
+            namedVersions: { currentVersion: currentVersionState, entries: newEntries },
+            changesets: currentState.result.changesets,
+          };
+          setResult(currentState.result);
 
-        if (!isProcessed) {
-          break;
+          if (!isProcessed) {
+            break;
+          }
+
+          currentState.currentNamedVersionIndex += 1;
+          if (currentState.currentNamedVersionIndex === sortedNamedVersions.length) {
+            break;
+          }
+
+          void currentState.changesetStatusIterable.next();
         }
+      })();
 
-        currentState.currentNamedVersionIndex += 1;
-        if (
-          currentState.currentNamedVersionIndex === sortedNamedVersions.length
-        ) {
-          break;
-        }
-
-        void currentState.changesetStatusIterable.next();
-      }
-    })();
-
-    return () => {
-      disposed = true;
-      pagedNamedVersionLoaderStateCache = cache.current;
-    };
-  }, []);
+      return () => {
+        disposed = true;
+        pagedNamedVersionLoaderStateCache = cache.current;
+      };
+    },
+    [],
+  );
 
   return result;
 }
 
-async function* map<T, U>(
-  iterable: AsyncIterable<T>,
-  transform: (value: T) => U,
-): AsyncGenerator<U> {
+async function* map<T, U>(iterable: AsyncIterable<T>, transform: (value: T) => U): AsyncGenerator<U> {
   for await (const value of iterable) {
     yield transform(value);
   }
@@ -439,10 +412,7 @@ async function* splitBeforeEach<T, U>(
   let accumulator: T[] = [];
   let currentMarkerIndex = 0;
   for await (const value of iterable) {
-    if (
-      currentMarkerIndex !== markers.length &&
-      selector(value) === markers[currentMarkerIndex]
-    ) {
+    if (currentMarkerIndex !== markers.length && selector(value) === markers[currentMarkerIndex]) {
       yield accumulator;
       accumulator = [];
       ++currentMarkerIndex;
@@ -454,10 +424,7 @@ async function* splitBeforeEach<T, U>(
   yield accumulator;
 }
 
-async function* skip<T>(
-  iterable: AsyncIterable<T>,
-  n: number,
-): AsyncGenerator<T> {
+async function* skip<T>(iterable: AsyncIterable<T>, n: number): AsyncGenerator<T> {
   const iterator = iterable[Symbol.asyncIterator]();
   for (let i = 0; i < n; ++i) {
     const result = await iterator.next();
@@ -515,70 +482,72 @@ interface VersionCompareSelectorInnerProps {
   onStartComparison: () => void;
   wantTitle: boolean | undefined;
   wantCompareButton: boolean | undefined;
-  compareButton: ((onClick: () => void) => React.ReactNode) | undefined;
+  compareButton: ((onClick: () => void) => ReactNode) | undefined;
   versionsUrl: string;
 }
 
-const VersionCompareSelectorInner = React.forwardRef<
+const VersionCompareSelectorInner = forwardRef<
   VersionCompareSelectComponentAttributes,
   VersionCompareSelectorInnerProps
->(function VersionCompareSelectorInner(props, ref): React.ReactElement {
-  React.useImperativeHandle(
-    ref,
-    () => ({ startComparison: props.onStartComparison }),
-    [props.onStartComparison],
-  );
+>(
+  function VersionCompareSelectorInner(props, ref): ReactElement {
+    useImperativeHandle(
+      ref,
+      () => ({ startComparison: props.onStartComparison }),
+      [props.onStartComparison],
+    );
 
-  return (
-    <div className="version-compare-selector">
-      {props.currentVersion && (
-        <div className="version-compare-row">
-          <div className="version-compare-label">
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparing")}
+    return (
+      <div className="version-compare-selector">
+        {
+          props.currentVersion &&
+          <div className="version-compare-row">
+            <div className="version-compare-label">
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparing")}
+            </div>
+            <div className="version-container-current">
+              <CurrentVersionEntry versionState={props.currentVersion} />
+            </div>
           </div>
-          <div className="version-container-current">
-            <CurrentVersionEntry versionState={props.currentVersion} />
+        }
+        {
+          props.wantTitle &&
+          <div className="title">
+            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
           </div>
+        }
+        {
+          props.entries.length > 0 && props.currentVersion ? (
+            <VersionList
+              entries={props.entries}
+              currentVersion={props.currentVersion}
+              selectedVersionChangesetId={props.selectedVersionChangesetId}
+              onVersionClicked={props.onVersionClicked}
+            />
+          ) : (
+            <div className="no-named-versions-message">
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noNamedVersions")}
+            </div>
+          )
+        }
+        <div className="version-selector-manage-link">
+          <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
+            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
+          </a>
         </div>
-      )}
-      {props.wantTitle && (
-        <div className="title">
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
-        </div>
-      )}
-      {props.entries.length > 0 && props.currentVersion ? (
-        <VersionList
-          entries={props.entries}
-          currentVersion={props.currentVersion}
-          selectedVersionChangesetId={props.selectedVersionChangesetId}
-          onVersionClicked={props.onVersionClicked}
-        />
-      ) : (
-        <div className="no-named-versions-message">
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noNamedVersions")}
-        </div>
-      )}
-      <div className="version-selector-manage-link">
-        <a
-          href={props.versionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="message"
-        >
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
-        </a>
+        {
+          props.wantCompareButton && props.compareButton === undefined &&
+          <div className="version-selector-footer">
+            <Button onClick={props.onStartComparison}>
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
+            </Button>
+          </div>
+        }
+        {props.compareButton?.(props.onStartComparison)}
       </div>
-      {props.wantCompareButton && props.compareButton === undefined && (
-        <div className="version-selector-footer">
-          <Button onClick={props.onStartComparison}>
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
-          </Button>
-        </div>
-      )}
-      {props.compareButton?.(props.onStartComparison)}
-    </div>
-  );
-});
+    );
+  },
+);
 
 interface VersionListProps {
   entries: VersionState[];
@@ -587,7 +556,7 @@ interface VersionListProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
 }
 
-function VersionList(props: VersionListProps): React.ReactElement {
+function VersionList(props: VersionListProps): ReactElement {
   return (
     <div className="version-compare-row version-compare-list">
       <div className="version-compare-label">
@@ -604,17 +573,13 @@ function VersionList(props: VersionListProps): React.ReactElement {
         </div>
         <div className="version-container">
           {props.entries.map((versionState, index) => {
-            const isSelected =
-              props.selectedVersionChangesetId !== undefined &&
-              versionState.version.changesetId ===
-              props.selectedVersionChangesetId;
+            const isSelected = props.selectedVersionChangesetId !== undefined &&
+              versionState.version.changesetId === props.selectedVersionChangesetId;
             return (
               <VersionListEntry
                 key={versionState.version.changesetId}
                 versionState={versionState}
-                previousEntry={
-                  index === 0 ? props.currentVersion : props.entries[index - 1]
-                }
+                previousEntry={index === 0 ? props.currentVersion : props.entries[index - 1]}
                 isSelected={isSelected}
                 onClicked={props.onVersionClicked}
               />
@@ -633,7 +598,7 @@ interface VersionListEntryProps {
   onClicked: (targetVersion: NamedVersion) => void;
 }
 
-function VersionListEntry(props: VersionListEntryProps): React.ReactElement {
+function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const handleClick = async () => {
     if (props.versionState.state !== VersionProcessedState.Processed) {
       return;
@@ -659,8 +624,7 @@ function VersionListEntry(props: VersionListEntryProps): React.ReactElement {
         return "";
       case VersionProcessedState.Processing: {
         return IModelApp.localization.getLocalizedString(
-          props.versionState.numberNeededChangesets ===
-            props.versionState.numberProcessedChangesets
+          props.versionState.numberNeededChangesets === props.versionState.numberProcessedChangesets
             ? "VersionCompare:versionCompare.processed"
             : "VersionCompare:versionCompare.processing",
         );
@@ -682,9 +646,7 @@ function VersionListEntry(props: VersionListEntryProps): React.ReactElement {
         return <div className="state-second-row">{processedStateMsg}</div>;
       }
       case VersionProcessedState.Unavailable:
-        return (
-          <span className="state-second-row-warning icon icon-status-warning" />
-        );
+        return <span className="state-second-row-warning icon icon-status-warning" />;
       case VersionProcessedState.Processed:
       default:
         return undefined;
@@ -739,10 +701,8 @@ function VersionListEntry(props: VersionListEntryProps): React.ReactElement {
     );
   };
 
-  const isProcessed =
-    props.versionState.state === VersionProcessedState.Processed;
-  const isPreviousAvailable =
-    props.previousEntry.state === VersionProcessedState.Processed;
+  const isProcessed = props.versionState.state === VersionProcessedState.Processed;
+  const isPreviousAvailable = props.previousEntry.state === VersionProcessedState.Processed;
   const isAvailable = isProcessed && isPreviousAvailable;
   return (
     <div
@@ -760,29 +720,24 @@ function VersionListEntry(props: VersionListEntryProps): React.ReactElement {
         <Radio
           disabled={!isProcessed}
           checked={props.isSelected}
-          onChange={() => {
-            /* no-op: avoid complaints for missing onChange */
-          }}
+          onChange={() => { /* no-op: avoid complaints for missing onChange */ }}
         />
       </div>
-      <VersionNameAndDescription
-        version={props.versionState.version}
-        isProcessed={isProcessed}
-      />
-      {props.versionState.state === VersionProcessedState.Verifying ? (
-        <>
-          <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
-          </DateAndCurrent>
-          <ProgressLinear indeterminate />
-        </>
-      ) : isAvailable ? (
-        getAvailableDate()
-      ) : isPreviousAvailable ? (
-        getProcessSpinner()
-      ) : (
-        getWaitingMessage()
-      )}
+      <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
+      {
+        props.versionState.state === VersionProcessedState.Verifying
+          ? <>
+            <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
+            </DateAndCurrent>
+            <ProgressLinear indeterminate />
+          </>
+          : isAvailable
+            ? getAvailableDate()
+            : isPreviousAvailable
+              ? getProcessSpinner()
+              : getWaitingMessage()
+      }
     </div>
   );
 }
@@ -791,18 +746,11 @@ interface CurrentVersionEntryProps {
   versionState: VersionState;
 }
 
-function CurrentVersionEntry(props: CurrentVersionEntryProps): React.ReactElement {
-  const isProcessed =
-    props.versionState.state === VersionProcessedState.Processed;
+function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
+  const isProcessed = props.versionState.state === VersionProcessedState.Processed;
   return (
-    <div
-      className="vc-entry-current"
-      key={props.versionState.version.changesetId}
-    >
-      <VersionNameAndDescription
-        version={props.versionState.version}
-        isProcessed={isProcessed}
-      />
+    <div className="vc-entry-current" key={props.versionState.version.changesetId}>
+      <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
       <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
         <div className="current-show">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
@@ -814,10 +762,10 @@ function CurrentVersionEntry(props: CurrentVersionEntryProps): React.ReactElemen
 
 interface DateAndCurrentProps {
   createdDate?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-function DateAndCurrent(props: DateAndCurrentProps): React.ReactElement {
+function DateAndCurrent(props: DateAndCurrentProps): ReactElement {
   return (
     <div className="date-and-current">
       <div className="date">
@@ -833,17 +781,13 @@ interface VersionNameAndDescriptionProps {
   isProcessed: boolean;
 }
 
-function VersionNameAndDescription(props: VersionNameAndDescriptionProps): React.ReactElement {
+function VersionNameAndDescription(props: VersionNameAndDescriptionProps): ReactElement {
   return (
     <div className="name-and-description">
       <div className={props.isProcessed ? "name" : "name-unprocessed"}>
         {props.version.name}
       </div>
-      <div
-        className={
-          props.isProcessed ? "description" : "description-unprocessed"
-        }
-      >
+      <div className={props.isProcessed ? "description" : "description-unprocessed"}>
         {props.version.description === ""
           ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noDescription")
           : props.version.description}
@@ -863,12 +807,11 @@ export interface VersionCompareSelectDialogProps {
 }
 
 /** Version Compare Select Dialog to start compariosn with by selecting a target named version */
-export class VersionCompareSelectDialog extends React.Component<
+export class VersionCompareSelectDialog extends Component<
   VersionCompareSelectDialogProps,
   VersionCompareSelectDialogState
 > {
-  private versionSelectComponentRef =
-    React.createRef<VersionCompareSelectComponentAttributes>();
+  private versionSelectComponentRef = createRef<VersionCompareSelectComponentAttributes>();
 
   constructor(props: VersionCompareSelectDialogProps) {
     super(props);
@@ -878,22 +821,19 @@ export class VersionCompareSelectDialog extends React.Component<
     };
   }
 
-  private async _handleOk() {
+  private async _handleOk(): Promise<void> {
     this.versionSelectComponentRef.current?.startComparison();
 
     ModalDialogManager.closeDialog();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   }
 
-  private _handleCancel() {
+  private _handleCancel(): void {
     ModalDialogManager.closeDialog();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   }
 
-  private _onVersionSelected = (
-    currentVersion: NamedVersion,
-    targetVersion: NamedVersion,
-  ) => {
+  private _onVersionSelected = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
     this.setState({
       ...this.state,
       targetVersion,
@@ -902,11 +842,11 @@ export class VersionCompareSelectDialog extends React.Component<
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogOpened);
   };
 
-  public override componentDidMount() {
+  public override componentDidMount(): void {
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogOpened);
   }
 
-  public override render() {
+  public override render(): ReactElement {
     return (
       <Modal
         className="version-compare-dialog"
@@ -939,9 +879,7 @@ export class VersionCompareSelectDialog extends React.Component<
   }
 }
 
-/**
- * Show error when we don't have a proper access token from the app to use
- */
+/** Show error when we don't have a proper access token from the app to use. */
 export const showNotValidAccessTokenError = () => {
   const brief = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_invalidToken");
   IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief));
@@ -953,10 +891,7 @@ export const showNotValidAccessTokenError = () => {
  * @param iModel iModel that will be used to find the changesets
  * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of elements/categories/models change from the app
  */
-export const openSelectDialog = async (
-  iModel: IModelConnection,
-  onViewUpdated?: BeEvent<(args?: unknown) => void>,
-) => {
+export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?: BeEvent<(args?: unknown) => void>) => {
   if (iModel.iModelId === undefined || iModel.iTwinId === undefined) {
     throw new Error("openSelectDialogToolButton: IModel is not properly defined");
   }
@@ -975,18 +910,16 @@ export const openSelectDialog = async (
   }
 
   ModalDialogManager.openDialog(
-    <VersionCompareSelectDialog
-      iModelConnection={iModel}
-      onViewOpened={onViewUpdated}
-    />,
+    <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
   );
 };
 
 /**
- * Tool Button that will open the version compare dialog and allow for starting the comparison
+ * Tool Button that will open the version compare dialog and allow for starting the comparison.
  * @param manager VersionCompareManager
  * @param iModel iModel that will be used to find the changesets
- * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of elements/categories/models change from the app
+ * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of
+ *                      elements/categories/models change from the app
  */
 export const openSelectDialogToolButton = (
   iModel: IModelConnection,
