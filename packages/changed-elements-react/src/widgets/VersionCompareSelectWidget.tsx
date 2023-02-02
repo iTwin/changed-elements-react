@@ -22,10 +22,10 @@ import "./VersionCompareSelectWidget.scss";
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
   /** IModel Connection that is being visualized. */
-  iModelConnection?: IModelConnection;
+  iModelConnection: IModelConnection;
 
   /** Optional handler for when a version is selected. */
-  onVersionSelected?: (currentVersion: NamedVersion, targetVersion: NamedVersion, chunks?: ChangesetChunk[]) => void;
+  onVersionSelected: (currentVersion: NamedVersion, targetVersion: NamedVersion, chunks?: ChangesetChunk[]) => void;
 
   /** Whether to show a title for the component or not. */
   wantTitle?: boolean;
@@ -56,20 +56,7 @@ export const VersionCompareSelectComponent = forwardRef<
     const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
     const versionsUrl = useMemo(
-      () => {
-        if (props.getManageVersionsUrl) {
-          return props.getManageVersionsUrl(props.iModelConnection);
-        }
-
-        const projectId = props.iModelConnection?.iTwinId;
-        const iModelId = props.iModelConnection?.iModelId;
-        if (!projectId || !iModelId) {
-          return "";
-        }
-
-        return `https://${process.env.IMJS_URL_PREFIX ?? ""
-          }connect-imodelhubwebsite.bentley.com//Project/${projectId}/iModel/${iModelId}/Progress#Changes`;
-      },
+      () => props.getManageVersionsUrl?.(props.iModelConnection),
       [props.getManageVersionsUrl, props.iModelConnection],
     );
 
@@ -483,7 +470,7 @@ interface VersionCompareSelectorInnerProps {
   wantTitle: boolean | undefined;
   wantCompareButton: boolean | undefined;
   compareButton: ((onClick: () => void) => ReactNode) | undefined;
-  versionsUrl: string;
+  versionsUrl?: string | undefined;
 }
 
 const VersionCompareSelectorInner = forwardRef<
@@ -530,11 +517,14 @@ const VersionCompareSelectorInner = forwardRef<
             </div>
           )
         }
-        <div className="version-selector-manage-link">
-          <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
-          </a>
-        </div>
+        {
+          props.versionsUrl &&
+          <div className="version-selector-manage-link">
+            <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
+            </a>
+          </div>
+        }
         {
           props.wantCompareButton && props.compareButton === undefined &&
           <div className="version-selector-footer">
@@ -785,7 +775,7 @@ function VersionNameAndDescription(props: VersionNameAndDescriptionProps): React
   return (
     <div className="name-and-description">
       <div className={props.isProcessed ? "name" : "name-unprocessed"}>
-        {props.version.name}
+        {props.version.displayName}
       </div>
       <div className={props.isProcessed ? "description" : "description-unprocessed"}>
         {props.version.description === ""
@@ -802,7 +792,7 @@ export interface VersionCompareSelectDialogState {
 }
 
 export interface VersionCompareSelectDialogProps {
-  iModelConnection?: IModelConnection;
+  iModelConnection: IModelConnection;
   onViewOpened?: BeEvent<(args?: unknown) => void>;
 }
 

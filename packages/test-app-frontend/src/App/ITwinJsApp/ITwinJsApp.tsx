@@ -37,24 +37,23 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <VersionCompareSelectDialog />
+      <VersionCompareSelectDialog iModelConnection={iModel} />
     </PageLayout.Content>
   );
 }
 
-export async function initializeITwinJsApp(): Promise<void> {
+export async function initializeITwinJsApp(authorizationClient: AuthorizationClient): Promise<void> {
   if (IModelApp.initialized) {
     return;
   }
 
+  const iModelsClient = new IModelsClient({ api: { baseUrl: applyUrlPrefix("https://api.bentley.com/imodels") } });
   await IModelApp.startup({
     localization: new ITwinLocalization({
       initOptions: { lng: "en" },
       urlTemplate: "/locales/{{lng}}/{{ns}}.json",
     }),
-    hubAccess: new FrontendIModelsAccess(
-      new IModelsClient({ api: { baseUrl: applyUrlPrefix("https://api.bentley.com/imodels") } }),
-    ),
+    hubAccess: new FrontendIModelsAccess(iModelsClient),
   });
   const rpcParams: BentleyCloudRpcParams = {
     info: { title: "test-app-backend", version: "v1.0" },
@@ -66,7 +65,11 @@ export async function initializeITwinJsApp(): Promise<void> {
     Presentation.initialize(),
     UiFramework.initialize(undefined),
   ]);
-  VersionCompare.initialize({});
+  VersionCompare.initialize({
+    iModelsClient,
+    changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
+    getAccessToken: () => authorizationClient.getAccessToken(),
+  });
 }
 
 function useIModel(

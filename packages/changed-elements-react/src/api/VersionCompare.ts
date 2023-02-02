@@ -7,6 +7,7 @@ import { ReducerRegistryInstance, StateManager, SyncUiEventDispatcher, type Fron
 import type { AccessToken } from "@itwin/core-bentley";
 import type { ModelProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ScreenViewport, ViewState } from "@itwin/core-frontend";
+import { IModelsClient } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
 import { ReactNode } from "react";
 import type { Store } from "redux";
@@ -72,6 +73,15 @@ export interface SimpleVisualizationOptions {
 }
 
 export interface VersionCompareOptions {
+  /** Client that gives access to iTwin Platform iModels API. */
+  iModelsClient: IModelsClient;
+
+  /**
+   * Base URL for iTwin Platform Changed Elements API.
+   * @default "https://api.bentley.com/changedelements"
+   */
+  changedElementsApiBaseUrl?: string | undefined;
+
   /** Feature tracking calls for applications to listen to. */
   featureTracking?: VersionCompareFeatureTracking;
 
@@ -127,7 +137,7 @@ export interface VersionCompareOptions {
   /** Visualization options for applications without ninezone support. */
   simpleVisualizationOptions?: SimpleVisualizationOptions;
 
-  getPublicAccessToken?: () => Promise<AccessToken>;
+  getAccessToken?: () => Promise<AccessToken>;
 }
 
 /** Maintains all version compare related data for the applications. */
@@ -156,11 +166,7 @@ export class VersionCompare {
 
   /** Used to create necessary clients for version compare feature */
   public static clientFactory: IVersionCompareClientFactory = {
-    createChangedElementsClient: () => {
-      return new ChangedElementsApiClient(
-        `https://${process.env.IMJS_URL_PREFIX ?? ""}api.bentley.com/changedelements`,
-      );
-    },
+    createChangedElementsClient: () => new ChangedElementsApiClient("https://api.bentley.com/changedelements"),
   };
 
   /**
@@ -177,7 +183,14 @@ export class VersionCompare {
     VersionCompare._manager = new VersionCompareManager(options);
 
     // get the access token
-    VersionCompare._getAccessToken = options.getPublicAccessToken ?? IModelApp.getAccessToken;
+    VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
+
+    if (options.changedElementsApiBaseUrl) {
+      const baseUrl = options.changedElementsApiBaseUrl;
+      VersionCompare.clientFactory = {
+        createChangedElementsClient: () => new ChangedElementsApiClient(baseUrl),
+      };
+    }
 
     ReducerRegistryInstance.registerReducer(VersionCompare._versionCompareStateKeyInStore, VersionCompareReducer);
   }

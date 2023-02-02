@@ -40,7 +40,7 @@ export class VersionCompareManager {
   public changedElementsManager: ChangedElementsManager;
 
   /** Cache for changesets and named versions */
-  public changesetCache: ChangesetCache = new ChangesetCache();
+  public changesetCache: ChangesetCache;
 
   private _visualizationHandler: VisualizationHandler | undefined;
   private _hasTypeOfChange = false;
@@ -56,6 +56,8 @@ export class VersionCompareManager {
    * @param options VersionCompareOptions interface for customizing the experience
    */
   constructor(public options: VersionCompareOptions) {
+    this.changesetCache = new ChangesetCache(options.iModelsClient);
+
     // Only register namespace once
     void IModelApp.localization.registerNamespace(VersionCompareManager.namespace);
 
