@@ -47,7 +47,6 @@ export interface ChangedElementsWidgetState {
   message: string;
   description?: string;
   menuOpened: boolean;
-  filterBy?: ChangeElementType;
 }
 
 /**

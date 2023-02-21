@@ -108,12 +108,6 @@ export interface VersionCompareOptions {
   wantedModelClasses?: string[];
 
   /**
-   * When true, Version Select dialog will not wait for all changeset statuses to become known before displaying named
-   * versions list. The list will appear sooner and will be progressively updated as the data loads in.
-   */
-  wantPagedChangesetStatusLoading?: boolean;
-
-  /**
    * Function to provide a view state for property compare. If not provided, it tries to maintain view state from one
    * frontstage to the next. The keys passed correspond to the element(s) being inspected in property comparison.
    */
