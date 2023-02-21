@@ -2,12 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ReactElement, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { SvgDeveloper, SvgMoon, SvgSun } from "@itwin/itwinui-icons-react";
 import {
-  Button, DropdownMenu, getUserColor, Header, HeaderLogo, IconButton, MenuItem, ThemeType, UserIcon, useTheme,
+  Button, DropdownMenu, getUserColor, Header, HeaderLogo, IconButton, MenuItem, ThemeType, UserIcon, useTheme
 } from "@itwin/itwinui-react";
+import { ReactElement, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { AuthorizationState, useAuthorization } from "./Authorization";
 import { getUserProfile, GetUserProfileResult } from "./ITwinApi";
 

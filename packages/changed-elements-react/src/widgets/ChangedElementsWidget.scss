@@ -1,0 +1,209 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
+
+.changed-elements {
+  > .no-elements-message {
+    margin: $uicore-m;
+    color: $uicore-gray;
+    cursor: default;
+    text-align: center;
+  }
+
+  > .changed-elements-list {
+    > .changed-element-entry {
+      display: flex;
+      align-items: center;
+      padding: $uicore-xs;
+
+      > .entry-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      > .change-insert {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        margin: $uicore-xs;
+        margin-right: $uicore-s;
+        background-color: RGB(86, 170, 28);
+      }
+
+      > .change-update {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        margin: $uicore-xs;
+        margin-right: $uicore-s;
+        background-color: RGB(0, 139, 225);
+      }
+
+      > .change-delete {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        margin: $uicore-xs;
+        margin-right: $uicore-s;
+        background-color: RGB(204, 0, 0);
+      }
+    }
+
+    > .changed-element-entry:hover {
+      background-color: #ffffff;
+      cursor: pointer;
+    }
+  }
+}
+
+.comparison-legend-message {
+  margin-top: 10px;
+  font-size: $uicore-font-size;
+  text-align: center;
+  padding: $uicore-s;
+}
+
+.changed-elements-image-checkbox {
+  padding-right: $uicore-s;
+}
+
+.expandable-section {
+  display: flex;
+  padding-right: $uicore-xs;
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: $uicore-gray-b;
+
+  > .expander-icon {
+    cursor: pointer;
+    padding-left: $uicore-xs;
+    height: $uicore-icons-small;
+    width: $uicore-icons-small;
+    margin: auto;
+  }
+
+  > .title {
+    @include uicore-font-family;
+    flex: 1 1;
+    font-size: $uicore-font-size;
+    text-align: left;
+    margin: auto;
+  }
+}
+
+.expandable-changed-elements {
+  width: 100%;
+
+  > .expandable-section {
+    display: flex;
+    padding-right: $uicore-xs;
+    border-bottom: solid;
+    border-width: 1px;
+    border-color: $uicore-gray-b;
+
+    > .expander-icon {
+      cursor: pointer;
+      padding-left: $uicore-xs;
+      height: $uicore-icons-small;
+      width: $uicore-icons-small;
+      margin: auto;
+    }
+
+    > .title {
+      @include uicore-font-family;
+      flex: 1 1;
+      font-size: $uicore-font-size;
+      text-align: left;
+      margin: auto;
+    }
+  }
+
+  > .items {
+    display: block;
+
+    > .element-entry {
+      display: flex;
+      padding-right: $uicore-xs;
+      padding: $uicore-xs;
+      border-bottom: solid;
+      border-width: 1px;
+      border-color: $uicore-gray-b;
+
+      > .element-label {
+        @include uicore-font-family;
+        width: 90%;
+        cursor: pointer;
+        flex: 1 1;
+        padding-left: $uicore-s + $uicore-xs + $uicore-icons-small +
+          $uicore-icons-small;
+        font-size: $uicore-font-size;
+        text-align: left;
+        margin: auto;
+      }
+    }
+
+    > .element-highlight {
+      background-color: $uicore-blue-highlight;
+    }
+  }
+}
+
+.visibility-button {
+  height: $uicore-icons-small;
+  width: $uicore-icons-small;
+  cursor: pointer;
+  margin: auto;
+  padding-right: $uicore-s;
+}
+
+.change-insert {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin: $uicore-xs;
+  margin-right: $uicore-s;
+  background-color: RGB(86, 170, 28);
+}
+
+.change-update {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin: $uicore-xs;
+  margin-right: $uicore-s;
+  background-color: RGB(0, 139, 225);
+}
+
+.change-delete {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin: $uicore-xs;
+  margin-right: $uicore-s;
+  background-color: RGB(204, 0, 0);
+}
+
+.context-menu-text {
+  @include uicore-font-family;
+  font-size: $uicore-font-size;
+  text-align: left;
+  position: absolute;
+  top: 20px;
+  left: -160px;
+}
+
+.context-menu-text-item {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.checkbox-container {
+  width: 16px;
+  height: 16px;
+  margin-left: -2px;
+}

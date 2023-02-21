@@ -1,0 +1,376 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
+@import "~@itwin/appui-layout-react/lib/cjs/appui-layout-react/_scrollbar";
+@import "~@itwin/itwinui-css/scss/style/theme";
+@import "~@itwin/itwinui-css/scss/style/mixins";
+
+.vc-loading-spinner-overlay {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: RGBA(128, 128, 128, 0.3);
+  z-index: 1;
+
+  .vc-inner-loading-spinner {
+    margin: auto;
+  }
+}
+
+.vc-deleted-color {
+  > .core-toggle-input:checked + .core-toggle-background {
+    background-color: #cc0000;
+  }
+}
+
+.vc-added-color {
+  > .core-toggle-input:checked + .core-toggle-background {
+    background-color: #57aa1c;
+  }
+}
+
+.vc-modified-color {
+  > .core-toggle-input:checked + .core-toggle-background {
+    background-color: #008be1;
+  }
+}
+
+.vc-color-toggle.iui-toggle-switch-wrapper > input {
+  background-color: #85929d;
+  opacity: 1;
+
+  &::after {
+    background-color: RGBA(255, 255, 255);
+    opacity: 1;
+  }
+
+  &:checked {
+    opacity: 1;
+  }
+
+  &:checked::after {
+    background-color: RGBA(255, 255, 255);
+    opacity: 1;
+  }
+}
+
+.vc-color-toggle.vc-unchanged.iui-toggle-switch-wrapper > input:checked {
+  background-color: RGBA(0, 0, 0);
+}
+
+.vc-color-toggle.vc-deleted.iui-toggle-switch-wrapper > input:checked {
+  background-color: #cc0000;
+}
+
+.vc-color-toggle.vc-added.iui-toggle-switch-wrapper > input:checked {
+  background-color: #57aa1c;
+}
+
+.vc-color-toggle.vc-modified.iui-toggle-switch-wrapper > input:checked {
+  background-color: #008be1;
+}
+
+.vc-relative-menu-container {
+  position: relative;
+}
+
+.vc-context-menu-separator {
+  width: 95%;
+  height: 1px;
+  margin: auto;
+  border-top: solid;
+  border-width: thin;
+  border-color: $uicore-gray-a;
+}
+
+.vc-context-menu-text-item {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.vc-context-menu-text {
+  @include uicore-font-family;
+  font-size: $uicore-font-size;
+  text-align: left;
+  position: absolute;
+  top: 25px;
+  left: 0;
+}
+
+.vc-unchanged-color {
+  > .core-toggle-input:checked + .core-toggle-background {
+    background-color: RGB(0, 0, 0);
+  }
+}
+
+.vc-element-inspect-button {
+  margin-left: auto;
+  visibility: hidden;
+  pointer-events: none;
+
+  &.show {
+    visibility: visible;
+    pointer-events: all;
+    cursor: pointer;
+  }
+}
+
+.element-node {
+  height: 34px; // fixed item height (virtualized)
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.element-label {
+  @include uicore-font-family;
+  color: $buic-text-color;
+  cursor: pointer;
+  margin-left: $uicore-s;
+  margin-right: $uicore-s;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.element-list-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.element-list-search-box {
+  width: 96% !important;
+  align-self: center;
+  padding-bottom: 4px;
+}
+
+.element-list-scrollbar {
+  @include iui-scrollbar;
+}
+
+.element-list {
+  width: 100%;
+  margin-top: 4px;
+  flex: 1 0 0;
+  background-color: $buic-background-1;
+  display: flex;
+}
+
+.element-list-no-results {
+  @include uicore-font-family;
+  color: $buic-text-color-muted;
+  margin: auto;
+  text-align: center;
+}
+
+.element-inspect-spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.element-expander {
+  visibility: visible;
+  pointer-events: all;
+  cursor: pointer;
+
+  &.hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  > svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.element-empty-expander {
+  width: 12px;
+  padding: $uicore-xs;
+  padding-left: 8px;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  padding: 1px 10px 1px 6px;
+  flex-wrap: wrap;
+
+  .filter-header-separator {
+    width: 1px;
+    margin: 0 10px 0 6px;
+    height: 20px;
+    background: var(--iui-color-background-border);
+  }
+}
+
+.vc-filter-header-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+.filter-label {
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: $uicore-xs;
+  margin-right: $uicore-m;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-label-dropdown {
+  display: flex;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: $uicore-xs;
+  margin-right: $uicore-xs;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc-element-node-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.vc-checkbox-container {
+  width: 16px;
+  height: 16px;
+}
+
+.breadcrumb-container {
+  @include nz-scrollbar($color: $buic-background-4);
+  display: flex;
+  margin-top: $uicore-xs;
+  margin-bottom: $uicore-xs;
+  padding: $uicore-xs;
+  border: solid;
+  border-width: 1px;
+  border-color: $uicore-gray-a;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow-x: scroll;
+  background-color: $buic-background-widget;
+}
+
+.vc-itwinui-breadcrumb-container {
+  padding: 0 $uicore-xs;
+
+  .iui-button:hover {
+    text-decoration: underline;
+    background: transparent;
+  }
+}
+
+.breadcrumb-entry-and-text {
+  display: flex;
+}
+
+.breadcrumb-static-text {
+  @include uicore-font-family;
+  margin-left: $uicore-s;
+}
+
+.breadcrumb-entry {
+  @include uicore-font-family;
+  cursor: pointer;
+  margin-left: $uicore-s;
+}
+
+.breadcrumb-entry:hover {
+  text-decoration: underline;
+}
+
+.element-node:hover {
+  background-color: $buic-row-hover;
+  cursor: pointer;
+}
+
+.selected {
+  background-color: $buic-row-selection;
+}
+
+.added {
+  color: RGB(86, 170, 28);
+}
+
+.modified {
+  color: RGB(0, 139, 225);
+}
+
+.deleted {
+  color: RGB(204, 0, 0);
+}
+
+.unchanged {
+  color: RGB(55, 55, 55);
+}
+
+.change-square {
+  width: 12px;
+  height: 12px;
+  border-width: medium;
+  border: solid;
+
+  &-modified {
+    @extend .change-square;
+    background-color: RGB(0, 139, 225);
+    border-color: RGB(0, 139, 225);
+  }
+
+  &-indirect {
+    @extend .change-square;
+    background-color: $buic-background-1;
+    border-color: RGB(0, 139, 225);
+  }
+
+  &-added {
+    @extend .change-square;
+    background-color: RGB(86, 170, 28);
+    border-color: RGB(86, 170, 28);
+  }
+
+  &-deleted {
+    @extend .change-square;
+    background-color: RGB(204, 0, 0);
+    border-color: RGB(204, 0, 0);
+  }
+}
+
+.element-list-search-status {
+  display: flex;
+  background-color: $buic-background-1;
+  padding-left: $uicore-s;
+}
+
+.element-list-search-status-msg {
+  @include uicore-font-family;
+  cursor: default;
+  color: $buic-text-color-muted;
+  text-align: left;
+  padding: $uicore-s;
+}
+
+.element-list-search-status-spinner {
+  width: 16px;
+  height: 16px;
+}

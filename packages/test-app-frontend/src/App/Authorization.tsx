@@ -2,15 +2,16 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { User, UserManager, WebStorageStateStore } from "oidc-client-ts";
-import {
-  ComponentType, createContext, Fragment, PropsWithChildren, ReactElement, ReactNode, useContext, useEffect, useRef,
-  useState,
-} from "react";
-import { useNavigate } from "react-router-dom";
 import { AccessToken } from "@itwin/core-bentley";
 import { AuthorizationClient } from "@itwin/core-common";
 import { Code } from "@itwin/itwinui-react";
+import { User, UserManager, WebStorageStateStore } from "oidc-client-ts";
+import {
+  ComponentType, createContext, Fragment, PropsWithChildren, ReactElement, ReactNode, useContext, useEffect, useRef,
+  useState
+} from "react";
+import { useNavigate } from "react-router-dom";
+
 import { applyUrlPrefix } from "../environment";
 import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";

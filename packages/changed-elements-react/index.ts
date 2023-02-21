@@ -2,9 +2,5 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-export { VersionSelectDialog } from "./src/VersionSelect/VersionSelectDialog";
-export * from "./src/api/changedElementsApi";
-export * from "./src/ChangedElementsWidget/ChangedElementsWidget";
-export * from "./src/VersionCompareManager";
-export * from "./src/VersionCompare";
-export * from "./src/VersionSelect/VersionSelectComponent";
+export { VersionCompare, VersionCompareSelectDialog, type VersionCompareSelectDialogProps } from "./src/index";
+

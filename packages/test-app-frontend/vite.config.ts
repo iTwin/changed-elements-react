@@ -2,15 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import * as path from "path";
-import { defineConfig, Plugin } from "vite";
+import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    stringReplacePlugin(),
     react(),
     viteStaticCopy({
       targets: [
@@ -26,27 +24,38 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      "~@itwin/appui-layout-react": "@itwin/appui-layout-react",
-      "~@itwin/core-react": "@itwin/core-react",
-      "~@itwin/itwinui-css": "@itwin/itwinui-css",
-      "@itwin/changed-elements-react": "@itwin/changed-elements-react/index.ts",
-      stream: path.resolve("./src/stubs/stream"),
-    },
+    alias: [
+      {
+        find: /^~(.*\/core-react\/)scrollbar$/,
+        replacement: "node_modules/$1/_scrollbar.scss",
+      },
+      {
+        find: /^~(.*\/core-react\/)typography$/,
+        replacement: "node_modules/$1/_typography.scss",
+      },
+      {
+        find: /^~(.*\/core-react\/)z-index$/,
+        replacement: "node_modules/$1/_z-index.scss",
+      },
+      {
+        find: /^~(.*\/core-react\/)geometry$/,
+        replacement: "node_modules/$1/_geometry.scss",
+      },
+      {
+        find: /^~(.*\/appui-layout-react\/.*\/)variables$/,
+        replacement: "node_modules/$1/_variables.scss",
+      },
+      {
+        find: /^~(.*\.scss)$/,
+        replacement: "node_modules/$1",
+      },
+      {
+        find: /^~(.*)(?!\.scss)$/,
+        replacement: "node_modules/$1.scss",
+      },
+    ],
   },
   server: {
     port: 2363,
   },
 });
-
-function stringReplacePlugin(): Plugin {
-  return {
-    name: stringReplacePlugin.name,
-    transform: (code) => {
-      return code.replace(
-        "var PRESENTATION_COMMON_ROOT = __dirname;",
-        "var PRESENTATION_COMMON_ROOT = typeof __dirname !== 'undefined' ? __dirname : '__dirname';",
-      );
-    },
-  };
-}

@@ -1,0 +1,390 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
+
+.unprocessed-color {
+  color: $buic-text-color-disabled;
+}
+
+@mixin name {
+  @include uicore-font-family;
+  color: $buic-text-color;
+  font-size: $uicore-font-size;
+  cursor: default;
+}
+
+@mixin description {
+  @include uicore-font-family;
+  color: $buic-text-color-muted;
+  font-size: $uicore-font-size-small;
+  cursor: default;
+}
+
+@mixin date {
+  @include uicore-font-family;
+  color: $buic-text-color-muted;
+  font-size: $uicore-font-size-small;
+  cursor: default;
+}
+
+.state-div {
+  display: flex;
+
+  > .state-processing {
+    @include uicore-font-family;
+    font-size: $uicore-font-size-small;
+    background-color: $uicore-orange;
+    text-align: right;
+    border-radius: 4px;
+    padding-left: $uicore-s;
+    padding-right: $uicore-s;
+    cursor: default;
+  }
+
+  > .state-second-row {
+    @include uicore-font-family;
+    color: $buic-text-color-muted;
+    font-size: $uicore-font-size-small;
+    text-align: right;
+    width: 34px;
+    margin-left: $uicore-s;
+    cursor: default;
+  }
+
+  > .state-second-row-warning {
+    @include uicore-font-family;
+    color: $uicore-orange;
+    font-size: $uicore-font-size-small;
+    text-align: center;
+    width: 34px;
+    margin: auto;
+    cursor: default;
+  }
+
+  > .state-unavailable {
+    @include uicore-font-family;
+    color: $uicore-white;
+    font-size: $uicore-font-size-small;
+    background-color: $uicore-gray;
+    text-align: right;
+    border-radius: 4px;
+    padding-left: $uicore-s;
+    padding-right: $uicore-s;
+    cursor: default;
+  }
+}
+
+.vc-spinner-current {
+  padding-right: $uicore-m;
+  margin: auto;
+}
+
+.vc-spinner-percentage {
+  @include uicore-font-family;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: $buic-text-color;
+  text-align: center;
+  position: absolute;
+  width: 32px;
+  height: 32px;
+}
+
+.vc-spinner-container {
+  position: relative;
+  height: auto;
+}
+
+.vc-waiting {
+  @include uicore-font-family;
+  display: flex;
+  color: $buic-text-color;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.version-container-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  > .version-container {
+    @include uicore-touch-scrolling;
+    @include uicore-scrollbar();
+    flex: 1;
+    border: solid;
+    border-color: $uicore-gray;
+    border-width: 1px;
+    overflow: auto;
+
+    > .selected {
+      background-color: $buic-row-selection;
+    }
+
+    > .unprocessed {
+      color: $uicore-gray-a;
+    }
+  }
+}
+
+.version-container-current {
+  width: 100%;
+  margin-bottom: $uicore-m;
+  overflow: hidden;
+
+  > .selected {
+    background-color: $buic-row-selection;
+  }
+
+  > .vc-entry-current {
+    display: flex;
+    padding: $uicore-s;
+
+    > .name-and-description {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      margin-right: 8px;
+      word-break: break-word;
+
+      > .name {
+        @include uicore-font-family;
+        color: $buic-text-color;
+        font-size: $uicore-font-size;
+        padding-bottom: $uicore-xs;
+        cursor: default;
+      }
+
+      > .description {
+        @include uicore-font-family;
+        color: $buic-text-color-muted;
+        font-size: $uicore-font-size-small;
+        cursor: default;
+      }
+    }
+
+    > .date-and-current {
+      display: block;
+
+      > .date {
+        @include uicore-font-family;
+        text-align: right;
+        color: $buic-text-color-muted;
+        font-size: $uicore-font-size-small;
+        padding-bottom: $uicore-xs;
+        cursor: default;
+      }
+
+      > .current-show {
+        @include uicore-font-family;
+        color: $uicore-white;
+        font-size: $uicore-font-size-small;
+        background-color: $uicore-green;
+        border-radius: 4px;
+        text-align: center;
+        cursor: default;
+      }
+
+      > .current-empty {
+        background-color: $uicore-white;
+      }
+    }
+  }
+}
+
+.vc-entry {
+  display: grid;
+  grid: 1fr 0 / auto 1fr auto;
+  padding: $uicore-s;
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: $uicore-gray-a;
+
+  > .name-and-description {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    margin-right: 8px;
+    word-break: break-word;
+
+    > .name {
+      @include name;
+      padding-bottom: 0;
+
+      &-unprocessed {
+        @include name;
+        color: $buic-text-color-disabled;
+      }
+    }
+
+    > .description {
+      @include description;
+
+      &-unprocessed {
+        @include description;
+        color: $buic-text-color-disabled;
+      }
+    }
+  }
+
+  > .date-and-current {
+    display: block;
+    text-align: center;
+
+    > .date {
+      @include date;
+      text-align: right;
+
+      &-unprocessed {
+        @include date;
+        color: $buic-text-color-disabled;
+      }
+    }
+
+    > .current-show {
+      @include uicore-font-family;
+      color: $uicore-white;
+      font-size: $uicore-font-size-small;
+      background-color: $uicore-green;
+      text-align: center;
+      border-radius: 4px;
+      cursor: default;
+    }
+
+    > .current-empty {
+      background-color: $uicore-white;
+    }
+  }
+
+  > .iui-progress-indicator-linear {
+    grid-column: 3;
+  }
+}
+
+.version-container-header {
+  display: flex;
+  border-left: solid;
+  border-right: solid;
+  border-top: solid;
+  border-color: $uicore-gray;
+  border-width: 1px;
+
+  > .version-header {
+    @include uicore-font-family;
+    color: $buic-text-color;
+    flex: 1 0;
+    margin: $uicore-s;
+    margin-left: $uicore-xl;
+    font-weight: $uicore-font-weight-bold;
+    font-size: $uicore-font-size;
+    text-align: left;
+  }
+
+  > .date-header {
+    @include uicore-font-family;
+    flex: 0 1;
+    color: $buic-text-color;
+    margin: $uicore-s;
+    font-weight: $uicore-font-weight-bold;
+    font-size: $uicore-font-size;
+    text-align: left;
+  }
+}
+
+.version-compare-selector {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  > .title {
+    @include uicore-font-family;
+    margin: $uicore-s;
+    font-weight: $uicore-font-weight-normal;
+    font-size: $uicore-font-size-leading;
+    cursor: default;
+    text-align: left;
+  }
+
+  > .version-compare-row {
+    display: flex;
+    flex-direction: row;
+
+    &.version-compare-list {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    > .version-compare-label {
+      @include uicore-font-family;
+      color: $buic-text-color;
+      width: 80px;
+      text-align: right;
+      padding-right: $uicore-s;
+      padding-top: $uicore-s;
+      box-sizing: border-box;
+    }
+  }
+}
+
+.vc-spinner {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.vcs-checkbox {
+  padding-right: $uicore-s;
+  align-self: center;
+}
+
+.no-named-versions-message {
+  @include uicore-font-family;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  margin: auto;
+  font-size: $uicore-font-size-leading;
+  background-color: $buic-background-dialog;
+  border: solid;
+  border-color: $uicore-gray;
+  border-width: 1px;
+}
+
+.vc-error-title {
+  padding-top: $uicore-m;
+}
+
+.version-selector-manage-link {
+  display: flex;
+  padding-top: $uicore-s;
+  padding-left: $uicore-xs;
+
+  > .message {
+    @include uicore-font-family;
+    color: $buic-foreground-primary;
+    padding-left: $uicore-xs;
+    width: 100%;
+    text-align: right;
+  }
+}
+
+.version-selector-footer {
+  display: flex;
+}
+
+.version-compare-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 750px;
+  height: 600px;
+  min-width: 500px;
+}
