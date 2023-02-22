@@ -126,15 +126,6 @@ export class VersionCompareFooterWidget extends React.Component<
     this.setState({ target });
   };
 
-  private _openDialog = () => {
-    ModalDialogManager.openDialog(
-      <VersionCompareSelectDialog
-        iModelConnection={this.props.iModelConnection}
-        onViewOpened={this.props.onViewChanged}
-      />,
-    );
-  };
-
   private _openDialogWithCheck = async () => {
     if (
       this.props.iModelConnection === undefined ||
@@ -144,7 +135,12 @@ export class VersionCompareFooterWidget extends React.Component<
       return;
     }
 
-    this._openDialog();
+    ModalDialogManager.openDialog(
+      <VersionCompareSelectDialog
+        iModelConnection={this.props.iModelConnection}
+        onViewOpened={this.props.onViewChanged}
+      />,
+    );
   };
 
   /** Render buttons for clear and show/hide manipulators */
