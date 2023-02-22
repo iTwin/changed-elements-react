@@ -5,8 +5,17 @@
 import { SvgChevronDown, SvgChevronUp } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
 
-import { ITwinCommonManager } from "../ITwinCommonManager";
 import "./NavigationComponent.scss";
+
+export type NavigationComponentTranslation = {
+  previous: string;
+  next: string;
+};
+
+const defaultStrings: NavigationComponentTranslation = {
+  previous: "Previous",
+  next: "Next",
+};
 
 export interface NavigationComponentProps {
   /**
@@ -27,6 +36,10 @@ export interface NavigationComponentProps {
    * default is 0
    */
   resultCount?: number;
+  /**
+   * Localized strings used in buttons.
+   */
+  translatedLabels?: NavigationComponentTranslation;
 }
 
 /** Navigation component (previous/next buttons) */
@@ -35,7 +48,10 @@ export const NavigationComponent = ({
   currentResult = 0,
   resultCount = 0,
   size,
+  translatedLabels,
 }: NavigationComponentProps) => {
+  const translatedStrings = { ...defaultStrings, ...translatedLabels };
+
   const onPrevClick = () => {
     if (currentResult > 1) {
       onCurrentSelectionChanged?.(currentResult - 1);
@@ -61,7 +77,7 @@ export const NavigationComponent = ({
         styleType="borderless"
         disabled={!isPrevEnabled}
         onClick={onPrevClick}
-        title={ITwinCommonManager.translate("SearchButton.previous")}
+        title={translatedStrings.previous}
       >
         <SvgChevronUp />
       </IconButton>
@@ -70,7 +86,7 @@ export const NavigationComponent = ({
         styleType="borderless"
         disabled={!isNextEnabled}
         onClick={onNextClick}
-        title={ITwinCommonManager.translate("SearchButton.next")}
+        title={translatedStrings.next}
       >
         <SvgChevronDown />
       </IconButton>

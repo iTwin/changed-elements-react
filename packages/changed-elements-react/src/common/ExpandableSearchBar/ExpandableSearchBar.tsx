@@ -7,11 +7,30 @@ import { SvgBlank, SvgClose, SvgSearch } from "@itwin/itwinui-icons-react";
 import { IconButton, Input, ProgressRadial } from "@itwin/itwinui-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { ITwinCommonManager } from "../ITwinCommonManager";
 import { FilterBar } from "./FilterBar";
 import { NavigationComponent } from "./NavigationComponent";
 
 import "./ExpandableSearchBar.scss";
+
+export type ExpandableSearchBarTranslation = {
+  search: string;
+  close: string;
+  closeSearchBar: string;
+  searchFor: string;
+  previous: string;
+  next: string;
+  clear: string;
+};
+
+const defaultStrings: ExpandableSearchBarTranslation = {
+  search: "Search",
+  close: "Close",
+  closeSearchBar: "Close search bar",
+  searchFor: "Search for",
+  previous: "Previous",
+  next: "Next",
+  clear: "Clear",
+};
 
 export interface ExpandableSearchBarProps extends CommonProps {
   /**
@@ -90,6 +109,10 @@ export interface ExpandableSearchBarProps extends CommonProps {
    * If `isSearchHidden` is set to true, hides the search bar icon
    */
   isSearchHidden?: boolean;
+  /**
+   * Localized strings used in buttons.
+   */
+  translatedLabels?: ExpandableSearchBarTranslation;
 }
 
 /**
@@ -127,7 +150,10 @@ export const ExpandableSearchBar = ({
   enableNavigation = false,
   enableFilterBar = false,
   isSearchHidden = false,
+  translatedLabels,
 }: ExpandableSearchBarProps) => {
+  const translatedStrings = { ...defaultStrings, ...translatedLabels };
+
   const [expanded, setExpanded] = useState(isExpanded);
   const [searchText, setSearchText] = useState(value);
   const [timeoutId, setTimeoutId] = useState(0);
@@ -192,9 +218,7 @@ export const ExpandableSearchBar = ({
             ref={inputElement}
             onChange={onInputChange}
             onKeyDown={onKeyDown}
-            placeholder={
-              placeholder ?? ITwinCommonManager.translate("SearchButton.search")
-            }
+            placeholder={placeholder ?? translatedStrings.search}
           />
           {isLoading && (
             <ProgressRadial
@@ -220,7 +244,7 @@ export const ExpandableSearchBar = ({
             size={size}
             styleType={styleType}
             onClick={onToggleSearch}
-            title={ITwinCommonManager.translate(expanded ? "SearchButton.closeSearchBar" : "SearchButton.search")}
+            title={expanded ? translatedStrings.closeSearchBar : translatedStrings.search}
           >
             {expanded ? <SvgClose /> : <SvgSearch />}
           </IconButton>
@@ -228,7 +252,7 @@ export const ExpandableSearchBar = ({
       </div>
       {enableFilterBar && !expanded && searchText && searchText.length > 0 && (
         <FilterBar
-          text={`${ITwinCommonManager.translate("SearchButton.searchFor")} \`${searchText}\``}
+          text={`${translatedStrings.searchFor} \`${searchText}\``}
           size={size}
           onCloseClick={onClearSearch}
           onTextClick={onToggleSearch}
