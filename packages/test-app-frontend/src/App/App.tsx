@@ -12,7 +12,7 @@ import { applyUrlPrefix, clientId } from "../environment";
 import "./App.css";
 import { AppHeader } from "./AppHeader";
 import {
-  AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, useAuthorization
+  AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, SignInSilentCallback, useAuthorization
 } from "./Authorization";
 import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";
@@ -30,8 +30,8 @@ export function App(): ReactElement {
         </PageLayout.Header>
         <Routes>
           <Route path="/auth/callback" element={<SignInCallback />} />
-          <Route path="/auth/silent" element={<SignInSilent />} />
-          <Route path="/*" element={<Main />} />
+          <Route path="/auth/silent" element={<SignInSilentCallback />} />
+          <Route path="/*" element={<><SignInSilent /><Main /></>} />
         </Routes>
       </PageLayout>
     </AuthorizationProvider>
@@ -107,8 +107,13 @@ function SignInPrompt(props: SignInPromptProps): ReactElement {
 
 function useBackgroundITwinJsAppLoading(): typeof ITwinJsApp | undefined {
   const [itwinJsApp, setITwinJsApp] = useState<typeof ITwinJsApp>();
+  const { userAuthorizationClient } = useAuthorization();
   useEffect(
     () => {
+      if (!userAuthorizationClient) {
+        return;
+      }
+
       let disposed = false;
       void (async () => {
         const { ITwinJsApp, initializeITwinJsApp } = await import("./ITwinJsApp/ITwinJsApp");
@@ -120,7 +125,7 @@ function useBackgroundITwinJsAppLoading(): typeof ITwinJsApp | undefined {
 
       return () => { disposed = true; };
     },
-    [],
+    [userAuthorizationClient],
   );
   return itwinJsApp;
 }
