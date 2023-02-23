@@ -164,9 +164,11 @@ export class VersionCompare {
     return VersionCompare._getAccessToken();
   }
 
+  private static defaultEndpoint = "https://api.bentley.com/changedelements";
+
   /** Used to create necessary clients for version compare feature */
   public static clientFactory: IVersionCompareClientFactory = {
-    createChangedElementsClient: () => new ChangedElementsApiClient("https://api.bentley.com/changedelements"),
+    createChangedElementsClient: () => new ChangedElementsApiClient(this.defaultEndpoint),
   };
 
   /**
@@ -190,6 +192,20 @@ export class VersionCompare {
       VersionCompare.clientFactory = {
         createChangedElementsClient: () => new ChangedElementsApiClient(baseUrl),
       };
+    } else {
+      // Help developers migrate away from relying on IMJS_URL_PREFIX environment variable
+      let imjsPrefixIsUsed = false;
+      try {
+        // Some users setup their bundlers to perform simple string replacements, so we must imitate what users would
+        // type and be prepared to catch ReferenceError if "process" is not defined.
+        imjsPrefixIsUsed = !!process.env.IMJS_URL_PREFIX;
+      } catch { }
+
+      if (imjsPrefixIsUsed) {
+        throw new Error(`IMJS_URL_PREFIX is '${process.env.IMJS_URL_PREFIX}', but VersionCompare still uses the \
+default endpoint '${this.defaultEndpoint}'. To suppress this error, specify changedElementsApiBaseUrl property when \
+initializing VersionCompare module, or do not define 'process.env.IMJS_URL_PREFIX'.`);
+      }
     }
 
     ReducerRegistryInstance.registerReducer(VersionCompare._versionCompareStateKeyInStore, VersionCompareReducer);
