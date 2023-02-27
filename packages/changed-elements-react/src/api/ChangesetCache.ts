@@ -8,54 +8,59 @@ import { VersionCompare } from "./VersionCompare";
 
 /** Caching utilities for changesets and named versions. */
 export class ChangesetCache {
-  private _changesets: MinimalChangeset[] = [];
-  private _versions: NamedVersion[] = [];
-  private _client = new IModelsClient();
+  private changesets: MinimalChangeset[] = [];
+  private versions: NamedVersion[] = [];
+  private iModelId = "";
 
-  constructor(private _iModelId: string = "") { }
+  constructor(private iModelsClient: IModelsClient) { }
 
   /** Build the caches of changesets and versions. */
-  private async _buildCache() {
+  private async buildCache() {
     const accessToken = await VersionCompare.getAccessToken();
     if (!accessToken) {
       return;
     }
 
-    const changesetIterator = this._client.changesets.getMinimalList({
-      iModelId: this._iModelId,
+    const changesetIterator = this.iModelsClient.changesets.getMinimalList({
+      iModelId: this.iModelId,
       authorization: getAccessToken,
     });
+    const changesets: MinimalChangeset[] = [];
     for await (const changeset of changesetIterator) {
-      this._changesets.push(changeset);
+      changesets.push(changeset);
     }
 
-    const namedVersionIterator = this._client.namedVersions.getRepresentationList({
-      iModelId: this._iModelId,
+    const namedVersionIterator = this.iModelsClient.namedVersions.getRepresentationList({
+      iModelId: this.iModelId,
       authorization: getAccessToken,
     });
+    const namedVersions: NamedVersion[] = [];
     for await (const namedVersion of namedVersionIterator) {
-      this._versions.push(namedVersion);
+      namedVersions.push(namedVersion);
     }
+
+    this.changesets = changesets;
+    this.versions = namedVersions;
   }
 
   /** Set the iModel Id, if it's different, clean caches. */
-  private _setIModelId(iModelId: string) {
-    if (this._iModelId !== iModelId) {
-      this._changesets = [];
-      this._versions = [];
-      this._iModelId = iModelId;
+  private setIModelId(iModelId: string) {
+    if (this.iModelId !== iModelId) {
+      this.changesets = [];
+      this.versions = [];
+      this.iModelId = iModelId;
     }
   }
 
   /** Get changesets for the iModel. */
   public async getChangesets(iModelId: string): Promise<MinimalChangeset[]> {
-    this._setIModelId(iModelId);
+    this.setIModelId(iModelId);
 
-    if (this._changesets.length === 0) {
-      await this._buildCache();
+    if (this.changesets.length === 0) {
+      await this.buildCache();
     }
 
-    return this._changesets;
+    return this.changesets;
   }
 
   /** Returns an ordered list of changesets in start to end order. */
@@ -66,13 +71,13 @@ export class ChangesetCache {
 
   /** Get versions for the iModel. */
   public async getVersions(iModelId: string): Promise<NamedVersion[]> {
-    this._setIModelId(iModelId);
+    this.setIModelId(iModelId);
 
-    if (this._versions.length === 0) {
-      await this._buildCache();
+    if (this.versions.length === 0) {
+      await this.buildCache();
     }
 
-    return this._versions;
+    return this.versions;
   }
 }
 

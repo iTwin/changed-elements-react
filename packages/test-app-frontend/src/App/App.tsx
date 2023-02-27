@@ -117,7 +117,7 @@ function useBackgroundITwinJsAppLoading(): typeof ITwinJsApp | undefined {
       let disposed = false;
       void (async () => {
         const { ITwinJsApp, initializeITwinJsApp } = await import("./ITwinJsApp/ITwinJsApp");
-        await initializeITwinJsApp();
+        await initializeITwinJsApp(userAuthorizationClient);
         if (!disposed) {
           setITwinJsApp(() => ITwinJsApp);
         }
