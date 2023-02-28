@@ -2,24 +2,31 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { MessageManager, UiFramework } from "@itwin/appui-react";
-import { VersionCompare, VersionCompareSelectDialog } from "@itwin/changed-elements-react";
 import {
-  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface
+  AppNotificationManager, CommonWidgetProps, ConfigurableUiContent, FrontstageManager, IModelViewportControl,
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework,
+  UiItemsManager, UiItemsProvider
+} from "@itwin/appui-react";
+import { ChangedElementsWidget, VersionCompare } from "@itwin/changed-elements-react";
+import { Id64 } from "@itwin/core-bentley";
+import {
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType
+  CheckpointConnection, IModelApp, IModelConnection, ViewCreator3d, ViewState
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
 import { FrontendIModelsAccess } from "@itwin/imodels-access-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
+import { toaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useState } from "react";
 import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
+import { UIFramework } from "./ui-framework/UiFramework";
 
 export interface ITwinJsAppProps {
   iTwinId: string;
@@ -28,16 +35,62 @@ export interface ITwinJsAppProps {
 }
 
 export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
+  type LoadingState = "opening-imodel" | "opening-viewstate" | "creating-viewstate" | "loaded";
+  const [loadingState, setLoadingState] = useState<LoadingState>("opening-imodel");
   const iModel = useIModel(props.iTwinId, props.iModelId, props.authorizationClient);
-  useEffect(() => { UiFramework.setIModelConnection(iModel); }, [iModel]);
+  useEffect(
+    () => {
+      if (!iModel) {
+        return;
+      }
 
-  if (!iModel) {
+      let disposed = false;
+      void (async () => {
+        await VersionCompare.manager?.stopComparison();
+
+        setLoadingState("opening-viewstate");
+        let viewState = await getStoredViewState(iModel);
+        if (disposed) {
+          return;
+        }
+
+        if (!viewState) {
+          setLoadingState("creating-viewstate");
+          const viewCreator = new ViewCreator3d(iModel);
+          viewState = await viewCreator.createDefaultView();
+        }
+
+        if (!disposed) {
+          setLoadingState("loaded");
+          UiFramework.setIModelConnection(iModel);
+          UiFramework.setDefaultViewState(viewState);
+          FrontstageManager.addFrontstageProvider(new MainFrontstageProvider());
+          // UiFramework will encounter a deadlock if we do not wait before setting active frontstage
+          setTimeout(() => FrontstageManager.setActiveFrontstage(MainFrontstageProvider.name));
+        }
+      })();
+      return () => { disposed = true; };
+    },
+    [iModel],
+  );
+
+  if (loadingState === "opening-imodel") {
     return <LoadingScreen>Opening iModel...</LoadingScreen>;
+  }
+
+  if (loadingState === "opening-viewstate") {
+    return <LoadingScreen>Opening ViewState...</LoadingScreen>;
+  }
+
+  if (loadingState === "creating-viewstate") {
+    return <LoadingScreen>Creating ViewState...</LoadingScreen>;
   }
 
   return (
     <PageLayout.Content>
-      <VersionCompareSelectDialog iModelConnection={iModel} />
+      <UIFramework>
+        <ConfigurableUiContent />
+      </UIFramework>
     </PageLayout.Content>
   );
 }
@@ -53,22 +106,33 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       initOptions: { lng: "en" },
       urlTemplate: "/locales/{{lng}}/{{ns}}.json",
     }),
+    notifications: new AppNotificationManager(),
     hubAccess: new FrontendIModelsAccess(iModelsClient),
+    publicPath: "/",
   });
   const rpcParams: BentleyCloudRpcParams = {
     info: { title: "test-app-backend", version: "v1.0" },
     uriPrefix: "http://localhost:3001",
   };
-  BentleyCloudRpcManager.initializeClient(rpcParams, [IModelReadRpcInterface, PresentationRpcInterface]);
+
+  BentleyCloudRpcManager.initializeClient(
+    rpcParams,
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface],
+  );
+
   await Promise.all([
     UiCore.initialize(IModelApp.localization),
     Presentation.initialize(),
     UiFramework.initialize(undefined),
   ]);
+
   VersionCompare.initialize({
     iModelsClient,
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
     getAccessToken: () => authorizationClient.getAccessToken(),
+    ninezoneOptions: {
+      frontstageIds: [MainFrontstageProvider.name],
+    },
   });
 }
 
@@ -117,10 +181,66 @@ function useIModel(
 
 function displayIModelError(message: string, error: unknown): void {
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
-  displayToast(OutputMessagePriority.Error, message, typeof errorMessage === "string" ? errorMessage : undefined);
+  toaster.negative(<>{message}<br /> {errorMessage}</>);
 }
 
-function displayToast(messageType: OutputMessagePriority, messageShort: string, messageDetail?: string): void {
-  const messageDetails = new NotifyMessageDetails(messageType, messageShort, messageDetail, OutputMessageType.Toast);
-  MessageManager.outputMessage(messageDetails);
+async function getStoredViewState(iModel: IModelConnection): Promise<ViewState | undefined> {
+  let viewId: string | undefined = await iModel.views.queryDefaultViewId();
+  if (viewId === Id64.invalid) {
+    const viewDefinitionProps = await iModel.views.queryProps({ wantPrivate: false, limit: 1 });
+    viewId = viewDefinitionProps[0]?.id;
+  }
+
+  return viewId ? iModel.views.load(viewId) : undefined;
+}
+
+class MainFrontstageProvider extends StandardFrontstageProvider {
+  constructor() {
+    super({
+      id: MainFrontstageProvider.name,
+      usage: StageUsage.General,
+      contentGroupProps: {
+        id: `${MainFrontstageProvider.name}ContentGroup`,
+        layout: { id: `${MainFrontstageProvider.name}ContentGroupLayout` },
+        contents: [{
+          id: `${MainFrontstageProvider.name}ContentView`,
+          classId: IModelViewportControl,
+          applicationData: {
+            viewState: UiFramework.getDefaultViewState(),
+            iModelConnection: UiFramework.getIModelConnection(),
+          },
+        }],
+      },
+      rightPanelProps: {
+        resizable: true,
+        pinned: true,
+        defaultState: StagePanelState.Open,
+        size: 400,
+      },
+    });
+
+    UiItemsManager.register(new MainFrontstageItemsProvider());
+  }
+}
+
+class MainFrontstageItemsProvider implements UiItemsProvider {
+  public readonly id = MainFrontstageItemsProvider.name;
+
+  public provideWidgets(
+    stageId: string,
+    stageUsage: string,
+    location: StagePanelLocation,
+    section?: StagePanelSection,
+  ): CommonWidgetProps[] {
+    if (
+      stageId !== MainFrontstageProvider.name ||
+      stageUsage !== StageUsage.General ||
+      location !== StagePanelLocation.Right ||
+      section !== StagePanelSection.Start
+    ) {
+      return [];
+    }
+
+    return [{ id: "ChangedElementsWidget", getWidgetContent: () => <ChangedElementsWidget /> }];
+  }
 }

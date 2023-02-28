@@ -13,7 +13,7 @@ import { SvgAdd, SvgCompare, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
 import { Component, createRef, ReactElement } from "react";
 
-import { ChangeElementType, type ChangedElementEntry } from "../api/ChangedElementEntryCache";
+import { type ChangedElementEntry } from "../api/ChangedElementEntryCache";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
 import { VersionCompare } from "../api/VersionCompare";
 import { VersionCompareManager } from "../api/VersionCompareManager";
@@ -115,13 +115,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     manager.loadingProgressEvent.addListener(this._onProgressEvent);
     manager.versionCompareStopped.addListener(this._onComparisonStopped);
 
-    //In UI 1.0, when the user starts version compare, the widget is first
-    //displayed and then loading messages are updated accordingly.
-    //By not setting message (or description), we prevent a quick flashing
-    //of an unnecessary text string.
-    //In UI 2.0, the widget is always shown, so it must have an initial
-    //message (and description).
-
     this.state = {
       manager,
       loading: manager.isComparing,
@@ -130,12 +123,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       elements: manager.changedElementsManager.entryCache.getAll(),
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
-      message: manager.wantNinezone
-        ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive")
-        : "",
-      description: manager.wantNinezone
-        ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted")
-        : "",
+      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+      description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
     };
   }
 

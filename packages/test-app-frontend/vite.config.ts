@@ -2,20 +2,21 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import react from "@vitejs/plugin-react-swc";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(() => ({
   plugins: [
+    new StringReplacePlugin(),
     react(),
     viteStaticCopy({
       targets: [
         { src: "./node_modules/@itwin/appui-react/lib/public/locales", dest: "." },
         { src: "./node_modules/@itwin/changed-elements-react/public/locales", dest: "." },
         { src: "./node_modules/@itwin/components-react/lib/public/locales", dest: "." },
-        { src: "./node_modules/@itwin/core-frontend/lib/public/locales", dest: "." },
+        { src: "./node_modules/@itwin/core-frontend/lib/public/**", dest: "." },
         { src: "./node_modules/@itwin/core-react/lib/public/locales", dest: "." },
         { src: "./node_modules/@itwin/imodel-components-react/lib/public/locales", dest: "." },
         { src: "./node_modules/@itwin/presentation-common/lib/public/locales", dest: "." },
@@ -58,4 +59,19 @@ export default defineConfig({
   server: {
     port: 2363,
   },
-});
+}));
+
+class StringReplacePlugin implements Plugin {
+  public name = StringReplacePlugin.name;
+  public enforce = "pre" as const;
+
+  public transform(code: string, _id: string) {
+    return code.replace(
+      /const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = await import\((.+?)\);/s,
+      `
+      const objectStorage = await import($1);
+      const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = objectStorage.default ?? objectStorage;
+      `,
+    );
+  }
+}
