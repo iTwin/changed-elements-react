@@ -2,19 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { IModelApp } from "@itwin/core-frontend";
 import { SvgClose } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
 import React from "react";
 
 import "./FilterBar.scss";
 
-export type FilterBarTranslation = {
-  clear: string;
-};
-
-const defaultStrings: FilterBarTranslation = {
-  clear: "Clear",
-};
 export interface FilterBarProps {
   /**
    * Modify size of the filter bar.
@@ -32,10 +26,6 @@ export interface FilterBarProps {
    * On click handler when the clear button is clicked.
    */
   onCloseClick?: () => void;
-  /**
-   * Localized strings used in buttons.
-   */
-  translatedLabels?: FilterBarTranslation;
 }
 
 export const FilterBar = ({
@@ -43,9 +33,7 @@ export const FilterBar = ({
   onCloseClick,
   size,
   text,
-  translatedLabels,
 }: FilterBarProps) => {
-  const translatedStrings = { ...defaultStrings, ...translatedLabels };
   return (
     <div
       role="button"
@@ -63,7 +51,7 @@ export const FilterBar = ({
           event.stopPropagation();
           onCloseClick?.();
         }}
-        title={translatedStrings.clear}
+        title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.clear")}
       >
         <SvgClose />
       </IconButton>
