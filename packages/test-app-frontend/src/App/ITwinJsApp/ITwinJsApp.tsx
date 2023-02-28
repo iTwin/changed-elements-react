@@ -130,6 +130,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     iModelsClient,
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
     getAccessToken: () => authorizationClient.getAccessToken(),
+    wantTooltipAugment: true,
     ninezoneOptions: {
       frontstageIds: [MainFrontstageProvider.name],
     },
