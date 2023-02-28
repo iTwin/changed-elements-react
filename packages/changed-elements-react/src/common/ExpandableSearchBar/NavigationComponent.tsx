@@ -2,10 +2,10 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { IModelApp } from "@itwin/core-frontend";
 import { SvgChevronDown, SvgChevronUp } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
 
-import { ITwinCommonManager } from "../ITwinCommonManager";
 import "./NavigationComponent.scss";
 
 export interface NavigationComponentProps {
@@ -61,7 +61,7 @@ export const NavigationComponent = ({
         styleType="borderless"
         disabled={!isPrevEnabled}
         onClick={onPrevClick}
-        title={ITwinCommonManager.translate("SearchButton.previous")}
+        title={IModelApp.localization.getLocalizedString("VersionCompare:expandableSearchBar.previous")}
       >
         <SvgChevronUp />
       </IconButton>
@@ -70,7 +70,7 @@ export const NavigationComponent = ({
         styleType="borderless"
         disabled={!isNextEnabled}
         onClick={onNextClick}
-        title={ITwinCommonManager.translate("SearchButton.next")}
+        title={IModelApp.localization.getLocalizedString("VersionCompare:expandableSearchBar.next")}
       >
         <SvgChevronDown />
       </IconButton>

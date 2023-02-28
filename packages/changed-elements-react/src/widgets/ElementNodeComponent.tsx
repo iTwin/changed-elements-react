@@ -122,6 +122,13 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
     }
   };
 
+  private handleVisibilityChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    // Toggle visibility if checkbox state and visibility now disagree
+    if (event.target.checked !== this.props.visible) {
+      this.props.toggleVisibility();
+    }
+  }
+
   public override render() {
     const nodeClasses = `element-node ${this.props.selected ? "selected" : ""}`;
     const classes = `element-label ${!this.props.wantChangeSquare ? this._getChangeClassName(this.props.opcode) : ""}`;
@@ -150,7 +157,7 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
             <Checkbox
               variant="eyeball"
               checked={this.props.visible}
-              onClick={this.props.toggleVisibility}
+              onChange={this.handleVisibilityChange}
             />
           </div>
           {this.props.wantChangeSquare && (

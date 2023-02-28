@@ -2,11 +2,11 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { IModelApp } from "@itwin/core-frontend";
 import { SvgClose } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
 import React from "react";
 
-import { ITwinCommonManager } from "../ITwinCommonManager";
 import "./FilterBar.scss";
 
 export interface FilterBarProps {
@@ -51,7 +51,7 @@ export const FilterBar = ({
           event.stopPropagation();
           onCloseClick?.();
         }}
-        title={ITwinCommonManager.translate("SearchButton.clear")}
+        title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.clear")}
       >
         <SvgClose />
       </IconButton>

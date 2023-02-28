@@ -2,12 +2,12 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { IModelApp } from "@itwin/core-frontend";
 import type { CommonProps } from "@itwin/core-react";
 import { SvgBlank, SvgClose, SvgSearch } from "@itwin/itwinui-icons-react";
 import { IconButton, Input, ProgressRadial } from "@itwin/itwinui-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { ITwinCommonManager } from "../ITwinCommonManager";
 import { FilterBar } from "./FilterBar";
 import { NavigationComponent } from "./NavigationComponent";
 
@@ -192,9 +192,7 @@ export const ExpandableSearchBar = ({
             ref={inputElement}
             onChange={onInputChange}
             onKeyDown={onKeyDown}
-            placeholder={
-              placeholder ?? ITwinCommonManager.translate("SearchButton.search")
-            }
+            placeholder={placeholder ?? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.search")}
           />
           {isLoading && (
             <ProgressRadial
@@ -220,7 +218,11 @@ export const ExpandableSearchBar = ({
             size={size}
             styleType={styleType}
             onClick={onToggleSearch}
-            title={ITwinCommonManager.translate(expanded ? "SearchButton.closeSearchBar" : "SearchButton.search")}
+            title={IModelApp.localization.getLocalizedString(
+              expanded
+                ? "VersionCompare:versionCompare.closeSearchBar"
+                : "VersionCompare:versionCompare.search",
+            )}
           >
             {expanded ? <SvgClose /> : <SvgSearch />}
           </IconButton>
@@ -228,7 +230,7 @@ export const ExpandableSearchBar = ({
       </div>
       {enableFilterBar && !expanded && searchText && searchText.length > 0 && (
         <FilterBar
-          text={`${ITwinCommonManager.translate("SearchButton.searchFor")} \`${searchText}\``}
+          text={`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.searchFor")} \`${searchText}\``}
           size={size}
           onCloseClick={onClearSearch}
           onTextClick={onToggleSearch}

@@ -201,5 +201,9 @@
     "saveAsTooltip": "Save the currently applied filters",
     "savedFilters": "Saved Filters...",
     "edit": "Edit Filters"
+  },
+  "expandableSearchBar": {
+    "previous": "Previous",
+    "next": "Next"
   }
 }

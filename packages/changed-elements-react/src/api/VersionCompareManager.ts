@@ -120,10 +120,6 @@ export class VersionCompareManager {
       (this.options.wantNinezone === undefined || this.options.wantNinezone === true);
   }
 
-  public get wantPagedChangesetStatusLoading(): boolean {
-    return !!this.options.wantPagedChangesetStatusLoading;
-  }
-
   /** Triggers when version compare processing is starting. */
   public versionCompareStarting = new BeEvent<() => void>();
 
@@ -139,9 +135,6 @@ export class VersionCompareManager {
 
   /** Triggers when starting version compare failed. */
   public versionCompareStartFailed = new BeEvent<() => void>();
-
-  /** Triggers when property comparison is started. */
-  public propertyComparisonStarted = new BeEvent<() => void>();
 
   /** Triggers when version compare visualization is stopped and visualization handlers are still available. */
   public versionCompareStopping = new BeEvent<() => void>();
