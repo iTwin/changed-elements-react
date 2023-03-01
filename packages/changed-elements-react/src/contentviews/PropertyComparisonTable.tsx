@@ -13,7 +13,8 @@ import {
 } from "@itwin/components-react";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { LoadingSpinner, Slider, Toggle } from "@itwin/core-react";
+import { LoadingSpinner } from "@itwin/core-react";
+import { Slider, ToggleSwitch } from "@itwin/itwinui-react";
 import { KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
@@ -74,22 +75,15 @@ export class OverviewOpacitySlider extends Component<OverviewOpacitySliderProps>
 
   public override render() {
     return (
-      <div className="slider-container">
-        <div className="slider-label">
-          {this.props.manager.currentVersion?.displayName}
-        </div>
-        <Slider
-          className="slider-overrides"
-          min={0}
-          max={100}
-          values={[50]}
-          showTooltip={false}
-          onUpdate={this._onOpacitySliderChange}
-        />
-        <div className="slider-label">
-          {this.props.manager.targetVersion?.displayName}
-        </div>
-      </div>
+      <Slider
+        min={0}
+        max={100}
+        values={[50]}
+        onUpdate={this._onOpacitySliderChange}
+        minLabel={this.props.manager.currentVersion?.displayName}
+        maxLabel={this.props.manager.targetVersion?.displayName}
+        tooltipProps={() => ({ visible: false })}
+      />
     );
   }
 }
@@ -875,32 +869,35 @@ export class PropertyComparisonTable extends Component<PropertyComparisonProps, 
           this.state.manager.wantNinezone && !this.state.sideBySide &&
           <OverviewOpacitySlider manager={this.state.manager} />
         }
-        <div className="go-left" />
-        {
-          this.state.manager.wantNinezone &&
-          <>
-            <Toggle isOn={this.state.sideBySide} onChange={this._onToggleInspectMode} />
-            <div className="header-toggle-label">
-              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.sideBySide")}
-            </div>
-          </>
-        }
-        <Toggle isOn={this.state.showChangedOnly} onChange={setShowChanged} />
-        <div className="header-toggle-label">
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.onlyChangedProps")}
+        <div className="settings">
+          {
+            this.state.manager.wantNinezone &&
+            <ToggleSwitch
+              checked={this.state.sideBySide}
+              onChange={this._onToggleInspectMode}
+              label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.sideBySide")}
+            />
+          }
+          <ToggleSwitch
+            checked={this.state.showChangedOnly}
+            onChange={setShowChanged}
+            label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.onlyChangedProps")}
+          />
         </div>
-        <div
-          className="chevron-button icon icon-chevron-up"
-          title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.scrollToChangedProperty")}
-          onClick={() => this.handleCycle(true)}
-          data-testid="pct-up-chevron"
-        />
-        <div
-          className="chevron-button icon icon-chevron-down"
-          title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.scrollToChangedProperty")}
-          onClick={() => this.handleCycle(false)}
-          data-testid="pct-down-chevron"
-        />
+        <div className="property-navigation">
+          <div
+            className="chevron-button icon icon-chevron-up"
+            title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.scrollToChangedProperty")}
+            onClick={() => this.handleCycle(true)}
+            data-testid="pct-up-chevron"
+          />
+          <div
+            className="chevron-button icon icon-chevron-down"
+            title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.scrollToChangedProperty")}
+            onClick={() => this.handleCycle(false)}
+            data-testid="pct-down-chevron"
+          />
+        </div>
       </div>
     );
   }
