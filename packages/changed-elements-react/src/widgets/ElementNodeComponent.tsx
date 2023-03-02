@@ -174,7 +174,7 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
         <IconButton
           size="small"
           styleType="borderless"
-          className={`vc-element-inspect-button" ${(
+          className={`vc-element-inspect-button ${(
             this.props.selected &&
             !this.props.isModel &&
             this.props.opcode !== undefined &&
