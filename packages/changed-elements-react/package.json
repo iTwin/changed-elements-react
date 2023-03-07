@@ -6,24 +6,26 @@
     "name": "Bentley Systems, Inc.",
     "url": "https://www.bentley.com"
   },
-  "main": "./lib/cjs/index.js",
-  "module": "./lib/esm/index.js",
-  "types": "./lib/esm/index.d.ts",
+  "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "import": "./lib/index.ts",
+      "types": "./lib/index.d.ts"
+    }
   },
+  "files": [
+    "./lib",
+    "./public"
+  ],
   "scripts": {
     "build": "run-p build:*",
-    "build:cjs": "tsc --project ./tsconfig.build.json --outDir ./lib/cjs --module CommonJS",
-    "build:esm": "tsc --project ./tsconfig.build.json --outDir ./lib/esm --module ES2020",
+    "build:copy-assets": "cpx \"./src/**/*.{scss,css}\" ./lib/src",
+    "build:transpile": "tsc --project ./tsconfig.build.json",
     "test": "vitest run",
     "test:cover": "vitest run --coverage",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit"
   },
-  "files": [
-    "lib/"
-  ],
   "devDependencies": {
     "@itwin/appui-abstract": "^3.6.0",
     "@itwin/appui-layout-react": "^3.6.0",
@@ -50,6 +52,7 @@
     "@types/react-window-infinite-loader": "^1.0.6",
     "@vitejs/plugin-react": "^2.1.0",
     "@vitest/coverage-c8": "^0.24.3",
+    "cpx2": "^4.2.0",
     "happy-dom": "^7.6.0",
     "npm-run-all": "^4.1.5",
     "react": "^17.0.0",
