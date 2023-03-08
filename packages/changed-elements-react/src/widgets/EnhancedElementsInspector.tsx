@@ -569,8 +569,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       this.dettachFromViewport(this._attachedVp);
       this._attachedVp = undefined;
     }
-
-    ChangedElementsListComponent.cleanMaintainedState();
   }
 
   /** Try scrolling to the selected element entry if shown. */
