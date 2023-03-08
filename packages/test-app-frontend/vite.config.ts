@@ -60,6 +60,7 @@ export default defineConfig(() => ({
       },
     ],
   },
+  optimizeDeps: { entries: ["./src/**", "../changed-elements-react/src/**"] },
   server: {
     port: 2363,
   },
