@@ -4,8 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 .signin-prompt {
-  display: flex;
-  justify-content: center;
+  height: 100%;
+  display: grid;
+  place-items: center;
 }
 
 .signin-prompt > div {
