@@ -6,11 +6,11 @@
     "name": "Bentley Systems, Inc.",
     "url": "https://www.bentley.com"
   },
-  "type": "module",
   "exports": {
     ".": {
-      "import": "./lib/index.ts",
-      "types": "./lib/index.d.ts"
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./src/index.ts"
     }
   },
   "files": [
@@ -18,9 +18,11 @@
     "./public"
   ],
   "scripts": {
-    "build": "run-p build:*",
-    "build:copy-assets": "cpx \"./src/**/*.{scss,css}\" ./lib/src",
-    "build:transpile": "tsc --project ./tsconfig.build.json",
+    "build": "run-p build:**",
+    "build:copy-assets:esm": "cpx \"./src/**/*.{scss,css}\" ./lib/esm",
+    "build:copy-assets:cjs": "cpx \"./src/**/*.{scss,css}\" ./lib/cjs",
+    "build:transpile:esm": "tsc --project ./tsconfig.build.json",
+    "build:transpile:cjs": "tsc --project ./tsconfig.build.json --module CommonJS --outDir ./lib/cjs",
     "test": "vitest run",
     "test:cover": "vitest run --coverage",
     "test:watch": "vitest watch",

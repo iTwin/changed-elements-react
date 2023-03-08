@@ -28,7 +28,7 @@ export default defineConfig(() => ({
     alias: [
       {
         find: "@itwin/changed-elements-react",
-        replacement: "/node_modules/@itwin/changed-elements-react/index.ts",
+        replacement: "/node_modules/@itwin/changed-elements-react/src/index.ts",
       },
       {
         find: /^~(.*\/core-react\/)scrollbar$/,

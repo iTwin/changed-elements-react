@@ -8,8 +8,8 @@
     "jsx": "react-jsx",
     "declaration": true,
     "esModuleInterop": true,
-    "outDir": "./lib"
+    "outDir": "./lib/esm",
   },
-  "include": [ "src", "index.ts" ],
+  "include": [ "src" ],
   "references": [ { "path": "./tsconfig.node.json" } ],
 }
