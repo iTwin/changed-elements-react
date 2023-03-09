@@ -10,7 +10,7 @@ import { LoadingIndicator } from "./LoadingIndicator";
 export function LoadingScreen(props: PropsWithChildren<{}>): ReactElement {
   return (
     <PageLayout.Content>
-      <LoadingIndicator style={{ padding: "66px 0" }}>{props.children}</LoadingIndicator>
+      <LoadingIndicator style={{ height: "100%" }}>{props.children}</LoadingIndicator>
     </PageLayout.Content>
   );
 }

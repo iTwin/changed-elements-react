@@ -52,7 +52,7 @@ function Main(): ReactElement {
 
   if (state === AuthorizationState.SignedOut) {
     return (
-      <PageLayout.Content padded>
+      <PageLayout.Content>
         <SignInPrompt signIn={signIn} />
       </PageLayout.Content>
     );
