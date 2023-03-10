@@ -2,9 +2,10 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import react from "@vitejs/plugin-react-swc";
+import * as path from "path";
 import { defineConfig, Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import react from "@vitejs/plugin-react-swc";
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
@@ -70,7 +71,13 @@ class StringReplacePlugin implements Plugin {
   public name = StringReplacePlugin.name;
   public enforce = "pre" as const;
 
-  public transform(code: string, _id: string) {
+  private root = path.resolve(__dirname, "../");
+
+  public transform = (code: string, id: string): string => {
+    if (id.startsWith(`${this.root}/changed-elements-react`)) {
+      return code.replaceAll(/from "(.*)\.js"/g, "from \"$1\"");
+    }
+
     return code.replace(
       /const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = await import\((.+?)\);/s,
       `
@@ -78,5 +85,5 @@ class StringReplacePlugin implements Plugin {
       const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = objectStorage.default ?? objectStorage;
       `,
     );
-  }
+  };
 }

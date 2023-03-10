@@ -4,6 +4,7 @@
     "composite": true,
     "module": "ES2020",
     "moduleResolution": "Node",
+    "lib": [ "ESNext" ]
   },
-  "include": ["vite.config.ts"]
+  "include": [ "vite.config.ts" ]
 }
