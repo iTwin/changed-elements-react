@@ -21,14 +21,14 @@ import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation
 import { Component, ReactElement } from "react";
 import { connect } from "react-redux";
 
-import type { ChangedElementEntry } from "../api/ChangedElementEntryCache";
-import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
-import { VersionCompare } from "../api/VersionCompare";
-import { VersionCompareManager } from "../api/VersionCompareManager";
-import { updateVersionComparisonTransparencies } from "../api/VersionCompareTiles";
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage";
-import { VersionCompareState } from "../store/VersionCompareStore";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
+import { VersionCompare } from "../api/VersionCompare.js";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { updateVersionComparisonTransparencies } from "../api/VersionCompareTiles.js";
+import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
+import { VersionCompareState } from "../store/VersionCompareStore.js";
 import "./PropertyComparisonTable.scss";
 
 const LOGGER_CATEGORY = "VersionCompare:PropertyComparisonTable";

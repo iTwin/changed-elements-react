@@ -4,12 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent } from "@itwin/core-bentley";
 
-import { ModelsCategoryCache } from "./ModelsCategoryCache";
-import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager";
-import type { SimpleVisualizationOptions } from "./VersionCompare";
-import { VersionCompareManager } from "./VersionCompareManager";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization";
-import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler";
+import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
+import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
+import type { SimpleVisualizationOptions } from "./VersionCompare.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
+import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler.js";
 
 /**
  * Handles version compare visualization for non-ninezone applications

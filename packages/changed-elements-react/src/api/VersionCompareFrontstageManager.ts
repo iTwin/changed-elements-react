@@ -10,17 +10,17 @@ import {
 import { KeySet, type InstanceKey, type Key } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage";
-import { VersionCompareActionTypes } from "../store/VersionCompareStore";
-import { changedElementsWidgetAttachToViewportEvent } from "../widgets/ChangedElementsWidget";
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
-import { ModelsCategoryCache } from "./ModelsCategoryCache";
-import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages";
-import { VersionCompare } from "./VersionCompare";
-import { VersionCompareManager } from "./VersionCompareManager";
-import { enableVersionCompareVisualizationCaching } from "./VersionCompareTiles";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization";
+import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
+import { VersionCompareActionTypes } from "../store/VersionCompareStore.js";
+import { changedElementsWidgetAttachToViewportEvent } from "../widgets/ChangedElementsWidget.js";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
+import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
+import { VersionCompare } from "./VersionCompare.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
+import { enableVersionCompareVisualizationCaching } from "./VersionCompareTiles.js";
+import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
 
 /** Manages version compare workflows based on design review's use case */
 export class VersionCompareFrontstageManager {

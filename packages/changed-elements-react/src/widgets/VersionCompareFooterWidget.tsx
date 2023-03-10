@@ -9,12 +9,12 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Button, ButtonType } from "@itwin/core-react";
 import * as React from "react";
 
-import type { ChangedElementEntry } from "../api/ChangedElementEntryCache";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
-import { VersionCompare } from "../api/VersionCompare";
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
+import { VersionCompare } from "../api/VersionCompare.js";
+import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
 import "./VersionCompareFooterWidget.scss";
-import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget";
+import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 export interface VersionCompareFooterProps {
   /** IModelConnection to use */

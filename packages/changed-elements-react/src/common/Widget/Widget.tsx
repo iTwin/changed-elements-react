@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { forwardRef, type ReactElement } from "react";
-import { WidgetContent } from "./WidgetContent";
-import { WidgetTitleBar } from "./WidgetTitleBar";
-import { WidgetToolBar } from "./WidgetToolBar";
+import { WidgetContent } from "./WidgetContent.js";
+import { WidgetTitleBar } from "./WidgetTitleBar.js";
+import { WidgetToolBar } from "./WidgetToolBar.js";
 
 import "./Widget.css";
 

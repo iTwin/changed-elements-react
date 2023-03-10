@@ -6,8 +6,8 @@ import { Cartographic, QueryBinder, type QueryOptions } from "@itwin/core-common
 import { BlankConnection } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { ModelsCategoryCache } from "../api/ModelsCategoryCache";
-import { mockChangedElementEntries } from "./TestUtilities";
+import { ModelsCategoryCache } from "../api/ModelsCategoryCache.js";
+import { mockChangedElementEntries } from "./TestUtilities.js";
 
 const queryMockGenerator = (bindingPostfix = "") => {
   const func = async function* (

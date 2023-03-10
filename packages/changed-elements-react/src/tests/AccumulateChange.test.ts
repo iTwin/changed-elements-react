@@ -6,8 +6,8 @@ import { DbOpcode } from "@itwin/core-bentley";
 import { TypeOfChange, type ChangedElements } from "@itwin/core-common";
 import { describe, expect, it } from "vitest";
 
-import type { ChangedElement } from "../api/ChangedElementEntryCache";
-import { accumulateChanges } from "../api/ChangedElementsManager";
+import type { ChangedElement } from "../api/ChangedElementEntryCache.js";
+import { accumulateChanges } from "../api/ChangedElementsManager.js";
 
 const changeset1: ChangedElements = {
   elements: ["0x1", "0x2"],

@@ -14,9 +14,9 @@ import {
   Component, createRef, forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState
 } from "react";
 
-import type { ChangedElementsApiClient, ChangesetChunk, ChangesetStatus } from "../api/ChangedElementsApiClient";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
-import { VersionCompare } from "../api/VersionCompare";
+import type { ChangedElementsApiClient, ChangesetChunk, ChangesetStatus } from "../api/ChangedElementsApiClient.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
+import { VersionCompare } from "../api/VersionCompare.js";
 import "./VersionCompareSelectWidget.scss";
 
 /** Options for VersionCompareSelectComponent. */

@@ -11,7 +11,7 @@ import { FixedSizeList, type ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
 import "./ChangedElementsInspector.scss";
-import { ElementNodeComponent } from "./ElementNodeComponent";
+import { ElementNodeComponent } from "./ElementNodeComponent.js";
 
 export interface ElementsListProps {
   /** Nodes to display and load */

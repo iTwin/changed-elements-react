@@ -6,10 +6,10 @@ import { BeEvent, DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat, TypeOfChange, type ChangedElements } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ModelState } from "@itwin/core-frontend";
 
-import { ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache";
-import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache";
-import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache";
-import { VersionCompareManager } from "./VersionCompareManager";
+import { ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
+import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
+import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
 
 /** Properties that are not shown but still found by the agent */
 const ignoredProperties = ["Checksum", "Version"];

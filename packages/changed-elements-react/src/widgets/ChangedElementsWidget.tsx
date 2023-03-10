@@ -13,18 +13,18 @@ import { SvgAdd, SvgCompare, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
 import { Component, createRef, ReactElement } from "react";
 
-import { type ChangedElementEntry } from "../api/ChangedElementEntryCache";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
-import { VersionCompare } from "../api/VersionCompare";
-import { VersionCompareManager } from "../api/VersionCompareManager";
-import { CenteredDiv } from "../common/CenteredDiv";
-import { EmptyStateComponent } from "../common/EmptyStateComponent";
-import { Widget as WidgetComponent } from "../common/Widget/Widget";
+import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
+import { VersionCompare } from "../api/VersionCompare.js";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { CenteredDiv } from "../common/CenteredDiv.js";
+import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
+import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import "./ChangedElementsWidget.scss";
 import {
   ChangedElementsInspector as EnhancedInspector, ChangedElementsListComponent as EnhancedListComponent
-} from "./EnhancedElementsInspector";
-import { openSelectDialog } from "./VersionCompareSelectWidget";
+} from "./EnhancedElementsInspector.js";
+import { openSelectDialog } from "./VersionCompareSelectWidget.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 

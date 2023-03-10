@@ -11,9 +11,9 @@ import {
 } from "@itwin/appui-react";
 import { IModelApp } from "@itwin/core-frontend";
 
-import { ChangedElementsWidget } from "./ChangedElementsWidget";
-import { VersionCompareFooterWidget, type VersionCompareFooterProps } from "./VersionCompareFooterWidget";
-import { openSelectDialog } from "./VersionCompareSelectWidget";
+import { ChangedElementsWidget } from "./ChangedElementsWidget.js";
+import { VersionCompareFooterWidget, type VersionCompareFooterProps } from "./VersionCompareFooterWidget.js";
+import { openSelectDialog } from "./VersionCompareSelectWidget.js";
 
 /**
  * Provide standard tools for Comments.

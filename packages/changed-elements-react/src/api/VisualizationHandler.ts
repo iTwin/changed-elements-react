@@ -4,8 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 import { KeySet } from "@itwin/presentation-common";
 
-import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization";
+import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
+import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
 
 export interface MainVisualizationOptions {
   wantTargetModified?: boolean;

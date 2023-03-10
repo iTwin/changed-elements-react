@@ -8,8 +8,8 @@ import { SvgBlank, SvgClose, SvgSearch } from "@itwin/itwinui-icons-react";
 import { IconButton, Input, ProgressRadial } from "@itwin/itwinui-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { FilterBar } from "./FilterBar";
-import { NavigationComponent } from "./NavigationComponent";
+import { FilterBar } from "./FilterBar.js";
+import { NavigationComponent } from "./NavigationComponent.js";
 
 import "./ExpandableSearchBar.scss";
 

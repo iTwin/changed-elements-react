@@ -12,10 +12,10 @@ import { KeySet } from "@itwin/presentation-common";
 import { ReactNode } from "react";
 import type { Store } from "redux";
 
-import { VersionCompareReducer } from "../store/VersionCompareStore";
-import { ChangedElementsApiClient } from "./ChangedElementsApiClient";
-import { ChangedElementsClientBase } from "./ChangedElementsClientBase";
-import { VersionCompareManager } from "./VersionCompareManager";
+import { VersionCompareReducer } from "../store/VersionCompareStore.js";
+import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
+import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;

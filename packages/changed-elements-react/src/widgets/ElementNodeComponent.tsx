@@ -9,9 +9,9 @@ import { SvgChevronRight, SvgCompare, SvgFolder, SvgItem } from "@itwin/itwinui-
 import { Checkbox, IconButton } from "@itwin/itwinui-react";
 import React from "react";
 
-import type { ChangedElementEntry } from "../api/ChangedElementEntryCache";
-import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider";
-import { VersionCompare } from "../api/VersionCompare";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
+import { VersionCompare } from "../api/VersionCompare.js";
 import "./ChangedElementsInspector.scss";
 
 export interface ElementListNodeProps {

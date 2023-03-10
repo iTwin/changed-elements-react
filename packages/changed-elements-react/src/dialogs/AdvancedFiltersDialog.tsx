@@ -10,9 +10,9 @@ import { Checkbox } from "@itwin/itwinui-react";
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useState } from "react";
 import type { CellProps, Row } from "react-table";
 
-import type { FilterOptions } from "../widgets/EnhancedElementsInspector";
+import type { FilterOptions } from "../widgets/EnhancedElementsInspector.js";
 import "./AdvancedFiltersDialog.scss";
-import { Table } from "./Table";
+import { Table } from "./Table.js";
 
 // Represents a single row in the Table.
 export interface PropertyFilter {

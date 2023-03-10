@@ -4,14 +4,14 @@
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent } from "@itwin/core-bentley";
 
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage";
-import { bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents } from "../widgets/ChangedElementsWidget";
-import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager";
-import type { NinezoneVisualizationOptions } from "./VersionCompare";
-import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager";
-import { VersionCompareManager } from "./VersionCompareManager";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization";
-import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler";
+import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
+import { bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents } from "../widgets/ChangedElementsWidget.js";
+import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
+import type { NinezoneVisualizationOptions } from "./VersionCompare.js";
+import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
+import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler.js";
 
 /**
  * Handles setting up version compare visualization for Ninezone applications

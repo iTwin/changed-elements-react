@@ -9,9 +9,9 @@ import {
 import { EmphasizeElements, IModelApp, Viewport } from "@itwin/core-frontend";
 import React, { useCallback, useEffect, useState } from "react";
 
-import { SideBySideVisualizationManager } from "../api/SideBySideVisualizationManager";
-import { VersionCompare } from "../api/VersionCompare";
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage";
+import { SideBySideVisualizationManager } from "../api/SideBySideVisualizationManager.js";
+import { VersionCompare } from "../api/VersionCompare.js";
+import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
 import "./PropertyComparisonToolWidget.override.css";
 
 export interface PropertyComparisonVisibilityClearToolProps {

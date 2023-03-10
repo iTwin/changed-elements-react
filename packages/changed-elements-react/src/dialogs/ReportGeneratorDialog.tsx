@@ -11,12 +11,12 @@ import { Checkbox } from "@itwin/itwinui-react";
 import * as React from "react";
 import type { CellProps } from "react-table";
 
-import { ModelReportGenerator } from "../api/ModelReportGenerator";
-import { ReportGenerator, ReportGeneratorBase, type ReportProperty } from "../api/ReportGenerator";
-import { VersionCompareManager } from "../api/VersionCompareManager";
-import { PropertyLabelCache } from "./PropertyLabelCache";
+import { ModelReportGenerator } from "../api/ModelReportGenerator.js";
+import { ReportGenerator, ReportGeneratorBase, type ReportProperty } from "../api/ReportGenerator.js";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { PropertyLabelCache } from "./PropertyLabelCache.js";
 import "./ReportGeneratorDialog.scss";
-import { Table } from "./Table";
+import { Table } from "./Table.js";
 
 /** Makes sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with requests */
 let reportBeingGenerated = false;

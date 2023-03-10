@@ -6,9 +6,9 @@ import { Cartographic } from "@itwin/core-common";
 import { BlankConnection } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import type { ChangedElement } from "../api/ChangedElementEntryCache";
-import { ChangedElementsChildrenCache } from "../api/ChangedElementsChildrenCache";
-import { iModelMocks, mockChangedElementEntry, QueryStatementMocker } from "./TestUtilities";
+import type { ChangedElement } from "../api/ChangedElementEntryCache.js";
+import { ChangedElementsChildrenCache } from "../api/ChangedElementsChildrenCache.js";
+import { iModelMocks, mockChangedElementEntry, QueryStatementMocker } from "./TestUtilities.js";
 
 const mockEntries = [
   mockChangedElementEntry("0x1"),
