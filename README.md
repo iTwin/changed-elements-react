@@ -12,3 +12,11 @@
 2. Run `pnpm install`.
 3. Run `npm start` from the repository root directory.
 4. Navigate to [`http://localhost:2363`](http://localhost:2363) in your browser.
+
+## Contributing
+
+We welcome contributions to make this project better. You can submit feature requests or report bugs by creating an [issue](https://github.com/iTwin/changed-elements-react/issues).
+
+---
+
+Copyright © Bentley Systems, Incorporated. All rights reserved. See [LICENSE.md](./LICENSE.md) for license terms and full copyright notice.
