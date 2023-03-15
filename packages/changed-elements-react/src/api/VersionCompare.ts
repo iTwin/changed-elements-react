@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { getClassName, UiError } from "@itwin/appui-abstract";
-import { ReducerRegistryInstance, StateManager, SyncUiEventDispatcher, type FrontstageProps } from "@itwin/appui-react";
+import { FrontstageConfig, ReducerRegistryInstance, StateManager, SyncUiEventDispatcher } from "@itwin/appui-react";
 import type { AccessToken } from "@itwin/core-bentley";
 import type { ModelProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ScreenViewport, ViewState } from "@itwin/core-frontend";
@@ -42,7 +42,7 @@ export interface PropertyComparisonOptions {
    * you want to maintain that functionality, but want to append tools to that zone, use verticalTools and
    * horizontalTools options instead.
    */
-  frontstageProps?: Partial<FrontstageProps>;
+  frontstageProps?: Partial<FrontstageConfig>;
 
   /** Vertical tools to add to the property comparison frontstage. */
   verticalTools?: JSX.Element[];

@@ -4,8 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import type { ContentLayoutProps, LayoutVerticalSplitProps } from "@itwin/appui-abstract";
 import {
-  ConfigurableUiManager, ContentGroup, ContentLayoutDef, ContentLayoutManager, Frontstage, FrontstageManager,
-  FrontstageProvider, StatusBarComposer, ToolItemDef, Widget, Zone, type ContentProps, type FrontstageProps
+  ConfigurableUiManager, ContentGroup, ContentLayoutDef, ContentLayoutManager, Frontstage, FrontstageConfig,
+  FrontstageManager, FrontstageProps, FrontstageProvider, StatusBarComposer, ToolItemDef, ViewToolWidgetComposer,
+  type ContentProps
 } from "@itwin/appui-react";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import * as React from "react";
@@ -61,7 +62,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     public getPrimaryViewState: () => ViewState,
     public getSecondaryViewState: () => ViewState,
     public mainFrontstageIds: Set<string>,
-    public frontstageProps?: Partial<FrontstageProps>,
+    public frontstageProps?: Partial<FrontstageConfig>,
     public propertyCompareToolWidgetProps?: PropertyCompareToolWidgetProps,
   ) {
     super();
@@ -109,6 +110,16 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
       id: PropertyComparisonFrontstage.overviewLayoutGroupId,
       layout: PropertyComparisonFrontstage._overviewLayoutProps(),
       contents: this._overviewContentProps(),
+    });
+
+    // Register dummy tool for no selection
+    DummyTool.register(VersionCompareManager.namespace);
+
+    FrontstageManager.onFrontstageReadyEvent.addListener(({ frontstageDef }) => {
+      if (frontstageDef.id === PropertyComparisonFrontstage.id) {
+        IModelApp.toolAdmin.defaultToolId = DummyTool.toolId;
+        void IModelApp.toolAdmin.startDefaultTool();
+      }
     });
   }
 
@@ -270,36 +281,32 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     return contentProps;
   };
 
+  public override frontstageConfig(): FrontstageConfig {
+    return {
+      id: PropertyComparisonFrontstage.id,
+      version: 0,
+      contentGroup: PropertyComparisonFrontstage._sideBySideContentGroup,
+      contentManipulation: {
+        id: "PropertyComparisonToolWidget",
+        element: <PropertyComparisonToolWidget {...this.propertyCompareToolWidgetProps} />,
+      },
+      statusBar: {
+        id: "VersionCompareStatusBar",
+        isStatusBar: true,
+        element: <StatusBarComposer items={[]} />,
+      },
+      viewNavigation: {
+        id: "ViewNavigation",
+        element: <ViewToolWidgetComposer />,
+      },
+      ...this.frontstageProps,
+    };
+  }
+
   /** Frontstage props definition. */
   public get frontstage(): React.ReactElement<FrontstageProps> {
     // Register dummy tool for no selection
     DummyTool.register(VersionCompareManager.namespace);
-
-    const getBottomCenterWidgets = () => {
-      return [
-        <Widget
-          key="VersionCompareStatusBar"
-          id="VersionCompareStatusBar"
-          isStatusBar={true}
-          element={<StatusBarComposer items={[]} />}
-        />,
-      ];
-    };
-
-    const getTopLeftWidgets = () => {
-      return [
-        <Widget
-          key="PropertyComparisonToolWidget"
-          id="PropertyComparisonToolWidget"
-          isFreeform={true}
-          element={
-            <PropertyComparisonToolWidget
-              {...this.propertyCompareToolWidgetProps}
-            />
-          }
-        />,
-      ];
-    };
 
     return (
       <Frontstage
@@ -311,10 +318,6 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
           })
         }
         contentGroup={PropertyComparisonFrontstage._sideBySideContentGroup}
-        isInFooterMode={true}
-        bottomCenter={<Zone widgets={getBottomCenterWidgets()} />}
-        topLeft={<Zone widgets={getTopLeftWidgets()} />}
-        {...this.frontstageProps}
       />
     );
   }
