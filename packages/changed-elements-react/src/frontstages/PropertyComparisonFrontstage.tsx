@@ -25,16 +25,12 @@ import "./PropertyComparisonFrontstage.scss";
  * Can be given frontstage props via constructor to override/customize the zones
  */
 export class PropertyComparisonFrontstage extends FrontstageProvider {
-  public static readonly id: string =
-    "VersionCompare_PropertyComparisonFrontstage";
-  public id: string = PropertyComparisonFrontstage.id;
-  public static readonly viewportContentId: string =
-    "VersionCompare_PropertyComparisonFrontstageViewportContent";
-  public static readonly propertyComparisonTableContentId: string =
-    "VersionCompare_PropertyComparisonTableContent";
+  public static readonly id = "VersionCompare_PropertyComparisonFrontstage";
+  public id = PropertyComparisonFrontstage.id;
+  public static readonly viewportContentId = "VersionCompare_PropertyComparisonFrontstageViewportContent";
+  public static readonly propertyComparisonTableContentId = "VersionCompare_PropertyComparisonTableContent";
 
-  public static readonly sideBySideLayoutId =
-    "PropertyComparisonThreeTopStacked";
+  public static readonly sideBySideLayoutId = "PropertyComparisonThreeTopStacked";
   public static readonly sideBySideLayoutGroupId = `${PropertyComparisonFrontstage.sideBySideLayoutId}_Group`;
   public static readonly primarySideLayoutId = `${PropertyComparisonFrontstage.sideBySideLayoutId}_Primary`;
   public static readonly secondarySideLayoutId = `${PropertyComparisonFrontstage.sideBySideLayoutId}_Secondary`;
@@ -69,17 +65,13 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     public propertyCompareToolWidgetProps?: PropertyCompareToolWidgetProps,
   ) {
     super();
-    if (
-      !ConfigurableUiManager.isControlRegistered(PropertyComparisonFrontstage.viewportContentId)
-    ) {
+    if (!ConfigurableUiManager.isControlRegistered(PropertyComparisonFrontstage.viewportContentId)) {
       ConfigurableUiManager.registerControl(
         PropertyComparisonFrontstage.viewportContentId,
         PropertyComparisonViewportControl,
       );
     }
-    if (
-      !ConfigurableUiManager.isControlRegistered(PropertyComparisonFrontstage.propertyComparisonTableContentId)
-    ) {
+    if (!ConfigurableUiManager.isControlRegistered(PropertyComparisonFrontstage.propertyComparisonTableContentId)) {
       ConfigurableUiManager.registerControl(
         PropertyComparisonFrontstage.propertyComparisonTableContentId,
         PropertyComparisonTableControl,
@@ -120,7 +112,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     });
   }
 
-  /** Changes layout to a single view for "Side-by-Side" (dual viewport) comparison mode */
+  /** Changes layout to a single view for "Side-by-Side" (dual viewport) comparison mode. */
   public static async changeToSideBySideLayout() {
     if (PropertyComparisonFrontstage._sideBySideContentGroup === undefined) {
       return;
@@ -132,50 +124,39 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     );
   }
 
-  /** Changes layout to "overview" (single viewport) comparison mode */
+  /** Changes layout to "overview" (single viewport) comparison mode. */
   public static async changeToOverviewLayout() {
     if (PropertyComparisonFrontstage._overviewContentGroup === undefined) {
       return;
     }
+
     await this._changeLayout(
       PropertyComparisonFrontstage.overviewLayoutId,
       PropertyComparisonFrontstage._overviewContentGroup,
     );
   }
 
-  /** Returns true if we are in side by side mode */
+  /** Returns true if we are in side by side mode. */
   public static get isSideBySide(): boolean {
     const activeFrontstageDef = FrontstageManager.activeFrontstageDef;
-    if (
-      activeFrontstageDef === undefined ||
-      activeFrontstageDef.contentLayoutDef === undefined
-    ) {
+    if (activeFrontstageDef === undefined || activeFrontstageDef.contentLayoutDef === undefined) {
       return false;
     }
 
-    return (
-      activeFrontstageDef.contentLayoutDef.id ===
-      PropertyComparisonFrontstage.sideBySideLayoutId
-    );
+    return activeFrontstageDef.contentLayoutDef.id === PropertyComparisonFrontstage.sideBySideLayoutId;
   }
 
-  /** Returns true if we are in single viewport overview mode */
+  /** Returns true if we are in single viewport overview mode. */
   public static get isOverview(): boolean {
     const activeFrontstageDef = FrontstageManager.activeFrontstageDef;
-    if (
-      activeFrontstageDef === undefined ||
-      activeFrontstageDef.contentLayoutDef === undefined
-    ) {
+    if (activeFrontstageDef === undefined || activeFrontstageDef.contentLayoutDef === undefined) {
       return false;
     }
 
-    return (
-      activeFrontstageDef.contentLayoutDef.id ===
-      PropertyComparisonFrontstage.overviewLayoutId
-    );
+    return activeFrontstageDef.contentLayoutDef.id === PropertyComparisonFrontstage.overviewLayoutId;
   }
 
-  /** Toggles layout of frontstage */
+  /** Toggles layout of frontstage. */
   public static async toggleLayout() {
     if (PropertyComparisonFrontstage.isSideBySide) {
       await PropertyComparisonFrontstage.changeToOverviewLayout();
@@ -184,13 +165,10 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     }
   }
 
-  /** Changes layout of frontstage */
+  /** Changes layout of frontstage. */
   private static async _changeLayout(id: string, contentGroup: ContentGroup) {
     const activeFrontstageDef = FrontstageManager.activeFrontstageDef;
-    if (
-      activeFrontstageDef !== undefined &&
-      activeFrontstageDef.id === PropertyComparisonFrontstage.id
-    ) {
+    if (activeFrontstageDef !== undefined && activeFrontstageDef.id === PropertyComparisonFrontstage.id) {
       const contentLayout = ContentLayoutManager.findLayout(id);
       if (contentLayout !== undefined) {
         await ContentLayoutManager.setActiveLayout(contentLayout, contentGroup);
@@ -198,7 +176,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     }
   }
 
-  /** Layout props for side by side mode */
+  /** Layout props for side by side mode. */
   private static _sideBySideLayoutProps = (): ContentLayoutProps => {
     const verticalSplit: LayoutVerticalSplitProps = {
       id: "PropertyComparisonThreeTopStacked.Top",
@@ -209,33 +187,27 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     };
 
     const sideBySideLayoutProps: ContentLayoutProps = {
-      // Three Views, one on the left, two stacked on the right.
+      // Three Views, one on the left, two stacked on the right
       id: PropertyComparisonFrontstage.sideBySideLayoutId,
-      description: IModelApp.localization.getLocalizedString(
-        "VersionCompare:ContentDef.ThreeTopStacked",
-      ),
+      description: IModelApp.localization.getLocalizedString("VersionCompare:ContentDef.ThreeTopStacked"),
       horizontalSplit: {
         id: "PropertyComparisonThreeTopStacked.MainHorizontal",
         percentage: 0.6,
         bottom: 2,
         minSizeTop: 200,
         minSizeBottom: 200,
-        top: {
-          verticalSplit,
-        },
+        top: { verticalSplit },
       },
     };
     return sideBySideLayoutProps;
   };
 
-  /** Layout props for overview mode */
+  /** Layout props for overview mode. */
   private static _overviewLayoutProps = (): ContentLayoutProps => {
     return {
-      // Two Content Views, one viewport top, table below.
+      // Two Content Views, one viewport top, table below
       id: PropertyComparisonFrontstage.overviewLayoutId,
-      description: IModelApp.localization.getLocalizedString(
-        "VersionCompare:ContentDef.TwoStacked",
-      ),
+      description: IModelApp.localization.getLocalizedString("VersionCompare:ContentDef.TwoStacked"),
       horizontalSplit: {
         id: "PropertyComparisonThreeTopStacked.MainHorizontal",
         percentage: 0.6,
@@ -247,7 +219,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     };
   };
 
-  /** Content props for side by side comparison */
+  /** Content props for side by side comparison. */
   private _sideBySideContentProps = (): ContentProps[] => {
     const contentProps: ContentProps[] = [];
     contentProps.push({
@@ -277,7 +249,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     return contentProps;
   };
 
-  /** Content props for overview comparison */
+  /** Content props for overview comparison. */
   private _overviewContentProps = (): ContentProps[] => {
     const contentProps: ContentProps[] = [];
     contentProps.push({
@@ -298,7 +270,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     return contentProps;
   };
 
-  /** Frontstage props definition */
+  /** Frontstage props definition. */
   public get frontstage(): React.ReactElement<FrontstageProps> {
     // Register dummy tool for no selection
     DummyTool.register(VersionCompareManager.namespace);
