@@ -258,6 +258,10 @@ function usePagedNamedVersionLoader(
           };
         }
 
+        const visibleNamedVersions = sortedNamedVersions
+          .map(({ namedVersion }) => namedVersion)
+          .filter(({ state }) => state !== NamedVersionState.Hidden);
+
         const currentVersionState: VersionState = {
           version: currentVersion,
           state: VersionProcessedState.Processed,
@@ -284,7 +288,7 @@ function usePagedNamedVersionLoader(
             (changeset) => changeset.id,
             [
               currentVersion.changesetId,
-              ...sortedNamedVersions.map(({ namedVersion }) => namedVersion.changesetId),
+              ...visibleNamedVersions.map(({ changesetId }) => changesetId),
             ],
           );
           cache.current = {
@@ -295,7 +299,7 @@ function usePagedNamedVersionLoader(
             currentNamedVersionIndex: 0,
             result: {
               namedVersions: {
-                entries: sortedNamedVersions.map(({ namedVersion }) => ({
+                entries: visibleNamedVersions.map((namedVersion) => ({
                   version: namedVersion,
                   state: VersionProcessedState.Verifying,
                   numberNeededChangesets: 0,
@@ -311,7 +315,7 @@ function usePagedNamedVersionLoader(
         // We have obtained the current state, notify component
         const currentState = cache.current;
         setResult(currentState.result);
-        if (sortedNamedVersions.length === 0) {
+        if (visibleNamedVersions.length === 0) {
           return;
         }
 
@@ -328,7 +332,7 @@ function usePagedNamedVersionLoader(
           const newEntries = currentState.result.namedVersions.entries.map((entry, index) => {
             if (index === currentState.currentNamedVersionIndex) {
               return {
-                version: sortedNamedVersions[currentState.currentNamedVersionIndex].namedVersion,
+                version: visibleNamedVersions[currentState.currentNamedVersionIndex],
                 state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
@@ -358,7 +362,7 @@ function usePagedNamedVersionLoader(
           }
 
           currentState.currentNamedVersionIndex += 1;
-          if (currentState.currentNamedVersionIndex === sortedNamedVersions.length) {
+          if (currentState.currentNamedVersionIndex === visibleNamedVersions.length) {
             break;
           }
 
