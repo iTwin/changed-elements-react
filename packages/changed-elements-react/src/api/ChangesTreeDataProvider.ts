@@ -13,9 +13,9 @@ import {
 } from "@itwin/core-frontend";
 import { PresentationLabelsProvider } from "@itwin/presentation-components";
 
-import { ChangeElementType, type ChangedElementEntry } from "../api/ChangedElementEntryCache";
-import { VersionCompare } from "../api/VersionCompare";
-import { VersionCompareManager } from "../api/VersionCompareManager";
+import { ChangeElementType, type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { VersionCompare } from "../api/VersionCompare.js";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
 
 enum ModelNodeType {
   Geometric3d,

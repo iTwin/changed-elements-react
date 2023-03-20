@@ -5,8 +5,8 @@
 import { DbOpcode, Logger } from "@itwin/core-bentley";
 import type { ChangedElements } from "@itwin/core-common";
 
-import type { ChangedElementsClientBase } from "./ChangedElementsClientBase";
-import { VersionCompare } from "./VersionCompare";
+import type { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
+import { VersionCompare } from "./VersionCompare.js";
 
 const REQUEST_TIMEOUT = 5 * 60 * 1000;
 const COMPARISON_CHUNK_SIZE = 200;

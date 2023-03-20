@@ -10,10 +10,10 @@ import {
   type TiledGraphicsProvider
 } from "@itwin/core-frontend";
 
-import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache";
-import { ModelsCategoryCache } from "./ModelsCategoryCache";
-import { SpatialModelTileTrees } from "./SpatialModelTileTrees";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization";
+import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
+import { SpatialModelTileTrees } from "./SpatialModelTileTrees.js";
+import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
 
 interface PerModelCategoryVisibilityProps {
   modelId: string;

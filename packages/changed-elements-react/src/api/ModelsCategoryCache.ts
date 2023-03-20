@@ -6,7 +6,7 @@ import { DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /**
  * Queries for the model Ids of the deleted elements passed

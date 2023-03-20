@@ -6,9 +6,9 @@ import { DbOpcode } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
 import { HitDetail, IModelApp, type ToolTipProvider } from "@itwin/core-frontend";
 
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
-import { VersionCompare } from "./VersionCompare";
-import { VersionCompareManager } from "./VersionCompareManager";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { VersionCompare } from "./VersionCompare.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
 
 /**
  * Appends the proper localized string that matches the given type of change

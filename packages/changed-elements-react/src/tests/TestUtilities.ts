@@ -5,7 +5,7 @@
 import { DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder } from "@itwin/core-common";
 
-import type { ChangedElementEntry } from "../api/ChangedElementEntryCache";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 
 export const mockChangedElementEntries = (
   size: number,

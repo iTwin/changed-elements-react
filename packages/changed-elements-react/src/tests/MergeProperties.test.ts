@@ -6,8 +6,8 @@ import { DbOpcode } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
 import { describe, expect, it } from "vitest";
 
-import type { ChangedElement, Checksums } from "../api/ChangedElementEntryCache";
-import { cleanMergedElements, mergeProperties } from "../api/ChangedElementsManager";
+import type { ChangedElement, Checksums } from "../api/ChangedElementEntryCache.js";
+import { cleanMergedElements, mergeProperties } from "../api/ChangedElementsManager.js";
 
 describe("Merge properties test", () => {
   it("Properties and checksums should be merged properly", () => {

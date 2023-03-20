@@ -6,9 +6,9 @@ import { DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
-import { ChangedElementDataCache } from "./ChangedElementDataCache";
-import { ChangeElementType, type ChangedElement, type ChangedElementEntry } from "./ChangedElementEntryCache";
-import type { ChangedElementQueryData } from "./ElementQueries";
+import { ChangedElementDataCache } from "./ChangedElementDataCache.js";
+import { ChangeElementType, type ChangedElement, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import type { ChangedElementQueryData } from "./ElementQueries.js";
 
 interface ParentChildData {
   directChildren: ChangedElementQueryData[];

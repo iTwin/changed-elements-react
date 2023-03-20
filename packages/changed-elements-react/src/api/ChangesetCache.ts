@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { Authorization, IModelsClient, MinimalChangeset, NamedVersion } from "@itwin/imodels-client-management";
 
-import { VersionCompare } from "./VersionCompare";
+import { VersionCompare } from "./VersionCompare.js";
 
 /** Caching utilities for changesets and named versions. */
 export class ChangesetCache {

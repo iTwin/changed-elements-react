@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { PrimitiveTool } from "@itwin/core-frontend";
 
-import { VersionCompareManager } from "../api/VersionCompareManager";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
 
 /** Dummy Tool used to avoid element selection during property comparison */
 export class DummyTool extends PrimitiveTool {

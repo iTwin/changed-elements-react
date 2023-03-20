@@ -16,17 +16,17 @@ import {
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { Component, createRef, ReactElement } from "react";
 
-import type { ChangedElementEntry } from "../api/ChangedElementEntryCache";
-import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages";
-import { VersionCompare } from "../api/VersionCompare";
-import { VersionCompareManager } from "../api/VersionCompareManager";
-import { ExpandableSearchBar } from "../common/ExpandableSearchBar/ExpandableSearchBar";
-import { AdvancedFilterDialog, type PropertyFilter } from "../dialogs/AdvancedFiltersDialog";
-import { PropertyLabelCache } from "../dialogs/PropertyLabelCache";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
+import { VersionCompare } from "../api/VersionCompare.js";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { ExpandableSearchBar } from "../common/ExpandableSearchBar/ExpandableSearchBar.js";
+import { AdvancedFilterDialog, type PropertyFilter } from "../dialogs/AdvancedFiltersDialog.js";
+import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import "./ChangedElementsInspector.scss";
-import { changedElementsWidgetAttachToViewportEvent } from "./ChangedElementsWidget";
-import { ElementsList } from "./ElementsList";
+import { changedElementsWidgetAttachToViewportEvent } from "./ChangedElementsWidget.js";
+import { ElementsList } from "./ElementsList.js";
 
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;

@@ -5,16 +5,16 @@
 import { BeEvent, DbOpcode, type Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 
-import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider";
-import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache";
-import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache";
-import { mergeProperties } from "./ChangedElementsManager";
+import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider.js";
+import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
+import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
+import { mergeProperties } from "./ChangedElementsManager.js";
 import {
   findTopParents, generateEntryFromQueryData, queryEntryDataBulk, type ChangedElementQueryData
-} from "./ElementQueries";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages";
-import { VersionCompare } from "./VersionCompare";
-import { VersionCompareManager } from "./VersionCompareManager";
+} from "./ElementQueries.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
+import { VersionCompare } from "./VersionCompare.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
 
 /** Changed property for a changed element */
 export interface Checksums {

@@ -7,8 +7,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import type { InstanceKey } from "@itwin/presentation-common";
 import { PresentationLabelsProvider as LabelsProvider } from "@itwin/presentation-components";
 
-import { ChangedElementDataCache } from "./ChangedElementDataCache";
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
+import { ChangedElementDataCache } from "./ChangedElementDataCache.js";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /** Cache for labels of changed elements, these labels may exist in either compared iModel Connections */
 export class ChangedElementsLabelsCache extends ChangedElementDataCache {

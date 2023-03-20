@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /** Internal structure for splitting lists of changed element entries in processed and non-processed for label querying */
 interface ProcessedSplit {

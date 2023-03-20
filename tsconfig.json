@@ -5,7 +5,7 @@
     "lib": [ "ES2020" ],
     "strict": true,
     "skipLibCheck": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "node16",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "forceConsistentCasingInFileNames": true,

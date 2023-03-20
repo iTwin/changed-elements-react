@@ -1,7 +1,7 @@
 // Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 import { KeySet } from "@itwin/presentation-common";
 
-import { type ActionsUnion, type DeepReadonly, createAction } from "./redux-ts";
+import { type ActionsUnion, type DeepReadonly, createAction } from "./redux-ts.js";
 
 export interface VersionCompareState {
   selection?: KeySet;

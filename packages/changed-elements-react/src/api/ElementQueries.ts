@@ -8,7 +8,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, type InstanceKey, type Key } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache";
+import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /**
  * Interface for query data

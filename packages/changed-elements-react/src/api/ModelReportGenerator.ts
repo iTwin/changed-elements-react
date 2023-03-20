@@ -5,9 +5,9 @@
 import { QueryRowFormat, type ModelProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
-import { ReportGeneratorBase, type ReportBaseOptions } from "./ReportGenerator";
-import { VersionCompareManager } from "./VersionCompareManager";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { ReportGeneratorBase, type ReportBaseOptions } from "./ReportGenerator.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
 
 /** Info for model data */
 interface ModelInfo {

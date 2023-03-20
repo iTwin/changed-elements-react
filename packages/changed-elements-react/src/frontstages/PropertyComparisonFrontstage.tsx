@@ -11,13 +11,13 @@ import {
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import * as React from "react";
 
-import { VersionCompareManager } from "../api/VersionCompareManager";
-import { PropertyComparisonTableControl } from "../contentviews/PropertyComparisonTable";
-import { PropertyComparisonViewportControl } from "../contentviews/PropertyComparisonViewport";
-import { DummyTool } from "../tools/DummyTool";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { PropertyComparisonTableControl } from "../contentviews/PropertyComparisonTable.js";
+import { PropertyComparisonViewportControl } from "../contentviews/PropertyComparisonViewport.js";
+import { DummyTool } from "../tools/DummyTool.js";
 import {
   PropertyComparisonToolWidget, type ToolWidgetProps as PropertyCompareToolWidgetProps
-} from "../widgets/PropertyComparisonToolWidget";
+} from "../widgets/PropertyComparisonToolWidget.js";
 import "./PropertyComparisonFrontstage.scss";
 
 /**

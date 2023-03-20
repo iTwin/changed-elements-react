@@ -12,14 +12,14 @@ import { Range3d, Transform } from "@itwin/core-geometry";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSetProvider } from "@itwin/presentation-frontend";
 
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import {
   cacheVersionComparisonDisplayProvider, disableVersionComparisonDisplay, enableVersionComparisonDisplay,
   getEmphasizeElementsProps, getVersionComparisonAlwaysDrawn, getVersionComparisonNeverDrawn,
   isVersionComparisonDisplayEnabled, Provider as VersionCompareProvider, updateVersionCompareDisplayEntries,
   updateVersionComparisonDisplayOptions, type VersionDisplayOptions
-} from "./VersionCompareTiles";
+} from "./VersionCompareTiles.js";
 
 /**
  * Handles version compare visualization by using the VersionCompareTiles' provider

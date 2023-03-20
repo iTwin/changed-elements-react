@@ -10,8 +10,8 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache";
-import { VersionCompareManager } from "./VersionCompareManager";
+import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { VersionCompareManager } from "./VersionCompareManager.js";
 
 export const downloadAsFile = (filename: string, data: string) => {
   const blob = new Blob(["\uFEFF", data], { type: "text/csv;charset=utf-18" });

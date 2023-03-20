@@ -11,17 +11,17 @@ import {
 import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
 
-import { PropertyLabelCache } from "../dialogs/PropertyLabelCache";
-import type { ChangedElementEntry } from "./ChangedElementEntryCache";
-import { ChangedElementsApiClient, type ChangesetChunk } from "./ChangedElementsApiClient";
-import { ChangedElementsManager } from "./ChangedElementsManager";
-import { ChangesetCache } from "./ChangesetCache";
-import { ChangesTooltipProvider } from "./ChangesTooltipProvider";
-import { NinezoneVisualizationHandler } from "./NinezoneVisualizationHandler";
-import { SimpleVisualizationHandler } from "./SimpleVisualizationHandler";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages";
-import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare";
-import { VisualizationHandler } from "./VisualizationHandler";
+import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { ChangedElementsApiClient, type ChangesetChunk } from "./ChangedElementsApiClient.js";
+import { ChangedElementsManager } from "./ChangedElementsManager.js";
+import { ChangesetCache } from "./ChangesetCache.js";
+import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
+import { NinezoneVisualizationHandler } from "./NinezoneVisualizationHandler.js";
+import { SimpleVisualizationHandler } from "./SimpleVisualizationHandler.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
+import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
+import { VisualizationHandler } from "./VisualizationHandler.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 

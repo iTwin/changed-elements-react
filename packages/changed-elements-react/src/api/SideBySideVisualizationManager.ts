@@ -13,9 +13,9 @@ import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 import type { InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-import { SideBySideLabelDecorator, ViewportLabelDecoration } from "../contentviews/ViewportLabel";
-import { DummyTool } from "../tools/DummyTool";
-import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache";
+import { SideBySideLabelDecorator, ViewportLabelDecoration } from "../contentviews/ViewportLabel.js";
+import { DummyTool } from "../tools/DummyTool.js";
+import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /** Handles side-by-side visualization of differencing by coloring the relevant elements */
 export class SideBySideVisualizationManager {
