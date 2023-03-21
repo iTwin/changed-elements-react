@@ -52,7 +52,7 @@
     "react-router-dom": "^6.4.3",
     "redux": "^4.1.0",
     "sass": "^1.56.1",
-    "typescript": "^4.9.4",
+    "typescript": "^5.0.0",
     "vite": "^4.0.4",
     "vite-plugin-static-copy": "^0.13.0"
   }

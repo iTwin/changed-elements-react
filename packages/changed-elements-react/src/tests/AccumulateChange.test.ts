@@ -13,7 +13,7 @@ const changeset1: ChangedElements = {
   elements: ["0x1", "0x2"],
   classIds: ["0xc1", "0xc2"],
   opcodes: [DbOpcode.Insert, DbOpcode.Insert],
-  type: [0, 0],
+  type: [TypeOfChange.Property, TypeOfChange.Property],
   modelIds: ["0x100", "0x200"],
   properties: [[], []],
 };
@@ -38,7 +38,7 @@ const insertDeleteCs1: ChangedElements = {
   elements: ["0x1"],
   classIds: ["0xc1"],
   opcodes: [DbOpcode.Insert],
-  type: [0],
+  type: [TypeOfChange.Property],
   modelIds: ["0x100"],
   properties: [[]],
 };
@@ -46,7 +46,7 @@ const insertDeleteCs2: ChangedElements = {
   elements: ["0x1"],
   classIds: ["0xc1"],
   opcodes: [DbOpcode.Delete],
-  type: [0],
+  type: [TypeOfChange.Property],
   modelIds: ["0x100"],
   properties: [[]],
 };
@@ -55,7 +55,7 @@ const insertInsertCs1: ChangedElements = {
   elements: ["0x1", "0x2"],
   classIds: ["0xc1", "0xc2"],
   opcodes: [DbOpcode.Insert, DbOpcode.Update],
-  type: [0, 1],
+  type: [TypeOfChange.Property, TypeOfChange.Property],
   modelIds: ["0x100", "0x100"],
   properties: [[], []],
 };
@@ -63,7 +63,7 @@ const insertInsertCs2: ChangedElements = {
   elements: ["0x1", "0x2"],
   classIds: ["0xc1", "0xc2"],
   opcodes: [DbOpcode.Insert, DbOpcode.Insert],
-  type: [0, 0],
+  type: [TypeOfChange.Property, TypeOfChange.Property],
   modelIds: ["0x100", "0x100"],
   properties: [[], []],
 };
@@ -72,7 +72,7 @@ const deleteInsertCs1: ChangedElements = {
   elements: ["0x1"],
   classIds: ["0xc1"],
   opcodes: [DbOpcode.Delete],
-  type: [0],
+  type: [TypeOfChange.Property],
   modelIds: ["0x100"],
   properties: [[]],
 };
@@ -80,7 +80,7 @@ const deleteInsertCs2: ChangedElements = {
   elements: ["0x1"],
   classIds: ["0xc1"],
   opcodes: [DbOpcode.Insert],
-  type: [0],
+  type: [TypeOfChange.Property],
   modelIds: ["0x100"],
   properties: [[]],
 };
@@ -113,7 +113,7 @@ const propertyCs1: ChangedElements = {
   elements: ["0x1"],
   classIds: ["0xc1"],
   opcodes: [DbOpcode.Insert],
-  type: [0],
+  type: [TypeOfChange.Property],
   modelIds: ["0x100"],
   properties: [[]],
   newChecksums: [[]],
@@ -124,7 +124,7 @@ const propertyCs12: ChangedElements = {
   elements: ["0x1"],
   classIds: ["0xc1"],
   opcodes: [DbOpcode.Update],
-  type: [0],
+  type: [TypeOfChange.Property],
   modelIds: ["0x100"],
   properties: [["Property1"]],
   newChecksums: [[80]],
