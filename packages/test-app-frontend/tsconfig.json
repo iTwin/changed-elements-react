@@ -8,6 +8,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "esModuleInterop": true,
+    "paths": {
+      "@itwin/changed-elements-react": [ "../changed-elements-react/src/index.ts" ],
+    },
   },
   "include": [ "src" ],
   "references": [ { "path": "./tsconfig.node.json" } ]

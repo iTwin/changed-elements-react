@@ -41,8 +41,6 @@ function main(): void {
 
   console.log(`Successfully bumped ${packageName} version and committed the changes.
 Release tag: v${packageVersion}`);
-
-  processPackageJson(args.packageJsonFilePath);
 }
 
 function readPackageJson(packageJsonFilePath: string): { packageName: string; packageVersion: string; } {
@@ -58,19 +56,6 @@ function readPackageJson(packageJsonFilePath: string): { packageName: string; pa
   }
 
   return { packageName, packageVersion };
-}
-
-function processPackageJson(packageJsonFilePath: string): void {
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonFilePath, { encoding: "utf-8" }));
-
-  // Remove fields that are not needed in published package
-  delete packageJson.devDependencies;
-  delete packageJson.scripts;
-
-  // Point types field to actual published types
-  packageJson.exports["."].types = packageJson.exports["."].import.replace(".js", ".d.ts");
-
-  fs.writeFileSync(packageJsonFilePath, JSON.stringify(packageJson, undefined, 2));
 }
 
 function updateChangelog(changelogFilePath: string, packageVersion: string): void {
