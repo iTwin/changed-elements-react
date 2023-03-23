@@ -7,7 +7,7 @@ import type { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Dialog, DialogButtonStyle, DialogButtonType, ImageCheckBox, SearchBox } from "@itwin/core-react";
 import { Checkbox } from "@itwin/itwinui-react";
-import { ChangeEventHandler, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEventHandler, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import type { CellProps, Row } from "react-table";
 
 import type { FilterOptions } from "../widgets/EnhancedElementsInspector.js";
@@ -24,20 +24,23 @@ export interface PropertyFilter {
   visible?: boolean;
 }
 
-/** Basic Property Label that takes the label from the cell props (doesn't load) */
-const PropertyLabel = (props: { cellProps: CellProps<PropertyFilter>; }) => {
+interface PropertyLabelProps {
+  cellProps: CellProps<PropertyFilter>;
+}
+
+/** Basic Property Label that takes the label from the cell props (doesn't load). */
+function PropertyLabel(props: PropertyLabelProps): ReactElement {
   const { cellProps } = props;
   return <>{cellProps.row.original.label}</>;
-};
+}
 
-// Custom checkbox column header (UX may not want this)
-const CheckboxHeader = (props: {
+interface CheckboxHeaderProps {
   cellProps: CellProps<PropertyFilter>;
-  updateData?: (
-    cellProps: CellProps<PropertyFilter>,
-    visible: boolean
-  ) => void;
-}) => {
+  updateData?: ((cellProps: CellProps<PropertyFilter>, visible: boolean) => void) | undefined;
+}
+
+/** Custom checkbox column header. */
+function CheckboxHeader(props: CheckboxHeaderProps): ReactElement {
   const { cellProps, updateData } = props;
 
   // We need to keep and update the state of the cell normally
@@ -45,37 +48,32 @@ const CheckboxHeader = (props: {
   const [indeterminate, setIndeterminate] = useState(cellProps.value);
 
   // If the initialValue is changed external, sync it up with our state
-  useEffect(() => {
-    setValue(cellProps.value);
-  }, [cellProps.value]);
+  useEffect(() => { setValue(cellProps.value); }, [cellProps.value]);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     event.stopPropagation();
     const newValue = event.target.checked;
     setValue(newValue);
-    updateData && updateData(cellProps, newValue);
+    updateData?.(cellProps, newValue);
   };
 
-  useEffect(() => {
-    const selectedCount = cellProps.rows.filter((row: Row<PropertyFilter>) => row.original.visible).length;
-    const allSelected = selectedCount === cellProps.rows.length;
-    const isIndeterminate = !allSelected && selectedCount > 0;
-    setIndeterminate(isIndeterminate);
-    if (isIndeterminate || selectedCount === 0) {
-      setValue(false);
-    } else if (allSelected) {
-      setValue(true);
-    }
-  }, [cellProps.rows, cellProps.data]);
-
-  return (
-    <Checkbox
-      checked={value}
-      indeterminate={indeterminate}
-      onChange={onChange}
-    />
+  useEffect(
+    () => {
+      const selectedCount = cellProps.rows.filter((row) => row.original.visible).length;
+      const allSelected = selectedCount === cellProps.rows.length;
+      const isIndeterminate = !allSelected && selectedCount > 0;
+      setIndeterminate(isIndeterminate);
+      if (isIndeterminate || selectedCount === 0) {
+        setValue(false);
+      } else if (allSelected) {
+        setValue(true);
+      }
+    },
+    [cellProps.rows, cellProps.data],
   );
-};
+
+  return <Checkbox checked={value} indeterminate={indeterminate} onChange={onChange} />;
+}
 
 export interface AdvancedFilterDialogProps {
   data: PropertyFilter[];
@@ -86,67 +84,56 @@ export interface AdvancedFilterDialogProps {
   onFilterSelected?: (filterOptions: FilterOptions) => void;
 }
 
-export const AdvancedFilterDialog = ({
-  data,
-  showValues,
-  onSave,
-}: AdvancedFilterDialogProps) => {
-  // current searchbox text filter
+export function AdvancedFilterDialog({ data, showValues, onSave }: AdvancedFilterDialogProps): ReactElement {
+  // Current searchbox text filter
   const [filter, setFilter] = useState("");
-  // list of all data (modifed)
+  // List of all data (modifed)
   const [modifiedData, setModifiedData] = useState<PropertyFilter[]>([]);
   // true if no results found
   const [noResults, setNoResults] = useState(false);
 
-  // called when the save button on the dialog is clicked
-  const onSaveClick = useCallback(() => {
-    ModalDialogManager.closeDialog();
-    onSave?.(modifiedData);
-  }, [modifiedData]);
+  // Called when the save button on the dialog is clicked
+  const onSaveClick = useCallback(
+    () => {
+      ModalDialogManager.closeDialog();
+      onSave?.(modifiedData);
+    },
+    [modifiedData],
+  );
 
-  // called when the cancel button on the dialog is clicked
-  const onCancel = useCallback(() => {
-    ModalDialogManager.closeDialog();
-  }, []);
+  // Called when the cancel button on the dialog is clicked
+  const onCancel = useCallback(() => { ModalDialogManager.closeDialog(); }, []);
 
-  // called when the rows have changed in the Table
-  const onRowsChanged = useCallback((rows: Row<PropertyFilter>[]) => {
-    setNoResults(rows.length === 0);
-  }, []);
+  // Called when the rows have changed in the Table
+  const onRowsChanged = useCallback((rows: Row<PropertyFilter>[]) => { setNoResults(rows.length === 0); }, []);
 
-  // initialize the modified data with the data passed in
-  useEffect(() => {
-    const newData = data.map((a) => ({ ...a })); // clone the array since we're modal
-    setModifiedData(newData);
-  }, [data]);
+  // Initialize the modified data with the data passed in
+  useEffect(
+    () => {
+      // Clone the array since we're modal
+      const newData = data.map((a) => ({ ...a }));
+      setModifiedData(newData);
+    },
+    [data],
+  );
 
-  // update all rows with the visible boolean after edit
-  const updateAllData = (
-    cellProps: CellProps<PropertyFilter>,
-    visibility: boolean,
-  ) => {
+  // Update all rows with the visible boolean after edit
+  const updateAllData = (cellProps: CellProps<PropertyFilter>, visibility: boolean) => {
     const updatedData = cellProps.data.slice();
     cellProps.rows.forEach((row) => (updatedData[row.index].visible = visibility));
     setModifiedData(updatedData);
   };
 
-  // update single row with the visible boolean after edit
-  const onVisibilityClick = (
-    cellProps: CellProps<PropertyFilter>,
-    visibility: boolean,
-  ) => {
-    setModifiedData((old) =>
-      old.map((row, index) => {
-        return index === cellProps.row.index
-          ? { ...row, visible: visibility }
-          : row;
-      }),
+  // Update single row with the visible boolean after edit
+  const onVisibilityClick = (cellProps: CellProps<PropertyFilter>, visibility: boolean) => {
+    setModifiedData(
+      (old) => old.map((row, index) => index === cellProps.row.index ? { ...row, visible: visibility } : row),
     );
   };
 
-  // columns in the table
-  const columns = useMemo(() => {
-    return [
+  // Columns in the table
+  const columns = useMemo(
+    () => [
       {
         Header: "Name",
         columns: [
@@ -157,9 +144,7 @@ export const AdvancedFilterDialog = ({
             width: 15,
             disableSortBy: true,
             Header: (propsH: CellProps<PropertyFilter>) => {
-              return (
-                <CheckboxHeader cellProps={propsH} updateData={updateAllData} />
-              );
+              return <CheckboxHeader cellProps={propsH} updateData={updateAllData} />;
             },
             Cell: (props: CellProps<PropertyFilter>) => {
               const value = props.cell.value;
@@ -168,9 +153,7 @@ export const AdvancedFilterDialog = ({
                   imageOn="icon-visibility"
                   imageOff="icon-visibility-hide-2"
                   checked={value}
-                  onClick={(checked: boolean) =>
-                    onVisibilityClick(props, checked)
-                  }
+                  onClick={(checked) => onVisibilityClick(props, checked)}
                 />
               );
             },
@@ -180,9 +163,7 @@ export const AdvancedFilterDialog = ({
             accessor: "label",
             id: "label",
             filter: "includes",
-            Cell: (props: CellProps<PropertyFilter>) => {
-              return <PropertyLabel cellProps={props} />;
-            },
+            Cell: (props: CellProps<PropertyFilter>) => <PropertyLabel cellProps={props} />,
           },
           {
             Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.numberOfElements"),
@@ -207,39 +188,34 @@ export const AdvancedFilterDialog = ({
           },
         ],
       },
-    ];
-  }, []);
+    ],
+    [],
+  );
 
-  const renderMainDialog = () => {
-    return (
-      <div className="filter-dialog-container">
-        <div className="filter-dialog-header">
-          <div className="filter-dialog-empty-header-space"></div>
-          <SearchBox
-            className="filter-dialog-search"
-            onValueChanged={setFilter}
-          />
-        </div>
-        <div className="filter-dialog-content">
-          <Table<PropertyFilter>
-            columns={columns}
-            data={modifiedData}
-            columnSortBy={[{ id: "name", desc: false }]}
-            searchText={filter}
-            onRowsChanged={onRowsChanged}
-          />
-          {noResults && (
-            <div className="filter-dialog-no-results">
-              <span className="icon icon-compare" />
-              <span>
-                {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noResults")}
-              </span>
-            </div>
-          )}
-        </div>
+  const renderMainDialog = () => (
+    <div className="filter-dialog-container">
+      <div className="filter-dialog-header">
+        <div className="filter-dialog-empty-header-space"></div>
+        <SearchBox className="filter-dialog-search" onValueChanged={setFilter} />
       </div>
-    );
-  };
+      <div className="filter-dialog-content">
+        <Table<PropertyFilter>
+          columns={columns}
+          data={modifiedData}
+          columnSortBy={[{ id: "name", desc: false }]}
+          searchText={filter}
+          onRowsChanged={onRowsChanged}
+        />
+        {
+          noResults &&
+          <div className="filter-dialog-no-results">
+            <span className="icon icon-compare" />
+            <span>{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noResults")}</span>
+          </div>
+        }
+      </div>
+    </div>
+  );
 
   return (
     <Dialog
@@ -268,4 +244,4 @@ export const AdvancedFilterDialog = ({
       {renderMainDialog()}
     </Dialog>
   );
-};
+}
