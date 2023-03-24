@@ -97,6 +97,9 @@ export interface VersionCompareOptions {
    */
   wantTooltipAugment?: boolean;
 
+  /** Shows the entry to open the report generation dialog from the changed elements widget. */
+  wantReportGeneration?: boolean;
+
   /** Whether to show all models in the results, including non-geometric. This will not include private models. */
   wantAllModels?: boolean;
 

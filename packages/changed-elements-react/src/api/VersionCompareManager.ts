@@ -115,6 +115,10 @@ export class VersionCompareManager {
     return this.options.wantAllModels ?? false;
   }
 
+  public get wantReportGeneration(): boolean {
+    return this.options.wantReportGeneration ?? false;
+  }
+
   public get wantNinezone(): boolean {
     return this.options.ninezoneOptions !== undefined &&
       (this.options.wantNinezone === undefined || this.options.wantNinezone === true);

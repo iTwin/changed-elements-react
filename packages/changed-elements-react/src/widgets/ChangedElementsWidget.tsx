@@ -9,17 +9,21 @@ import {
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
 import { ScrollPositionMaintainer } from "@itwin/core-react";
-import { SvgAdd, SvgCompare, SvgStop } from "@itwin/itwinui-icons-react";
+import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, createRef, ReactElement } from "react";
+import { Component, ReactElement, createRef } from "react";
 
+import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { ReportProperty } from "../api/ReportGenerator.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { CenteredDiv } from "../common/CenteredDiv.js";
 import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
 import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
+import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
+import { openReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import "./ChangedElementsWidget.scss";
 import {
   ChangedElementsInspector as EnhancedInspector, ChangedElementsListComponent as EnhancedListComponent
@@ -135,6 +139,12 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
   }
 
+  private _currentFilterOptions: FilterOptions | undefined;
+
+  private _onFilterChange = (options: FilterOptions): void => {
+    this._currentFilterOptions = options;
+  };
+
   private getChangedElementsContent(): ReactElement {
     if (!this.state.currentIModel || !this.state.targetIModel) {
       Logger.logError(
@@ -147,6 +157,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     return (
       <EnhancedInspector
         manager={this.state.manager}
+        onFilterChange={this._onFilterChange}
         onShowAll={this._showAll}
         onHideAll={this._hideAll}
         onInvert={this._invert}
@@ -228,6 +239,36 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ loaded: false });
   };
 
+  private _handleReportGeneration = async (): Promise<void> => {
+    let properties: ReportProperty[] = [];
+    if (this._currentFilterOptions !== undefined && this.state.manager.currentIModel) {
+      const propertyNames: string[] = [];
+      for (const property of this._currentFilterOptions.wantedProperties) {
+        // Get all enabled properties
+        if (property[1]) {
+          propertyNames.push(property[0]);
+        }
+      }
+
+      // Load labels for properties to be displayed
+      if (!PropertyLabelCache.labelsLoaded(propertyNames)) {
+        await PropertyLabelCache.loadLabels(
+          this.state.manager.currentIModel,
+          propertyNames.map((propertyName) => ({ classId: "", propertyName }))
+        );
+      }
+
+      properties = propertyNames.map((propertyName) => ({
+        propertyName,
+        label: PropertyLabelCache.getLabel("", propertyName) ?? propertyName,
+      }));
+    }
+    openReportGeneratorDialog(
+      this.state.manager,
+      properties.length !== 0 ? properties : undefined
+    );
+  };
+
   private getHeader(): ReactElement {
     return (
       <>
@@ -252,6 +293,19 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             <SvgStop />
           </IconButton>
         }
+        {
+          this.state.manager.wantReportGeneration &&
+          this.state.manager.wantNinezone &&
+          this.state.loaded &&
+            <IconButton
+              size="small"
+              styleType="borderless"
+              onClick={this._handleReportGeneration}
+              title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
+            >
+              <SvgExport />
+            </IconButton>
+          }
         {
           this.state.loaded && this.state.manager.wantNinezone &&
           <IconButton
