@@ -290,9 +290,7 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
           ><SvgProgressBackwardCircular />
           </IconButton>
           <div className="filter-dialog-edit-table-header-label">
-            {IModelApp.localization.getLocalizedString(
-              "VersionCompare:filters.edit"
-            )}
+            {IModelApp.localization.getLocalizedString("VersionCompare:filters.edit")}
           </div>
         </div>
         <SavedFiltersTable savedFilters={savedFilters} />
