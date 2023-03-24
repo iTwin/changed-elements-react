@@ -2,65 +2,44 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
 
 .filter-dialog-container {
-  padding: $uicore-s $uicore-sm;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  color: $buic-foreground-body;
-  background-color: $buic-background-dialog;
   box-sizing: border-box;
   height: 400px;
 
   .filter-dialog-edit-table-header {
     display: flex;
     flex-direction: row;
-    padding-bottom: $uicore-xs;
-
-    .filter-dialog-container-back-button {
-      font-size: 24px;
-      margin-top: auto;
-      margin-bottom: auto;
-    }
+    padding-bottom: 4px;
 
     .filter-dialog-edit-table-header-label {
-      @include uicore-font-family;
-      color: $buic-text-color;
-      padding: $uicore-xs;
+      padding: 4px;
       margin-right: auto;
       margin-top: auto;
       margin-bottom: auto;
-      margin-left: $uicore-s;
+      margin-left: 8px;
       text-align: left;
     }
   }
 
   .filter-dialog-apply-saved-filter-label {
-    @include uicore-font-family;
-    color: $buic-text-color;
-    padding: $uicore-xs;
+    padding: 4px;
   }
 
   .filter-dialog-header {
-    padding: $uicore-s 0;
+    padding: 8px 0;
     display: flex;
     align-items: left;
-    margin-bottom: $uicore-s;
+    margin-bottom: 8px;
 
     .filter-dialog-search {
       width: 210px;
       height: 38px;
       margin-right: 0;
     }
-  }
-
-  // Note: fixes bug in core (setting className on Select sets both parent/child div classNames)
-  // Nancy is fixing this in core
-  .uicore-reactSelectTop {
-    margin-left: $uicore-xs;
-    margin-right: $uicore-m;
-    width: 225px;
   }
 
   .filter-dialog-content {
@@ -77,24 +56,17 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: $buic-foreground-muted;
 
       > .icon {
         font-size: 60px;
+        color: var(--iui-text-color-muted);
       }
     }
 
     .filter-dialog-value-varies {
-      color: $buic-foreground-muted;
       font-style: italic;
     }
   }
-}
-
-.filter-dialog-name-skeleton {
-  background: $buic-background-placeholder;
-  width: 65%;
-  height: 1.25em;
 }
 
 .filter-dialog-empty-header-space {

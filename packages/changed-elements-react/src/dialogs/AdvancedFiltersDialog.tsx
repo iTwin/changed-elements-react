@@ -6,13 +6,18 @@ import { ModalDialogManager } from "@itwin/appui-react";
 import type { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Dialog, DialogButtonStyle, DialogButtonType, ImageCheckBox, SearchBox } from "@itwin/core-react";
-import { Checkbox } from "@itwin/itwinui-react";
+import { SvgProgressBackwardCircular } from "@itwin/itwinui-icons-react";
+import { Checkbox, IconButton, Text } from "@itwin/itwinui-react";
 import { ChangeEventHandler, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import type { CellProps, Row } from "react-table";
 
-import type { FilterOptions } from "../widgets/EnhancedElementsInspector.js";
-import "./AdvancedFiltersDialog.scss";
+import { FilterOptions, SavedFiltersManager } from "../SavedFiltersManager.js";
+import { useVersionCompare } from "../VersionCompareContext.js";
+import { SavedFiltersTable } from "./SavedFiltersDialog.js";
+import { SavedFiltersSelector } from "./SavedFiltersSelector.js";
 import { Table } from "./Table.js";
+
+import "./AdvancedFiltersDialog.scss";
 
 // Represents a single row in the Table.
 export interface PropertyFilter {
@@ -84,13 +89,17 @@ export interface AdvancedFilterDialogProps {
   onFilterSelected?: (filterOptions: FilterOptions) => void;
 }
 
-export function AdvancedFilterDialog({ data, showValues, onSave }: AdvancedFilterDialogProps): ReactElement {
+export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactElement {
+  const { data, showValues, onSave, onFilterSelected, getCurrentFilterOptions } = props;
+
   // Current searchbox text filter
   const [filter, setFilter] = useState("");
   // List of all data (modifed)
   const [modifiedData, setModifiedData] = useState<PropertyFilter[]>([]);
   // true if no results found
   const [noResults, setNoResults] = useState(false);
+  // true if we are editing the saved filters
+  const [showEditTable, setShowEditTable] = useState(false);
 
   // Called when the save button on the dialog is clicked
   const onSaveClick = useCallback(
@@ -181,9 +190,9 @@ export function AdvancedFilterDialog({ data, showValues, onSave }: AdvancedFilte
             disableFilters: true,
             Cell: (props: CellProps<PropertyFilter>) => {
               const value = props.cell.value;
-              const isVaries = value === "**Varies**";
-              const className = isVaries ? "filter-dialog-value-varies" : "";
-              return <span className={className}>{value}</span>;
+              return value === "**Varies**"
+                ? <Text className="filter-dialog-value-varies" isMuted>{value}</Text>
+                : <span>{value}</span>;
             },
           },
         ],
@@ -192,9 +201,56 @@ export function AdvancedFilterDialog({ data, showValues, onSave }: AdvancedFilte
     [],
   );
 
+  // Called from the filter selector. Update current filter options with the properties updated in the this dialog
+  const getCurrentFilterOptionsWithProperties = () => {
+    const currentOptions = { ...getCurrentFilterOptions() };
+    currentOptions.wantedProperties.clear();
+    for (const propData of modifiedData) {
+      currentOptions.wantedProperties.set(propData.name, propData.visible ?? false);
+    }
+
+    return currentOptions;
+  };
+
+  // Called from the filter selector. Update visible properties and send to parent
+  const onFilterSelectedWithProperties = (options: FilterOptions) => {
+    if (onFilterSelected) {
+      // Update the filters visibility
+      setModifiedData((prev) => {
+        return prev.map((currentFilter) => ({
+          ...currentFilter,
+          visible: options.wantedProperties.get(currentFilter.name) ?? false,
+        }));
+      });
+      // Send to parent
+      onFilterSelected(options);
+    }
+  };
+
+  const onEditFilters = () => {
+    setShowEditTable(true);
+  };
+
+  const { savedFilters } = useVersionCompare() ?? { savedFilters: undefined };
+
   const renderMainDialog = () => (
     <div className="filter-dialog-container">
+      {
+        savedFilters &&
+        <div className="filter-dialog-apply-saved-filter-label">
+          {IModelApp.localization.getLocalizedString("VersionCompare:filters.applySavedFilter")}
+        </div>
+      }
       <div className="filter-dialog-header">
+        {
+          savedFilters && onFilterSelected &&
+          <SavedFiltersSelector
+            savedFilters={savedFilters}
+            onFilterSelected={onFilterSelectedWithProperties}
+            getCurrentFilterOptions={getCurrentFilterOptionsWithProperties}
+            onEditFilters={onEditFilters}
+          />
+        }
         <div className="filter-dialog-empty-header-space"></div>
         <SearchBox className="filter-dialog-search" onValueChanged={setFilter} />
       </div>
@@ -210,12 +266,39 @@ export function AdvancedFilterDialog({ data, showValues, onSave }: AdvancedFilte
           noResults &&
           <div className="filter-dialog-no-results">
             <span className="icon icon-compare" />
-            <span>{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noResults")}</span>
+            <Text isMuted>
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noResults")}
+            </Text>
           </div>
         }
       </div>
     </div>
   );
+
+  const onBack = () => {
+    setShowEditTable(false);
+  };
+
+  const renderEditSavedFilters = (savedFilters: SavedFiltersManager) => {
+    return (
+      <div className="filter-dialog-container">
+        <div className="filter-dialog-edit-table-header">
+          <IconButton
+            className="filter-dialog-container-back-button"
+            onClick={onBack}
+            styleType="borderless"
+          ><SvgProgressBackwardCircular />
+          </IconButton>
+          <div className="filter-dialog-edit-table-header-label">
+            {IModelApp.localization.getLocalizedString(
+              "VersionCompare:filters.edit"
+            )}
+          </div>
+        </div>
+        <SavedFiltersTable savedFilters={savedFilters} />
+      </div>
+    );
+  };
 
   return (
     <Dialog
@@ -241,7 +324,7 @@ export function AdvancedFilterDialog({ data, showValues, onSave }: AdvancedFilte
         },
       ]}
     >
-      {renderMainDialog()}
+      {showEditTable && savedFilters ? renderEditSavedFilters(savedFilters) : renderMainDialog()}
     </Dialog>
   );
 }
