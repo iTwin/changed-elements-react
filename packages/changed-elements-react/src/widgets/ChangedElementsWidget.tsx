@@ -254,7 +254,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       if (!PropertyLabelCache.labelsLoaded(propertyNames)) {
         await PropertyLabelCache.loadLabels(
           this.state.manager.currentIModel,
-          propertyNames.map((propertyName) => ({ classId: "", propertyName }))
+          propertyNames.map((propertyName) => ({ classId: "", propertyName })),
         );
       }
 
@@ -263,10 +263,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         label: PropertyLabelCache.getLabel("", propertyName) ?? propertyName,
       }));
     }
-    openReportGeneratorDialog(
-      this.state.manager,
-      properties.length !== 0 ? properties : undefined
-    );
+    
+    openReportGeneratorDialog(this.state.manager, properties.length !== 0 ? properties : undefined);
   };
 
   private getHeader(): ReactElement {
