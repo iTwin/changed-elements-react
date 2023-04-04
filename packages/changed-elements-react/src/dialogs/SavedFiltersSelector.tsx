@@ -209,8 +209,6 @@ export const SavedFiltersSelector = (props: SavedFiltersSelectorProps) => {
 
   const onNameInputChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilterName(event.target.value ?? "");
-
-    // TODO: Do some checks whether the name is valid
   };
 
   const onNameInputBlur = () => {
