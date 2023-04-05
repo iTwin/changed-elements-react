@@ -16,6 +16,7 @@ import { connect } from "react-redux";
 
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
 import { SvgChevronDown, SvgChevronUp } from "@itwin/itwinui-icons-react";
+import { useVersionCompare } from "../VersionCompareContext.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import type { ChangedElementsManager } from "../api/ChangedElementsManager.js";
 import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
@@ -70,6 +71,9 @@ interface PropertyComparisonTableProps {
 }
 
 function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
+  // Throw if context is not provided
+  useVersionCompare();
+
   const { manager, selection } = props;
 
   const columns = useColumnsDefinition(manager.currentVersion?.displayName, manager.targetVersion?.displayName);

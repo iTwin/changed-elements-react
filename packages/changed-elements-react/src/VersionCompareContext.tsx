@@ -22,12 +22,23 @@ export function VersionCompareContext(props: PropsWithChildren<VersionCompareCon
   return <versionCompareContext.Provider value={value}>{props.children}</versionCompareContext.Provider>;
 }
 
+export function useVersionCompare(): VersionCompareContextValue {
+  const context = useContext(versionCompareContext);
+  if (!context) {
+    throw new Error(`VersionCompare module is not initialized. Did you forget to wrap your application with VersionCompareContext?
+
+Example:
+  <VersionCompareContext>
+    <App/>
+  </VersionCompareContext>
+`);
+  }
+
+  return context;
+}
+
 export interface VersionCompareContextValue {
   savedFilters: SavedFiltersManager | undefined;
 }
 
 const versionCompareContext = createContext<VersionCompareContextValue | undefined>(undefined);
-
-export function useVersionCompare(): VersionCompareContextValue | undefined {
-  return useContext(versionCompareContext);
-}
