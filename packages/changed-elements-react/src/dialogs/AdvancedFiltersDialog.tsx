@@ -231,7 +231,7 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
     setShowEditTable(true);
   };
 
-  const { savedFilters } = useVersionCompare() ?? { savedFilters: undefined };
+  const { savedFilters } = useVersionCompare();
 
   const renderMainDialog = () => (
     <div className="filter-dialog-container">
