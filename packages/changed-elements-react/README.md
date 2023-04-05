@@ -12,12 +12,22 @@ npm install @itwin/changed-elements-react
 
 ## Usage
 
-### Integrating with @itwin/appui-react
+This package is intended to be used together with iTwin.js AppUI framework, however it is also possible to use the provided components without it. In either way, to consume this package in your application, you will need to:
 
-To integrate version comparison features with AppUI framework, you will need to do the following:
+1. If you are using iTwin Platform Changed Elements endpoint (which is the default), add `changedelements:read` scope to your OAuth client.
+2. Wrap your application with `VersionCompareContext`.
 
-1. If you are using iTwin Platform Changed Elements endpoint (default), add `changedelements:read` scope to your OAuth client.
-2. Initialize VersionCompare module with `VersionCompare.initialize()`.
+  ```TypeScriptReact
+    <VersionCompareContext>
+      <App />
+    </VersionCompareContext>
+  ```
+
+### Integrating with AppUI framework
+
+In addition, to integrate version comparison features with AppUI framework, you will need to do the following:
+
+1. Initialize VersionCompare module with `VersionCompare.initialize()`.
 
     ```TypeScript
     VersionCompare.initialize({
@@ -30,7 +40,7 @@ To integrate version comparison features with AppUI framework, you will need to 
     });
     ```
 
-3. Add a way to invoke `VersionCompareSelectDialog`. You may use `openSelectDialog` function to start the dialog, or add a pre-defined tool button returned by `openSelectDialogToolButton` to the tools section.
+2. Add a way to invoke `VersionCompareSelectDialog`. You may use `openSelectDialog` function to start the dialog, or add a pre-defined tool button returned by `openSelectDialogToolButton` to the tools section.
 
     ```TypeScript
     // Open version compare select dialog
@@ -43,7 +53,7 @@ To integrate version comparison features with AppUI framework, you will need to 
 
     You may also use the `openSelectDialogToolButton` function to get a button to add to your tool buttons.
 
-4. Add `ChangedElementsWidget` to a frontstage. This widget lets users to inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
+3. Add `ChangedElementsWidget` to a frontstage. This widget lets users to inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
 
     ```TypeScript
     class MyFrontstageItemsProvider implements UiItemsProvider {
@@ -72,8 +82,7 @@ To integrate version comparison features with AppUI framework, you will need to 
 
 If your application does not use AppUI or its frontstages, you can use the package like so:
 
-1. If you are using iTwin Platform Changed Elements endpoint (default), add `changedelements:read` scope to your OAuth client.
-2. Initialize Version Compare with `VersionCompare.initialize()`.
+1. Initialize Version Compare with `VersionCompare.initialize()`.
 
     ```TypeScript
     // Create the options so that version compare is aware of which viewports to use
@@ -98,9 +107,9 @@ If your application does not use AppUI or its frontstages, you can use the packa
     VersionCompare.initialize(options);
     ```
 
-3. `VersionCompareSelectComponent` React component is intended to serve as a dialog that will be used to start a comparison. You should also add a button in your UI that stops comparison by calling `VersionCompare.manager.stopComparison()`.
-4. `ChangedElementsWidget` React component lets users to inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
-5. `PropertyComparisonTable` React component lists properties of a selected element and displays how they changed between versions of an iModel.
+2. `VersionCompareSelectComponent` React component is intended to serve as a dialog that will be used to start a comparison. You should also add a button in your UI that stops comparison by calling `VersionCompare.manager.stopComparison()`.
+3. `ChangedElementsWidget` React component lets users to inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
+4. `PropertyComparisonTable` React component lists properties of a selected element and displays how they changed between versions of an iModel.
 
 ## Contributing
 

@@ -10,6 +10,10 @@ export interface VersionCompareContextProps {
   savedFilters?: SavedFiltersManager | undefined;
 }
 
+/**
+ * Main entry point for setting version comparison configuration. This component will eventually completely replace the
+ * global `VersionCompare` object.
+ */
 export function VersionCompareContext(props: PropsWithChildren<VersionCompareContextProps>): ReactElement {
   const value = useMemo(
     () => ({ savedFilters: props.savedFilters }),
