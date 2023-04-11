@@ -17,6 +17,8 @@ import {
 import type { ChangedElementsApiClient, ChangesetChunk, ChangesetStatus } from "../api/ChangedElementsApiClient.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
+import { useVersionCompare } from "../VersionCompareContext.js";
+
 import "./VersionCompareSelectWidget.scss";
 
 /** Options for VersionCompareSelectComponent. */
@@ -53,6 +55,9 @@ export const VersionCompareSelectComponent = forwardRef<
   VersionCompareSelectorProps
 >(
   function VersionCompareSelectComponent(props, ref): ReactElement {
+    // Throw if context is not provided
+    useVersionCompare();
+
     const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
     const versionsUrl = useMemo(
