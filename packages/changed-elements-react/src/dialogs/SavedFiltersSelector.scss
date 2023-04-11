@@ -1,0 +1,60 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.vc-saved-filters-selector {
+  display: flex;
+  width: 300px;
+
+  .vc-saved-filters-input-container {
+    padding-right: 4px;
+
+    .vc-saved-filters-themed-select {
+      width: 250px;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .filter-name-input {
+      margin-top: 0;
+      margin-bottom: 0;
+      height: 36px;
+      width: 250px;
+    }
+  }
+
+  .save-icon-container {
+    position: relative;
+    font-size: 16px;
+    margin: auto;
+
+    .icon-button {
+      border: 0;
+      font-size: 16px;
+    }
+  }
+}
+
+.vc-save-filters-context-menu {
+  top: 8px;
+  left: 60px;
+
+  .core-context-menu-icon {
+    display: none;
+  }
+}
+
+.vc-saved-filters-select-option .iui-menu-label {
+  display: flex;
+
+  .vc-saved-filters-select-option-label {
+    text-align: left;
+    margin-right: auto;
+  }
+
+  .vc-saved-filters-select-option-shared {
+    margin-left: auto;
+    text-align: right;
+  }
+}

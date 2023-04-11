@@ -7,7 +7,7 @@ import {
   StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework,
   UiItemsManager, UiItemsProvider
 } from "@itwin/appui-react";
-import { ChangedElementsWidget, VersionCompare } from "@itwin/changed-elements-react";
+import { ChangedElementsWidget, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
@@ -24,8 +24,10 @@ import { toaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useState } from "react";
+
 import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
+import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
 import { UIFramework } from "./ui-framework/UiFramework";
 
 export interface ITwinJsAppProps {
@@ -88,12 +90,16 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <UIFramework>
-        <ConfigurableUiContent />
-      </UIFramework>
-    </PageLayout.Content>
+      <VersionCompareContext savedFilters={savedFilters}>
+        <UIFramework>
+          <ConfigurableUiContent />
+        </UIFramework>
+      </VersionCompareContext>
+    </PageLayout.Content >
   );
 }
+
+const savedFilters = new MockSavedFiltersManager();
 
 export async function initializeITwinJsApp(authorizationClient: AuthorizationClient): Promise<void> {
   if (IModelApp.initialized) {

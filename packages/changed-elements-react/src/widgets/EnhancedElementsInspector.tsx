@@ -24,9 +24,11 @@ import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { ExpandableSearchBar } from "../common/ExpandableSearchBar/ExpandableSearchBar.js";
 import { AdvancedFilterDialog, type PropertyFilter } from "../dialogs/AdvancedFiltersDialog.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
-import "./ChangedElementsInspector.scss";
+import { FilterOptions } from "../SavedFiltersManager.js";
 import { changedElementsWidgetAttachToViewportEvent } from "./ChangedElementsWidget.js";
 import { ElementsList } from "./ElementsList.js";
+
+import "./ChangedElementsInspector.scss";
 
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
@@ -126,15 +128,6 @@ class ChangedElementsBreadCrumb extends Component<BreadCrumbProps> {
       </>
     );
   }
-}
-
-export interface FilterOptions {
-  wantAdded: boolean;
-  wantDeleted: boolean;
-  wantModified: boolean;
-  wantUnchanged: boolean;
-  wantedTypeOfChange: number;
-  wantedProperties: Map<string, boolean>;
 }
 
 const typeOfChangeAll = (): number => {
