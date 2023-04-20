@@ -14,17 +14,18 @@ import {
   Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, ToggleSwitch
 } from "@itwin/itwinui-react";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
-import { Component, createRef, ReactElement } from "react";
+import { Component, createRef, type ReactElement } from "react";
 
+import { type FilterOptions } from "../SavedFiltersManager.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { type VersionCompareVisualizationManager } from "../api/VersionCompareVisualization.js";
 import { ExpandableSearchBar } from "../common/ExpandableSearchBar/ExpandableSearchBar.js";
 import { AdvancedFilterDialog, type PropertyFilter } from "../dialogs/AdvancedFiltersDialog.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
-import { FilterOptions } from "../SavedFiltersManager.js";
 import { changedElementsWidgetAttachToViewportEvent } from "./ChangedElementsWidget.js";
 import { ElementsList } from "./ElementsList.js";
 
@@ -568,18 +569,52 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   private onHandleShowAll = async (): Promise<void> => {
+    const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+    if (visualizationManager && this._getCurrentPathNode() === undefined) {
+      await this.toggleModelDisplay(
+        visualizationManager,
+        (model) => !visualizationManager.isModelVisibile(
+          model.id,
+          model.extendedData?.element.opcode === DbOpcode.Delete,
+        ),
+      );
+    }
+
     await this.props.onShowAll();
     this._refreshVisibility();
   };
 
   private onHandleHideAll = async (): Promise<void> => {
+    const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+    if (visualizationManager && this._getCurrentPathNode() === undefined) {
+      await this.toggleModelDisplay(
+        visualizationManager,
+        (model) => visualizationManager.isModelVisibile(
+          model.id,
+          model.extendedData?.element.opcode === DbOpcode.Delete,
+        ),
+      );
+    }
+
     await this.props.onHideAll();
     this._refreshVisibility();
   };
 
   private onInvert = async (): Promise<void> => {
+    const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+    if (visualizationManager && this._getCurrentPathNode() === undefined) {
+      await this.toggleModelDisplay(visualizationManager, () => true);
+    }
+
     await this.props.onInvert();
     this._refreshVisibility();
+  };
+
+  private toggleModelDisplay = async (
+    visualizationManager: VersionCompareVisualizationManager,
+    filter: (model: TreeNodeItem) => boolean,
+  ): Promise<void> => {
+    await Promise.all(this.getNodes().filter(filter).map((model) => visualizationManager.toggleModel(model.id)));
   };
 
   public attachToViewport = async (vp: ScreenViewport): Promise<void> => {
