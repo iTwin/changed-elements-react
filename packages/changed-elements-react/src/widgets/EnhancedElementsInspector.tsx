@@ -14,17 +14,18 @@ import {
   Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, ToggleSwitch
 } from "@itwin/itwinui-react";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
-import { Component, createRef, ReactElement } from "react";
+import { Component, createRef, type ReactElement } from "react";
 
+import { type FilterOptions } from "../SavedFiltersManager.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { type VersionCompareVisualizationManager } from "../api/VersionCompareVisualization.js";
 import { ExpandableSearchBar } from "../common/ExpandableSearchBar/ExpandableSearchBar.js";
 import { AdvancedFilterDialog, type PropertyFilter } from "../dialogs/AdvancedFiltersDialog.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
-import { FilterOptions } from "../SavedFiltersManager.js";
 import { changedElementsWidgetAttachToViewportEvent } from "./ChangedElementsWidget.js";
 import { ElementsList } from "./ElementsList.js";
 
@@ -110,7 +111,6 @@ class ChangedElementsBreadCrumb extends Component<BreadCrumbProps> {
     };
 
     const lastNode = this.props.path.length > 0 ? this.props.path[this.props.path.length - 1] : undefined;
-
     return (
       <>
         {
@@ -529,15 +529,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       }
 
       // Get filtered nodes and update visualization
-      // const filteredNodes = this.getFilteredNodes(
-      //   mState.nodes,
-      //   mState.filterOptions,
-      // );
-      await this.setVisualization(
-        mState.nodes,
-        this.state.path[this.state.path.length - 1],
-        mState.filterOptions,
-      );
+      await this.setVisualization(mState.nodes, this.state.path[this.state.path.length - 1], mState.filterOptions);
       // Handle unchanged visibility
       const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
       if (visualizationManager) {
@@ -567,9 +559,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   /** Try scrolling to the selected element entry if shown. */
   private _selectionChangedHandler = (args: SelectionChangeEventArgs): void => {
     let ids: string[] = [];
-
     args.keys.instanceKeys.forEach((keys) => { ids = [...ids, ...keys]; });
-
     this.setState({ selectedIds: new Set(ids) });
   };
 
@@ -579,18 +569,52 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   private onHandleShowAll = async (): Promise<void> => {
+    const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+    if (visualizationManager && this._getCurrentPathNode() === undefined) {
+      await this.toggleModelDisplay(
+        visualizationManager,
+        (model) => !visualizationManager.isModelVisibile(
+          model.id,
+          model.extendedData?.element.opcode === DbOpcode.Delete,
+        ),
+      );
+    }
+
     await this.props.onShowAll();
     this._refreshVisibility();
   };
 
   private onHandleHideAll = async (): Promise<void> => {
+    const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+    if (visualizationManager && this._getCurrentPathNode() === undefined) {
+      await this.toggleModelDisplay(
+        visualizationManager,
+        (model) => visualizationManager.isModelVisibile(
+          model.id,
+          model.extendedData?.element.opcode === DbOpcode.Delete,
+        ),
+      );
+    }
+
     await this.props.onHideAll();
     this._refreshVisibility();
   };
 
   private onInvert = async (): Promise<void> => {
+    const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+    if (visualizationManager && this._getCurrentPathNode() === undefined) {
+      await this.toggleModelDisplay(visualizationManager, () => true);
+    }
+
     await this.props.onInvert();
     this._refreshVisibility();
+  };
+
+  private toggleModelDisplay = async (
+    visualizationManager: VersionCompareVisualizationManager,
+    filter: (model: TreeNodeItem) => boolean,
+  ): Promise<void> => {
+    await Promise.all(this.getNodes().filter(filter).map((model) => visualizationManager.toggleModel(model.id)));
   };
 
   public attachToViewport = async (vp: ScreenViewport): Promise<void> => {
@@ -944,11 +968,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   public handleFilterChange = async (options: FilterOptions): Promise<void> => {
     // Get filtered nodes and update visualization
     const filteredNodes = this.getFilteredNodes(this.state.nodes, options);
-    await this.setVisualization(
-      this.state.nodes,
-      this.state.path[this.state.path.length - 1],
-      options,
-    );
+    await this.setVisualization(this.state.nodes, this.state.path[this.state.path.length - 1], options);
     // Handle unchanged visibility
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (visualizationManager) {
@@ -993,19 +1013,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     }
 
     return this.state.nodes;
-  }
-
-  public getSortedNodes(): TreeNodeItem[] {
-    let nodes = this.getNodes();
-    const parentNodes = nodes.filter((node: DelayLoadedTreeNodeItem) => node.hasChildren === true);
-    const leafNodes = nodes.filter((node: DelayLoadedTreeNodeItem) => node.hasChildren !== true);
-    const sortByLabel = (a: TreeNodeItem, b: TreeNodeItem) => {
-      const aLabel = (a.label.value as PrimitiveValue).displayValue ?? "";
-      const bLabel = (b.label.value as PrimitiveValue).displayValue ?? "";
-      return aLabel.localeCompare(bLabel);
-    };
-    nodes = [...parentNodes.sort(sortByLabel), ...leafNodes.sort(sortByLabel)];
-    return nodes;
   }
 
   /** Handle clearing search */
@@ -1222,13 +1229,17 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   public override render(): ReactElement {
     const nodes = this.getNodes();
     const renderLoading = () => {
-      return this.state.loading ? (
+      if (!this.state.loading) {
+        return undefined;
+      }
+
+      return (
         <div className="vc-loading-spinner-overlay">
           <div className="vc-inner-loading-spinner">
             <LoadingSpinner />
           </div>
         </div>
-      ) : undefined;
+      );
     };
 
     const renderSearchStatus = () => {
@@ -1237,10 +1248,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         return <div />;
       }
 
-      const message =
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.searchingRemaining") +
-        " " + toLoad + " " +
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.elements");
+      const message = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.searchingRemaining")
+        + ` ${toLoad} ` + IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.elements");
       return (
         <div className="element-list-search-status">
           <LoadingSpinner size={SpinnerSize.Small} />
@@ -1278,7 +1287,9 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         />
         <ChangedElementsBreadCrumb
           rootLabel={IModelApp.localization.getLocalizedString(
-            "VersionCompare:versionCompare." + (this.state.searchPath !== undefined ? "searchResults" : "changes"),
+            this.state.searchPath !== undefined
+              ? "VersionCompare:versionCompare.searchResults"
+              : "VersionCompare:versionCompare.changes",
           )}
           path={this.state.searchPath ?? this.state.path}
           pathClicked={this._handlePathClick}
