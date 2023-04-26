@@ -2,10 +2,11 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ModalDialogManager } from "@itwin/appui-react";
+import { DialogButtonStyle, DialogButtonType } from "@itwin/appui-abstract";
+import { UiFramework } from "@itwin/appui-react";
 import type { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Dialog, DialogButtonStyle, DialogButtonType, ImageCheckBox, SearchBox } from "@itwin/core-react";
+import { Dialog, ImageCheckBox, SearchBox } from "@itwin/core-react";
 import { SvgProgressBackwardCircular } from "@itwin/itwinui-icons-react";
 import { Checkbox, IconButton, Text } from "@itwin/itwinui-react";
 import { ChangeEventHandler, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
@@ -104,14 +105,14 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
   // Called when the save button on the dialog is clicked
   const onSaveClick = useCallback(
     () => {
-      ModalDialogManager.closeDialog();
+      UiFramework.dialogs.modal.close();
       onSave?.(modifiedData);
     },
     [modifiedData],
   );
 
   // Called when the cancel button on the dialog is clicked
-  const onCancel = useCallback(() => { ModalDialogManager.closeDialog(); }, []);
+  const onCancel = useCallback(() => { UiFramework.dialogs.modal.close(); }, []);
 
   // Called when the rows have changed in the Table
   const onRowsChanged = useCallback((rows: Row<PropertyFilter>[]) => { setNoResults(rows.length === 0); }, []);

@@ -2,9 +2,8 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { WidgetState } from "@itwin/appui-abstract";
 import {
-  ConfigurableCreateInfo, FrontstageManager, UiFramework, Widget, WidgetControl, type FrontstageReadyEventArgs
+  ConfigurableCreateInfo, UiFramework, WidgetControl, WidgetState, type FrontstageReadyEventArgs, type WidgetConfig
 } from "@itwin/appui-react";
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
@@ -370,7 +369,7 @@ export class ChangedElementsWidgetControl extends WidgetControl {
 
 const onComparisonStarting = (): void => {
   // Open/Close comparison legend
-  FrontstageManager.activeFrontstageDef
+  UiFramework.frontstages.activeFrontstageDef
     ?.findWidgetDef(ChangedElementsWidget.widgetId)
     ?.setWidgetState(WidgetState.Open);
 };
@@ -381,7 +380,7 @@ const onComparisonStopped = (): void => {
 
 const onStartFailed = (): void => {
   // Open/Close comparison legend
-  FrontstageManager.activeFrontstageDef
+  UiFramework.frontstages.activeFrontstageDef
     ?.findWidgetDef(ChangedElementsWidget.widgetId)
     ?.setWidgetState(WidgetState.Hidden);
 };
@@ -407,7 +406,7 @@ export const bindChangedElementsWidgetEvents = (manager: VersionCompareManager):
   manager.versionCompareStarting.addListener(onComparisonStarting);
   manager.versionCompareStopped.addListener(onComparisonStopped);
   manager.versionCompareStartFailed.addListener(onStartFailed);
-  FrontstageManager.onFrontstageReadyEvent.addListener(onFrontstageReady);
+  UiFramework.frontstages.onFrontstageReadyEvent.addListener(onFrontstageReady);
 };
 
 /** Clean-up events that make the widget automatically react to frontstage activated and version compare events. */
@@ -415,22 +414,18 @@ export const unbindChangedElementsWidgetEvents = (manager: VersionCompareManager
   manager.versionCompareStarting.removeListener(onComparisonStarting);
   manager.versionCompareStopped.removeListener(onComparisonStopped);
   manager.versionCompareStartFailed.removeListener(onStartFailed);
-  FrontstageManager.onFrontstageReadyEvent.removeListener(onFrontstageReady);
+  UiFramework.frontstages.onFrontstageReadyEvent.removeListener(onFrontstageReady);
 
   // Ensure widget gets closed
   onComparisonStopped();
 };
 
 /** Returns a React element containing the ChangedElementsWidgetControl in a ui-framework Widget. */
-export const getChangedElementsWidget = (): ReactElement => {
-  return (
-    <Widget
-      id={ChangedElementsWidget.widgetId}
-      fillZone={true}
-      label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLegend")}
-      defaultState={WidgetState.Hidden}
-      iconSpec="icon-list"
-      control={ChangedElementsWidgetControl}
-    />
-  );
+export const getChangedElementsWidget = (): WidgetConfig => {
+  return {
+    id: ChangedElementsWidget.widgetId,
+    label: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLegend"),
+    defaultState: WidgetState.Hidden,
+    icon: "icon-list",
+  };
 };

@@ -2,9 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Direction, Toolbar } from "@itwin/appui-layout-react";
 import {
-  ActionItemButton, CommandItemDef, FrontstageManager, NestedFrontstage, ToolButton, ToolWidget
+  BackstageAppButton, CommandItemDef, CommonToolbarItem, ToolItemDef, ToolWidgetComposer, ToolbarComposer,
+  ToolbarHelper, ToolbarOrientation, ToolbarUsage, UiFramework
 } from "@itwin/appui-react";
 import { EmphasizeElements, IModelApp, Viewport } from "@itwin/core-frontend";
 import React, { useCallback, useEffect, useState } from "react";
@@ -12,17 +12,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { SideBySideVisualizationManager } from "../api/SideBySideVisualizationManager.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
+
 import "./PropertyComparisonToolWidget.override.css";
 
 export interface PropertyComparisonVisibilityClearToolProps {
   clearIsolate: () => void;
-  className?: string;
 }
 
-export const PropertyComparisonVisibilityClearTool = ({
-  clearIsolate,
-  className,
-}: PropertyComparisonVisibilityClearToolProps) => {
+export const PropertyComparisonVisibilityClearTool = ({ clearIsolate }: PropertyComparisonVisibilityClearToolProps) => {
   const [
     areElementDisplayOverridesActive,
     setAreElementDisplayOverridesActive,
@@ -67,7 +64,7 @@ export const PropertyComparisonVisibilityClearTool = ({
   const clearIsolateToolCommand = new CommandItemDef({
     commandId: "VersionCompare.PropertyComparisonTools.ClearIsolate",
     iconSpec: "icon-visibility",
-    isVisible: areElementDisplayOverridesActive,
+    isHidden: !areElementDisplayOverridesActive,
     label: () => IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.clearIsolate"),
     execute: executeClearIsolate,
   });
@@ -75,13 +72,10 @@ export const PropertyComparisonVisibilityClearTool = ({
   return (
     <>
       {areElementDisplayOverridesActive && (
-        <Toolbar
-          className={className}
-          items={
-            <>
-              <ActionItemButton actionItem={clearIsolateToolCommand} />
-            </>
-          }
+        <ToolbarComposer
+          items={[ToolbarHelper.createToolbarItemFromItemDef(0, clearIsolateToolCommand)]}
+          usage={ToolbarUsage.ContentManipulation}
+          orientation={ToolbarOrientation.Horizontal}
         />
       )}
     </>
@@ -90,9 +84,9 @@ export const PropertyComparisonVisibilityClearTool = ({
 
 export interface ToolWidgetProps {
   /** Extra tools to add to the Property Comparison Tool Widget */
-  verticalTools?: JSX.Element[];
+  verticalTools?: CommonToolbarItem[];
   /** Extra tools to add to the Property Comparison Tool Widget */
-  horizontalTools?: JSX.Element[];
+  horizontalTools?: CommonToolbarItem[];
   /** Vertical toolbar */
   verticalToolbar?: React.ReactNode;
   /** Horizontal Toolbar */
@@ -125,15 +119,14 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
       // Setup correct color overrides
       if (VersionCompare.manager) {
         const frontstageIds = new Set(VersionCompare.manager.options.ninezoneOptions?.frontstageIds ?? []);
-        if (frontstageIds.has(FrontstageManager.activeFrontstageId)) {
+        if (frontstageIds.has(UiFramework.frontstages.activeFrontstageId)) {
           const visualizationManager =
             VersionCompare.manager?.visualization?.getSingleViewVisualizationManager();
           if (visualizationManager !== undefined) {
             await visualizationManager.resetDisplay();
           }
         } else if (
-          FrontstageManager.activeFrontstageId ===
-          PropertyComparisonFrontstage.id &&
+          UiFramework.frontstages.activeFrontstageId === PropertyComparisonFrontstage.id &&
           VersionCompare.manager.currentIModel &&
           VersionCompare.manager.targetIModel
         ) {
@@ -151,16 +144,21 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
       }
     };
 
-    const tools: JSX.Element[] = [];
-    const horizontalTools: JSX.Element[] = [];
+    const tools: CommonToolbarItem[] = [];
+    const horizontalTools: CommonToolbarItem[] = [];
 
     tools.push(
-      <ToolButton
-        toolId="VersionCompare.IsolateSelected"
-        iconSpec="icon-isolate"
-        label={IModelApp.localization.getLocalizedString("VersionCompare:tools.isolate")}
-        execute={isolateSelected}
-      />,
+      ToolbarHelper.createToolbarItemFromItemDef(
+        0,
+        new ToolItemDef(
+          {
+            toolId: "VersionCompare.IsolateSelected",
+            iconSpec: "icon-isolate",
+            label: IModelApp.localization.getLocalizedString("VersionCompare:tools.isolate"),
+          },
+          isolateSelected,
+        ),
+      ),
     );
 
     if (this.props.verticalTools !== undefined) {
@@ -172,27 +170,39 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
     }
 
     const verticalToolbar = this.props.verticalToolbar ?? (
-      <Toolbar expandsTo={Direction.Right} items={tools} />
+      <ToolbarComposer
+        orientation={ToolbarOrientation.Vertical}
+        items={tools}
+        usage={ToolbarUsage.ContentManipulation}
+      />
     );
 
     const horizontalToolbar = this.props.horizontalToolbar ?? (
       <>
         <PropertyComparisonVisibilityClearTool clearIsolate={clearIsolate} />
         {horizontalTools.length !== 0 && (
-          <Toolbar expandsTo={Direction.Bottom} items={horizontalTools} />
+          <ToolbarComposer
+            orientation={ToolbarOrientation.Horizontal}
+            items={horizontalTools}
+            usage={ToolbarUsage.ContentManipulation}
+          />
         )}
       </>
     );
 
     return (
-      <div>
-        <ToolWidget
-          className="vc-reset-vertical-grid-area"
-          appButton={NestedFrontstage.backToPreviousFrontstageCommand}
-          verticalToolbar={verticalToolbar}
-          horizontalToolbar={horizontalToolbar}
-        />
-      </div>
+      <ToolWidgetComposer
+        className="vc-reset-vertical-grid-area"
+        cornerItem={
+          <BackstageAppButton
+            icon="icon-progress-backward"
+            label={IModelApp.localization.getLocalizedString("UiFramefork:commands.backToPreviousFrontstage")}
+            execute={() => UiFramework.frontstages.closeNestedFrontstage()}
+          />
+        }
+        verticalToolbar={verticalToolbar}
+        horizontalToolbar={horizontalToolbar}
+      />
     );
   }
 }

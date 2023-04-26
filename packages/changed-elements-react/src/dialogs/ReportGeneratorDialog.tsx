@@ -2,12 +2,12 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ModalDialogManager } from "@itwin/appui-react";
+import { DialogButtonStyle, DialogButtonType } from "@itwin/appui-abstract";
+import { UiFramework } from "@itwin/appui-react";
 import { IModelApp, NotifyMessageDetails, OutputMessagePriority } from "@itwin/core-frontend";
-import {
-  Dialog, DialogButtonStyle, DialogButtonType, Input, LoadingSpinner, SearchBox, ThemedSelect, ThemedSelectProps, Toggle
-} from "@itwin/core-react";
-import { Checkbox } from "@itwin/itwinui-react";
+import { Dialog, LoadingSpinner, SearchBox } from "@itwin/core-react";
+import { Checkbox, Input, Select, ToggleSwitch } from "@itwin/itwinui-react";
+import { SelectOption } from "@itwin/itwinui-react/cjs";
 import * as React from "react";
 import type { CellProps } from "react-table";
 
@@ -15,8 +15,9 @@ import { ModelReportGenerator } from "../api/ModelReportGenerator.js";
 import { ReportGenerator, ReportGeneratorBase, type ReportProperty } from "../api/ReportGenerator.js";
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { PropertyLabelCache } from "./PropertyLabelCache.js";
-import "./ReportGeneratorDialog.scss";
 import { Table } from "./Table.js";
+
+import "./ReportGeneratorDialog.scss";
 
 /** Makes sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with requests */
 let reportBeingGenerated = false;
@@ -28,12 +29,6 @@ interface ReportPropertyWithExport extends ReportProperty {
 enum ReportType {
   ChangedElements,
   ChangedModels,
-}
-
-/** For use in ThemedSelect component */
-interface SelectOptions {
-  value: ReportType;
-  label: string;
 }
 
 /** State for the dialog class */
@@ -127,7 +122,7 @@ export class ReportGeneratorDialog extends React.Component<
 
   /** Handle closing the dialog */
   private _handleClose = () => {
-    ModalDialogManager.closeDialog();
+    UiFramework.dialogs.modal.close();
   };
 
   /** Builds and downloads the report using the given generator */
@@ -181,7 +176,7 @@ export class ReportGeneratorDialog extends React.Component<
     reportBeingGenerated = true;
 
     // Close the dialog
-    ModalDialogManager.closeDialog();
+    UiFramework.dialogs.modal.close();
 
     // Notify user process will take a bit
     IModelApp.notifications.outputMessage(
@@ -209,9 +204,9 @@ export class ReportGeneratorDialog extends React.Component<
   };
 
   /** Handle toggle for exporting only visible changes and not ALL changes */
-  private _onExportVisibleToggle = (value: boolean) => {
+  private _onExportVisibleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      onlyExportVisibleChanges: value,
+      onlyExportVisibleChanges: event.target.checked,
     });
   };
 
@@ -301,7 +296,7 @@ export class ReportGeneratorDialog extends React.Component<
     );
   };
 
-  private _getValidReportTypeOptions = (): SelectOptions[] => {
+  private _getValidReportTypeOptions = (): Array<SelectOption<ReportType>> => {
     return [
       {
         label: IModelApp.localization.getLocalizedString("VersionCompare:report.changedElements"),
@@ -314,20 +309,18 @@ export class ReportGeneratorDialog extends React.Component<
     ];
   };
 
-  private _getCurrentReportTypeOption = (): SelectOptions | undefined => {
+  private _getCurrentReportTypeOption = (): ReportType | undefined => {
     const options = this._getValidReportTypeOptions();
     for (const option of options) {
       if (this.state.reportType === option.value) {
-        return option;
+        return option.value;
       }
     }
     return undefined;
   };
 
-  private _onReportTypeChange: ThemedSelectProps["onChange"] = (option) => {
-    this.setState({
-      reportType: (option as SelectOptions).value,
-    });
+  private _onReportTypeChange = (option: ReportType) => {
+    this.setState({ reportType: option });
   };
 
   private _handleSearchBox = (value: string) => {
@@ -374,7 +367,7 @@ export class ReportGeneratorDialog extends React.Component<
               <div className="change-report-dialog-row-label">
                 {IModelApp.localization.getLocalizedString("VersionCompare:report.reportType")}
               </div>
-              <ThemedSelect
+              <Select<ReportType>
                 className="change-report-select-type"
                 value={this._getCurrentReportTypeOption()}
                 options={this._getValidReportTypeOptions()}
@@ -395,7 +388,7 @@ export class ReportGeneratorDialog extends React.Component<
                   {this._renderPropertyTable()}
                 </div>
                 <div className="change-report-dialog-row">
-                  <Toggle
+                  <ToggleSwitch
                     className="change-report-dialog-toggle"
                     title={IModelApp.localization.getLocalizedString("VersionCompare:report.onlyVisibleTooltip")}
                     onChange={this._onExportVisibleToggle}
@@ -430,5 +423,5 @@ export const openReportGeneratorDialog = (
   }
 
   // Open dialog
-  ModalDialogManager.openDialog(<ReportGeneratorDialog manager={manager} initialProperties={properties} />);
+  UiFramework.dialogs.modal.open(<ReportGeneratorDialog manager={manager} initialProperties={properties} />);
 };

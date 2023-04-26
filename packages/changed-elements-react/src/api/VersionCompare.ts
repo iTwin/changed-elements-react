@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { getClassName, UiError } from "@itwin/appui-abstract";
+import { UiError, getClassName, type CommonToolbarItem } from "@itwin/appui-abstract";
 import { FrontstageConfig, ReducerRegistryInstance, StateManager, SyncUiEventDispatcher } from "@itwin/appui-react";
 import type { AccessToken } from "@itwin/core-bentley";
 import type { ModelProps } from "@itwin/core-common";
@@ -45,10 +45,10 @@ export interface PropertyComparisonOptions {
   frontstageProps?: Partial<FrontstageConfig>;
 
   /** Vertical tools to add to the property comparison frontstage. */
-  verticalTools?: JSX.Element[];
+  verticalTools?: CommonToolbarItem[];
 
   /** Horizontal tools to add to the property comparison frontstage. */
-  horizontalTools?: JSX.Element[];
+  horizontalTools?: CommonToolbarItem[];
 }
 
 /** Options for ninezone applications version compare visualization. */
