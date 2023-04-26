@@ -2,7 +2,6 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
 
 .change-report-dialog {
   display: block;
@@ -11,7 +10,7 @@
 .change-report-dialog-row {
   display: flex;
   height: fit-content;
-  margin-bottom: $uicore-s;
+  margin-bottom: var(--iui-size-xs);
   align-items: center;
 
   > .core-searchbox {
@@ -33,20 +32,18 @@
 }
 
 .change-report-dialog-property-table {
-  @include uicore-scrollbar();
   position: relative;
-  margin-top: $uicore-xs;
-  margin-bottom: $uicore-xs;
+  margin-top: var(--iui-size-2xs);
+  margin-bottom: var(--iui-size-2xs);
   display: block;
   height: 400px;
   overflow: auto;
 }
 
 .change-report-dialog-row-label {
-  @include uicore-font-family;
   width: 25%;
-  font-size: $uicore-font-size;
-  padding: $uicore-s;
+  font-size: var(--iui-font-size-1);
+  padding: var(--iui-size-xs);
   margin-top: auto;
   margin-bottom: auto;
   text-align: left;
@@ -58,29 +55,13 @@
   margin: 0;
 }
 
-.change-report-dialog-row-label-multi {
-  @include uicore-font-family;
-  font-size: $uicore-font-size;
-  padding: $uicore-s;
-}
-
-.change-report-read-only-text-area {
-  @include uicore-font-family;
-  font-size: $uicore-font-size;
-  padding: $uicore-s;
-  background-color: $uicore-white !important;
-  color: $uicore-black !important;
-  cursor: default !important;
-}
-
 .change-report-dialog-row-toggle-label {
-  @include uicore-font-family;
-  font-size: $uicore-font-size;
+  font-size: var(--iui-font-size-1);
   margin-top: auto;
   margin-bottom: auto;
-  padding: $uicore-s;
+  padding: var(--iui-size-xs);
 }
 
 .change-report-dialog-toggle {
-  margin: $uicore-s;
+  margin: var(--iui-size-xs);
 }

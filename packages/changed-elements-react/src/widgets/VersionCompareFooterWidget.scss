@@ -2,18 +2,16 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
 
 .vc-footer-widget {
   display: block;
   width: 300px;
-  padding: $uicore-m;
-  color: $buic-text-color;
+  padding: var(--iui-size-m);
   text-align: left;
 }
 
 .vc-text-info {
-  margin-bottom: $uicore-s;
+  margin-bottom: var(--iui-size-xs);
 }
 
 .vc-text-info-underline {
@@ -22,24 +20,10 @@
 
 .vc-button {
   width: 100%;
-  padding: $uicore-s;
+  padding: var(--iui-size-xs);
   text-align: center;
 }
 
 .vc-footer-no-comparison-msg {
   text-align: center;
-}
-
-.vc-a {
-  margin-left: $uicore-xs;
-  color: $buic-foreground-primary;
-  cursor: pointer;
-}
-
-.vc-a:hover {
-  text-decoration: underline;
-}
-
-.vc-a:visited {
-  color: $buic-foreground-primary-tone;
 }

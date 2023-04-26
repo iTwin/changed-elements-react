@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 .filter-dialog-container {
-  padding: 8px 12px;
+  padding: var(--iui-size-xs) var(--iui-size-s);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -13,27 +13,27 @@
   .filter-dialog-edit-table-header {
     display: flex;
     flex-direction: row;
-    padding-bottom: 4px;
+    padding-bottom: var(--iui-size-2xs);
 
     .filter-dialog-edit-table-header-label {
-      padding: 4px;
+      padding: var(--iui-size-2xs);
       margin-right: auto;
       margin-top: auto;
       margin-bottom: auto;
-      margin-left: 8px;
+      margin-left: var(--iui-size-xs);
       text-align: left;
     }
   }
 
   .filter-dialog-apply-saved-filter-label {
-    padding: 4px;
+    padding: var(--iui-size-2xs);
   }
 
   .filter-dialog-header {
-    padding: 8px 0;
+    padding: var(--iui-size-xs) 0;
     display: flex;
     align-items: left;
-    margin-bottom: 8px;
+    margin-bottom: var(--iui-size-xs);
 
     .filter-dialog-search {
       width: 210px;
@@ -59,7 +59,7 @@
 
       > .icon {
         font-size: 60px;
-        color: var(--iui-text-color-muted);
+        color: var(--iui-color-text-muted);
       }
     }
 

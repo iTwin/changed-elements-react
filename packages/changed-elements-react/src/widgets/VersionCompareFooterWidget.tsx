@@ -163,11 +163,7 @@ export class VersionCompareFooterWidget extends React.Component<
             <div className="vc-text-info">
               {VersionCompare.manager?.targetVersion?.displayName ?? ""}
             </div>
-            <Button
-              className={"vc-button"}
-              buttonType={ButtonType.Hollow}
-              onClick={this.handleStopComparison}
-            >
+            <Button className="vc-button" onClick={this.handleStopComparison}>
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.stopComparison")}
             </Button>
           </>
@@ -178,9 +174,9 @@ export class VersionCompareFooterWidget extends React.Component<
             ) : (
               <>
                 {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_noComparison")}
-                <a className="vc-a" onClick={this._openDialogWithCheck}>
+                <Button as="a" onClick={this._openDialogWithCheck}>
                   {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_clickHere")}
-                </a>
+                </Button>
               </>
             )}
           </div>

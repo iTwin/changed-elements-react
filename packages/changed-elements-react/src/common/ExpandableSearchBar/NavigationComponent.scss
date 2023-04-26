@@ -2,9 +2,6 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/itwinui-css/scss/style/theme";
-@import "~@itwin/itwinui-css/scss/style/space";
-@import "~@itwin/itwinui-css/scss/variables";
 
 .navigation-component {
   display: flex;
@@ -15,7 +12,7 @@
   .navigation-component-separator {
     height: 70%;
     width: 1px;
-    margin: 0 $iui-s;
+    margin: 0 var(--iui-size-s);
     background: var(--iui-color-background-border);
   }
 }

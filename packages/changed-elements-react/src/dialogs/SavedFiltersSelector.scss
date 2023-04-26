@@ -8,7 +8,7 @@
   width: 300px;
 
   .vc-saved-filters-input-container {
-    padding-right: 4px;
+    padding-right: var(--iui-size-2xs);
 
     .vc-saved-filters-themed-select {
       width: 250px;

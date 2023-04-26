@@ -190,29 +190,24 @@ function useColumnsDefinition(
       const targetLabel = targetVersion || defaultLabel;
       return [
         {
-          id: "table-columns",
-          columns: [
-            {
-              id: "category",
-              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.category"),
-              accessor: "category",
-            },
-            {
-              id: "propertyName",
-              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.property"),
-              accessor: "propertyName",
-            },
-            {
-              id: "current",
-              Header: currentLabel,
-              accessor: "current",
-            },
-            {
-              id: "target",
-              Header: targetLabel,
-              accessor: "target",
-            },
-          ],
+          id: "category",
+          Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.category"),
+          accessor: "category",
+        },
+        {
+          id: "propertyName",
+          Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.property"),
+          accessor: "propertyName",
+        },
+        {
+          id: "current",
+          Header: currentLabel,
+          accessor: "current",
+        },
+        {
+          id: "target",
+          Header: targetLabel,
+          accessor: "target",
         },
       ] satisfies Array<Column<ComparisonDataRow>>;
     },
