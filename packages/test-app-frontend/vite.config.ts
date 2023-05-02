@@ -61,7 +61,6 @@ export default defineConfig(() => ({
       },
     ],
   },
-  // optimizeDeps: { entries: ["./src/**", "../changed-elements-react/src/**"] },
   server: {
     port: 2363,
   },
@@ -71,13 +70,7 @@ class StringReplacePlugin implements Plugin {
   public name = StringReplacePlugin.name;
   public enforce = "pre" as const;
 
-  private root = path.resolve(__dirname, "../");
-
-  public transform = (code: string, id: string): string => {
-    // if (id.startsWith(`${this.root}/changed-elements-react`)) {
-    //   return code.replaceAll(/from "(.*)\.js"/g, "from \"$1\"");
-    // }
-
+  public transform = (code: string): string => {
     return code.replace(
       /const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = await import\((.+?)\);/s,
       `
