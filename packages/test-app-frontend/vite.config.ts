@@ -29,7 +29,7 @@ export default defineConfig(() => ({
     alias: [
       {
         find: "@itwin/changed-elements-react",
-        replacement: "/node_modules/@itwin/changed-elements-react/src/index.ts",
+        replacement: path.resolve(__dirname, "../changed-elements-react/src/index.ts"),
       },
       {
         find: /^~(.*\/core-react\/)scrollbar$/,
@@ -61,7 +61,7 @@ export default defineConfig(() => ({
       },
     ],
   },
-  optimizeDeps: { entries: ["./src/**", "../changed-elements-react/src/**"] },
+  // optimizeDeps: { entries: ["./src/**", "../changed-elements-react/src/**"] },
   server: {
     port: 2363,
   },
@@ -74,9 +74,9 @@ class StringReplacePlugin implements Plugin {
   private root = path.resolve(__dirname, "../");
 
   public transform = (code: string, id: string): string => {
-    if (id.startsWith(`${this.root}/changed-elements-react`)) {
-      return code.replaceAll(/from "(.*)\.js"/g, "from \"$1\"");
-    }
+    // if (id.startsWith(`${this.root}/changed-elements-react`)) {
+    //   return code.replaceAll(/from "(.*)\.js"/g, "from \"$1\"");
+    // }
 
     return code.replace(
       /const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = await import\((.+?)\);/s,
