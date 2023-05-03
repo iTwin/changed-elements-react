@@ -4,13 +4,14 @@
 *--------------------------------------------------------------------------------------------*/
 import { SvgDeveloper, SvgMoon, SvgSun } from "@itwin/itwinui-icons-react";
 import {
-  Button, DropdownMenu, getUserColor, Header, HeaderLogo, IconButton, MenuItem, ThemeType, UserIcon, useTheme
+  Button, DropdownMenu, Header, HeaderLogo, IconButton, MenuItem, UserIcon, getUserColor
 } from "@itwin/itwinui-react";
 import { ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAppContext } from "./AppContext";
 import { AuthorizationState, useAuthorization } from "./Authorization";
-import { getUserProfile, GetUserProfileResult } from "./ITwinApi";
+import { GetUserProfileResult, getUserProfile } from "./ITwinApi";
 
 export function AppHeader(): ReactElement {
   const { state, signIn, signOut, userAuthorizationClient } = useAuthorization();
@@ -110,16 +111,15 @@ function GitHubLogo(props: GitHubLogoProps): ReactElement {
 }
 
 function ThemeButton(): ReactElement {
-  const [theme, setTheme] = useState<ThemeType>("light");
-  useTheme(theme);
+  const { theme, setTheme } = useAppContext();
 
   const handleClick = () => {
-    setTheme(theme === "light" ? "dark" : "light");
+    setTheme(theme !== "dark" ? "dark" : "light");
   };
 
   return (
     <IconButton styleType="borderless" onClick={handleClick}>
-      {theme === "light" ? <SvgMoon /> : <SvgSun />}
+      {theme !== "dark" ? <SvgMoon /> : <SvgSun />}
     </IconButton>
   );
 }
