@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { PropertyRecord, type PrimitiveValue } from "@itwin/appui-abstract";
 import type {
-  DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, ITreeDataProvider, TreeDataChangesListener, TreeNodeItem
+  DelayLoadedTreeNodeItem, ITreeDataProvider, ImmediatelyLoadedTreeNodeItem, TreeNodeItem
 } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Id64, Logger } from "@itwin/core-bentley";
 import { QueryRowFormat, type ModelProps } from "@itwin/core-common";
@@ -220,8 +220,6 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     }
     return nodes;
   }
-
-  public onTreeNodeChanged?: BeEvent<TreeDataChangesListener> | undefined;
 
   public async getNodesCount(parent?: TreeNodeItem | undefined): Promise<number> {
     if (parent === undefined) {

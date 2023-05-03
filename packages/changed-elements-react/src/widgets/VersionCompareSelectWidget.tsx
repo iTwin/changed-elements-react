@@ -2,14 +2,15 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ModalDialogManager, ToolButton } from "@itwin/appui-react";
+import { CommonToolbarItem, ToolbarHelper, ToolItemDef, UiFramework } from "@itwin/appui-react";
 import { BeEvent, Logger } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority
 } from "@itwin/core-frontend";
-import { LoadingSpinner, SpinnerSize } from "@itwin/core-react";
 import { MinimalChangeset, NamedVersion, NamedVersionState } from "@itwin/imodels-client-management";
-import { Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, Radio } from "@itwin/itwinui-react";
+import {
+  Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
+} from "@itwin/itwinui-react";
 import {
   Component, createRef, forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState
 } from "react";
@@ -72,7 +73,7 @@ export const VersionCompareSelectComponent = forwardRef<
       if (!namedVersions) {
         return (
           <div className="vc-spinner">
-            <LoadingSpinner />
+            <ProgressRadial size="large" indeterminate />
           </div>
         );
       }
@@ -676,7 +677,7 @@ function VersionListEntry(props: VersionListEntryProps): ReactElement {
         <div className="vc-spinner-container">
           <div className="vc-spinner-percentage">{percentage}</div>
         </div>
-        <LoadingSpinner size={SpinnerSize.Medium} />
+        <ProgressRadial indeterminate />
       </div>
     );
   };
@@ -823,12 +824,12 @@ export class VersionCompareSelectDialog extends Component<
   private async _handleOk(): Promise<void> {
     this.versionSelectComponentRef.current?.startComparison();
 
-    ModalDialogManager.closeDialog();
+    UiFramework.dialogs.modal.close();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   }
 
   private _handleCancel(): void {
-    ModalDialogManager.closeDialog();
+    UiFramework.dialogs.modal.close();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   }
 
@@ -908,7 +909,7 @@ export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?:
     return;
   }
 
-  ModalDialogManager.openDialog(
+  UiFramework.dialogs.modal.open(
     <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
   );
 };
@@ -923,16 +924,20 @@ export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?:
 export const openSelectDialogToolButton = (
   iModel: IModelConnection,
   onViewUpdated?: BeEvent<(args?: unknown) => void>,
-) => {
+): CommonToolbarItem => {
   const onExecute = async () => {
     await openSelectDialog(iModel, onViewUpdated);
   };
-  return (
-    <ToolButton
-      execute={onExecute}
-      toolId={"VersionCompareSelectTool"}
-      iconSpec="icon-compare"
-      labelKey={"VersionCompare:versionCompare.versionCompareBeta"}
-    />
+
+  return ToolbarHelper.createToolbarItemFromItemDef(
+    0,
+    new ToolItemDef(
+      {
+        toolId: "VersionCompareSelectTool",
+        iconSpec: "icon-compare",
+        labelKey: "VersionCompare:versionCompare.versionCompareBeta",
+      },
+      onExecute,
+    ),
   );
 };

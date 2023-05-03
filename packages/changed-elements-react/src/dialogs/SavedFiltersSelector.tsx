@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, NotifyMessageDetails, OutputMessagePriority } from "@itwin/core-frontend";
-import { ContextMenu, ContextMenuDirection, ContextMenuItem, Icon } from "@itwin/core-react";
-import { SvgList, SvgSaveAs } from "@itwin/itwinui-icons-react";
-import { IconButton, Input, MenuItem, Select, SelectOption } from "@itwin/itwinui-react";
+import { ContextMenu, ContextMenuDirection, ContextMenuItem } from "@itwin/core-react";
+import { SvgBlank, SvgList, SvgSaveAs, SvgShare } from "@itwin/itwinui-icons-react";
+import { IconButton, Input, Select, type SelectOption } from "@itwin/itwinui-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { FilterData, FilterOptions, SavedFiltersManager } from "../SavedFiltersManager.js";
@@ -249,19 +249,8 @@ export const SavedFiltersSelector = (props: SavedFiltersSelectorProps) => {
     return {
       value: data,
       label: data.name,
+      icon: data.shared ? <SvgShare /> : <SvgBlank />,
     };
-  };
-
-  const renderOption = (option: SelectOption<FilterData>) => {
-    const data = option.value;
-    return (
-      <MenuItem className="vc-saved-filters-select-option">
-        <div className="vc-saved-filters-select-option-label">{data.name}</div>
-        <div className="vc-saved-filters-select-option-shared">
-          {data.shared && <Icon iconSpec="icon-share" />}
-        </div>
-      </MenuItem>
-    );
   };
 
   return (
@@ -283,12 +272,11 @@ export const SavedFiltersSelector = (props: SavedFiltersSelectorProps) => {
         {
           !isCreatingNew &&
           // TODO: ThemedSelect does not set the placeholder when going from OptionType to undefined value
-          <Select
+          <Select<FilterData>
             className="vc-saved-filters-themed-select"
             options={filters.map(filterToOption)}
             disabled={disable}
             onChange={onFilterChange}
-            itemRenderer={renderOption}
             value={selectedFilter}
             placeholder={IModelApp.localization.getLocalizedString("VersionCompare:filters.savedFilters")}
           />

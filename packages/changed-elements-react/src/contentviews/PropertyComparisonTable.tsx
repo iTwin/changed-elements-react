@@ -5,7 +5,7 @@
 import {
   PropertyRecord, PropertyValueFormat, type ArrayValue, type PrimitiveValue, type StructValue
 } from "@itwin/appui-abstract";
-import { ContentControl, FrontstageManager, type ConfigurableCreateInfo } from "@itwin/appui-react";
+import { ContentControl, type ConfigurableCreateInfo, UiFramework } from "@itwin/appui-react";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { IconButton, Slider, Table, Text, ToggleSwitch, type TableProps } from "@itwin/itwinui-react";
@@ -190,29 +190,24 @@ function useColumnsDefinition(
       const targetLabel = targetVersion || defaultLabel;
       return [
         {
-          id: "table-columns",
-          columns: [
-            {
-              id: "category",
-              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.category"),
-              accessor: "category",
-            },
-            {
-              id: "propertyName",
-              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.property"),
-              accessor: "propertyName",
-            },
-            {
-              id: "current",
-              Header: currentLabel,
-              accessor: "current",
-            },
-            {
-              id: "target",
-              Header: targetLabel,
-              accessor: "target",
-            },
-          ],
+          id: "category",
+          Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.category"),
+          accessor: "category",
+        },
+        {
+          id: "propertyName",
+          Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.property"),
+          accessor: "propertyName",
+        },
+        {
+          id: "current",
+          Header: currentLabel,
+          accessor: "current",
+        },
+        {
+          id: "target",
+          Header: targetLabel,
+          accessor: "target",
         },
       ] satisfies Array<Column<ComparisonDataRow>>;
     },
@@ -646,7 +641,7 @@ function SideBySideToggle(props: SideBySideToggleProps): ReactElement {
     // toggleLayout() will cause current component to unmount and re-mount
     await PropertyComparisonFrontstage.toggleLayout();
 
-    const activeFrontstageDef = FrontstageManager.activeFrontstageDef;
+    const activeFrontstageDef = UiFramework.frontstages.activeFrontstageDef;
     if (activeFrontstageDef?.id !== PropertyComparisonFrontstage.id) {
       return;
     }

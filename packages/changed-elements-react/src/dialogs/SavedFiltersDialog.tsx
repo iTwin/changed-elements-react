@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, NotifyMessageDetails, OutputMessagePriority } from "@itwin/core-frontend";
-import { ContextMenu, ContextMenuDirection, ContextMenuItem, Icon, Input } from "@itwin/core-react";
+import { ContextMenu, ContextMenuDirection, ContextMenuItem, Icon } from "@itwin/core-react";
 import { SvgMore } from "@itwin/itwinui-icons-react";
-import { IconButton } from "@itwin/itwinui-react";
+import { IconButton, Input } from "@itwin/itwinui-react";
 import { CSSProperties, ReactElement, useEffect, useMemo, useState } from "react";
 import { CellProps } from "react-table";
 

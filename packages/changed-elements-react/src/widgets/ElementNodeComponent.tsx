@@ -12,6 +12,7 @@ import React from "react";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
 import { VersionCompare } from "../api/VersionCompare.js";
+
 import "./ChangedElementsInspector.scss";
 
 export interface ElementListNodeProps {
@@ -166,7 +167,7 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
               title={this._getChangeSquareTooltip()}
             ></div>
           )}
-          {this.props.isModel ? <SvgFolder /> : <SvgItem />}
+          {this.props.isModel ? <SvgFolder className="vc-node-icon" /> : <SvgItem className="vc-node-icon" />}
         </div>
         <div className={classes} title={tooltip}>
           {label}

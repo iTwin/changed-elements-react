@@ -16,7 +16,7 @@
     "release": "ts-node --esm scripts/release.ts"
   },
   "engines": {
-    "pnpm": ">=7",
+    "pnpm": ">=8",
     "npm": "<0",
     "node": ">=16"
   },

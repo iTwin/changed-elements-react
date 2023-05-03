@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { StateManager, UiFramework, UiStateStorageHandler } from "@itwin/appui-react";
+import { StateManager, ThemeManager, UiFramework, UiStateStorageHandler } from "@itwin/appui-react";
 import { UiStateStorage, UiStateStorageResult, UiStateStorageStatus } from "@itwin/core-react";
 import { PropsWithChildren, ReactElement, useEffect } from "react";
 import { Provider } from "react-redux";
@@ -10,7 +10,9 @@ import { Provider } from "react-redux";
 export function UIFramework(props: PropsWithChildren<unknown>): ReactElement {
   useEffect(
     () => {
-      // We do not UI state to persist between sessions
+      UiFramework.setColorTheme("inherit");
+
+      // We do not want UI state to persist between sessions
       void UiFramework.setUiStateStorage(new MemoryUISettingsStorage(), true);
     },
     [],
@@ -18,9 +20,11 @@ export function UIFramework(props: PropsWithChildren<unknown>): ReactElement {
 
   return (
     <Provider store={StateManager.store}>
-      <UiStateStorageHandler>
-        {props.children}
-      </UiStateStorageHandler>
+      <ThemeManager>
+        <UiStateStorageHandler>
+          {props.children}
+        </UiStateStorageHandler>
+      </ThemeManager>
     </Provider>
   );
 }

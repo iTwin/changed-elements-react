@@ -4,12 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 import { SvgUser } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
-import { Button, Surface } from "@itwin/itwinui-react";
+import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
 import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 
 import { applyUrlPrefix, clientId } from "../environment";
-import "./App.css";
+import { AppContext, appContext } from "./AppContext";
 import { AppHeader } from "./AppHeader";
 import {
   AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, SignInSilentCallback, useAuthorization
@@ -18,23 +18,33 @@ import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";
 import { IModelBrowser } from "./imodel-browser/IModelBrowser";
 import { ITwinBrowser } from "./imodel-browser/ITwinBrowser";
-
 import type { ITwinJsApp } from "./ITwinJsApp/ITwinJsApp";
 
+import "./App.css";
+
 export function App(): ReactElement {
+  const [appContextValue, setAppContextValue] = useState<AppContext>({
+    theme: "light",
+    setTheme: (theme) => setAppContextValue((prev) => ({ ...prev, theme })),
+  });
+
   return (
-    <AuthorizationProvider>
-      <PageLayout>
-        <PageLayout.Header>
-          <AppHeader />
-        </PageLayout.Header>
-        <Routes>
-          <Route path="/auth/callback" element={<SignInCallback />} />
-          <Route path="/auth/silent" element={<SignInSilentCallback />} />
-          <Route path="/*" element={<><SignInSilent /><Main /></>} />
-        </Routes>
-      </PageLayout>
-    </AuthorizationProvider>
+    <appContext.Provider value={appContextValue}>
+      <AuthorizationProvider>
+        <ThemeProvider theme={appContextValue.theme}>
+          <PageLayout>
+            <PageLayout.Header>
+              <AppHeader />
+            </PageLayout.Header>
+            <Routes>
+              <Route path="/auth/callback" element={<SignInCallback />} />
+              <Route path="/auth/silent" element={<SignInSilentCallback />} />
+              <Route path="/*" element={<><SignInSilent /><Main /></>} />
+            </Routes>
+          </PageLayout>
+        </ThemeProvider>
+      </AuthorizationProvider>
+    </appContext.Provider>
   );
 }
 

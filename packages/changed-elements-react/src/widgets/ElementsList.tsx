@@ -154,7 +154,6 @@ export class ElementsList extends React.Component<ElementsListProps> {
                       <FixedSizeList
                         ref={this._listRef}
                         style={{ overflow: "overlay" }}
-                        className="element-list-scrollbar"
                         height={size.height}
                         itemCount={this.props.nodes.length}
                         onItemsRendered={onItemsRendered}

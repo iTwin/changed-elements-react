@@ -3,12 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
-@import "~@itwin/core-react/lib/cjs/core-react/style/themecolors.scss";
-
 .empty-component-container {
-  padding: $uicore-m;
-  color: $buic-text-color;
+  padding: var(--iui-size-m);
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -20,8 +16,8 @@
 
   > .icon {
     font-size: 64px;
-    color: var(--iui-text-color-muted);
-    margin-bottom: $uicore-m;
+    color: var(--iui-color-text-muted);
+    margin-bottom: var(--iui-size-m);
   }
 
   > .core-svg-icon {
@@ -35,11 +31,7 @@
   }
 
   > .error-title {
-    font-size: $uicore-font-size-subheading;
-    margin-bottom: $uicore-m;
-  }
-
-  > .error-description {
-    color: $buic-foreground-muted;
+    font-size: var(--iui-font-size-3);
+    margin-bottom: var(--iui-size-m);
   }
 }

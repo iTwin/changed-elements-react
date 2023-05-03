@@ -434,13 +434,9 @@ export class Provider
           : undefined,
     });
     for (const elem of insertedElems) {
-      // Check if user is emphasizing some elements
-      if (this._internalAlwaysDrawn.size === 0) {
-        overrides.overrideElement(elem.id, inserted);
-      }
-      // If so, only override said elements
-      else if (this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.overrideElement(elem.id, inserted);
+      // Check if user is emphasizing some elements, and if so, override said elements
+      if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
+        overrides.override({ elementId: elem.id, appearance: inserted });
       }
     }
 
@@ -466,19 +462,9 @@ export class Provider
           : undefined,
     });
     for (const elem of updatedElems) {
-      // Check if user is emphasizing some elements
-      if (this._internalAlwaysDrawn.size === 0) {
-        overrides.overrideElement(
-          elem.id,
-          elem.indirect ? updatedIndirectly : updated,
-        );
-      }
-      // If so, only override said elements
-      else if (this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.overrideElement(
-          elem.id,
-          elem.indirect ? updatedIndirectly : updated,
-        );
+      // Check if user is emphasizing some elements, and if so, only override said elements
+      if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
+        overrides.override({ elementId: elem.id, appearance: elem.indirect ? updatedIndirectly : updated });
       }
     }
   }
@@ -513,13 +499,13 @@ export class Provider
     if (this._internalAlwaysDrawn.size !== 0 && !this._exclusive) {
       ovrs.setDefaultOverrides(unchangedAppearance);
       const alwaysDrawn = [...elementIds].filter((elemId: string) => this._internalAlwaysDrawn.has(elemId));
-      alwaysDrawn.forEach((elemId) => {
-        ovrs.overrideElement(elemId, appearance);
+      alwaysDrawn.forEach((elementId) => {
+        ovrs.override({ elementId, appearance });
       });
     } else {
       // If not emphasizing, just set the elements in the other iModel to show as the given appearance
-      elementIds.forEach((elemId) => {
-        ovrs.overrideElement(elemId, appearance);
+      elementIds.forEach((elementId) => {
+        ovrs.override({ elementId, appearance });
       });
     }
   };

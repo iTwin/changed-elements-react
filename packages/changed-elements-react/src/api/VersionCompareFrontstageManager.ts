@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ConfigurableUiManager, FrontstageManager, type FrontstageReadyEventArgs } from "@itwin/appui-react";
+import { UiFramework, type FrontstageReadyEventArgs } from "@itwin/appui-react";
 import { BeEvent, DbOpcode, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport, ViewState
@@ -46,7 +46,7 @@ export class VersionCompareFrontstageManager {
     private _propertyComparisonStageId: string,
     private _manager: VersionCompareManager,
   ) {
-    FrontstageManager.onFrontstageReadyEvent.addListener(this._onFrontstageReady);
+    UiFramework.frontstages.onFrontstageReadyEvent.addListener(this._onFrontstageReady);
   }
 
   /**
@@ -109,7 +109,7 @@ export class VersionCompareFrontstageManager {
   /** Cleans up and dettaches from Frontstage events to trigger comparison visualization */
   public async detach() {
     await this.cleanUp();
-    FrontstageManager.onFrontstageReadyEvent.removeListener(this._onFrontstageReady);
+    UiFramework.frontstages.onFrontstageReadyEvent.removeListener(this._onFrontstageReady);
   }
 
   /** Handler for frontstage ready */
@@ -231,7 +231,7 @@ export class VersionCompareFrontstageManager {
             ?.horizontalTools,
       },
     );
-    ConfigurableUiManager.addFrontstageProvider(stage);
+    UiFramework.frontstages.addFrontstageProvider(stage);
 
     // Clear selection before we start property comparison
     Presentation.selection.clearSelection(
@@ -243,10 +243,10 @@ export class VersionCompareFrontstageManager {
       targetIModel,
     );
 
-    const frontstageDef = await FrontstageManager.getFrontstageDef(this._propertyComparisonStageId);
+    const frontstageDef = await UiFramework.frontstages.getFrontstageDef(this._propertyComparisonStageId);
     if (undefined !== frontstageDef) {
       // Activate property comparison frontstage which should trigger the version compare frontstage manager to start the visualization
-      await FrontstageManager.openNestedFrontstage(frontstageDef);
+      await UiFramework.frontstages.openNestedFrontstage(frontstageDef);
     }
   }
 

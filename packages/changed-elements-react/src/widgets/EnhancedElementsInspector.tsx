@@ -3,15 +3,14 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { type PrimitiveValue } from "@itwin/appui-abstract";
-import { ModalDialogManager } from "@itwin/appui-react";
+import { UiFramework } from "@itwin/appui-react";
 import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Logger } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
-import { LoadingSpinner, SpinnerSize } from "@itwin/core-react";
 import { SvgFolder, SvgVisibilityHalf, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import {
-  Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, ToggleSwitch
+  Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, ProgressRadial, ToggleSwitch
 } from "@itwin/itwinui-react";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { Component, createRef, type ReactElement } from "react";
@@ -264,7 +263,7 @@ const ChangeTypeFilterHeader = (props: FilterHeaderProps): ReactElement => {
 
       // Open dialog
       if (props.iModelConnection) {
-        ModalDialogManager.openDialog(
+        UiFramework.dialogs.modal.open(
           <AdvancedFilterDialog
             data={finalData}
             showValues={false}
@@ -1236,7 +1235,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       return (
         <div className="vc-loading-spinner-overlay">
           <div className="vc-inner-loading-spinner">
-            <LoadingSpinner />
+            <ProgressRadial indeterminate />
           </div>
         </div>
       );
@@ -1252,7 +1251,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         + ` ${toLoad} ` + IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.elements");
       return (
         <div className="element-list-search-status">
-          <LoadingSpinner size={SpinnerSize.Small} />
+          <ProgressRadial size="x-small" indeterminate />
           <div className="element-list-search-status-msg">{message}</div>
         </div>
       );

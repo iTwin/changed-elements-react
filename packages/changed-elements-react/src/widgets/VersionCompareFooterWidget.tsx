@@ -2,21 +2,22 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Dialog, FooterPopup, TitleBar } from "@itwin/appui-layout-react";
-import { FrontstageManager, Indicator, ModalDialogManager, type StatusFieldProps } from "@itwin/appui-react";
+import { StatusBarDialog, StatusBarIndicator, UiFramework } from "@itwin/appui-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Button, ButtonType } from "@itwin/core-react";
+import { SvgCompare } from "@itwin/itwinui-icons-react";
+import { Button, IconButton } from "@itwin/itwinui-react";
 import * as React from "react";
 
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
-import "./VersionCompareFooterWidget.scss";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
-export interface VersionCompareFooterProps {
+import "./VersionCompareFooterWidget.scss";
+
+export interface VersionCompareFooterWidgetProps {
   /** IModelConnection to use */
   iModelConnection?: IModelConnection;
   /** Hook to trigger onViewChanged when version comparison starts */
@@ -26,9 +27,6 @@ export interface VersionCompareFooterProps {
   /** Hide the version compare icon on toolbar when toggled true */
   excludeToolbarItem?: boolean;
 }
-
-export type VersionCompareFooterWidgetProps = VersionCompareFooterProps &
-  StatusFieldProps;
 
 interface VersionCompareFooterState {
   opened: boolean;
@@ -135,7 +133,7 @@ export class VersionCompareFooterWidget extends React.Component<
       return;
     }
 
-    ModalDialogManager.openDialog(
+    UiFramework.dialogs.modal.open(
       <VersionCompareSelectDialog
         iModelConnection={this.props.iModelConnection}
         onViewOpened={this.props.onViewChanged}
@@ -165,11 +163,7 @@ export class VersionCompareFooterWidget extends React.Component<
             <div className="vc-text-info">
               {VersionCompare.manager?.targetVersion?.displayName ?? ""}
             </div>
-            <Button
-              className={"vc-button"}
-              buttonType={ButtonType.Hollow}
-              onClick={this.handleStopComparison}
-            >
+            <Button className="vc-button" onClick={this.handleStopComparison}>
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.stopComparison")}
             </Button>
           </>
@@ -180,9 +174,9 @@ export class VersionCompareFooterWidget extends React.Component<
             ) : (
               <>
                 {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_noComparison")}
-                <a className="vc-a" onClick={this._openDialogWithCheck}>
+                <Button as="a" onClick={this._openDialogWithCheck}>
                   {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_clickHere")}
-                </a>
+                </Button>
               </>
             )}
           </div>
@@ -192,45 +186,35 @@ export class VersionCompareFooterWidget extends React.Component<
   }
 
   public override render() {
-    const show =
-      !this.props.hideWhenUnused ||
-      (this.state.comparing &&
-        FrontstageManager.activeFrontstageId !==
-          PropertyComparisonFrontstage.id);
+    const show = !this.props.hideWhenUnused
+      || (this.state.comparing && UiFramework.frontstages.activeFrontstageId !== PropertyComparisonFrontstage.id);
+    if (!show) {
+      return null;
+    }
+
     return (
-      <>
-        {show && (
-          <>
-            <div
-              ref={this._handleTargetRef}
-              title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareBeta")}
+      <div
+        ref={this._handleTargetRef}
+        title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareBeta")}
+      >
+        <StatusBarIndicator
+          popup={
+            <StatusBarDialog
+              titleBar={
+                <StatusBarDialog.TitleBar
+                  title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareBeta")}
+                />
+              }
             >
-              <Indicator
-                iconName="icon-compare"
-                onClick={this.handleClick.bind(this)}
-                opened={this.state.opened}
-              ></Indicator>
-            </div>
-            <FooterPopup
-              target={this.state.target}
-              onClose={() => this.setState({ opened: false })}
-              isOpen={this.state.opened}
-            >
-              <Dialog
-                titleBar={
-                  <TitleBar
-                    title={IModelApp.localization.getLocalizedString(
-                      "VersionCompare:versionCompare.versionCompareBeta",
-                    )}
-                  ></TitleBar>
-                }
-              >
-                {this.renderContents()}
-              </Dialog>
-            </FooterPopup>
-          </>
-        )}
-      </>
+              {this.renderContents()}
+            </StatusBarDialog>
+          }
+        >
+          <IconButton styleType="borderless" onClick={this.handleClick.bind(this)}>
+            <SvgCompare />
+          </IconButton>
+        </StatusBarIndicator>
+      </div>
     );
   }
 }

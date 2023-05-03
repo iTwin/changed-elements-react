@@ -13,11 +13,13 @@
   width: 256px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 22px;
   padding: 22px;
 }
 
 .signin-prompt svg {
-  height: calc(11px * 12);
+  height: var(--iui-size-3xl);
+  width: var(--iui-size-3xl);
   fill: var(--iui-color-icon);
 }

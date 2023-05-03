@@ -2,10 +2,6 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/core-react/lib/cjs/core-react/index.scss";
-@import "~@itwin/appui-layout-react/lib/cjs/appui-layout-react/_scrollbar";
-@import "~@itwin/itwinui-css/scss/style/theme";
-@import "~@itwin/itwinui-css/scss/style/mixins";
 
 .vc-loading-spinner-overlay {
   display: flex;
@@ -84,7 +80,7 @@
   margin: auto;
   border-top: solid;
   border-width: thin;
-  border-color: $uicore-gray-a;
+  border-color: var(--iui-color-border);
 }
 
 .vc-context-menu-text-item {
@@ -95,8 +91,7 @@
 }
 
 .vc-context-menu-text {
-  @include uicore-font-family;
-  font-size: $uicore-font-size;
+  font-size: var(--iui-font-size-1);
   text-align: left;
   position: absolute;
   top: 25px;
@@ -129,12 +124,14 @@
   padding: 0 12px;
 }
 
+.element-node .vc-node-icon {
+  fill: var(--iui-icon-color);
+}
+
 .element-label {
-  @include uicore-font-family;
-  color: $buic-text-color;
   cursor: pointer;
-  margin-left: $uicore-s;
-  margin-right: $uicore-s;
+  margin-left: var(--iui-size-xs);
+  margin-right: var(--iui-size-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -154,21 +151,15 @@
   padding-bottom: 4px;
 }
 
-.element-list-scrollbar {
-  @include iui-scrollbar;
-}
-
 .element-list {
   width: 100%;
   margin-top: 4px;
   flex: 1 0 0;
-  background-color: $buic-background-1;
   display: flex;
 }
 
 .element-list-no-results {
-  @include uicore-font-family;
-  color: $buic-text-color-muted;
+  color: var(--iui-color-text-muted);
   margin: auto;
   text-align: center;
 }
@@ -196,7 +187,7 @@
 
 .element-empty-expander {
   width: 12px;
-  padding: $uicore-xs;
+  padding: var(--iui-size-2xs);
   padding-left: 8px;
 }
 
@@ -224,8 +215,8 @@
 .filter-label {
   margin-top: auto;
   margin-bottom: auto;
-  margin-left: $uicore-xs;
-  margin-right: $uicore-m;
+  margin-left: var(--iui-size-2xs);
+  margin-right: var(--iui-size-m);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -234,8 +225,8 @@
   display: flex;
   margin-top: auto;
   margin-bottom: auto;
-  margin-left: $uicore-xs;
-  margin-right: $uicore-xs;
+  margin-left: var(--iui-size-2xs);
+  margin-right: var(--iui-size-2xs);
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -257,23 +248,8 @@
   height: 16px;
 }
 
-.breadcrumb-container {
-  @include nz-scrollbar($color: $buic-background-4);
-  display: flex;
-  margin-top: $uicore-xs;
-  margin-bottom: $uicore-xs;
-  padding: $uicore-xs;
-  border: solid;
-  border-width: 1px;
-  border-color: $uicore-gray-a;
-  border-radius: 4px;
-  white-space: nowrap;
-  overflow-x: scroll;
-  background-color: $buic-background-widget;
-}
-
 .vc-itwinui-breadcrumb-container {
-  padding: 0 $uicore-xs;
+  padding: 0 var(--iui-size-2xs);
 
   .iui-button:hover {
     text-decoration: underline;
@@ -286,14 +262,12 @@
 }
 
 .breadcrumb-static-text {
-  @include uicore-font-family;
-  margin-left: $uicore-s;
+  margin-left: var(--iui-size-xs);
 }
 
 .breadcrumb-entry {
-  @include uicore-font-family;
   cursor: pointer;
-  margin-left: $uicore-s;
+  margin-left: var(--iui-size-xs);
 }
 
 .breadcrumb-entry:hover {
@@ -301,12 +275,12 @@
 }
 
 .element-node:hover {
-  background-color: $buic-row-hover;
+  background-color: var(--iui-color-background-hover);
   cursor: pointer;
 }
 
 .selected {
-  background-color: $buic-row-selection;
+  background-color: var(--iui-color-background-accent-muted);
 }
 
 .added {
@@ -339,7 +313,6 @@
 
   &-indirect {
     @extend .change-square;
-    background-color: $buic-background-1;
     border-color: RGB(0, 139, 225);
   }
 
@@ -358,16 +331,14 @@
 
 .element-list-search-status {
   display: flex;
-  background-color: $buic-background-1;
-  padding-left: $uicore-s;
+  padding-left: var(--iui-size-xs);
 }
 
 .element-list-search-status-msg {
-  @include uicore-font-family;
   cursor: default;
-  color: $buic-text-color-muted;
+  color: var(--iui-color-text-muted);
   text-align: left;
-  padding: $uicore-s;
+  padding: var(--iui-size-xs);
 }
 
 .element-list-search-status-spinner {

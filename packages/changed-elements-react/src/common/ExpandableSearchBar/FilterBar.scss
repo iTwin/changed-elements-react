@@ -2,13 +2,12 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/itwinui-css/scss/variables";
 
 .search-bar-filter-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--iui-text-color);
+  color: var(--iui-color-text);
   background: linear-gradient(RGBA(var(--iui-color-foreground-primary-rgb), var(--iui-opacity-6)), RGBA(var(--iui-color-foreground-primary-rgb), var(--iui-opacity-6))), linear-gradient(var(--iui-color-background-1), var(--iui-color-background-1));
   border-top: 1px solid var(--iui-color-foreground-primary);
   border-bottom: 1px solid var(--iui-color-foreground-primary);

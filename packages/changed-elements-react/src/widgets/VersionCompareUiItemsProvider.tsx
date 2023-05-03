@@ -3,16 +3,13 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  StagePanelLocation, StagePanelSection, StageUsage, StatusBarSection, ToolbarOrientation, ToolbarUsage,
-  type AbstractWidgetProps, type CommonStatusBarItem, type CommonToolbarItem, type UiItemsProvider
-} from "@itwin/appui-abstract";
-import {
-  CommandItemDef, StatusBarItemUtilities, ToolbarHelper, UiFramework, withStatusFieldProps
+  CommandItemDef, StagePanelLocation, StagePanelSection, StageUsage, StatusBarItem, StatusBarItemUtilities,
+  StatusBarSection, ToolbarHelper, ToolbarItem, ToolbarOrientation, ToolbarUsage, UiFramework, UiItemsProvider, Widget
 } from "@itwin/appui-react";
 import { IModelApp } from "@itwin/core-frontend";
 
 import { ChangedElementsWidget } from "./ChangedElementsWidget.js";
-import { VersionCompareFooterWidget, type VersionCompareFooterProps } from "./VersionCompareFooterWidget.js";
+import { VersionCompareFooterWidget, type VersionCompareFooterWidgetProps } from "./VersionCompareFooterWidget.js";
 import { openSelectDialog } from "./VersionCompareSelectWidget.js";
 
 /**
@@ -23,45 +20,36 @@ export class VersionCompareUiItemsProvider implements UiItemsProvider {
   public static readonly providerId = "VersionCompareUiItemsProvider";
   public readonly id = VersionCompareUiItemsProvider.providerId;
 
-  public constructor(private props: VersionCompareFooterProps) { }
+  public constructor(private props: VersionCompareFooterWidgetProps) { }
 
-  public provideToolbarButtonItems(
+  public provideToolbarItems(
     _stageId: string,
     _stageUsage: string,
     toolbarUsage: ToolbarUsage,
     toolbarOrientation: ToolbarOrientation,
-  ): CommonToolbarItem[] {
+  ): ToolbarItem[] {
     if (
       toolbarUsage === ToolbarUsage.ContentManipulation &&
       toolbarOrientation === ToolbarOrientation.Vertical &&
       !this.props.excludeToolbarItem
     ) {
-      const items: CommonToolbarItem[] = [];
-      items.push(
-        ToolbarHelper.createToolbarItemFromItemDef(
-          500,
-          this.createOpenSelectDialogItemDef,
-        ),
-      );
+      const items: ToolbarItem[] = [];
+      items.push(ToolbarHelper.createToolbarItemFromItemDef(500, this.createOpenSelectDialogItemDef));
       return items;
     }
 
     return [];
   }
 
-  public provideStatusBarItems(
-    _stageId: string,
-    stageUsage: string,
-  ): CommonStatusBarItem[] {
-    const statusBarItems: CommonStatusBarItem[] = [];
+  public provideStatusBarItems(_stageId: string, stageUsage: string): StatusBarItem[] {
+    const statusBarItems: StatusBarItem[] = [];
     if (stageUsage === StageUsage.General) {
-      const WidgetWithProps = withStatusFieldProps(VersionCompareFooterWidget);
       statusBarItems.push(
-        StatusBarItemUtilities.createStatusBarItem(
+        StatusBarItemUtilities.createCustomItem(
           "VersionCompare",
           StatusBarSection.Left,
           50,
-          <WidgetWithProps {...this.props} />,
+          <VersionCompareFooterWidget {...this.props} />,
         ),
       );
     }
@@ -74,18 +62,18 @@ export class VersionCompareUiItemsProvider implements UiItemsProvider {
     stageUsage: string,
     location: StagePanelLocation,
     section?: StagePanelSection,
-  ): AbstractWidgetProps[] {
+  ): Widget[] {
     if (
       stageUsage === StageUsage.General &&
       location === StagePanelLocation.Right &&
       section === StagePanelSection.Start
     ) {
-      const widgets: AbstractWidgetProps[] = [];
+      const widgets: Widget[] = [];
       widgets.push({
         id: ChangedElementsWidget.widgetId,
         label: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare"),
         icon: "icon-compare",
-        getWidgetContent: () => <ChangedElementsWidget />,
+        content: <ChangedElementsWidget />,
       });
       return widgets;
     }

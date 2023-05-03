@@ -3,9 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, CommonWidgetProps, ConfigurableUiContent, FrontstageManager, IModelViewportControl,
-  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework,
-  UiItemsManager, UiItemsProvider
+  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, StagePanelLocation, StagePanelSection,
+  StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager, UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import { ChangedElementsWidget, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
@@ -66,9 +65,8 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
           setLoadingState("loaded");
           UiFramework.setIModelConnection(iModel);
           UiFramework.setDefaultViewState(viewState);
-          FrontstageManager.addFrontstageProvider(new MainFrontstageProvider());
-          // UiFramework will encounter a deadlock if we do not wait before setting active frontstage
-          setTimeout(() => FrontstageManager.setActiveFrontstage(MainFrontstageProvider.name));
+          UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
+          await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
         }
       })();
       return () => { disposed = true; };
@@ -239,7 +237,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     stageUsage: string,
     location: StagePanelLocation,
     section?: StagePanelSection,
-  ): CommonWidgetProps[] {
+  ): Widget[] {
     if (
       stageId !== MainFrontstageProvider.name ||
       stageUsage !== StageUsage.General ||
@@ -249,6 +247,6 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    return [{ id: "ChangedElementsWidget", getWidgetContent: () => <ChangedElementsWidget /> }];
+    return [{ id: "ChangedElementsWidget", content: <ChangedElementsWidget /> }];
   }
 }
