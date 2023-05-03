@@ -10,7 +10,9 @@ import { Provider } from "react-redux";
 export function UIFramework(props: PropsWithChildren<unknown>): ReactElement {
   useEffect(
     () => {
-      // We do not UI state to persist between sessions
+      UiFramework.setColorTheme("inherit");
+
+      // We do not want UI state to persist between sessions
       void UiFramework.setUiStateStorage(new MemoryUISettingsStorage(), true);
     },
     [],
