@@ -81,5 +81,5 @@ class StringReplacePlugin implements Plugin {
       const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = objectStorage.default ?? objectStorage;
       `,
     );
-  };
+  }
 }
