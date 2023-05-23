@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Cartographic } from "@itwin/core-common";
-import { BlankConnection } from "@itwin/core-frontend";
+import { BlankConnection, IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { ChangedElement } from "../api/ChangedElementEntryCache.js";
@@ -44,7 +44,7 @@ const queryMocker: QueryStatementMocker = {
 };
 
 describe("Test ChangedElementsChildrenCache", () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     vi.mock("@itwin/core-frontend", async () => {
       const module = await vi.importActual<typeof import("@itwin/core-frontend")>("@itwin/core-frontend");
       const BlankConnection = {
@@ -55,9 +55,12 @@ describe("Test ChangedElementsChildrenCache", () => {
       };
       return { ...module, BlankConnection };
     });
+
+    await NoRenderApp.startup();
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    await IModelApp.shutdown();
     vi.restoreAllMocks();
   });
 

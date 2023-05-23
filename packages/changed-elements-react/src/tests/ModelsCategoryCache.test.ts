@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Cartographic, QueryBinder, type QueryOptions } from "@itwin/core-common";
-import { BlankConnection } from "@itwin/core-frontend";
+import { BlankConnection, IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { ModelsCategoryCache } from "../api/ModelsCategoryCache.js";
@@ -39,8 +39,9 @@ const queryMockGenerator = (bindingPostfix = "") => {
 };
 
 describe("Models Category Cache Tests", () => {
-  beforeAll(() => {
-    vi.mock("@itwin/core-frontend", () => {
+  beforeAll(async () => {
+    vi.mock("@itwin/core-frontend", async () => {
+      const module = await vi.importActual<typeof import("@itwin/core-frontend")>("@itwin/core-frontend");
       const BlankConnection = {
         create: () => {
           const load = vi.fn();
@@ -51,11 +52,14 @@ describe("Models Category Cache Tests", () => {
           };
         },
       };
-      return { BlankConnection };
+      return { ...module, BlankConnection };
     });
+
+    await NoRenderApp.startup();
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    await IModelApp.shutdown();
     vi.restoreAllMocks();
   });
 
