@@ -60,18 +60,18 @@
     "@types/react-virtualized-auto-sizer": "^1.0.1",
     "@types/react-window": "^1.8.5",
     "@types/react-window-infinite-loader": "^1.0.6",
-    "@vitejs/plugin-react": "^2.1.0",
-    "@vitest/coverage-c8": "^0.24.3",
-    "cpx2": "^4.2.0",
-    "happy-dom": "^7.6.0",
+    "@vitejs/plugin-react-swc": "^3.3.1",
+    "@vitest/coverage-c8": "^0.31.1",
+    "cpx2": "^4.2.3",
+    "happy-dom": "^9.20.3",
     "npm-run-all": "^4.1.5",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-redux": "^7.2.2",
     "redux": "^4.1.0",
-    "typescript": "^5.0.0",
-    "vite": "^3.1.0",
-    "vitest": "^0.28.1"
+    "typescript": "^5.0.4",
+    "vite": "^4.3.8",
+    "vitest": "^0.31.1"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^4.0.0",
@@ -94,7 +94,7 @@
     "redux": "^4.1.0"
   },
   "dependencies": {
-    "@itwin/imodels-client-management": "^3.1.0",
+    "@itwin/imodels-client-management": "^4.0.0",
     "@itwin/itwinui-icons-react": "^2.2.0",
     "react-table": "^7.8.0",
     "react-virtualized-auto-sizer": "^1.0.7",
