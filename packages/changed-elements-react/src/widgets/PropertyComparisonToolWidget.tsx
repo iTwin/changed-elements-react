@@ -180,13 +180,11 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
     const horizontalToolbar = this.props.horizontalToolbar ?? (
       <>
         <PropertyComparisonVisibilityClearTool clearIsolate={clearIsolate} />
-        {horizontalTools.length !== 0 && (
-          <ToolbarComposer
-            orientation={ToolbarOrientation.Horizontal}
-            items={horizontalTools}
-            usage={ToolbarUsage.ContentManipulation}
-          />
-        )}
+        <ToolbarComposer
+          orientation={ToolbarOrientation.Horizontal}
+          items={horizontalTools}
+          usage={ToolbarUsage.ContentManipulation}
+        />
       </>
     );
 

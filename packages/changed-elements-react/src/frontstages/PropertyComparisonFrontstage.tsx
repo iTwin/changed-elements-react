@@ -4,9 +4,10 @@
 *--------------------------------------------------------------------------------------------*/
 import type { ContentLayoutProps, LayoutVerticalSplitProps } from "@itwin/appui-abstract";
 import {
-  ContentGroup, ContentLayoutDef, FrontstageConfig, FrontstageProvider, UiFramework, type ContentProps, StatusBarComposer, ViewToolWidgetComposer
+  ContentGroup, ContentLayoutDef, FrontstageConfig, FrontstageProvider, StatusBarComposer, UiFramework,
+  ViewToolWidgetComposer, type ContentProps
 } from "@itwin/appui-react";
-import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, SelectionTool, ViewState } from "@itwin/core-frontend";
 
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { PropertyComparisonTableControl } from "../contentviews/PropertyComparisonTable.js";
@@ -108,12 +109,9 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     // Register dummy tool for no selection
     DummyTool.register(VersionCompareManager.namespace);
 
-    UiFramework.frontstages.onFrontstageReadyEvent.addListener(({ frontstageDef }) => {
-      if (frontstageDef.id === PropertyComparisonFrontstage.id) {
-        IModelApp.toolAdmin.defaultToolId = DummyTool.toolId;
-        void IModelApp.toolAdmin.startDefaultTool();
-      }
-    });
+    if (!UiFramework.frontstages.onFrontstageDeactivatedEvent.has(handleFrontstageDeactivated)) {
+      UiFramework.frontstages.onFrontstageDeactivatedEvent.addListener(handleFrontstageDeactivated);
+    }
   }
 
   /** Changes layout to a single view for "Side-by-Side" (dual viewport) comparison mode. */
@@ -278,6 +276,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     return {
       id: PropertyComparisonFrontstage.id,
       version: 0,
+      defaultTool: DummyTool.toolId,
       contentGroup: PropertyComparisonFrontstage._sideBySideContentGroup,
       contentManipulation: {
         id: "PropertyComparisonToolWidget",
@@ -293,5 +292,11 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
       },
       ...this.frontstageProps,
     };
+  }
+}
+
+function handleFrontstageDeactivated(): void {
+  if (IModelApp.toolAdmin.defaultToolId === DummyTool.toolId) {
+    IModelApp.toolAdmin.defaultToolId = SelectionTool.toolId;
   }
 }
