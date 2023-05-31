@@ -18,7 +18,7 @@ export interface Size {
 
 export const AutoSizer = forwardRef<HTMLDivElement, AutoSizerProps>(
   function Autosizer(props, ref) {
-    const divRef = useRef<HTMLDivElement>(null!);
+    const divRef = useRef(null as unknown as HTMLDivElement);
     const [size, setSize] = useState<Size>();
 
     useLayoutEffect(
