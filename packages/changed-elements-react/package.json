@@ -57,7 +57,6 @@
     "@types/react": "^17.0.0",
     "@types/react-redux": "^7.1.25",
     "@types/react-table": "^7.7.14",
-    "@types/react-virtualized-auto-sizer": "^1.0.1",
     "@types/react-window": "^1.8.5",
     "@types/react-window-infinite-loader": "^1.0.6",
     "@vitejs/plugin-react-swc": "^3.3.1",
@@ -97,7 +96,6 @@
     "@itwin/imodels-client-management": "^4.0.0",
     "@itwin/itwinui-icons-react": "^2.2.0",
     "react-table": "^7.8.0",
-    "react-virtualized-auto-sizer": "^1.0.7",
     "react-window": "^1.8.8",
     "react-window-infinite-loader": "^1.0.8"
   }
