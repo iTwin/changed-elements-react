@@ -5,8 +5,8 @@
 import { DbOpcode, type Id64String } from "@itwin/core-bentley";
 import { Placement3d, type GeometricElement3dProps } from "@itwin/core-common";
 import {
-  EmphasizeElements, IModelApp, IModelConnection, ScreenViewport, SelectionTool, SpatialViewState, TwoWayViewportSync,
-  ViewState, ViewState3d
+  EmphasizeElements, IModelApp, IModelConnection, ScreenViewport, SpatialViewState, TwoWayViewportSync, ViewState,
+  ViewState3d
 } from "@itwin/core-frontend";
 import { Range3d } from "@itwin/core-geometry";
 import { MinimalNamedVersion } from "@itwin/imodels-client-management";
@@ -14,12 +14,10 @@ import type { InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 import { SideBySideLabelDecorator, ViewportLabelDecoration } from "../contentviews/ViewportLabel.js";
-import { DummyTool } from "../tools/DummyTool.js";
 import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /** Handles side-by-side visualization of differencing by coloring the relevant elements */
 export class SideBySideVisualizationManager {
-  private _defaultToolId: string | undefined;
   private _viewportSync: TwoWayViewportSync = new TwoWayViewportSync();
   private _decorator: SideBySideLabelDecorator | undefined;
 
@@ -112,11 +110,6 @@ export class SideBySideVisualizationManager {
     // Setup labels
     this.setViewportsLabels();
 
-    // Save the default tool and set the dummy tool as default
-    this._defaultToolId = IModelApp.toolAdmin.defaultToolId;
-    IModelApp.toolAdmin.defaultToolId = DummyTool.toolId;
-    await IModelApp.toolAdmin.startDefaultTool();
-
     if (emphasizedElements) {
       await this.emphasizeSet(emphasizedElements);
     }
@@ -148,11 +141,6 @@ export class SideBySideVisualizationManager {
     this.cleanViewportsLabels();
     // Clean the focused element
     this._focusedElementKey = undefined;
-    // Reset to default tool
-    IModelApp.toolAdmin.defaultToolId = this._defaultToolId
-      ? this._defaultToolId
-      : SelectionTool.toolId;
-    void IModelApp.toolAdmin.startDefaultTool();
   }
 
   /**

@@ -5,9 +5,9 @@
 import type { ContentLayoutProps, LayoutVerticalSplitProps } from "@itwin/appui-abstract";
 import {
   ContentGroup, ContentLayoutDef, FrontstageConfig, FrontstageProvider, StatusBarComposer, UiFramework,
-  ViewToolWidgetComposer, type ContentProps
+  ViewToolWidgetComposer, type ContentProps, FrontstageActivatedEventArgs
 } from "@itwin/appui-react";
-import { IModelApp, IModelConnection, SelectionTool, ViewState } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { PropertyComparisonTableControl } from "../contentviews/PropertyComparisonTable.js";
@@ -109,8 +109,8 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     // Register dummy tool for no selection
     DummyTool.register(VersionCompareManager.namespace);
 
-    if (!UiFramework.frontstages.onFrontstageDeactivatedEvent.has(handleFrontstageDeactivated)) {
-      UiFramework.frontstages.onFrontstageDeactivatedEvent.addListener(handleFrontstageDeactivated);
+    if (!UiFramework.frontstages.onFrontstageActivatedEvent.has(handleFrontstageChanged)) {
+      UiFramework.frontstages.onFrontstageActivatedEvent.addListener(handleFrontstageChanged);
     }
   }
 
@@ -276,7 +276,6 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     return {
       id: PropertyComparisonFrontstage.id,
       version: 0,
-      defaultTool: DummyTool.toolId,
       contentGroup: PropertyComparisonFrontstage._sideBySideContentGroup,
       contentManipulation: {
         id: "PropertyComparisonToolWidget",
@@ -295,8 +294,23 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
   }
 }
 
-function handleFrontstageDeactivated(): void {
-  if (IModelApp.toolAdmin.defaultToolId === DummyTool.toolId) {
-    IModelApp.toolAdmin.defaultToolId = SelectionTool.toolId;
+let originalDefaultToolId: string | undefined = undefined;
+function handleFrontstageChanged(args: FrontstageActivatedEventArgs): void {
+  if (args.activatedFrontstageDef.id === PropertyComparisonFrontstage.id) {
+    originalDefaultToolId = IModelApp.toolAdmin.defaultToolId;
+    IModelApp.toolAdmin.defaultToolId = DummyTool.toolId;
+    // Currently the defaultTool property of the frontstage config is not working properly, consequently the
+    // PropertyComparisonFrontstage will be set with the default select tool, which this handler overrides, but we must
+    // use setTimeout to let the other listeners finish running so that this default tool (DummyTool) as applied last.
+    // In practise without this the dummy tool is still active but the tool assistance will show the select tool instead
+    // of this blank tool in the status bar.
+    setTimeout(() => IModelApp.toolAdmin.startDefaultTool());
+  }
+
+  if (args.deactivatedFrontstageDef?.id === PropertyComparisonFrontstage.id) {
+    if (originalDefaultToolId) {
+      IModelApp.toolAdmin.defaultToolId = originalDefaultToolId;
+      void IModelApp.toolAdmin.startDefaultTool();
+    }
   }
 }
