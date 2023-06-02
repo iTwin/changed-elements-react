@@ -2,12 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { ConditionalBooleanValue } from "@itwin/appui-abstract";
 import {
-  BackstageAppButton, CommandItemDef, CommonToolbarItem, ToolItemDef, ToolWidgetComposer, ToolbarComposer,
-  ToolbarHelper, ToolbarOrientation, ToolbarUsage, UiFramework
+  BackstageAppButton, CommandItemDef, HideIsolateEmphasizeActionHandler, SyncUiEventId, ToolbarComposer, ToolbarHelper,
+  ToolbarItem, ToolbarOrientation, ToolbarUsage, ToolItemDef, ToolWidgetComposer, UiFramework
 } from "@itwin/appui-react";
-import { EmphasizeElements, IModelApp, Viewport } from "@itwin/core-frontend";
-import React, { useCallback, useEffect, useState } from "react";
+import { EmphasizeElements, IModelApp } from "@itwin/core-frontend";
+import React, { useCallback } from "react";
 
 import { SideBySideVisualizationManager } from "../api/SideBySideVisualizationManager.js";
 import { VersionCompare } from "../api/VersionCompare.js";
@@ -20,73 +21,49 @@ export interface PropertyComparisonVisibilityClearToolProps {
 }
 
 export const PropertyComparisonVisibilityClearTool = ({ clearIsolate }: PropertyComparisonVisibilityClearToolProps) => {
-  const [
-    areElementDisplayOverridesActive,
-    setAreElementDisplayOverridesActive,
-  ] = useState(false);
-
-  useEffect(() => {
-    const onFeatureOverridesListener = (vp: Viewport) => {
-      const isolatedElements =
-        EmphasizeElements.get(vp)?.getIsolatedElements(vp);
-      setAreElementDisplayOverridesActive(isolatedElements !== undefined && isolatedElements.size !== 0);
-    };
-
-    const listeners: (() => void)[] = [];
-    if (IModelApp.viewManager) {
-      for (const vp of IModelApp.viewManager) {
-        listeners.push(vp.onFeatureOverridesChanged.addListener(onFeatureOverridesListener));
-      }
+  const areElementDisplayOverridesActive = () => {
+    const vp = IModelApp.viewManager.selectedView;
+    if (!vp) {
+      return false;
     }
 
-    return () => {
-      listeners.forEach((listener) => listener());
-    };
-  }, [IModelApp.viewManager]);
+    const isolatedElements = EmphasizeElements.get(vp)?.getIsolatedElements(vp);
+    return isolatedElements !== undefined && isolatedElements.size !== 0;
+  };
 
-  useEffect(() => {
-    const onViewOpenListener = (vp: Viewport) => {
-      vp.onFeatureOverridesChanged.addListener((vp: Viewport) => {
-        const isolatedElements =
-          EmphasizeElements.get(vp)?.getIsolatedElements(vp);
-        setAreElementDisplayOverridesActive(isolatedElements !== undefined && isolatedElements.size !== 0);
-      });
-    };
-
-    return IModelApp.viewManager?.onViewOpen.addListener(onViewOpenListener);
-  }, [IModelApp.viewManager]);
-
-  const executeClearIsolate = useCallback(() => {
-    clearIsolate();
-    setAreElementDisplayOverridesActive(false);
-  }, []);
+  const executeClearIsolate = useCallback(clearIsolate, []);
 
   const clearIsolateToolCommand = new CommandItemDef({
     commandId: "VersionCompare.PropertyComparisonTools.ClearIsolate",
     iconSpec: "icon-visibility",
-    isHidden: !areElementDisplayOverridesActive,
+    isHidden: new ConditionalBooleanValue(
+      () => !areElementDisplayOverridesActive(),
+      [
+        HideIsolateEmphasizeActionHandler.hideIsolateEmphasizeUiSyncId,
+        SyncUiEventId.ActiveViewportChanged,
+        SyncUiEventId.ViewStateChanged,
+        SyncUiEventId.FeatureOverridesChanged,
+        "visibilitycleartooloverridechanged",
+      ],
+    ),
     label: () => IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.clearIsolate"),
     execute: executeClearIsolate,
   });
 
   return (
-    <>
-      {areElementDisplayOverridesActive && (
-        <ToolbarComposer
-          items={[ToolbarHelper.createToolbarItemFromItemDef(0, clearIsolateToolCommand)]}
-          usage={ToolbarUsage.ContentManipulation}
-          orientation={ToolbarOrientation.Horizontal}
-        />
-      )}
-    </>
+    <ToolbarComposer
+      items={[ToolbarHelper.createToolbarItemFromItemDef(0, clearIsolateToolCommand)]}
+      usage={ToolbarUsage.ContentManipulation}
+      orientation={ToolbarOrientation.Horizontal}
+    />
   );
 };
 
 export interface ToolWidgetProps {
   /** Extra tools to add to the Property Comparison Tool Widget */
-  verticalTools?: CommonToolbarItem[];
+  verticalTools?: ToolbarItem[];
   /** Extra tools to add to the Property Comparison Tool Widget */
-  horizontalTools?: CommonToolbarItem[];
+  horizontalTools?: ToolbarItem[];
   /** Vertical toolbar */
   verticalToolbar?: React.ReactNode;
   /** Horizontal Toolbar */
@@ -144,8 +121,8 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
       }
     };
 
-    const tools: CommonToolbarItem[] = [];
-    const horizontalTools: CommonToolbarItem[] = [];
+    const tools: ToolbarItem[] = [];
+    const horizontalTools: ToolbarItem[] = [];
 
     tools.push(
       ToolbarHelper.createToolbarItemFromItemDef(
@@ -178,14 +155,7 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
     );
 
     const horizontalToolbar = this.props.horizontalToolbar ?? (
-      <>
-        <PropertyComparisonVisibilityClearTool clearIsolate={clearIsolate} />
-        <ToolbarComposer
-          orientation={ToolbarOrientation.Horizontal}
-          items={horizontalTools}
-          usage={ToolbarUsage.ContentManipulation}
-        />
-      </>
+      <PropertyComparisonVisibilityClearTool clearIsolate={clearIsolate} />
     );
 
     return (
@@ -194,7 +164,7 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
         cornerItem={
           <BackstageAppButton
             icon="icon-progress-backward"
-            label={IModelApp.localization.getLocalizedString("UiFramefork:commands.backToPreviousFrontstage")}
+            label={IModelApp.localization.getLocalizedString("UiFramework:commands.backToPreviousFrontstage")}
             execute={() => UiFramework.frontstages.closeNestedFrontstage()}
           />
         }
