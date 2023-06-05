@@ -1,0 +1,82 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.components-catalog {
+  height: 100%;
+  display: grid;
+  grid: 1fr / auto auto 1fr;
+}
+
+.components-catalog > .components-list {
+  height: 100%;
+  background: var(--iui-color-background);
+  border-right: 1px solid var(--iui-color-border);
+  display: grid;
+  grid: var(--iui-size-xl) 1fr / 1fr;
+  min-height: 0;
+}
+
+.components-catalog > .components-list > .title {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--iui-size-s);
+  border-bottom: 1px solid var(--iui-color-border);
+}
+
+.components-catalog > .components-list > .list {
+  overflow: auto;
+}
+
+.components-catalog > .playground-side {
+  padding: var(--iui-size-l) calc(2 * var(--iui-size-l));
+  display: grid;
+  grid: auto 1fr / 1fr;
+}
+
+.components-catalog > .playground-side > .playground-area {
+  align-self: center;
+  justify-self: center;
+  width: 80%;
+  height: 80%;
+  overflow: auto;
+  resize: both;
+  display: grid;
+  grid: minmax(0, 1fr) / minmax(0, 1fr);
+  background: var(--iui-color-background);
+}
+
+.components-catalog-error {
+  padding: var(--iui-size-l) calc(2 * var(--iui-size-l));
+}
+
+.components-catalog-error .title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--iui-size-m);
+}
+
+.components-catalog-error .title > :first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--iui-size-s)
+}
+
+.components-catalog-error .error-icon {
+  width: var(--iui-size-xl);
+  height: var(--iui-size-xl);
+}
+
+.components-catalog-error .title button {
+  width: var(--iui-size-xl);
+  height: var(--iui-size-xl);
+}
+
+.components-catalog-error .iui-code {
+  white-space: pre;
+  border: 0;
+  display: block;
+  overflow: auto;
+}

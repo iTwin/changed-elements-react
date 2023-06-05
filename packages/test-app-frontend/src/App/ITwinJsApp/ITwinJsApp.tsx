@@ -6,7 +6,7 @@ import {
   AppNotificationManager, ConfigurableUiContent, IModelViewportControl, StagePanelLocation, StagePanelSection,
   StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager, UiItemsProvider, type Widget
 } from "@itwin/appui-react";
-import { ChangedElementsWidget, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
+import { ChangedElementsWidget, ITwinChangedElementsClient, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
@@ -88,7 +88,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <VersionCompareContext savedFilters={savedFilters}>
+      <VersionCompareContext changedElementsClient={changedElementsClient} savedFilters={savedFilters}>
         <UIFramework>
           <ConfigurableUiContent />
         </UIFramework>
@@ -96,6 +96,11 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
     </PageLayout.Content >
   );
 }
+
+const changedElementsClient = new ITwinChangedElementsClient({
+  baseUrl: "https://dev-api.bentley.com/changedelements",
+  getAccessToken: VersionCompare.getAccessToken,
+});
 
 const savedFilters = new MockSavedFiltersManager();
 

@@ -7,7 +7,9 @@ import { BeEvent, Logger } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority
 } from "@itwin/core-frontend";
-import { MinimalChangeset, NamedVersion, NamedVersionState } from "@itwin/imodels-client-management";
+import {
+  MinimalChangeset, MinimalNamedVersion, NamedVersion, NamedVersionState
+} from "@itwin/imodels-client-management";
 import {
   Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
 } from "@itwin/itwinui-react";
@@ -18,7 +20,11 @@ import {
 import type { ChangedElementsApiClient, ChangesetChunk, ChangesetStatus } from "../api/ChangedElementsApiClient.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
+import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import { ChangedElements } from "../client/ChangedElementsClient.js";
 import { useVersionCompare } from "../VersionCompareContext.js";
+import { ChangesetSelectDialog } from "../VersionSelector/ChangesetSelectDialog.js";
+import { ChangesetInfo } from "../VersionSelector/useVersionSelector.js";
 
 import "./VersionCompareSelectWidget.scss";
 
@@ -122,30 +128,42 @@ interface PagedNamedVersionProviderProps {
 function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): ReactElement {
   const result = usePagedNamedVersionLoader(props.iModelConnection);
   const handleStartComparison = async (targetVersion: NamedVersion | undefined) => {
-    if (VersionCompare.manager?.isComparing) {
-      await VersionCompare.manager?.stopComparison();
-    }
-
-    const currentVersion = result?.namedVersions.currentVersion?.version;
-    if (currentVersion && targetVersion && props.iModelConnection) {
-      const currentIndex = result.changesets.findIndex((changeset) => changeset.id === currentVersion.changesetId);
-      const targetIndex = result.changesets.findIndex((changeset) => changeset.id === targetVersion.changesetId);
-      const relevantChangesets = result.changesets.slice(currentIndex, targetIndex - currentIndex).reverse();
-
-      const chunkSize = 200;
-      const chunks: ChangesetChunk[] = [];
-      for (let i = 0; i < relevantChangesets.length; i += chunkSize) {
-        chunks.push({
-          startChangesetId: relevantChangesets[i].id,
-          endChangesetId: relevantChangesets[Math.min(i + chunkSize, relevantChangesets.length) - 1].id,
-        });
+    try {
+      const manager = VersionCompare.manager;
+      if (!manager) {
+        return;
       }
 
-      VersionCompare.manager
-        ?.startComparison(props.iModelConnection, currentVersion, targetVersion, undefined, chunks)
-        .catch((e) => {
-          Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-        });
+      if (manager.isComparing) {
+        await manager.stopComparison();
+      }
+
+      const currentVersion = result?.namedVersions.currentVersion?.version;
+      if (currentVersion && targetVersion && props.iModelConnection) {
+        const currentIndex = result.changesets.findIndex((changeset) => changeset.id === currentVersion.changesetId);
+        const targetIndex = result.changesets.findIndex((changeset) => changeset.id === targetVersion.changesetId);
+        const relevantChangesets = result.changesets.slice(currentIndex, targetIndex - currentIndex).reverse();
+
+        const chunkSize = 200;
+        const chunks: ChangesetChunk[] = [];
+        for (let i = 0; i < relevantChangesets.length; i += chunkSize) {
+          chunks.push({
+            startChangesetId: relevantChangesets[i].id,
+            endChangesetId: relevantChangesets[Math.min(i + chunkSize, relevantChangesets.length) - 1].id,
+          });
+        }
+
+        const changedElements = await manager.getChangedElements(
+          props.iModelConnection,
+          currentVersion,
+          targetVersion,
+          chunks,
+        );
+
+        await manager.startComparison(props.iModelConnection, currentVersion, targetVersion, changedElements);
+      }
+    } catch (e) {
+      Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
     }
   };
 
@@ -891,7 +909,7 @@ export const showNotValidAccessTokenError = () => {
  * @param iModel iModel that will be used to find the changesets
  * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of elements/categories/models change from the app
  */
-export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?: BeEvent<(args?: unknown) => void>) => {
+export const openSelectDialog = async (iModel: IModelConnection) => {
   if (iModel.iModelId === undefined || iModel.iTwinId === undefined) {
     throw new Error("openSelectDialogToolButton: IModel is not properly defined");
   }
@@ -909,24 +927,82 @@ export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?:
     return;
   }
 
+
+  const handleStartComparison = async (
+    currentChangesetId: string,
+    targetChangesetId: string,
+    { changedElements }: ChangedElements,
+  ) => {
+    if (manager.isComparing) {
+      await manager.stopComparison();
+    }
+
+    const currentVersion: MinimalNamedVersion = {
+      id: currentChangesetId,
+      displayName: "",
+      changesetId: currentChangesetId,
+      changesetIndex: -1,
+    };
+    const targetVersion: MinimalNamedVersion = {
+      id: targetChangesetId,
+      displayName: "",
+      changesetId: targetChangesetId,
+      changesetIndex: -1,
+    };
+    await manager.startComparison(iModel, currentVersion, targetVersion, [changedElements]);
+  };
+
   UiFramework.dialogs.modal.open(
-    <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
+    <ChangesetSelectDialog
+      iTwinId={iModel.iTwinId}
+      iModelId={iModel.iModelId}
+      changesetId={iModel.changeset.id}
+      onStartComparison={handleStartComparison}
+      getChangesetInfo={getChangesetInfo(manager, iModel.iModelId)}
+    />,
   );
+
+  // UiFramework.dialogs.modal.open(
+  //   <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
+  // );
 };
+
+function getChangesetInfo(manager: VersionCompareManager, iModelId: string): () => AsyncIterable<ChangesetInfo> {
+  return async function* () {
+    const [changesets, namedVersions] = await Promise.all([
+      manager.changesetCache.getOrderedChangesets(iModelId),
+      manager.changesetCache.getVersions(iModelId),
+    ]);
+    return {
+      changesets: changesets.map(
+        (changeset) => ({
+          id: changeset.id,
+          description: changeset.description,
+          date: new Date(changeset.pushDateTime),
+          isProcessed: false,
+        }),
+      ),
+      namedVersions: namedVersions.map(
+        (namedVersion) => ({
+          id: namedVersion.id,
+          changesetId: namedVersion.changesetId ?? "",
+          displayName: namedVersion.displayName,
+          description: namedVersion.description ?? "",
+          date: namedVersion.createdDateTime,
+        }),
+      ),
+    };
+  };
+}
 
 /**
  * Tool Button that will open the version compare dialog and allow for starting the comparison.
  * @param manager VersionCompareManager
  * @param iModel iModel that will be used to find the changesets
- * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of
- *                      elements/categories/models change from the app
  */
-export const openSelectDialogToolButton = (
-  iModel: IModelConnection,
-  onViewUpdated?: BeEvent<(args?: unknown) => void>,
-): CommonToolbarItem => {
+export const openSelectDialogToolButton = (iModel: IModelConnection): CommonToolbarItem => {
   const onExecute = async () => {
-    await openSelectDialog(iModel, onViewUpdated);
+    await openSelectDialog(iModel);
   };
 
   return ToolbarHelper.createToolbarItemFromItemDef(

@@ -263,17 +263,13 @@ export class VersionCompareManager {
    * @param currentIModel Current IModelConnection to be used to compare against
    * @param currentVersion Current Version of the iModel
    * @param targetVersion Target Version of the iModel, an IModelConnection is opened to it
-   * @param _onViewChanged [optional] this event serves as a communication channel to let version compare frontstage
-   *                       manager know about changes in categories/models/emphasize elements. The app should raise this
-   *                       event whenever it changes anything related to view.
    * @param changesetChunks [optional] If present, the provided chunks will be used to load changed element data
    */
   public async startComparison(
     currentIModel: IModelConnection,
     currentVersion: MinimalNamedVersion,
     targetVersion: MinimalNamedVersion,
-    _onViewChanged?: BeEvent<(args: unknown) => void>,
-    changesetChunks?: ChangesetChunk[],
+    changedElements: ChangedElements[],
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
 
@@ -310,12 +306,6 @@ export class VersionCompareManager {
 
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
-      );
-      const changedElements = await this.getChangedElements(
-        this._currentIModel,
-        currentVersion,
-        targetVersion,
-        changesetChunks,
       );
 
       this.loadingProgressEvent.raiseEvent(

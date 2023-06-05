@@ -2,23 +2,24 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { SvgUser } from "@itwin/itwinui-icons-react";
+import { SvgImodelHollow, SvgPalette, SvgUser } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
-import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
+import { Button, SideNavigation, SidenavButton, Surface, ThemeProvider } from "@itwin/itwinui-react";
 import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
-import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useMatch, useNavigate, useParams } from "react-router-dom";
 
 import { applyUrlPrefix, clientId } from "../environment";
 import { AppContext, appContext } from "./AppContext";
 import { AppHeader } from "./AppHeader";
 import {
-  AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, SignInSilentCallback, useAuthorization
+  AuthorizationState, SignInCallback, SignInSilent, SignInSilentCallback, createAuthorizationProvider, useAuthorization
 } from "./Authorization";
+import { ComponentsCatalogRoutes } from "./ComponentsCatalog/ComponentsCatalog";
+import type { ITwinJsApp } from "./ITwinJsApp/ITwinJsApp";
 import { LoadingScreen } from "./common/LoadingScreen";
 import { ErrorPage } from "./errors/ErrorPage";
 import { IModelBrowser } from "./imodel-browser/IModelBrowser";
 import { ITwinBrowser } from "./imodel-browser/ITwinBrowser";
-import type { ITwinJsApp } from "./ITwinJsApp/ITwinJsApp";
 
 import "./App.css";
 
@@ -48,9 +49,71 @@ export function App(): ReactElement {
   );
 }
 
+const AuthorizationProvider = clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx"
+  ? (props: PropsWithChildren<unknown>) => <>{props.children}</>
+  : createAuthorizationProvider({
+    authority: "https://qa-ims.bentley.com",
+    client_id: clientId,
+    redirect_uri: "/auth/callback",
+    silent_redirect_uri: "/auth/silent",
+    post_logout_redirect_uri: "/",
+    scope: "changedelements:modify imodelaccess:read changedelements:read imodels:read itwins:read users:read itwinjs",
+  });
+
 function Main(): ReactElement {
   const iTwinJsApp = useBackgroundITwinJsAppLoading();
+  return (
+    <>
+      <AppSidebar />
+      <Routes>
+        <Route index element={<Navigate replace to="components" />} />
+        <Route path="components/*" element={<ComponentsCatalogRoutes />}>
+        </Route>
+        <Route path="itwinjs" element={<ITwinJsAppTab />}>
+          <Route index element={<Navigate replace to="browse/iTwins" />} />
+          <Route path="browse/iTwins">
+            <Route index element={<ITwinBrowser />} />
+            <Route path=":iTwinId" element={<IModelBrowser />} />
+          </Route>
+          <Route path="open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
+        </Route>
+      </Routes>
+    </>
+  );
+}
 
+function AppSidebar(): ReactElement {
+  const match = useMatch(":tab/*");
+  const navigate = useNavigate();
+  return (
+    <PageLayout.SideNavigation>
+      <SideNavigation
+        items={[
+          <SidenavButton
+            key="Components"
+            startIcon={<SvgPalette />}
+            title="Components catalog"
+            isActive={match?.params.tab === "components"}
+            onClick={() => navigate("components")}
+          >
+            Components
+          </SidenavButton>,
+          <SidenavButton
+            key="iTwin.js App"
+            startIcon={<SvgImodelHollow />}
+            title="iTwin.js App"
+            isActive={match?.params.tab === "itwinjs"}
+            onClick={() => navigate("itwinjs")}
+          >
+            iTwin.js App
+          </SidenavButton>,
+        ]}
+      />
+    </PageLayout.SideNavigation>
+  );
+}
+
+function ITwinJsAppTab(): ReactElement {
   const { state, signIn } = useAuthorization();
   if (state === AuthorizationState.Offline) {
     return <SetupEnvHint />;
@@ -68,29 +131,8 @@ function Main(): ReactElement {
     );
   }
 
-  return (
-    <Routes>
-      <Route index element={<Navigate replace to="/browse/iTwins" />} />
-      <Route path="browse/iTwins">
-        <Route index element={<ITwinBrowser />} />
-        <Route path=":iTwinId" element={<IModelBrowser />} />
-      </Route>
-      <Route path="open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
-    </Routes>
-  );
+  return <Outlet />;
 }
-
-const AuthorizationProvider = clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx"
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  ? (props: PropsWithChildren<{}>) => <>{props.children}</>
-  : createAuthorizationProvider({
-    authority: applyUrlPrefix("https://ims.bentley.com"),
-    client_id: clientId,
-    redirect_uri: "/auth/callback",
-    silent_redirect_uri: "/auth/silent",
-    post_logout_redirect_uri: "/",
-    scope: "users:read imodels:read imodelaccess:read changedelements:read itwins:read",
-  });
 
 function SetupEnvHint(): ReactElement {
   return (

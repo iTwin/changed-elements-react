@@ -89,7 +89,7 @@ export class VersionCompareUiItemsProvider implements UiItemsProvider {
       execute: async () => {
         const iModelConnection = UiFramework.getIModelConnection();
         if (iModelConnection) {
-          await openSelectDialog(iModelConnection, this.props.onViewChanged);
+          await openSelectDialog(iModelConnection);
         }
       },
     });

@@ -1,0 +1,85 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.iTwinChangedElements__version-selector {
+  grid-template-rows: auto 1fr;
+  min-height: var(--iui-size-3xl);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iTwinChangedElements__version-selector .iui-code {
+  border: 0;
+  color: var(--iui-color-text-muted);
+}
+
+.iTwinChangedElements__named-version-selector {
+  height: 100%;
+  display: grid;
+  grid: auto 1fr auto / 1fr;
+  gap: var(--iui-size-s);
+}
+
+.iTwinChangedElements__named-version-row {
+  display: grid;
+  grid: 1fr / auto 1fr auto auto;
+  align-items: baseline;
+  padding-block: 0;
+  --iui-component-height: calc(2 * var(--iui-size-l) + 2 * var(--iui-size-2xs));
+}
+
+.iTwinChangedElements__named-version-row > button {
+  align-self: center;
+  --iui-component-height: calc(var(--iui-size-s) * 3);
+}
+
+.iTwinChangedElements__named-version-row > :nth-child(3) {
+  display: grid;
+  place-items: end;
+}
+
+.iTwinChangedElements__named-version-row .iui-text-muted {
+  font-style: italic;
+}
+
+.iTwinChangedElements__named-version-row svg {
+  align-self: center;
+}
+
+.iTwinChangedElements__named-version-selector .iTwinChangedElements__changeset-row {
+  padding-left: var(--iui-size-xl);
+  display: grid;
+  grid: 1fr / 1fr auto auto;
+  padding-block: 0;
+}
+
+.iTwinChangedElements__changeset-selector {
+  display: grid;
+  grid: auto minmax(0, 1fr) / 1fr;
+  gap: var(--iui-size-s);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iTwinChangedElements__changeset-selector .iui-list-item {
+  display: grid;
+  grid: 1fr / auto auto 1fr auto auto;
+}
+
+.iTwinChangedElements__list-icon {
+  width: var(--iui-size-xl);
+  height: calc(var(--iui-component-height) - 1px);
+  z-index: 10;
+}
+
+.iTwinChangedElements__list-icon * {
+  fill: var(--iui-color-border-foreground);
+  stroke: var(--iui-color-border-foreground);
+}
+
+.iTwinChangedElements__list-icon[data-required=true] * {
+  fill: var(--iui-color-icon-accent);
+  stroke: var(--iui-color-icon-accent);
+}

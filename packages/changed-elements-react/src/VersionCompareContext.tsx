@@ -2,11 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { createContext, PropsWithChildren, ReactElement, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, type PropsWithChildren, type ReactElement } from "react";
 
-import { SavedFiltersManager } from "./SavedFiltersManager.js";
+import type { ChangedElementsClient } from "./client/ChangedElementsClient.js";
+import type { SavedFiltersManager } from "./SavedFiltersManager.js";
 
 export interface VersionCompareContextProps {
+  changedElementsClient: ChangedElementsClient;
   savedFilters?: SavedFiltersManager | undefined;
 }
 
@@ -16,7 +18,12 @@ export interface VersionCompareContextProps {
  */
 export function VersionCompareContext(props: PropsWithChildren<VersionCompareContextProps>): ReactElement {
   const value = useMemo(
-    () => ({ savedFilters: props.savedFilters }),
+    () => {
+      return {
+        savedFilters: props.savedFilters,
+        changedElementsClient: props.changedElementsClient,
+      };
+    },
     [props.savedFilters],
   );
   return <versionCompareContext.Provider value={value}>{props.children}</versionCompareContext.Provider>;
@@ -39,6 +46,7 @@ Example:
 
 export interface VersionCompareContextValue {
   savedFilters: SavedFiltersManager | undefined;
+  changedElementsClient: ChangedElementsClient;
 }
 
 const versionCompareContext = createContext<VersionCompareContextValue | undefined>(undefined);
