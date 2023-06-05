@@ -37,21 +37,26 @@ export function useVersionSelector(getChangesetInfo: () => AsyncIterable<Changes
           const iterator = getChangesetInfo()[Symbol.asyncIterator]();
           const result = await iterator.next();
           const { changesets, namedVersions } = result.value ?? { changesets: [], namedVersions: [] };
-          setResult((prev) => {
-            return {
-              status: "ready",
-              changesets: prev.changesets.concat(changesets),
-              namedVersions: prev.namedVersions?.concat(namedVersions),
-            };
-          });
+          if (!disposed) {
+            setResult((prev) => {
+              return {
+                status: "ready",
+                changesets: prev.changesets.concat(changesets),
+                namedVersions: prev.namedVersions?.concat(namedVersions),
+              };
+            });
+          }
         } catch (error) {
           setResult((prev) => ({ ...prev, status: "error", error }));
         }
       })();
 
-      return () => { disposed = true; };
+      return () => {
+        setResult({ status: "loading", changesets: [], namedVersions: [] });
+        disposed = true;
+      };
     },
-    [],
+    [getChangesetInfo],
   );
   // useEffect(
   //   () => {

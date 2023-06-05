@@ -3,28 +3,34 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  ChangesetSelectDialog, VersionCompareContext, type ChangedElements, type ChangedElementsClient, type ChangesetInfo,
-  type ComparisonJob, type GetComparisonJobParams, type PostComparisonJobParams
+  ChangesetSelectDialog, ComparisonJobCompleted, VersionCompareContext, type ChangedElements,
+  type ChangedElementsClient, type ChangesetInfo, type ComparisonJob, type GetComparisonJobParams,
+  type PostComparisonJobParams
 } from "@itwin/changed-elements-react";
 import { type ReactElement } from "react";
 
+import { changesets, currentNamedVersion, namedVersionList } from "./common";
+
 export function ChangesetSelectDialogDemo(): ReactElement {
+  async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
+    yield {
+      changesets,
+      namedVersions: [currentNamedVersion.namedVersion, ...namedVersionList.map(({ namedVersion }) => namedVersion)],
+    };
+  }
+
   return (
     <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
-      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId="" getChangesetInfo={getChangesetInfo} />
+      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId={changesets[0].id} getChangesetInfo={getChangesetInfo} />
     </VersionCompareContext>
-  )
+  );
 }
 
 export function ChangesetSelectDialogLoading(): ReactElement {
-  return (
-    <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
-      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId="" getChangesetInfo={getChangesetInfo} />
-    </VersionCompareContext>
-  )
-}
+  async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
+    yield await new Promise(() => { });
+  }
 
-export function ChangesetSelectDialogNoChangesets(): ReactElement {
   return (
     <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
       <ChangesetSelectDialog iTwinId="" iModelId="" changesetId="" getChangesetInfo={getChangesetInfo} />
@@ -32,16 +38,26 @@ export function ChangesetSelectDialogNoChangesets(): ReactElement {
   );
 }
 
-async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
-  yield {
-    changesets: [],
-    namedVersions: [],
-  };
+export function ChangesetSelectDialogNoChangesets(): ReactElement {
+  async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
+    yield {
+      changesets: [],
+      namedVersions: [],
+    };
+  }
+
+  return (
+    <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
+      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId="" getChangesetInfo={getChangesetInfo} />
+    </VersionCompareContext>
+  );
 }
 
 class DemoChangedElementsClient implements ChangedElementsClient {
+  constructor(private methods: Partial<ChangedElementsClient> = {}) { }
+
   public async getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob> {
-    return {
+    return this.methods.getComparisonJob?.(args) ?? {
       comparisonJob: {
         status: "Queued",
         jobId: "",
@@ -53,8 +69,8 @@ class DemoChangedElementsClient implements ChangedElementsClient {
     };
   }
 
-  public async getComparisonJobResult(): Promise<ChangedElements> {
-    return {
+  public async getComparisonJobResult(comparisonJob: ComparisonJobCompleted): Promise<ChangedElements> {
+    return this.methods.getComparisonJobResult?.(comparisonJob) ?? {
       changedElements: {
         elements: [],
         classIds: [],
@@ -71,7 +87,7 @@ class DemoChangedElementsClient implements ChangedElementsClient {
   }
 
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {
-    return {
+    return this.methods.postComparisonJob?.(args) ?? {
       comparisonJob: {
         status: "Queued",
         jobId: "",

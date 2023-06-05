@@ -55,15 +55,12 @@
   padding-block: 0;
 }
 
-.iTwinChangedElements__changeset-selector {
-  display: grid;
-  grid: auto minmax(0, 1fr) / 1fr;
-  gap: var(--iui-size-s);
+.iTwinChangedElements__changeset-list {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.iTwinChangedElements__changeset-selector .iui-list-item {
+.iTwinChangedElements__changeset-list .iui-list-item {
   display: grid;
   grid: 1fr / auto auto 1fr auto auto;
 }

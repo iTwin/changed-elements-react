@@ -14,6 +14,7 @@ export interface ChangesetListProps {
   namedVersions?: NamedVersion[] | undefined;
   selectedChangesetId?: string | undefined;
   onChangesetSelected?: ((changesetId: string) => void) | undefined;
+  actionable?: boolean;
 }
 
 export function ChangesetList(props: ChangesetListProps): ReactElement {
@@ -32,7 +33,7 @@ export function ChangesetList(props: ChangesetListProps): ReactElement {
 
   let isRequired = !!baseChangeset;
   return (
-    <List>
+    <List className="iTwinChangedElements__changeset-list">
       {currentChangeset && currentNamedVersion && <NamedVersionRow namedVersion={currentNamedVersion} isRequired={isRequired} />}
       {currentChangeset && <ChangesetRow changeset={currentChangeset} current required={!!baseChangeset} />}
       {changesets.map((changeset) => {
@@ -50,6 +51,7 @@ export function ChangesetList(props: ChangesetListProps): ReactElement {
               changeset={changeset}
               isBase={isBase}
               required={isRequired}
+              actionable={props.actionable}
               onClick={() => props.onChangesetSelected?.(changeset.id)}
             />
           </Fragment>
@@ -78,6 +80,7 @@ function NamedVersionRow(props: NamedVersionRowProps) {
 interface ChangesetRowProps {
   changeset: Changeset;
   isBase?: boolean;
+  actionable?: boolean;
   required?: boolean;
   current?: boolean;
   onClick?: (changeset: Changeset) => void;
@@ -85,7 +88,14 @@ interface ChangesetRowProps {
 
 function ChangesetRow(props: ChangesetRowProps): ReactElement {
   return (
-    <ListItem className="iTwinChangedElements__changeset-row" style={{ paddingBlock: 0 }} actionable disabled={props.current} onClick={() => props.onClick?.(props.changeset)} active={props.isBase}>
+    <ListItem
+      className="iTwinChangedElements__changeset-row"
+      style={{ paddingBlock: 0 }}
+      actionable={props.actionable}
+      disabled={props.current}
+      active={props.isBase}
+      onClick={() => props.onClick?.(props.changeset)}
+    >
       {props.changeset.isProcessed ? <IconProcessed required={props.required} /> : <IconUnprocessed required={props.required} />}
       <Code>{props.changeset.id.slice(0, 8)}</Code>
       <Text>{props.changeset.description}</Text>

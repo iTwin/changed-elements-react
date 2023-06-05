@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Button, Dialog, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
+import { Button, ProgressRadial, Text } from "@itwin/itwinui-react";
 import { ReactElement, useEffect, useState } from "react";
 
 import { useVersionCompare } from "../VersionCompareContext.js";
@@ -27,27 +27,32 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
 
   return (
     <div style={{ display: "grid", grid: "auto minmax(0, 1fr) auto / 1fr", gap: "var(--iui-size-s)" }}>
-      <Text variant="subheading">Select version for comparison</Text>
       {
         !baseVersion &&
-        <VersionPicker
-          iModelId={props.iModelId}
-          changesetId={props.changesetId}
-          data={data}
-          selectedChangesetId={selectedChangesetId}
-          onChangesetSelected={setSelectedChangeset}
-        />
+        <>
+          <Text variant="subheading">Select version for comparison</Text>
+          <VersionPicker
+            iModelId={props.iModelId}
+            changesetId={props.changesetId}
+            data={data}
+            selectedChangesetId={selectedChangesetId}
+            onChangesetSelected={setSelectedChangeset}
+          />
+        </>
       }
       {
         baseVersion && currentChangeset &&
-        <ComparisonLoader
-          iTwinId={props.iTwinId}
-          iModelId={props.iModelId}
-          currentChangeset={currentChangeset}
-          baseChangesetId={baseVersion}
-          data={data}
-          onStartComparison={props.onStartComparison}
-        />
+        <>
+          <Text variant="subheading">Preparing comparison</Text>
+          <ComparisonLoader
+            iTwinId={props.iTwinId}
+            iModelId={props.iModelId}
+            currentChangeset={currentChangeset}
+            baseChangesetId={baseVersion}
+            data={data}
+            onStartComparison={props.onStartComparison}
+          />
+        </>
       }
       <div style={{ display: "flex", justifyContent: "end", gap: "var(--iui-size-xs)" }}>
         <Button
@@ -73,25 +78,23 @@ interface VersionPickerProps {
 function VersionPicker(props: VersionPickerProps): ReactElement {
   if (props.data.status !== "ready") {
     return (
-      <Dialog.Content>
+      <>
         <ProgressRadial size="large" indeterminate />
-        <Text variant="leading">Loading data...</Text>
-      </Dialog.Content>
+        <Text variant="leading">Loading changesets...</Text>
+      </>
     );
   }
 
   return (
-    <div className="iTwinChangedElements__changeset-selector">
-      <SearchBox />
-      <div style={{ overflow: "auto" }}>
-        <ChangesetList
-          currentChangesetId={props.changesetId}
-          changesets={props.data.changesets}
-          namedVersions={props.data.namedVersions}
-          selectedChangesetId={props.selectedChangesetId}
-          onChangesetSelected={props.onChangesetSelected}
-        />
-      </div>
+    <div style={{ overflow: "auto" }}>
+      <ChangesetList
+        currentChangesetId={props.changesetId}
+        changesets={props.data.changesets}
+        namedVersions={props.data.namedVersions}
+        selectedChangesetId={props.selectedChangesetId}
+        onChangesetSelected={props.onChangesetSelected}
+        actionable
+      />
     </div>
   );
 }
@@ -116,7 +119,7 @@ function ComparisonLoader(props: ComparisonLoaderProps): ReactElement {
           changedElementsClient,
           iTwinId: props.iTwinId,
           iModelId: props.iModelId,
-          startChangesetId: props.data.changesets[props.data.changesets.findIndex(({ id }) => id === props.baseChangesetId) + 1].id,
+          startChangesetId: props.data.changesets[props.data.changesets.findIndex(({ id }) => id === props.baseChangesetId) - 1].id,
           endChangesetId: props.currentChangeset.id,
         });
         if (disposed) {
@@ -138,7 +141,6 @@ function ComparisonLoader(props: ComparisonLoaderProps): ReactElement {
 
   return (
     <div style={{ display: "grid" }}>
-      <Text variant="subheading">Preparing comparison</Text>
       <Text>
         Comparing {props.currentChangeset?.description} with {props.data.changesets.find(({ id }) => id === props.baseChangesetId)?.description}
       </Text>

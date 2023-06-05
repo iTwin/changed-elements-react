@@ -8,14 +8,17 @@ import { Code, IconButton, List, ListItem, Surface, Text } from "@itwin/itwinui-
 import { Component, createElement, type PropsWithChildren, type ReactElement, type ReactNode } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
-import { ChangesetSelectDialogDemo, ChangesetSelectDialogNoChangesets } from "./VersionSelectorDemo/ChangesetSelectorDialogDemo";
+import { ChangesetSelectDialogDemo, ChangesetSelectDialogLoading, ChangesetSelectDialogNoChangesets } from "./VersionSelectorDemo/ChangesetSelectorDialogDemo";
 import { NamedVersionSelectorDemo } from "./VersionSelectorDemo/NamedVersionSelectorDemo";
 
 import "./ComponentsCatalog.css";
 
 const componentsMap = new Map([
   ["NamedVersionSelectorDemo", [NamedVersionSelectorDemo]],
-  ["ChangesetSelectDialog", [ChangesetSelectDialogDemo, ChangesetSelectDialogNoChangesets]],
+  [
+    "ChangesetSelectDialog",
+    [ChangesetSelectDialogDemo, ChangesetSelectDialogLoading, ChangesetSelectDialogNoChangesets],
+  ],
 ]);
 
 export function ComponentsCatalogRoutes(): ReactElement {

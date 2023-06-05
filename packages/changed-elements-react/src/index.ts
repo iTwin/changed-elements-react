@@ -4,8 +4,10 @@
 *--------------------------------------------------------------------------------------------*/
 export { type FilterData, type FilterOptions, type SavedFiltersManager } from "./SavedFiltersManager.js";
 export { VersionCompareContext, type VersionCompareContextValue } from "./VersionCompareContext.js";
-export { NamedVersionSelector, type Changeset, type NamedVersion, type NamedVersionListItem } from "./VersionSelector/NamedVersionSelector.js";
 export { ChangesetSelectDialog } from "./VersionSelector/ChangesetSelectDialog.js";
+export {
+  NamedVersionSelector, type Changeset, type NamedVersion, type NamedVersionListItem
+} from "./VersionSelector/NamedVersionSelector.js";
 export { type ChangesetInfo } from "./VersionSelector/useVersionSelector.js";
 export * from "./api/ChangedElementsApiClient.js";
 export * from "./api/ChangedElementsClientBase.js";
@@ -17,8 +19,8 @@ export * from "./api/VersionCompareFrontstageManager.js";
 export * from "./api/VersionCompareTiles.js";
 export * from "./api/VersionCompareVisualization.js";
 export {
-  type ChangedElements, type ChangedElementsClient, type ComparisonJob, type GetComparisonJobParams,
-  type PostComparisonJobParams
+  type ChangedElements, type ChangedElementsClient, type ComparisonJob, type ComparisonJobCompleted,
+  type GetComparisonJobParams, type PostComparisonJobParams
 } from "./client/ChangedElementsClient.js";
 export {
   ITwinChangedElementsClient, type ITwinChangedElementsClientParams
