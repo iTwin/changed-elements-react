@@ -14,7 +14,6 @@
     "consistent-return": "warn",
     "eqeqeq": "warn",
     "no-alert": "warn",
-    "no-console": "warn",
     "no-empty": [ "warn", { "allowEmptyCatch": true } ],
     "no-eval": "error",
     "@typescript-eslint/comma-dangle": [
