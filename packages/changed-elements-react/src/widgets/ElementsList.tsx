@@ -6,12 +6,13 @@ import type { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import * as React from "react";
-import AutoSizer, { type Size } from "react-virtualized-auto-sizer";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
-import "./ChangedElementsInspector.scss";
+import { AutoSizer } from "../AutoSizer.js";
 import { ElementNodeComponent } from "./ElementNodeComponent.js";
+
+import "./ChangedElementsInspector.scss";
 
 export interface ElementsListProps {
   /** Nodes to display and load */
@@ -136,51 +137,50 @@ export class ElementsList extends React.Component<ElementsListProps> {
     );
   };
 
-  public override render() {
+  public override render(): React.ReactElement {
+    if (this.props.nodes.length === 0) {
+      return (
+        <div className="element-list-no-results">
+          {this.props.emptyMessage}
+        </div>
+      );
+    }
+
     return (
-      <div className="element-list">
-        {this.props.nodes.length !== 0 && (
-          <AutoSizer>
-            {(size: Size) => {
-              return (
-                <InfiniteLoader
-                  ref={this._loaderRef}
-                  isItemLoaded={this._isItemLoaded}
-                  itemCount={this.props.nodes.length}
-                  loadMoreItems={this._loadMoreItems}
-                >
-                  {({ onItemsRendered }) => {
-                    return (
-                      <FixedSizeList
-                        ref={this._listRef}
-                        style={{ overflow: "overlay" }}
-                        height={size.height}
-                        itemCount={this.props.nodes.length}
-                        onItemsRendered={onItemsRendered}
-                        itemSize={34}
-                        width={size.width}
-                      >
-                        {(props: ListChildComponentProps) => {
-                          return (
-                            <div style={props.style}>
-                              {this._renderNode(this.props.nodes[props.index])}
-                            </div>
-                          );
-                        }}
-                      </FixedSizeList>
-                    );
-                  }}
-                </InfiniteLoader>
-              );
-            }}
-          </AutoSizer>
-        )}
-        {this.props.nodes.length === 0 && (
-          <div className="element-list-no-results">
-            {this.props.emptyMessage}
-          </div>
-        )}
-      </div>
+      <AutoSizer className="element-list">
+        {(size) => {
+          return (
+            <InfiniteLoader
+              ref={this._loaderRef}
+              isItemLoaded={this._isItemLoaded}
+              itemCount={this.props.nodes.length}
+              loadMoreItems={this._loadMoreItems}
+            >
+              {({ onItemsRendered }) => {
+                return (
+                  <FixedSizeList
+                    ref={this._listRef}
+                    style={{ overflow: "overlay" }}
+                    height={size.height}
+                    itemCount={this.props.nodes.length}
+                    onItemsRendered={onItemsRendered}
+                    itemSize={34}
+                    width={size.width}
+                  >
+                    {(props: ListChildComponentProps) => {
+                      return (
+                        <div style={props.style}>
+                          {this._renderNode(this.props.nodes[props.index])}
+                        </div>
+                      );
+                    }}
+                  </FixedSizeList>
+                );
+              }}
+            </InfiniteLoader>
+          );
+        }}
+      </AutoSizer>
     );
   }
 }

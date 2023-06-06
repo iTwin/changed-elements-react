@@ -43,9 +43,6 @@ importers:
       react-table:
         specifier: ^7.8.0
         version: 7.8.0(react@17.0.0)
-      react-virtualized-auto-sizer:
-        specifier: ^1.0.7
-        version: 1.0.7(react-dom@17.0.0)(react@17.0.0)
       react-window:
         specifier: ^1.8.8
         version: 1.8.8(react-dom@17.0.0)(react@17.0.0)
@@ -107,9 +104,6 @@ importers:
       '@types/react-table':
         specifier: ^7.7.14
         version: 7.7.14
-      '@types/react-virtualized-auto-sizer':
-        specifier: ^1.0.1
-        version: 1.0.1
       '@types/react-window':
         specifier: ^1.8.5
         version: 1.8.5
@@ -1677,12 +1671,6 @@ packages:
     resolution: {integrity: sha512-VnCdSxfcm08KjsJVQcfBmhEQAPnLB8G08hAxn39azX1qYBQ/5RVQuoHuKIcfKOdncuaUvEpFKFzEvbtIMsfVew==}
     dependencies:
       '@types/react': 17.0.0
-
-  /@types/react-virtualized-auto-sizer@1.0.1:
-    resolution: {integrity: sha512-GH8sAnBEM5GV9LTeiz56r4ZhMOUSrP43tAQNSRVxNexDjcNKLCEtnxusAItg1owFUFE6k0NslV26gqVClVvong==}
-    dependencies:
-      '@types/react': 17.0.0
-    dev: true
 
   /@types/react-window-infinite-loader@1.0.6:
     resolution: {integrity: sha512-V8g8sBDLVeJJAfEENJS7VXZK+DRJ+jzPNtk8jpj2G+obhf+iqGNUDGwNWCbBhLiD+KpHhf3kWQlKBRi0tAeU4Q==}
@@ -4326,17 +4314,6 @@ packages:
       prop-types: 15.8.1
       react: 17.0.0
       react-dom: 17.0.0(react@17.0.0)
-
-  /react-virtualized-auto-sizer@1.0.7(react-dom@17.0.0)(react@17.0.0):
-    resolution: {integrity: sha512-Mxi6lwOmjwIjC1X4gABXMJcKHsOo0xWl3E3ugOgufB8GJU+MqrtY35aBuvCYv/razQ1Vbp7h1gWJjGjoNN5pmA==}
-    engines: {node: '>8.0.0'}
-    peerDependencies:
-      react: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0-rc
-      react-dom: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0-rc
-    dependencies:
-      react: 17.0.0
-      react-dom: 17.0.0(react@17.0.0)
-    dev: false
 
   /react-window-infinite-loader@1.0.8(react-dom@17.0.0)(react@17.0.0):
     resolution: {integrity: sha512-907ZLAiZZfBHuZyiY0V7uiSL4P/rI6UQyCF9wES1cDWTeyNLgGLaxu+BZkcUW3R5tSCQcbCcWBl0jVIpYzrKGQ==}

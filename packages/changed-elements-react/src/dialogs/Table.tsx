@@ -7,8 +7,9 @@ import {
   useFlexLayout, useGlobalFilter, useMountedLayoutEffect, useSortBy, useTable, type HeaderGroup, type Row,
   type SortingRule, type TableOptions
 } from "react-table";
-import AutoSizer, { type Size } from "react-virtualized-auto-sizer";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
+
+import { AutoSizer } from "../AutoSizer.js";
 
 import "./Table.scss";
 
@@ -150,20 +151,18 @@ export function Table<T extends object>(props: PropsWithChildren<Table<T>>): Rea
             </div>
           ))}
         </div>
-        <div className="themedTableTbody" {...getTableBodyProps()}>
-          <AutoSizer>
-            {({ width, height }: Size) => (
-              <FixedSizeList
-                height={height}
-                width={width}
-                itemCount={rows.length}
-                itemSize={40}
-              >
-                {renderRow}
-              </FixedSizeList>
-            )}
-          </AutoSizer>
-        </div>
+        <AutoSizer className="themedTableTbody" {...getTableBodyProps()}>
+          {({ width, height }) => (
+            <FixedSizeList
+              height={height}
+              width={width}
+              itemCount={rows.length}
+              itemSize={40}
+            >
+              {renderRow}
+            </FixedSizeList>
+          )}
+        </AutoSizer>
       </div>
     </div>
   );
