@@ -193,7 +193,7 @@ interface FilterHeaderProps {
   onSearchChanged?: (newFilter: string) => void;
 }
 
-const ChangeTypeFilterHeader = (props: FilterHeaderProps): ReactElement => {
+function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
   /** Handle saving the advanced filter changes. */
   const handleAdvancedFilteringSave = (filterData: PropertyFilter[]) => {
     const opts = props.options;
@@ -418,7 +418,7 @@ const ChangeTypeFilterHeader = (props: FilterHeaderProps): ReactElement => {
       </ExpandableSearchBar>
     </div>
   );
-};
+}
 
 export interface ChangedElementsListProps {
   manager: VersionCompareManager;

@@ -108,7 +108,7 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
       UiFramework.dialogs.modal.close();
       onSave?.(modifiedData);
     },
-    [modifiedData],
+    [onSave, modifiedData],
   );
 
   // Called when the cancel button on the dialog is clicked
@@ -199,7 +199,7 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
         ],
       },
     ],
-    [],
+    [showValues],
   );
 
   // Called from the filter selector. Update current filter options with the properties updated in the this dialog

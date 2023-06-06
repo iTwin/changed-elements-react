@@ -5,7 +5,7 @@
 import { IModelApp } from "@itwin/core-frontend";
 import { SvgClose } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
-import React from "react";
+import { type ReactElement } from "react";
 
 import "./FilterBar.scss";
 
@@ -28,12 +28,12 @@ export interface FilterBarProps {
   onCloseClick?: () => void;
 }
 
-export const FilterBar = ({
+export function FilterBar({
   onTextClick,
   onCloseClick,
   size,
   text,
-}: FilterBarProps) => {
+}: FilterBarProps): ReactElement {
   return (
     <div
       role="button"
@@ -57,4 +57,4 @@ export const FilterBar = ({
       </IconButton>
     </div>
   );
-};
+}

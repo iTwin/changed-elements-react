@@ -8,7 +8,7 @@ import {
   ToolbarItem, ToolbarOrientation, ToolbarUsage, ToolItemDef, ToolWidgetComposer, UiFramework
 } from "@itwin/appui-react";
 import { EmphasizeElements, IModelApp } from "@itwin/core-frontend";
-import React, { useCallback } from "react";
+import { Component, type ReactElement, type ReactNode } from "react";
 
 import { SideBySideVisualizationManager } from "../api/SideBySideVisualizationManager.js";
 import { VersionCompare } from "../api/VersionCompare.js";
@@ -20,7 +20,9 @@ export interface PropertyComparisonVisibilityClearToolProps {
   clearIsolate: () => void;
 }
 
-export const PropertyComparisonVisibilityClearTool = ({ clearIsolate }: PropertyComparisonVisibilityClearToolProps) => {
+export function PropertyComparisonVisibilityClearTool(
+  { clearIsolate }: PropertyComparisonVisibilityClearToolProps,
+): ReactElement {
   const areElementDisplayOverridesActive = () => {
     const vp = IModelApp.viewManager.selectedView;
     if (!vp) {
@@ -30,8 +32,6 @@ export const PropertyComparisonVisibilityClearTool = ({ clearIsolate }: Property
     const isolatedElements = EmphasizeElements.get(vp)?.getIsolatedElements(vp);
     return isolatedElements !== undefined && isolatedElements.size !== 0;
   };
-
-  const executeClearIsolate = useCallback(clearIsolate, []);
 
   const clearIsolateToolCommand = new CommandItemDef({
     commandId: "VersionCompare.PropertyComparisonTools.ClearIsolate",
@@ -47,7 +47,7 @@ export const PropertyComparisonVisibilityClearTool = ({ clearIsolate }: Property
       ],
     ),
     label: () => IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.clearIsolate"),
-    execute: executeClearIsolate,
+    execute: clearIsolate,
   });
 
   return (
@@ -57,7 +57,7 @@ export const PropertyComparisonVisibilityClearTool = ({ clearIsolate }: Property
       orientation={ToolbarOrientation.Horizontal}
     />
   );
-};
+}
 
 export interface ToolWidgetProps {
   /** Extra tools to add to the Property Comparison Tool Widget */
@@ -65,16 +65,45 @@ export interface ToolWidgetProps {
   /** Extra tools to add to the Property Comparison Tool Widget */
   horizontalTools?: ToolbarItem[];
   /** Vertical toolbar */
-  verticalToolbar?: React.ReactNode;
+  verticalToolbar?: ReactNode;
   /** Horizontal Toolbar */
-  horizontalToolbar?: React.ReactNode;
+  horizontalToolbar?: ReactNode;
 }
 
 /**
  * Default tool widget for the property comparison frontstage
  * Contains measure tools and an isolate tool
  */
-export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProps> {
+export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
+  private clearIsolate = async () => {
+    // Setup correct color overrides
+    if (VersionCompare.manager) {
+      const frontstageIds = new Set(VersionCompare.manager.options.ninezoneOptions?.frontstageIds ?? []);
+      if (frontstageIds.has(UiFramework.frontstages.activeFrontstageId)) {
+        const visualizationManager =
+          VersionCompare.manager?.visualization?.getSingleViewVisualizationManager();
+        if (visualizationManager !== undefined) {
+          await visualizationManager.resetDisplay();
+        }
+      } else if (
+        UiFramework.frontstages.activeFrontstageId === PropertyComparisonFrontstage.id &&
+        VersionCompare.manager.currentIModel &&
+        VersionCompare.manager.targetIModel
+      ) {
+        const hiliteSet =
+          await SideBySideVisualizationManager.getHiliteElements(
+            VersionCompare.manager.currentIModel,
+            VersionCompare.manager.targetIModel,
+          );
+        const propertyVisualizationManager =
+          VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
+        if (propertyVisualizationManager !== undefined) {
+          await propertyVisualizationManager.emphasizeSet(hiliteSet);
+        }
+      }
+    }
+  };
+
   public override render() {
     const isolateSelected = () => {
       if (VersionCompare.manager?.currentIModel) {
@@ -88,34 +117,6 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
             VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
           if (propertyVisualizationManager) {
             propertyVisualizationManager.setupViewportsOverrides(true);
-          }
-        }
-      }
-    };
-    const clearIsolate = async () => {
-      // Setup correct color overrides
-      if (VersionCompare.manager) {
-        const frontstageIds = new Set(VersionCompare.manager.options.ninezoneOptions?.frontstageIds ?? []);
-        if (frontstageIds.has(UiFramework.frontstages.activeFrontstageId)) {
-          const visualizationManager =
-            VersionCompare.manager?.visualization?.getSingleViewVisualizationManager();
-          if (visualizationManager !== undefined) {
-            await visualizationManager.resetDisplay();
-          }
-        } else if (
-          UiFramework.frontstages.activeFrontstageId === PropertyComparisonFrontstage.id &&
-          VersionCompare.manager.currentIModel &&
-          VersionCompare.manager.targetIModel
-        ) {
-          const hiliteSet =
-            await SideBySideVisualizationManager.getHiliteElements(
-              VersionCompare.manager.currentIModel,
-              VersionCompare.manager.targetIModel,
-            );
-          const propertyVisualizationManager =
-            VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
-          if (propertyVisualizationManager !== undefined) {
-            await propertyVisualizationManager.emphasizeSet(hiliteSet);
           }
         }
       }
@@ -155,7 +156,7 @@ export class PropertyComparisonToolWidget extends React.Component<ToolWidgetProp
     );
 
     const horizontalToolbar = this.props.horizontalToolbar ?? (
-      <PropertyComparisonVisibilityClearTool clearIsolate={clearIsolate} />
+      <PropertyComparisonVisibilityClearTool clearIsolate={this.clearIsolate} />
     );
 
     return (

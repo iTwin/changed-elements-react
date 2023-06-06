@@ -16,7 +16,7 @@ export type WidgetToolBarProps = React.ComponentPropsWithRef<"div">;
  * </Widget.ToolBar>
  */
 export const WidgetToolBar = forwardRef<HTMLDivElement, React.PropsWithChildren<WidgetToolBarProps>>(
-  function (props, ref): ReactElement {
+  function WidgetToolBar(props, ref): ReactElement {
     const { children, className, ...rest } = props;
     return (
       <div
