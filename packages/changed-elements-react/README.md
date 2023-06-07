@@ -17,11 +17,11 @@ This package is intended to be used together with iTwin.js AppUI framework, howe
 1. If you are using iTwin Platform Changed Elements endpoint (which is the default), add `changedelements:read` scope to your OAuth client.
 2. Wrap your application with `VersionCompareContext`.
 
-  ```TypeScriptReact
-    <VersionCompareContext>
-      <App />
-    </VersionCompareContext>
-  ```
+    ```TypeScriptReact
+      <VersionCompareContext>
+        <App />
+      </VersionCompareContext>
+    ```
 
 ### Integrating with AppUI framework
 
@@ -31,7 +31,7 @@ In addition, to integrate version comparison features with AppUI framework, you 
 
     ```TypeScript
     VersionCompare.initialize({
-      ninezoneOptions: {
+      appUiOptions: {
         // List frontstages where version compare widgets should be present
         frontstageIds: [MyFrontstageId0, MyFrontstageId1, ...],
       },
@@ -95,8 +95,8 @@ If your application does not use AppUI or its frontstages, you can use the packa
     };
 
     const options: VersionCompareOptions = {
-      // Tell version compare you don't want ninezone functionality
-      wantNinezone: false,
+      // Tell version compare you don't want AppUi functionality
+      wantAppUi: false,
       // Use the options for visualization
       simpleVisualizationOptions,
       ...

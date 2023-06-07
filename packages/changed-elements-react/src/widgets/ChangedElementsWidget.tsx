@@ -262,7 +262,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         label: PropertyLabelCache.getLabel("", propertyName) ?? propertyName,
       }));
     }
-    
+
     openReportGeneratorDialog(this.state.manager, properties.length !== 0 ? properties : undefined);
   };
 
@@ -292,7 +292,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         }
         {
           this.state.manager.wantReportGeneration &&
-          this.state.manager.wantNinezone &&
+          this.state.manager.wantAppUi &&
           this.state.loaded &&
             <IconButton
               size="small"
@@ -304,7 +304,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             </IconButton>
           }
         {
-          this.state.loaded && this.state.manager.wantNinezone &&
+          this.state.loaded && this.state.manager.wantAppUi &&
           <IconButton
             size="small"
             styleType="borderless"
@@ -391,7 +391,7 @@ const onFrontstageReady = (args: FrontstageReadyEventArgs): void => {
     return;
   }
 
-  const frontstageIds = new Set(manager.options.ninezoneOptions?.frontstageIds ?? []);
+  const frontstageIds = new Set(manager.options.appUiOptions?.frontstageIds ?? []);
   if (frontstageIds.has(args.frontstageDef.id)) {
     const widget = args.frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId);
     widget?.setWidgetState(manager.isComparing ? WidgetState.Open : WidgetState.Hidden);
