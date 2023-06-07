@@ -8,9 +8,9 @@
 
 ## Running the test app
 
-1. Create `packages/test-app-frontend/.env.local` file based on the contents of `packages/test-app-frontend/.env` file.
-2. Run `pnpm install`.
-3. Run `npm start` from the repository root directory.
+1. Run `pnpm install`.
+2. Create `packages/test-app-frontend/.env.local` file based on the contents of `packages/test-app-frontend/.env`.
+3. Run `npm start` in the repository base directory.
 4. Navigate to [`http://localhost:2363`](http://localhost:2363) in your browser.
 
 ## Contributing
