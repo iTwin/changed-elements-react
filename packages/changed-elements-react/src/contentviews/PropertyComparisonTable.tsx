@@ -63,14 +63,14 @@ function mapStateToProps(
   };
 }
 
-interface PropertyComparisonTableProps {
+export interface PropertyComparisonTableProps {
   manager: VersionCompareManager;
 
   /** KeySet of the selection to display results for in the table. */
   selection?: KeySet;
 }
 
-function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
+export function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
   // Throw if context is not provided
   useVersionCompare();
 
