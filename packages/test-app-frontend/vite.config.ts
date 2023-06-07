@@ -72,14 +72,6 @@ class StringReplacePlugin implements Plugin {
 
   public transform(code: string): string {
     // iTwin.js by default injects a font that is incorrect and lacks some required font weights
-    code = code.replace("document.head.prepend(openSans);", "// document.head.prepend(openSans);");
-
-    return code.replace(
-      /const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = await import\((.+?)\);/s,
-      `
-      const objectStorage = await import($1);
-      const { AzureFrontendStorage, FrontendBlockBlobClientWrapperFactory } = objectStorage.default ?? objectStorage;
-      `,
-    );
+    return code.replace("document.head.prepend(openSans);", "// document.head.prepend(openSans);");
   }
 }
