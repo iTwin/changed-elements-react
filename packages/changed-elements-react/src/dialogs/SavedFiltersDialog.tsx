@@ -6,8 +6,8 @@ import { IModelApp, NotifyMessageDetails, OutputMessagePriority } from "@itwin/c
 import { ContextMenu, ContextMenuDirection, ContextMenuItem, Icon } from "@itwin/core-react";
 import { SvgMore } from "@itwin/itwinui-icons-react";
 import { IconButton, Input } from "@itwin/itwinui-react";
-import { CSSProperties, ReactElement, useEffect, useMemo, useState } from "react";
-import { CellProps } from "react-table";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactElement } from "react";
+import { type CellProps } from "react-table";
 
 import { FilterData, SavedFiltersManager } from "../SavedFiltersManager.js";
 import { Table } from "./Table.js";
@@ -21,7 +21,7 @@ interface SavedFilterContextMenuProps {
 }
 
 /** 'More' button for a filter with options to share and delete. */
-const SavedFilterContextMenuButton = (props: SavedFilterContextMenuProps) => {
+function SavedFilterContextMenuButton(props: SavedFilterContextMenuProps): ReactElement {
   const { data, savedFilters, onStartRename } = props;
   const [opened, setOpened] = useState(false);
 
@@ -114,7 +114,7 @@ const SavedFilterContextMenuButton = (props: SavedFilterContextMenuProps) => {
       </ContextMenu>
     </>
   );
-};
+}
 
 export interface EditableFilterNameProps {
   data: FilterData;

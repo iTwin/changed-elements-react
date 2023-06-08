@@ -32,6 +32,5 @@ void (async () => {
 
   const port = 3001;
   await server.initialize(3001);
-  // eslint-disable-next-line no-console
   console.log(`Backend (PID ${process.pid}) is listening on port ${port}.`);
 })();

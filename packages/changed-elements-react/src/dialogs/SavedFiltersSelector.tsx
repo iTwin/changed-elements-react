@@ -6,7 +6,7 @@ import { IModelApp, NotifyMessageDetails, OutputMessagePriority } from "@itwin/c
 import { ContextMenu, ContextMenuDirection, ContextMenuItem } from "@itwin/core-react";
 import { SvgBlank, SvgList, SvgSaveAs, SvgShare } from "@itwin/itwinui-icons-react";
 import { IconButton, Input, Select, type SelectOption } from "@itwin/itwinui-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 
 import { FilterData, FilterOptions, SavedFiltersManager } from "../SavedFiltersManager.js";
 
@@ -30,7 +30,7 @@ export interface SavedFiltersSelectorProps {
 let cachedSelectedFilter: FilterData | undefined;
 
 /** Selector component and buttons for storing saved filters and applying them. */
-export const SavedFiltersSelector = (props: SavedFiltersSelectorProps) => {
+export function SavedFiltersSelector(props: SavedFiltersSelectorProps): ReactElement {
   const { savedFilters, onFilterSelected, getCurrentFilterOptions, onEditFilters } = props;
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [filterName, setFilterName] = useState<string>("");
@@ -326,4 +326,4 @@ export const SavedFiltersSelector = (props: SavedFiltersSelectorProps) => {
       </div>
     </div>
   );
-};
+}

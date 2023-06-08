@@ -131,10 +131,12 @@ export function Table<T extends object>(props: PropsWithChildren<Table<T>>): Rea
               key={i}
             >
               {headerGroup.headers.map((column) => {
+                const headerProps = column.getHeaderProps(column.getSortByToggleProps());
                 return (
                   <div
                     className={`themedTableTh styledTableHeaderCellSticky ${column.isSorted ? "styledTableHeaderCellSorted" : ""}`}
-                    {...column.getHeaderProps(column.getSortByToggleProps())}
+                    {...headerProps}
+                    key={headerProps.key}
                   >
                     <div style={getColumnStyle(column.align)}>
                       {column.render("Header")}

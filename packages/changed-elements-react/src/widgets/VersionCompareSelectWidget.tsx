@@ -62,7 +62,7 @@ export const VersionCompareSelectComponent = forwardRef<
     const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
     const versionsUrl = useMemo(
-      () => props.getManageVersionsUrl?.(props.iModelConnection),
+      () => (0, props.getManageVersionsUrl)?.(props.iModelConnection),
       [props.getManageVersionsUrl, props.iModelConnection],
     );
 
@@ -381,7 +381,7 @@ function usePagedNamedVersionLoader(
         pagedNamedVersionLoaderStateCache = cache.current;
       };
     },
-    [],
+    [iModelConnection],
   );
 
   return result;

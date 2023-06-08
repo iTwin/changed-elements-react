@@ -6,7 +6,9 @@ import { IModelApp } from "@itwin/core-frontend";
 import type { CommonProps } from "@itwin/core-react";
 import { SvgBlank, SvgClose, SvgSearch } from "@itwin/itwinui-icons-react";
 import { IconButton, Input, ProgressRadial } from "@itwin/itwinui-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactElement, type ReactNode
+} from "react";
 
 import { FilterBar } from "./FilterBar.js";
 import { NavigationComponent } from "./NavigationComponent.js";
@@ -27,7 +29,7 @@ export interface ExpandableSearchBarProps extends CommonProps {
   /**
    * Items on the left (replaced by the expanded search box).
    */
-  children: React.ReactNode;
+  children: ReactNode;
   /**
    * Search value.
    */
@@ -108,7 +110,7 @@ export interface ExpandableSearchBarProps extends CommonProps {
  */
 
 /** SearchBox with expanding search box capability */
-export const ExpandableSearchBar = ({
+export function ExpandableSearchBar({
   size,
   styleType,
   children,
@@ -127,7 +129,7 @@ export const ExpandableSearchBar = ({
   enableNavigation = false,
   enableFilterBar = false,
   isSearchHidden = false,
-}: ExpandableSearchBarProps) => {
+}: ExpandableSearchBarProps): ReactElement {
   const [expanded, setExpanded] = useState(isExpanded);
   const [searchText, setSearchText] = useState(value);
   const [timeoutId, setTimeoutId] = useState(0);
@@ -144,13 +146,13 @@ export const ExpandableSearchBar = ({
     onExpandedChange?.(expand);
   }, [onExpandedChange, expanded]);
 
-  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
       onToggleSearch();
     }
   };
 
-  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const onInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const value = event.target.value;
     setSearchText(value);
     if (valueChangedDelay) {
@@ -238,4 +240,4 @@ export const ExpandableSearchBar = ({
       )}
     </div>
   );
-};
+}

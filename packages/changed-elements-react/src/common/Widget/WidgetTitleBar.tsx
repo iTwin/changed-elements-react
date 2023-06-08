@@ -46,7 +46,7 @@ export type WidgetTitleBarTitleProps = {
  * <Widget.TitleBar>My widget title</Widget.TitleBar>
  */
 export const WidgetTitleBarTitle = forwardRef<HTMLDivElement, WidgetTitleBarTitleProps>(
-  function (props, ref): ReactElement {
+  function WidgetTitleBarTitle(props, ref): ReactElement {
     const { children, className, ...rest } = props;
     return (
       <div

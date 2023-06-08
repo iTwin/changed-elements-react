@@ -5,6 +5,7 @@
 import { IModelApp } from "@itwin/core-frontend";
 import { SvgChevronDown, SvgChevronUp } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
+import { type ReactElement } from "react";
 
 import "./NavigationComponent.scss";
 
@@ -30,12 +31,12 @@ export interface NavigationComponentProps {
 }
 
 /** Navigation component (previous/next buttons) */
-export const NavigationComponent = ({
+export function NavigationComponent({
   onCurrentSelectionChanged,
   currentResult = 0,
   resultCount = 0,
   size,
-}: NavigationComponentProps) => {
+}: NavigationComponentProps): ReactElement {
   const onPrevClick = () => {
     if (currentResult > 1) {
       onCurrentSelectionChanged?.(currentResult - 1);
@@ -76,4 +77,4 @@ export const NavigationComponent = ({
       </IconButton>
     </div>
   );
-};
+}
