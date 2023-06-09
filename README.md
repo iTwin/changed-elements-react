@@ -6,12 +6,20 @@
 
 [@itwin/changed-elements-react](./packages/changed-elements-react/)
 
-## Running the test app
+## Setup
 
-1. Run `pnpm install`.
-2. Create `packages/test-app-frontend/.env.local` file based on the contents of `packages/test-app-frontend/.env`.
-3. Run `npm start` in the repository base directory.
-4. Navigate to [`http://localhost:2363`](http://localhost:2363) in your browser.
+```bash
+npx pnpm install
+```
+
+## Commands
+
+* `npm start` – starts the test app, available on http://localhost:2363
+  * To enable iTwin Platform features, create `packages/test-app-frontend/.env.local` file based on contents of `packages/test-app-frontend/.env`
+* `npm test` – runs all unit tests
+* `npm run cover` – runs all unit tests and calculates test coverage
+* `npm run lint` – runs ESLint on all TypeScript files in this repository
+* `npm run typecheck` – type checks all packages in this repository
 
 ## Contributing
 
