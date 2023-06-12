@@ -8,18 +8,18 @@
 
 ## Setup
 
-```bash
-npx pnpm install
+```shell
+pnpm install
 ```
 
 ## Commands
 
-* `npm start` – starts the test app, available on http://localhost:2363
+* `pnpm start` – starts the test app, available on [http://localhost:2363](http://localhost:2363)
   * To enable iTwin Platform features, create `packages/test-app-frontend/.env.local` file based on contents of `packages/test-app-frontend/.env`
-* `npm test` – runs all unit tests
-* `npm run cover` – runs all unit tests and calculates test coverage
-* `npm run lint` – runs ESLint on all TypeScript files in this repository
-* `npm run typecheck` – type checks all packages in this repository
+* `pnpm test` – runs all unit tests
+* `pnpm run cover` – runs all unit tests and calculates test coverage
+* `pnpm run lint` – runs ESLint on all TypeScript files in this repository
+* `pnpm run typecheck` – type checks all packages in this repository
 
 ## Contributing
 
