@@ -12,12 +12,12 @@ import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
 
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
+import { AppUiVisualizationHandler } from "./AppUiVisualizationHandler.js";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { ChangedElementsApiClient, type ChangesetChunk } from "./ChangedElementsApiClient.js";
 import { ChangedElementsManager } from "./ChangedElementsManager.js";
-import { ChangesetCache } from "./ChangesetCache.js";
 import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
-import { NinezoneVisualizationHandler } from "./NinezoneVisualizationHandler.js";
+import { ChangesetCache } from "./ChangesetCache.js";
 import { SimpleVisualizationHandler } from "./SimpleVisualizationHandler.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
@@ -73,13 +73,13 @@ export class VersionCompareManager {
   /** Create the proper visualization handler based on options */
   private _initializeVisualizationHandler(): void {
     // Undefined defaults to true for this option
-    if (this.wantNinezone && this.options.ninezoneOptions) {
-      this._visualizationHandler = new NinezoneVisualizationHandler(this, this.options.ninezoneOptions);
+    if (this.wantAppUi && this.options.appUiOptions) {
+      this._visualizationHandler = new AppUiVisualizationHandler(this, this.options.appUiOptions);
     } else if (this.options.simpleVisualizationOptions !== undefined) {
       this._visualizationHandler = new SimpleVisualizationHandler(this, this.options.simpleVisualizationOptions);
     } else {
       throw new Error(
-        "Cannot start visualization if no ninezoneOptions or simpleVisualizationOptions are provided to version compare",
+        "Cannot start visualization if no appUiOptions or simpleVisualizationOptions are provided to version compare",
       );
     }
   }
@@ -119,9 +119,9 @@ export class VersionCompareManager {
     return this.options.wantReportGeneration ?? false;
   }
 
-  public get wantNinezone(): boolean {
-    return this.options.ninezoneOptions !== undefined &&
-      (this.options.wantNinezone === undefined || this.options.wantNinezone === true);
+  public get wantAppUi(): boolean {
+    return this.options.appUiOptions !== undefined &&
+      (this.options.wantAppUi === undefined || this.options.wantAppUi === true);
   }
 
   /** Triggers when version compare processing is starting. */

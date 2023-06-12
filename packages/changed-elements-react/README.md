@@ -2,7 +2,7 @@
 
 ## About
 
-This package provides React components that implement iTwin version comparison forkflows. These components communicate via [iTwin Platform Changed Elements API](https://developer.bentley.com/apis/changed-elements/) to retrieve data about changed elements.
+This package provides React components that help implement iTwin version comparison forkflows. These components are designed to communicate with [iTwin Platform Changed Elements API](https://developer.bentley.com/apis/changed-elements/), which is used to retrieve data about iModel change history.
 
 ## Installation
 
@@ -12,60 +12,53 @@ npm install @itwin/changed-elements-react
 
 ## Usage
 
-This package is intended to be used together with iTwin.js AppUI framework, however it is also possible to use the provided components without it. In either way, to consume this package in your application, you will need to:
+This package is intended to be used together with iTwin.js AppUI framework, however it is also possible to use the provided components without it. Either way, to begin using this package in your application, you will need to:
 
-1. If you are using iTwin Platform Changed Elements endpoint (which is the default), add `changedelements:read` scope to your OAuth client.
-2. Wrap your application with `VersionCompareContext`.
+1. Add `changedelements:read` and `changedelements:modify` OAuth scopes to your iTwin Platform application.
+2. Place `VersionCompareContext` somewhere high on the React components tree where all the rest `@itwin/changed-elements-react` components can access it.
 
-  ```TypeScriptReact
-    <VersionCompareContext>
-      <App />
-    </VersionCompareContext>
-  ```
+    ```tsx
+      <VersionCompareContext>
+        <App />
+      </VersionCompareContext>
+    ```
 
 ### Integrating with AppUI framework
 
-In addition, to integrate version comparison features with AppUI framework, you will need to do the following:
-
 1. Initialize VersionCompare module with `VersionCompare.initialize()`.
 
-    ```TypeScript
+    ```ts
     VersionCompare.initialize({
-      ninezoneOptions: {
+      appUiOptions: {
         // List frontstages where version compare widgets should be present
         frontstageIds: [MyFrontstageId0, MyFrontstageId1, ...],
       },
-      ...
-      // Look at VersionCompareOptions interface for all other options
+      ... // Look at VersionCompareOptions interface for documentaton of other options
     });
     ```
 
-2. Add a way to invoke `VersionCompareSelectDialog`. You may use `openSelectDialog` function to start the dialog, or add a pre-defined tool button returned by `openSelectDialogToolButton` to the tools section.
+2. Add a way to invoke `VersionCompareSelectDialog`. You may use pre-defined `openSelectDialog()` function to start the dialog, or use `openSelectDialogToolButton()` to create a tool button that can be added to the AppUI tools section.
 
-    ```TypeScript
-    // Open version compare select dialog
-    const onClick = () => {
-      // Last parameter is optional. VersionCompare will use onViewChanged event to refresh
-      // its widgets when visibility of elements changes.
-      await openSelectDialog(iModelConnection, accessToken, onViewChanged);
-    }
+    ```ts
+    import { openSelectDialog } from "@itwin/changed-elements-react";
+
+    const handleClick = () => openSelectDialog(iModelConnection, accessToken);
     ```
 
-    You may also use the `openSelectDialogToolButton` function to get a button to add to your tool buttons.
+3. Add `ChangedElementsWidget` to a frontstage. This widget lets users inspect differences in properties between iModel versions, generate reports, search for changed elements, and control element visibility.
 
-3. Add `ChangedElementsWidget` to a frontstage. This widget lets users to inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
-
-    ```TypeScript
+    ```ts
     class MyFrontstageItemsProvider implements UiItemsProvider {
       public readonly id = MyFrontstageItemsProvider.name;
+
       public provideWidgets(
         stageId: string,
         stageUsage: string,
         location: StagePanelLocation,
         section?: StagePanelSection,
-      ): CommonWidgetProps[] {
+      ): Widget[] {
         if (
-          stageId !== this.id ||
+          stageId !== MainFrontstageProvider.name ||
           stageUsage !== StageUsage.General ||
           location !== StagePanelLocation.Right ||
           section !== StagePanelSection.Start
@@ -73,44 +66,38 @@ In addition, to integrate version comparison features with AppUI framework, you 
           return [];
         }
 
-        return [{ id: "ChangedElementsWidget", getWidgetContent: () => <ChangedElementsWidget /> }];
+        return [{ id: "ChangedElementsWidget", content: <ChangedElementsWidget /> }];
       }
     }
     ```
 
 ### As stand-alone React components
 
-If your application does not use AppUI or its frontstages, you can use the package like so:
+If your application does not use AppUI, you can still use components from this package.
 
-1. Initialize Version Compare with `VersionCompare.initialize()`.
+1. Initialize Version Compare with `VersionCompare.initialize()` and specify `wantAppUi` as `false`.
 
-    ```TypeScript
-    // Create the options so that version compare is aware of which viewports to use
-    const options: SimpleVisualizationOptions = {
-      getPrimaryViewport: () => {
-        // Return which viewport you want visualization to occur on
-        // Just as an example, you can use the selected view like so:
-        return IModelApp.viewManager.selectedView;
-      }
-    };
-
-    const options: VersionCompareOptions = {
-      // Tell version compare you don't want ninezone functionality
-      wantNinezone: false,
-      // Use the options for visualization
-      simpleVisualizationOptions,
-      ...
-      // Look at VersionCompareOptions interface for all other options
-    };
-
-    // Initialize the version compare package
-    VersionCompare.initialize(options);
+    ```ts
+    VersionCompare.initialize({
+      wantAppUi: false,
+      simpleVisualizationOptions: {
+        getPrimaryViewport: () => {
+          // Return which viewport you want visualization to occur on
+          return IModelApp.viewManager.selectedView;
+        }
+      },
+      ... // Look at VersionCompareOptions interface for documentaton of other options
+    });
     ```
 
-2. `VersionCompareSelectComponent` React component is intended to serve as a dialog that will be used to start a comparison. You should also add a button in your UI that stops comparison by calling `VersionCompare.manager.stopComparison()`.
-3. `ChangedElementsWidget` React component lets users to inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
-4. `PropertyComparisonTable` React component lists properties of a selected element and displays how they changed between versions of an iModel.
+2. Mount `VersionCompareSelectComponent` to begin version comparison worflow by selecting iModel versions to compare. You should also add a button in your UI that calls `VersionCompare.manager.stopComparison()`.
+3. `ChangedElementsWidget` React component lets users inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility.
+4. `PropertyComparisonTable` React component lists properties of a selected element and displays how they changed between two versions.
 
 ## Contributing
 
 We welcome contributions to make this package better. You can submit feature requests or report bugs by creating an [issue](https://github.com/iTwin/changed-elements-react/issues).
+
+---
+
+Copyright © Bentley Systems, Incorporated. All rights reserved. See [LICENSE.md](./LICENSE.md) for license terms and full copyright notice.

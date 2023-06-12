@@ -78,7 +78,7 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
   private clearIsolate = async () => {
     // Setup correct color overrides
     if (VersionCompare.manager) {
-      const frontstageIds = new Set(VersionCompare.manager.options.ninezoneOptions?.frontstageIds ?? []);
+      const frontstageIds = new Set(VersionCompare.manager.options.appUiOptions?.frontstageIds ?? []);
       if (frontstageIds.has(UiFramework.frontstages.activeFrontstageId)) {
         const visualizationManager =
           VersionCompare.manager?.visualization?.getSingleViewVisualizationManager();

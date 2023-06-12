@@ -1276,7 +1276,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
           options={this.state.filterOptions}
           onFilterChange={this.handleFilterChange}
           wantTypeOfChange={this.props.manager.wantTypeOfChange}
-          wantPropertyFiltering={this.props.manager.wantPropertyFiltering && this.props.manager.wantNinezone}
+          wantPropertyFiltering={this.props.manager.wantPropertyFiltering && this.props.manager.wantAppUi}
           onLoadLabels={onLoadLabels}
           iModelConnection={this.props.manager.currentIModel}
           onSearchChanged={this._loadSearch}

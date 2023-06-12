@@ -179,7 +179,7 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
             this.props.selected &&
             !this.props.isModel &&
             this.props.opcode !== undefined &&
-            VersionCompare.manager?.wantNinezone &&
+            VersionCompare.manager?.wantAppUi &&
             this.props.opcode === DbOpcode.Update) ? "show" : ""}`}
           onClick={this.props.onPropertyCompare}
           title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.inspectProperties")}

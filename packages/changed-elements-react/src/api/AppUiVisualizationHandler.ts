@@ -7,24 +7,23 @@ import { BeEvent } from "@itwin/core-bentley";
 import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
 import { bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents } from "../widgets/ChangedElementsWidget.js";
 import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
-import type { NinezoneVisualizationOptions } from "./VersionCompare.js";
+import type { AppUiVisualizationOptions } from "./VersionCompare.js";
 import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
 import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler.js";
 
 /**
- * Handles setting up version compare visualization for Ninezone applications
- * This expects that the app has frontstages and adds our own property compare
- * frontstage
+ * Handles setting up version compare visualization for AppUi applications. This expects that the app has frontstages
+ * and adds our own property compare frontstage.
  */
-export class NinezoneVisualizationHandler extends VisualizationHandler {
+export class AppUiVisualizationHandler extends VisualizationHandler {
   private _frontstageManager: VersionCompareFrontstageManager | undefined;
   private _onViewChanged?: BeEvent<(args: unknown) => void>;
 
   public constructor(
     private _manager: VersionCompareManager,
-    options: NinezoneVisualizationOptions,
+    options: AppUiVisualizationOptions,
   ) {
     super();
     const frontstageIds = new Set(options?.frontstageIds ?? []);
@@ -60,7 +59,7 @@ export class NinezoneVisualizationHandler extends VisualizationHandler {
   }
 
   /**
-   * Enable visualization of version comparison for ninezone apps
+   * Enable visualization of version comparison for AppUi apps.
    * @param options Options for visualization
    */
   public async enableVisualization(options?: MainVisualizationOptions): Promise<void> {

@@ -36,7 +36,7 @@ export interface VersionCompareSelectorProps {
   /** Configure the 'Manage Named Versions' URL. */
   getManageVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 
-  /** Show start button, useful for non-ninezone applications using the component. */
+  /** Show start button, useful for non-AppUi applications using the component. */
   wantCompareButton?: boolean;
 
   /** Compare button react node that will be added to the footer of this component. */

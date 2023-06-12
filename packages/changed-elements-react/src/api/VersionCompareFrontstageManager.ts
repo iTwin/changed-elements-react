@@ -221,13 +221,13 @@ export class VersionCompareFrontstageManager {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
       this._mainComparisonStageIds,
-      this._manager.options.ninezoneOptions?.propertyComparisonOptions?.frontstageProps,
+      this._manager.options.appUiOptions?.propertyComparisonOptions?.frontstageProps,
       {
         verticalTools:
-          this._manager.options.ninezoneOptions?.propertyComparisonOptions
+          this._manager.options.appUiOptions?.propertyComparisonOptions
             ?.verticalTools,
         horizontalTools:
-          this._manager.options.ninezoneOptions?.propertyComparisonOptions
+          this._manager.options.appUiOptions?.propertyComparisonOptions
             ?.horizontalTools,
       },
     );

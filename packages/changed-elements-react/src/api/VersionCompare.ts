@@ -51,8 +51,8 @@ export interface PropertyComparisonOptions {
   horizontalTools?: CommonToolbarItem[];
 }
 
-/** Options for ninezone applications version compare visualization. */
-export interface NinezoneVisualizationOptions {
+/** Options for AppUi applications version compare visualization. */
+export interface AppUiVisualizationOptions {
   /* frontstageIds Frontstage Ids where version compare will be available. */
   frontstageIds?: string[];
 
@@ -60,7 +60,7 @@ export interface NinezoneVisualizationOptions {
   propertyComparisonOptions?: PropertyComparisonOptions;
 }
 
-/** Options for simple visualization for non-ninezone applications. */
+/** Options for simple visualization for non-AppUi applications. */
 export interface SimpleVisualizationOptions {
   /**
    * Should return the main viewport your application wants to display the comparison in. If using side-by-side display,
@@ -125,13 +125,13 @@ export interface VersionCompareOptions {
    */
   getManageNamedVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 
-  /** Whether or not to use ninezone handling for visualization. True by default. */
-  wantNinezone?: boolean;
+  /** Whether or not to use AppUi handling for visualization. True by default. */
+  wantAppUi?: boolean;
 
-  /** Visualization options for ninezone applications. */
-  ninezoneOptions?: NinezoneVisualizationOptions;
+  /** Visualization options for AppUi applications. */
+  appUiOptions?: AppUiVisualizationOptions;
 
-  /** Visualization options for applications without ninezone support. */
+  /** Visualization options for applications without AppUi support. */
   simpleVisualizationOptions?: SimpleVisualizationOptions;
 
   getAccessToken?: () => Promise<AccessToken>;
@@ -209,16 +209,16 @@ initializing VersionCompare module, or do not define 'process.env.IMJS_URL_PREFI
   }
 
   /**
-   * Update the options for the property comparison frontstage. Only useful for nine-zone applications using the
-   * property comparison stage.
+   * Update the options for the property comparison frontstage. Only useful for AppUi applications using the property
+   * comparison stage.
    */
   public static setPropertyComparisonOptions(propertyComparisonOptions?: PropertyComparisonOptions): void {
     // Update optiions
     if (VersionCompare._options) {
-      if (VersionCompare._options.ninezoneOptions === undefined) {
-        VersionCompare._options.ninezoneOptions = { propertyComparisonOptions };
+      if (VersionCompare._options.appUiOptions === undefined) {
+        VersionCompare._options.appUiOptions = { propertyComparisonOptions };
       } else {
-        VersionCompare._options.ninezoneOptions.propertyComparisonOptions = propertyComparisonOptions;
+        VersionCompare._options.appUiOptions.propertyComparisonOptions = propertyComparisonOptions;
       }
 
       // Re-create manager with new options

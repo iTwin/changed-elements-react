@@ -63,14 +63,14 @@ function mapStateToProps(
   };
 }
 
-interface PropertyComparisonTableProps {
+export interface PropertyComparisonTableProps {
   manager: VersionCompareManager;
 
   /** KeySet of the selection to display results for in the table. */
   selection?: KeySet;
 }
 
-function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
+export function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
   // Throw if context is not provided
   useVersionCompare();
 
@@ -120,14 +120,14 @@ function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElem
           {manager.wantTypeOfChange && changedElement && <ElementChanges changedElement={changedElement} />}
         </div>
         {
-          manager.wantNinezone && !PropertyComparisonFrontstage.isSideBySide &&
+          manager.wantAppUi && !PropertyComparisonFrontstage.isSideBySide &&
           <OverviewOpacitySlider
             currentVersion={manager.currentVersion?.displayName}
             targetVersion={manager.targetVersion?.displayName}
           />
         }
         <div className="settings">
-          {manager.wantNinezone && <SideBySideToggle manager={manager} selection={selection} />}
+          {manager.wantAppUi && <SideBySideToggle manager={manager} selection={selection} />}
           <ToggleSwitch
             label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.onlyChangedProps")}
             checked={showChangedOnly}

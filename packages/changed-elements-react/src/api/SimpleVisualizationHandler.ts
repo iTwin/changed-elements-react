@@ -11,9 +11,7 @@ import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
 import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler.js";
 
-/**
- * Handles version compare visualization for non-ninezone applications
- */
+/** Handles version compare visualization for non-AppUi applications. */
 export class SimpleVisualizationHandler extends VisualizationHandler {
   private _onViewChanged?: BeEvent<(args: unknown) => void>;
   private _visualizationManager: VersionCompareVisualizationManager | undefined;

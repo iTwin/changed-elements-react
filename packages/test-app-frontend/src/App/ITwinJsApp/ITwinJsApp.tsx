@@ -136,7 +136,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     getAccessToken: () => authorizationClient.getAccessToken(),
     wantReportGeneration: true,
     wantTooltipAugment: true,
-    ninezoneOptions: {
+    appUiOptions: {
       frontstageIds: [MainFrontstageProvider.name],
     },
   });
