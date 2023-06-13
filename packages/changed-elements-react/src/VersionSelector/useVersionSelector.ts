@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 import { Changeset, NamedVersion } from "./NamedVersionSelector.js";
 
@@ -11,8 +11,10 @@ export interface ChangesetInfo {
   namedVersions?: NamedVersion[] | undefined;
 }
 
-export type UseVersionSelectorResult = ChangesetInfo
-  & (UseVersionSelectorStatusLoading | UseVersionSelectorStatusReady | UseVersionSelectorStatusError);
+export type UseVersionSelectorResult = {
+  changesets: Changeset[];
+  namedVersions: NamedVersion[];
+} & (UseVersionSelectorStatusLoading | UseVersionSelectorStatusReady | UseVersionSelectorStatusError);
 
 export interface UseVersionSelectorStatusLoading {
   status: "loading";
@@ -20,89 +22,88 @@ export interface UseVersionSelectorStatusLoading {
 
 export interface UseVersionSelectorStatusReady {
   status: "ready";
+  loadMore: (() => void) | undefined;
 }
 
 export interface UseVersionSelectorStatusError {
   status: "error";
   error: unknown;
+  retry: () => void;
 }
 
 export function useVersionSelector(getChangesetInfo: () => AsyncIterable<ChangesetInfo>): UseVersionSelectorResult {
-  const [result, setResult] = useState<UseVersionSelectorResult>({ status: "loading", changesets: [], namedVersions: [] });
-  useEffect(
+  const [result, setResult] = useState<UseVersionSelectorResult>({
+    changesets: [],
+    namedVersions: [],
+    status: "loading",
+  });
+
+  // With useEffect loading state would flash on screen when data is resolved in the same task
+  useLayoutEffect(
     () => {
+      setResult({
+        changesets: [],
+        namedVersions: [],
+        status: "loading",
+      });
+
+      let resolveContinueLoading = (_: boolean) => {};
+      let continueLoading = Promise.resolve(true);
       let disposed = false;
       void (async () => {
-        try {
-          const iterator = getChangesetInfo()[Symbol.asyncIterator]();
-          const result = await iterator.next();
-          const { changesets, namedVersions } = result.value ?? { changesets: [], namedVersions: [] };
-          if (!disposed) {
-            setResult((prev) => {
-              return {
-                status: "ready",
-                changesets: prev.changesets.concat(changesets),
-                namedVersions: prev.namedVersions?.concat(namedVersions),
-              };
-            });
+        const iterator = getChangesetInfo()[Symbol.asyncIterator]();
+        while (await continueLoading) {
+          if (disposed) {
+            break;
           }
-        } catch (error) {
-          setResult((prev) => ({ ...prev, status: "error", error }));
+
+          setResult((prev) => ({
+            changesets: prev.changesets,
+            namedVersions: prev.namedVersions,
+            status: "loading",
+          }));
+
+          try {
+            const result = await iterator.next();
+            if (disposed) {
+              break;
+            }
+
+            const { changesets, namedVersions = [] } = result.value ?? { changesets: [], namedVerions: [] };
+
+            continueLoading = new Promise((resolve) => { resolveContinueLoading = resolve; });
+            setResult((prev) => ({
+              changesets: prev.changesets.concat(changesets),
+              namedVersions: prev.namedVersions.concat(namedVersions),
+              status: "ready",
+              loadMore: result.done ? undefined : () => { resolveContinueLoading(true); }
+            }));
+
+            if (result.done) {
+              break;
+            }
+          } catch (error) {
+            if (!disposed) {
+              continueLoading = new Promise((resolve) => { resolveContinueLoading = resolve; });
+              setResult((prev) => ({
+                changesets: prev.changesets,
+                namedVersions: prev.namedVersions,
+                status: "error",
+                error,
+                retry: () => { resolveContinueLoading(true); },
+              }));
+            }
+          }
         }
       })();
 
       return () => {
-        setResult({ status: "loading", changesets: [], namedVersions: [] });
+        resolveContinueLoading(false);
         disposed = true;
       };
     },
     [getChangesetInfo],
   );
-  // useEffect(
-  //   () => {
-  //     let disposed = false;
-  //     void (async () => {
-  //       let activeState: UseVersionSelectorResult = { status: "loading" };
-  //       setResult((prev) => prev.status === "loading" ? prev : activeState);
-
-  //       try {
-  //         const [changesets, namedVersions] = await Promise.all([
-  //           manager.changesetCache.getOrderedChangesets(iModelId),
-  //           manager.changesetCache.getVersions(iModelId),
-  //         ]);
-  //         activeState = {
-  //           status: "ready",
-  //           changesets: changesets.map(
-  //             (changeset) => ({
-  //               id: changeset.id,
-  //               description: changeset.description,
-  //               date: new Date(changeset.pushDateTime),
-  //               isProcessed: false,
-  //             }),
-  //           ),
-  //           namedVersions: namedVersions.map(
-  //             (namedVersion) => ({
-  //               id: namedVersion.id,
-  //               changesetId: namedVersion.changesetId ?? "",
-  //               displayName: namedVersion.displayName,
-  //               description: namedVersion.description ?? "",
-  //               date: namedVersion.createdDateTime,
-  //             }),
-  //           ),
-  //         };
-  //       } catch (error) {
-  //         activeState = { status: "error", error };
-  //       }
-
-  //       if (!disposed) {
-  //         setResult(activeState);
-  //       }
-  //     })();
-
-  //     return () => { disposed = true; };
-  //   },
-  //   [iModelId],
-  // );
 
   return result;
 }

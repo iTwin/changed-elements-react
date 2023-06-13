@@ -5,10 +5,14 @@
 import { SvgRefresh, SvgStatusErrorHollow } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Code, IconButton, List, ListItem, Surface, Text } from "@itwin/itwinui-react";
-import { Component, createElement, type PropsWithChildren, type ReactElement, type ReactNode } from "react";
+import {
+  Component, StrictMode, createElement, type PropsWithChildren, type ReactElement, type ReactNode
+} from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
-import { ChangesetSelectDialogDemo, ChangesetSelectDialogLoading, ChangesetSelectDialogNoChangesets } from "./VersionSelectorDemo/ChangesetSelectorDialogDemo";
+import {
+  ChangesetSelectDialogDemo, ChangesetSelectDialogError, ChangesetSelectDialogLoading, ChangesetSelectDialogNoChangesets
+} from "./VersionSelectorDemo/ChangesetSelectorDialogDemo";
 import { NamedVersionSelectorDemo } from "./VersionSelectorDemo/NamedVersionSelectorDemo";
 
 import "./ComponentsCatalog.css";
@@ -17,17 +21,24 @@ const componentsMap = new Map([
   ["NamedVersionSelectorDemo", [NamedVersionSelectorDemo]],
   [
     "ChangesetSelectDialog",
-    [ChangesetSelectDialogDemo, ChangesetSelectDialogLoading, ChangesetSelectDialogNoChangesets],
+    [
+      ChangesetSelectDialogDemo,
+      ChangesetSelectDialogLoading,
+      ChangesetSelectDialogNoChangesets,
+      ChangesetSelectDialogError,
+    ],
   ],
 ]);
 
 export function ComponentsCatalogRoutes(): ReactElement {
   const [firstCategory, [firstComponent]] = [...componentsMap.entries()][0];
   return (
-    <Routes>
-      <Route index element={<Navigate to={`${firstCategory}/${firstComponent.name}`} />} />
-      <Route path=":category/:component/*" element={<ComponentsCatalog />} />
-    </Routes>
+    <StrictMode>
+      <Routes>
+        <Route index element={<Navigate to={`${firstCategory}/${firstComponent.name}`} />} />
+        <Route path=":category/:component/*" element={<ComponentsCatalog />} />
+      </Routes>
+    </StrictMode>
   );
 }
 

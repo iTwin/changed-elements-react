@@ -16,6 +16,7 @@
     "no-alert": "warn",
     "no-empty": [ "warn", { "allowEmptyCatch": true } ],
     "no-eval": "error",
+    "require-yield": "off",
     "@typescript-eslint/comma-dangle": [
       "warn",
       {

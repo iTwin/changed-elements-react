@@ -1,0 +1,14 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.iTwinChangedElements__changeset-select-dialog {
+  display: grid;
+  grid: auto minmax(0, 1fr) auto / 1fr;
+  grid-template-areas:
+    "title"
+    "content"
+    "buttons";
+  gap: var(--iui-size-s);
+}

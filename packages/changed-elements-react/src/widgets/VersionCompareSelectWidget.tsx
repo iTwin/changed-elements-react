@@ -11,7 +11,7 @@ import {
   MinimalChangeset, MinimalNamedVersion, NamedVersion, NamedVersionState
 } from "@itwin/imodels-client-management";
 import {
-  Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
+  Button, Dialog, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
 } from "@itwin/itwinui-react";
 import {
   Component, createRef, forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState
@@ -927,7 +927,6 @@ export const openSelectDialog = async (iModel: IModelConnection) => {
     return;
   }
 
-
   const handleStartComparison = async (
     currentChangesetId: string,
     targetChangesetId: string,
@@ -953,17 +952,23 @@ export const openSelectDialog = async (iModel: IModelConnection) => {
   };
 
   UiFramework.dialogs.modal.open(
-    <ChangesetSelectDialog
-      iTwinId={iModel.iTwinId}
-      iModelId={iModel.iModelId}
-      changesetId={iModel.changeset.id}
-      onStartComparison={handleStartComparison}
-      getChangesetInfo={getChangesetInfo(manager, iModel.iModelId)}
-    />,
+    <Dialog isOpen>
+      <Dialog.Main>
+        <Dialog.Content>
+          <ChangesetSelectDialog
+            iTwinId={iModel.iTwinId}
+            iModelId={iModel.iModelId}
+            currentChangeset={iModel.changeset.id}
+            onStartComparison={handleStartComparison}
+            getChangesetInfo={getChangesetInfo(manager, iModel.iModelId)}
+          />
+        </Dialog.Content>
+      </Dialog.Main>
+    </Dialog>,
   );
 
   // UiFramework.dialogs.modal.open(
-  //   <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
+  //   <VersionCompareSelectDialog iModelConnection={iModel} />,
   // );
 };
 
@@ -973,7 +978,7 @@ function getChangesetInfo(manager: VersionCompareManager, iModelId: string): () 
       manager.changesetCache.getOrderedChangesets(iModelId),
       manager.changesetCache.getVersions(iModelId),
     ]);
-    return {
+    yield {
       changesets: changesets.map(
         (changeset) => ({
           id: changeset.id,

@@ -14,14 +14,23 @@ import { changesets, currentNamedVersion, namedVersionList } from "./common";
 export function ChangesetSelectDialogDemo(): ReactElement {
   async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
     yield {
-      changesets,
+      changesets: changesets.slice(0, 2),
       namedVersions: [currentNamedVersion.namedVersion, ...namedVersionList.map(({ namedVersion }) => namedVersion)],
+    };
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return {
+      changesets: changesets.slice(2),
     };
   }
 
   return (
     <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
-      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId={changesets[0].id} getChangesetInfo={getChangesetInfo} />
+      <ChangesetSelectDialog
+        iTwinId=""
+        iModelId=""
+        currentChangeset={changesets[0]}
+        getChangesetInfo={getChangesetInfo}
+      />
     </VersionCompareContext>
   );
 }
@@ -33,14 +42,19 @@ export function ChangesetSelectDialogLoading(): ReactElement {
 
   return (
     <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
-      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId="" getChangesetInfo={getChangesetInfo} />
+      <ChangesetSelectDialog
+        iTwinId=""
+        iModelId=""
+        currentChangeset={changesets[0]}
+        getChangesetInfo={getChangesetInfo}
+      />
     </VersionCompareContext>
   );
 }
 
 export function ChangesetSelectDialogNoChangesets(): ReactElement {
   async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
-    yield {
+    return {
       changesets: [],
       namedVersions: [],
     };
@@ -48,7 +62,33 @@ export function ChangesetSelectDialogNoChangesets(): ReactElement {
 
   return (
     <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
-      <ChangesetSelectDialog iTwinId="" iModelId="" changesetId="" getChangesetInfo={getChangesetInfo} />
+      <ChangesetSelectDialog
+        iTwinId=""
+        iModelId=""
+        currentChangeset={changesets[0]}
+        getChangesetInfo={getChangesetInfo}
+      />
+    </VersionCompareContext>
+  );
+}
+
+export function ChangesetSelectDialogError(): ReactElement {
+  async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
+    yield {
+      changesets: changesets.slice(0, 2),
+      namedVersions: [currentNamedVersion.namedVersion, ...namedVersionList.map(({ namedVersion }) => namedVersion)],
+    };
+    throw new Error();
+  }
+
+  return (
+    <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
+      <ChangesetSelectDialog
+        iTwinId=""
+        iModelId=""
+        currentChangeset={changesets[0]}
+        getChangesetInfo={getChangesetInfo}
+      />
     </VersionCompareContext>
   );
 }
