@@ -58,7 +58,7 @@ This package is intended to be used together with iTwin.js AppUI framework, howe
         section?: StagePanelSection,
       ): Widget[] {
         if (
-          stageId !== MainFrontstageProvider.name ||
+          stageId !== MyFrontstageProvider.name ||
           stageUsage !== StageUsage.General ||
           location !== StagePanelLocation.Right ||
           section !== StagePanelSection.Start
