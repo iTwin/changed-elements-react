@@ -30,9 +30,9 @@ stages:
             fetchDepth: 1
 
           - task: NodeTool@0
-            displayName: Use Node.js 16.x
+            displayName: Use Node.js 18.x
             inputs:
-              versionSpec: 16.x
+              versionSpec: 18.x
 
           - task: CmdLine@2
             displayName: Install pnpm
