@@ -12,7 +12,6 @@
     "name": "Bentley Systems, Inc.",
     "url": "https://www.bentley.com"
   },
-  "main": "./lib/cjs/index.js",
   "exports": {
     ".": {
       "import": {
@@ -34,7 +33,7 @@
     "build:copy-assets:esm": "cpx \"./src/**/*.{scss,css}\" ./lib/esm",
     "build:copy-assets:cjs": "cpx \"./src/**/*.{scss,css}\" ./lib/cjs",
     "build:transpile:esm": "tsc --project ./tsconfig.build.json",
-    "build:transpile:cjs": "tsc --project ./tsconfig.build.json --module CommonJS --outDir ./lib/cjs",
+    "build:transpile:cjs": "tsc --project ./tsconfig.build.json --module CommonJS --moduleResolution Node16 --outDir ./lib/cjs",
     "test": "vitest run",
     "test:cover": "vitest run --coverage",
     "test:watch": "vitest watch",
