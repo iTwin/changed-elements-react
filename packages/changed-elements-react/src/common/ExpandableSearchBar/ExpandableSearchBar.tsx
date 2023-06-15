@@ -16,87 +16,82 @@ import { NavigationComponent } from "./NavigationComponent.js";
 import "./ExpandableSearchBar.scss";
 
 export interface ExpandableSearchBarProps extends CommonProps {
-  /**
-   * Modify size of the search button.
-   */
+  /** Modify size of the search button. */
   size?: "small" | "large";
+
   /**
    * Style of the button.
    * Use 'borderless' to hide outline.
    * @default 'default'
    */
   styleType?: "cta" | "high-visibility" | "default" | "borderless";
-  /**
-   * Items on the left (replaced by the expanded search box).
-   */
+
+  /** Items on the left (replaced by the expanded search box). */
   children: ReactNode;
-  /**
-   * Search value.
-   */
+
+  /** Search value. */
   value?: string;
+
   /**
    * Show the search box in its expanded state.
    * @default false
    */
   isExpanded?: boolean;
-  /**
-   * Searchbox frequency to poll for changes in value (milliseconds).
-   */
+
+  /** Searchbox frequency to poll for changes in value (milliseconds). */
   valueChangedDelay?: number;
-  /**
-   * Placeholder value to show in gray before anything is entered in.
-   */
+
+  /** Placeholder value to show in gray before anything is entered in. */
   placeholder?: string;
+
   /**
    * Set focus on input element when expanded.
    * @default false
    */
   setFocus?: boolean;
+
   /**
    * Show or hide a loading spinner.
    * @default false
    */
   isLoading?: boolean;
-  /**
-   * On search text change handler.
-   */
+
+  /** On search text change handler. */
   onChange?: (searchText: string) => void;
-  /**
-   * Callback function on expansion state change.
-   */
+
+  /** Callback function on expansion state change. */
   onExpandedChange?: (expanded: boolean) => void;
+
   /**
    * Show prev/next navigation buttons.
    * @default false
    */
   enableNavigation?: boolean;
+
   /**
    * Show filter bar when a filter is active.
    * @default false
    */
   enableFilterBar?: boolean;
+
   /**
-   * Current result (one based)
-   * default is 0
+   * Current result (one based).
+   * @default 0
    */
   currentResult?: number;
-  /**
-   * If `enableNavigation` is specified, Total number of results/entries.
-   */
+
+  /** If `enableNavigation` is specified, Total number of results/entries. */
   resultCount?: number;
-  /**
-   * If `enableNavigation` is specified, on selected result/entry change handler.
-   */
+
+  /** If `enableNavigation` is specified, on selected result/entry change handler. */
   onCurrentSelectionChanged?: (index: number) => void;
-  /**
-   * If `isSearchHidden` is set to true, hides the search bar icon
-   */
+
+  /** If `isSearchHidden` is set to true, hides the search bar icon. */
   isSearchHidden?: boolean;
 }
 
 /**
- * Display content to the left of the expanding search button.
- * Handles expanding search box when search is clicked.
+ * Display content to the left of the expanding search button. Handles expanding search box when search is clicked.
  *
  * @example
  * <ExpandableSearchButton>
@@ -109,7 +104,7 @@ export interface ExpandableSearchBarProps extends CommonProps {
  * </ExpandableSearchButton>
  */
 
-/** SearchBox with expanding search box capability */
+/** SearchBox with expanding search box capability. */
 export function ExpandableSearchBar({
   size,
   styleType,
@@ -140,11 +135,14 @@ export function ExpandableSearchBar({
     onChange?.("");
   };
 
-  const onToggleSearch = useCallback(() => {
-    const expand = !expanded;
-    setExpanded(expand);
-    onExpandedChange?.(expand);
-  }, [onExpandedChange, expanded]);
+  const onToggleSearch = useCallback(
+    () => {
+      const expand = !expanded;
+      setExpanded(expand);
+      onExpandedChange?.(expand);
+    },
+    [onExpandedChange, expanded],
+  );
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
@@ -168,20 +166,19 @@ export function ExpandableSearchBar({
     }
   };
 
-  useEffect(() => {
-    setSearchText(value);
-  }, [value]);
+  useEffect(() => { setSearchText(value); }, [value]);
 
-  useEffect(() => {
-    setExpanded(isExpanded);
-  }, [isExpanded]);
+  useEffect(() => { setExpanded(isExpanded); }, [isExpanded]);
 
-  // call focus() when search is expanded
-  useEffect(() => {
-    if (setFocus && expanded) {
-      inputElement.current?.focus();
-    }
-  }, [setFocus, expanded]);
+  // Call focus() when search is expanded
+  useEffect(
+    () => {
+      if (setFocus && expanded) {
+        inputElement.current?.focus();
+      }
+    },
+    [setFocus, expanded],
+  );
 
   return (
     <div className={`expandable-search-bar ${className ?? ""}`}>
@@ -194,27 +191,26 @@ export function ExpandableSearchBar({
             ref={inputElement}
             onChange={onInputChange}
             onKeyDown={onKeyDown}
-            placeholder={placeholder ?? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.search")}
+            placeholder={
+              placeholder ?? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.search")
+            }
           />
-          {isLoading && (
-            <ProgressRadial
-              className="expandable-search-bar-spinner"
-              indeterminate
-            />
-          )}
-          {enableNavigation && (
+          {isLoading && <ProgressRadial className="expandable-search-bar-spinner" indeterminate />}
+          {
+            enableNavigation &&
             <NavigationComponent
               size={size}
               currentResult={currentResult}
               resultCount={resultCount}
               onCurrentSelectionChanged={onCurrentSelectionChanged}
             />
-          )}
+          }
           <IconButton size={size} styleType={styleType}>
             <SvgBlank />
           </IconButton>
         </div>
-        {!isSearchHidden && (
+        {
+          !isSearchHidden &&
           <IconButton
             className="expandable-search-bar-icon-wrapper"
             size={size}
@@ -228,16 +224,17 @@ export function ExpandableSearchBar({
           >
             {expanded ? <SvgClose /> : <SvgSearch />}
           </IconButton>
-        )}
+        }
       </div>
-      {enableFilterBar && !expanded && searchText && searchText.length > 0 && (
+      {
+        enableFilterBar && !expanded && searchText && searchText.length > 0 &&
         <FilterBar
           text={`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.searchFor")} \`${searchText}\``}
           size={size}
           onCloseClick={onClearSearch}
           onTextClick={onToggleSearch}
         />
-      )}
+      }
     </div>
   );
 }
