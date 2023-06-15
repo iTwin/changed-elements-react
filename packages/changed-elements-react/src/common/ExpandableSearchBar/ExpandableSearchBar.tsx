@@ -228,12 +228,7 @@ export function ExpandableSearchBar({
       </div>
       {
         enableFilterBar && !expanded && searchText && searchText.length > 0 &&
-        <FilterBar
-          text={`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.searchFor")} \`${searchText}\``}
-          size={size}
-          onCloseClick={onClearSearch}
-          onTextClick={onToggleSearch}
-        />
+        <FilterBar text={`\`${searchText}\``} onCloseClick={onClearSearch} onTextClick={onToggleSearch} />
       }
     </div>
   );

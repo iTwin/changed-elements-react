@@ -322,17 +322,17 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override render(): ReactElement {
     return (
       <WidgetComponent data-testid="comparison-legend-widget">
-        <WidgetComponent.TitleBar>
-          <WidgetComponent.TitleBar.Title>
+        <WidgetComponent.Header>
+          <WidgetComponent.Header.Label>
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
-          </WidgetComponent.TitleBar.Title>
-          <WidgetComponent.TitleBar.Content>
+          </WidgetComponent.Header.Label>
+          <WidgetComponent.Header.Actions>
             {this.getHeader()}
-          </WidgetComponent.TitleBar.Content>
-        </WidgetComponent.TitleBar>
-        <WidgetComponent.Content data-testid="comparison-legend-widget-content">
+          </WidgetComponent.Header.Actions>
+        </WidgetComponent.Header>
+        <WidgetComponent.Body data-testid="comparison-legend-widget-content">
           {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
-        </WidgetComponent.Content>
+        </WidgetComponent.Body>
       </WidgetComponent>
     );
   }

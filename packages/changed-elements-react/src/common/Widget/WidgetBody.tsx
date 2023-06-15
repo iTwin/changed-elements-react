@@ -6,7 +6,7 @@ import { forwardRef, type ReactElement } from "react";
 
 import "./Widget.css";
 
-export type WidgetContentProps = {
+export type WidgetBodyProps = {
   /** Main content in the Widget. */
   children: React.ReactNode;
 } & React.ComponentPropsWithRef<"div">;
@@ -14,19 +14,15 @@ export type WidgetContentProps = {
 /**
  * Container for content in `Widget`. Recommended to be used as a child of `Widget`.
  * @example
- * <Widget.Content>
+ * <Widget.Body>
  *   My Widget content
- * </Widget.Content>
+ * </Widget.Body>
  */
-export const WidgetContent = forwardRef<HTMLDivElement, WidgetContentProps>(
-  function WidgetContent(props, ref): ReactElement {
+export const WidgetBody = forwardRef<HTMLDivElement, WidgetBodyProps>(
+  function WidgetBody(props, ref): ReactElement {
     const { children, className, ...rest } = props;
     return (
-      <div
-        ref={ref}
-        className={`itwin-common-widget-content ${className ?? ""}`}
-        {...rest}
-      >
+      <div ref={ref} className={`itwin-widget-body ${className ?? ""}`} {...rest}>
         {children}
       </div>
     );

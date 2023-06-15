@@ -3,46 +3,53 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-.itwin-common-widget {
-  background-color: var(--iui-color-background-1);
+.itwin-widget {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background-color: var(--iui-color-background);
 }
 
-.itwin-common-widget-title {
+.itwin-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: calc(var(--iui-size-s) * 3);
+  font-size: var(--iui-font-size-2);
+  font-weight: var(--iui-font-weight-normal);
+  padding-inline: var(--iui-size-s);
+  background-color: var(--iui-color-background);
+  flex-shrink: 0;
+}
+
+.itwin-widget-toolbar {
+  display: flex;
+  align-items: center;
+  height: calc(var(--iui-size-s) * 3);
+  padding-inline: var(--iui-size-s);
+  background-color: var(--iui-color-background);
+  flex-shrink: 0;
+}
+
+.itwin-widget-body {
+  margin-top: var(--iui-size-xs);
+  margin-bottom: var(--iui-size-xs);
+  flex-grow: 2;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-y: overlay;
+}
+
+.itwin-widget-header-label {
   font-size: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.5;
   margin-right: auto;
 }
 
-.itwin-common-widget-title-bar-content {
+.itwin-widget-header-actions {
   display: flex;
   align-items: center;
-  margin-left: auto;
-}
-
-.itwin-common-widget-title-bar {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  font-weight: 400;
-  padding: 6px 12px;
-}
-
-.itwin-common-widget-toolbar {
-  display: flex;
-  align-items: center;
-  padding: 2px 12px;
-}
-
-.itwin-common-widget-content {
-  flex-grow: 2;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  overflow-y: overlay;
+  flex-shrink: 0;
 }

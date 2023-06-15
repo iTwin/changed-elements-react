@@ -19,11 +19,7 @@ export const WidgetToolBar = forwardRef<HTMLDivElement, React.PropsWithChildren<
   function WidgetToolBar(props, ref): ReactElement {
     const { children, className, ...rest } = props;
     return (
-      <div
-        ref={ref}
-        className={`itwin-common-widget-toolbar ${className ?? ""}`}
-        {...rest}
-      >
+      <div ref={ref} className={`itwin-widget-toolbar ${className ?? ""}`} {...rest}>
         {children}
       </div>
     );
