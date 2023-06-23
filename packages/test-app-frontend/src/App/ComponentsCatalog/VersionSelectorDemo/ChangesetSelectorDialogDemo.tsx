@@ -5,7 +5,8 @@
 import {
   ChangesetSelectDialog, ComparisonJobCompleted, VersionCompareContext, type ChangedElements,
   type ChangedElementsClient, type ChangesetInfo, type ComparisonJob, type GetComparisonJobParams,
-  type PostComparisonJobParams
+  type PostComparisonJobParams,
+  Changeset
 } from "@itwin/changed-elements-react";
 import { type ReactElement } from "react";
 
@@ -79,6 +80,42 @@ export function ChangesetSelectDialogError(): ReactElement {
       namedVersions: [currentNamedVersion.namedVersion, ...namedVersionList.map(({ namedVersion }) => namedVersion)],
     };
     throw new Error();
+  }
+
+  return (
+    <VersionCompareContext changedElementsClient={new DemoChangedElementsClient()}>
+      <ChangesetSelectDialog
+        iTwinId=""
+        iModelId=""
+        currentChangeset={changesets[0]}
+        getChangesetInfo={getChangesetInfo}
+      />
+    </VersionCompareContext>
+  );
+}
+
+export function ChangesetSelectDialogManyChangesets(): ReactElement {
+  async function* getChangesetInfo(): AsyncIterable<ChangesetInfo> {
+    const numChangesets = 20_000;
+    const batchSize = 1000;
+    const changesetTemplate: Changeset = {
+      id: "",
+      date: new Date(),
+      description: "",
+      isProcessed: true,
+    };
+
+    for (let i = 0; i < numChangesets; i += batchSize) {
+      yield {
+        changesets: Array
+          .from({ length: batchSize })
+          .map((_, batchIndex) => ({
+            ...changesetTemplate,
+            id: (i + batchIndex).toString(),
+            description: `Changeset ${numChangesets - i - batchIndex}`
+          })),
+      };
+    }
   }
 
   return (

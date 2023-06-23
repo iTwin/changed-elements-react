@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Button, ProgressRadial, Text } from "@itwin/itwinui-react";
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useRef, useState } from "react";
 
 import { useVersionCompare } from "../VersionCompareContext.js";
 import { ChangedElements, ChangedElementsClient, ComparisonJob } from "../client/ChangedElementsClient.js";
@@ -26,13 +26,38 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
   const [baseVersion, setBaseVersion] = useState<string>();
   const [selectedChangesetId, setSelectedChangeset] = useState<string>();
 
+  const contentRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  useEffect(
+    () => {
+      const element = progressRef.current;
+      const loadMore = data.status === "ready" && data.loadMore;
+      if (!element || !contentRef.current || !loadMore) {
+        return;
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[entries.length - 1].isIntersecting) {
+            loadMore();
+          }
+        },
+        { root: contentRef.current, rootMargin: "200px" },
+      );
+
+      observer.observe(element);
+      return () => observer.unobserve(element);
+    },
+    [data, ],
+  );
+
   return (
     <div className="iTwinChangedElements__changeset-select-dialog">
-      <div style={{ gridArea: "content" }}>
+      <Text variant="subheading">Select version for comparison</Text>
+      <div ref={contentRef} style={{ gridArea: "content", overflow: "auto" }}>
         {
           !baseVersion &&
           <>
-            <Text variant="subheading">Select version for comparison</Text>
             {
               <>
                 {
@@ -45,15 +70,14 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
                     onChangesetSelected={setSelectedChangeset}
                   />
                 }
-                {data.status === "ready" && data.loadMore && <Button onClick={data.loadMore}>Load more</Button>}
               </>
             }
             {
-              data.status === "loading" &&
-              <>
+              (data.status !== "ready" || data.loadMore !== undefined) &&
+              <div ref={progressRef}>
                 <ProgressRadial size="large" indeterminate />
                 <Text variant="leading">Loading changesets...</Text>
-              </>
+              </div>
             }
           </>
         }
@@ -95,16 +119,14 @@ interface VersionPickerProps {
 
 function VersionPicker(props: VersionPickerProps): ReactElement {
   return (
-    <div style={{ overflow: "auto" }}>
-      <ChangesetList
-        currentChangesetId={props.changesetId}
-        changesets={props.data.changesets}
-        namedVersions={props.data.namedVersions}
-        selectedChangesetId={props.selectedChangesetId}
-        onChangesetSelected={props.onChangesetSelected}
-        actionable
-      />
-    </div>
+    <ChangesetList
+      currentChangesetId={props.changesetId}
+      changesets={props.data.changesets}
+      namedVersions={props.data.namedVersions}
+      selectedChangesetId={props.selectedChangesetId}
+      onChangesetSelected={props.onChangesetSelected}
+      actionable
+    />
   );
 }
 

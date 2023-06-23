@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Code, List, ListItem, Text } from "@itwin/itwinui-react";
-import { Fragment, ReactElement } from "react";
+import { Fragment, ReactElement, memo, useCallback } from "react";
 
 import { Changeset, NamedVersion } from "./NamedVersionSelector";
 import { SvgHistory } from "@itwin/itwinui-icons-react";
@@ -18,10 +18,15 @@ export interface ChangesetListProps {
 }
 
 export function ChangesetList(props: ChangesetListProps): ReactElement {
+  const handleChangesetClicked = useCallback(
+    (changeset) => (0, props.onChangesetSelected)?.(changeset.id),
+    [props.onChangesetSelected],
+  );
+
   if (props.changesets.length === 0) {
     return (
       <div><SvgHistory /> No changesets</div>
-    )
+    );
   }
 
   const currentChangesetIndex = props.changesets.findIndex(({ id }) => id === props.currentChangesetId);
@@ -52,7 +57,7 @@ export function ChangesetList(props: ChangesetListProps): ReactElement {
               isBase={isBase}
               required={isRequired}
               actionable={props.actionable}
-              onClick={() => props.onChangesetSelected?.(changeset.id)}
+              onClick={handleChangesetClicked}
             />
           </Fragment>
         );
@@ -86,27 +91,29 @@ interface ChangesetRowProps {
   onClick?: (changeset: Changeset) => void;
 }
 
-function ChangesetRow(props: ChangesetRowProps): ReactElement {
-  return (
-    <ListItem
-      className="iTwinChangedElements__changeset-row"
-      style={{ paddingBlock: 0 }}
-      actionable={props.actionable}
-      disabled={props.current}
-      active={props.isBase}
-      onClick={() => props.onClick?.(props.changeset)}
-    >
-      {props.changeset.isProcessed ? <IconProcessed required={props.required} /> : <IconUnprocessed required={props.required} />}
-      <Code>{props.changeset.id.slice(0, 8)}</Code>
-      <Text>{props.changeset.description}</Text>
-      {!props.current && <Text></Text>}
-      {props.current && <Text>Active version</Text>}
-      <div style={{ display: "grid", justifyItems: "end" }}>
-        <Text title={props.changeset.date.toLocaleString()}>{formatDate(props.changeset.date)}</Text>
-      </div>
-    </ListItem>
-  );
-}
+const ChangesetRow = memo(
+  function ChangesetRow(props: ChangesetRowProps): ReactElement {
+    return (
+      <ListItem
+        className="iTwinChangedElements__changeset-row"
+        style={{ paddingBlock: 0 }}
+        actionable={props.actionable}
+        disabled={props.current}
+        active={props.isBase}
+        onClick={() => props.onClick?.(props.changeset)}
+      >
+        {props.changeset.isProcessed ? <IconProcessed required={props.required} /> : <IconUnprocessed required={props.required} />}
+        <Code>{props.changeset.id.slice(0, 8)}</Code>
+        <Text>{props.changeset.description}</Text>
+        {!props.current && <Text></Text>}
+        {props.current && <Text>Active version</Text>}
+        <div style={{ display: "grid", justifyItems: "end" }}>
+          <Text title={props.changeset.date.toLocaleString()}>{formatDate(props.changeset.date)}</Text>
+        </div>
+      </ListItem>
+    );
+  },
+);
 
 
 export interface IconProps {

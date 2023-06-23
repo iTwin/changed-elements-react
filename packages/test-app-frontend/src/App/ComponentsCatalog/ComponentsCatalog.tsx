@@ -6,12 +6,16 @@ import { SvgRefresh, SvgStatusErrorHollow } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Code, IconButton, List, ListItem, Surface, Text } from "@itwin/itwinui-react";
 import {
-  Component, StrictMode, createElement, type PropsWithChildren, type ReactElement, type ReactNode
+  Component, StrictMode, createElement,
+  useLayoutEffect,
+  useRef,
+  type PropsWithChildren, type ReactElement, type ReactNode
 } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
 import {
-  ChangesetSelectDialogDemo, ChangesetSelectDialogError, ChangesetSelectDialogLoading, ChangesetSelectDialogNoChangesets
+  ChangesetSelectDialogDemo, ChangesetSelectDialogError, ChangesetSelectDialogLoading,
+  ChangesetSelectDialogManyChangesets, ChangesetSelectDialogNoChangesets
 } from "./VersionSelectorDemo/ChangesetSelectorDialogDemo";
 import { NamedVersionSelectorDemo } from "./VersionSelectorDemo/NamedVersionSelectorDemo";
 
@@ -26,6 +30,7 @@ const componentsMap = new Map([
       ChangesetSelectDialogLoading,
       ChangesetSelectDialogNoChangesets,
       ChangesetSelectDialogError,
+      ChangesetSelectDialogManyChangesets,
     ],
   ],
 ]);
@@ -99,17 +104,45 @@ function ComponentsCatalog(): ReactElement {
                 <PageLayout.TitleArea>
                   <Text variant="title">{currentComponent.name}</Text>
                 </PageLayout.TitleArea>
-                <div className="playground-area">
-                  <ErrorBoundary key={currentComponent.name}>
-                    {createElement(currentComponent)}
-                  </ErrorBoundary>
-                </div>
+                <ResizablePlaygroundArea identifier={currentComponent.name}>
+                  {createElement(currentComponent)}
+                </ResizablePlaygroundArea>
               </>
               : <Text>Component not found</Text>
           }
         </div>
       </div>
     </PageLayout.Content>
+  );
+}
+
+interface ResizablePlaygroundAreaProps {
+  identifier: string;
+  children: ReactElement;
+}
+
+function ResizablePlaygroundArea(props: ResizablePlaygroundAreaProps): ReactElement {
+  const playgroundAreaRef = useRef<HTMLDivElement>(null);
+
+  // Fix component's dimensions in place on the initial render
+  useLayoutEffect(
+    () => {
+      if (!playgroundAreaRef.current) {
+        return;
+      }
+
+      playgroundAreaRef.current.style.width = `${playgroundAreaRef.current.clientWidth}px`;
+      playgroundAreaRef.current.style.height = `${playgroundAreaRef.current.clientHeight}px`;
+    },
+    [],
+  );
+
+  return (
+    <div ref={playgroundAreaRef} className="playground-area">
+      <ErrorBoundary key={props.identifier}>
+        {props.children}
+      </ErrorBoundary>
+    </div>
   );
 }
 
