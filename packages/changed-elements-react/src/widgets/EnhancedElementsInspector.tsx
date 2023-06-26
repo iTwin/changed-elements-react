@@ -382,7 +382,6 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
       <ExpandableSearchBar
         size="small"
         styleType="borderless"
-        enableFilterBar
         setFocus={true}
         valueChangedDelay={500}
         onChange={props.onSearchChanged}
