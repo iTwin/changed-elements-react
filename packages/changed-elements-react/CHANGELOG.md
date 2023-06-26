@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Update `ChangedElementsWidget` layout
 * Update search bar style in `ChangedElementsWidget`
 
+### Fixes
+
+* Fix Elements Widget failing to restore its previous scroll offset when used as AppUI widget
+
 ## [0.1.0](https://github.com/iTwin/changed-elements-react/tree/v0.1.0/packages/changed-elements-react) - 2023-06-15
 
 Initial package release.
