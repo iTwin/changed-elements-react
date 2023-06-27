@@ -20,6 +20,4 @@ export * from "./tools/DummyTool.js";
 export { VersionCompareContext, type VersionCompareContextValue } from "./VersionCompareContext.js";
 export * from "./widgets/ChangedElementsWidget.js";
 export * from "./widgets/PropertyComparisonToolWidget.js";
-export * from "./widgets/VersionCompareFooterWidget.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
-export * from "./widgets/VersionCompareUiItemsProvider.js";
