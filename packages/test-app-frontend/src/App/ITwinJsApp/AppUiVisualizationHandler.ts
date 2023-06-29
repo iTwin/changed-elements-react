@@ -2,30 +2,20 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { BeEvent } from "@itwin/core-bentley";
-
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
-import { bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents } from "../widgets/ChangedElementsWidget.js";
-import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
-import type { AppUiVisualizationOptions } from "./VersionCompare.js";
-import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
-import { VisualizationHandler, type MainVisualizationOptions } from "./VisualizationHandler.js";
+import {
+  AppUiVisualizationOptions, MainVisualizationOptions, PropertyComparisonFrontstage, SideBySideVisualizationManager,
+  VersionCompareFrontstageManager, VersionCompareManager, VersionCompareVisualizationManager, VisualizationHandler,
+  bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents
+} from "@itwin/changed-elements-react";
 
 /**
  * Handles setting up version compare visualization for AppUi applications. This expects that the app has frontstages
  * and adds our own property compare frontstage.
  */
-export class AppUiVisualizationHandler extends VisualizationHandler {
+export class AppUiVisualizationHandler implements VisualizationHandler {
   private _frontstageManager: VersionCompareFrontstageManager | undefined;
-  private _onViewChanged?: BeEvent<(args: unknown) => void>;
 
-  public constructor(
-    private _manager: VersionCompareManager,
-    options: AppUiVisualizationOptions,
-  ) {
-    super();
+  public constructor(private _manager: VersionCompareManager, options: AppUiVisualizationOptions) {
     const frontstageIds = new Set(options?.frontstageIds ?? []);
     this._frontstageManager = new VersionCompareFrontstageManager(
       frontstageIds,
@@ -35,26 +25,19 @@ export class AppUiVisualizationHandler extends VisualizationHandler {
     bindChangedElementsWidgetEvents(this._manager);
   }
 
-  public get visualizationManager():
-    | VersionCompareVisualizationManager
-    | undefined {
-    return this._frontstageManager
-      ? this._frontstageManager.visualizationManager
-      : undefined;
-  }
-  public get propertyComparisonVisualizationManager():
-    | SideBySideVisualizationManager
-    | undefined {
-    return this._frontstageManager
-      ? this._frontstageManager.propertyComparisonVisualizationManager
-      : undefined;
+  public get visualizationManager(): VersionCompareVisualizationManager | undefined {
+    return this._frontstageManager?.visualizationManager;
   }
 
-  public getSingleViewVisualizationManager() {
+  public get propertyComparisonVisualizationManager(): SideBySideVisualizationManager | undefined {
+    return this._frontstageManager?.propertyComparisonVisualizationManager;
+  }
+
+  public getSingleViewVisualizationManager(): VersionCompareVisualizationManager | undefined {
     return this.visualizationManager;
   }
 
-  public getDualViewVisualizationManager() {
+  public getDualViewVisualizationManager(): SideBySideVisualizationManager | undefined {
     return this.propertyComparisonVisualizationManager;
   }
 
@@ -66,12 +49,7 @@ export class AppUiVisualizationHandler extends VisualizationHandler {
     const changedElementsManager = this._manager.changedElementsManager;
     const currentIModel = this._manager.currentIModel;
     const targetIModel = this._manager.targetIModel;
-    if (
-      changedElementsManager === undefined ||
-      currentIModel === undefined ||
-      targetIModel === undefined
-    ) {
-      // TODO: Log error
+    if (!changedElementsManager || !currentIModel || !targetIModel) {
       return;
     }
 
@@ -83,27 +61,25 @@ export class AppUiVisualizationHandler extends VisualizationHandler {
         changedElementEntries,
         changedElementsManager.changedModels,
         changedElementsManager.unchangedModels,
-        this._onViewChanged,
+        undefined,
         options?.wantTargetModified,
       );
 
-      if (options?.focusedSelection !== undefined) {
+      if (options?.focusedSelection) {
         const elementIds = new Set<string>();
-        options?.focusedSelection.instanceKeys.forEach((ids: Set<string>) => {
-          for (const id of ids) {
+        for (const instanceKeys of options.focusedSelection.instanceKeys.values()) {
+          for (const id of instanceKeys) {
             elementIds.add(id);
           }
-        });
-        const entries = await changedElementsManager.entryCache.getEntries(
-          elementIds,
-          true,
-        );
+        }
+
+        const entries = changedElementsManager.entryCache.getEntries(elementIds, true);
         await this.visualizationManager?.setFocusedElements(entries);
       }
     }
   }
 
-  /** Enable side by side visualization for property comparison */
+  /** Enable side by side visualization for property comparison. */
   public async enableSideBySideVisualization(): Promise<void> {
     if (this._frontstageManager) {
       await this._frontstageManager.setupSideBySideVisualization();
@@ -111,28 +87,23 @@ export class AppUiVisualizationHandler extends VisualizationHandler {
   }
 
   /**
-   * Starts property comparison by changing the frontstage into a nested
-   * property comparison frontstage that displays a property comparison table
-   * and a side by side view of the current version vs the target version
+   * Starts property comparison by changing the frontstage into a nested property comparison frontstage that displays a
+   * property comparison table and a side by side view of the current version vs the target version.
    */
   public async startPropertyComparison(): Promise<void> {
     const currentIModel = this._manager.currentIModel;
     const targetIModel = this._manager.targetIModel;
     if (this._frontstageManager && currentIModel && targetIModel) {
-      await this._frontstageManager.initializePropertyComparison(
-        currentIModel,
-        targetIModel,
-      );
+      await this._frontstageManager.initializePropertyComparison(currentIModel, targetIModel);
     }
   }
 
-  /**
-   * Clean-up managers and events
-   */
+  /** Clean-up managers and events. */
   public async cleanUp(): Promise<void> {
     if (this._frontstageManager) {
       await this._frontstageManager.cleanUp();
     }
+
     unbindChangedElementsWidgetEvents(this._manager);
   }
 }

@@ -16,6 +16,7 @@ import { VersionCompareReducer } from "../store/VersionCompareStore.js";
 import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VisualizationHandler } from "./VisualizationHandler.js";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;
@@ -125,9 +126,6 @@ export interface VersionCompareOptions {
    */
   getManageNamedVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 
-  /** Whether or not to use AppUi handling for visualization. True by default. */
-  wantAppUi?: boolean;
-
   /** Visualization options for AppUi applications. */
   appUiOptions?: AppUiVisualizationOptions;
 
@@ -135,6 +133,7 @@ export interface VersionCompareOptions {
   simpleVisualizationOptions?: SimpleVisualizationOptions;
 
   getAccessToken?: () => Promise<AccessToken>;
+  createVisualizationHandler: (manager: VersionCompareManager) => VisualizationHandler;
 }
 
 /** Maintains all version compare related data for the applications. */

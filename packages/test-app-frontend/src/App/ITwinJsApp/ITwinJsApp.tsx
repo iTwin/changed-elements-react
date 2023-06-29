@@ -26,6 +26,7 @@ import { ReactElement, useEffect, useState } from "react";
 
 import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
+import { AppUiVisualizationHandler } from "./AppUiVisualizationHandler";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
 import { UIFramework } from "./ui-framework/UiFramework";
 
@@ -136,9 +137,10 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     getAccessToken: () => authorizationClient.getAccessToken(),
     wantReportGeneration: true,
     wantTooltipAugment: true,
-    appUiOptions: {
-      frontstageIds: [MainFrontstageProvider.name],
-    },
+    createVisualizationHandler: (manager) => new AppUiVisualizationHandler(
+      manager,
+      { frontstageIds: [MainFrontstageProvider.name] },
+    ),
   });
 }
 

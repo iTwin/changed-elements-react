@@ -292,7 +292,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         }
         {
           this.state.manager.wantReportGeneration &&
-          this.state.manager.wantAppUi &&
           this.state.loaded &&
             <IconButton
               size="small"
@@ -304,7 +303,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             </IconButton>
           }
         {
-          this.state.loaded && this.state.manager.wantAppUi &&
+          this.state.loaded &&
           <IconButton
             size="small"
             styleType="borderless"

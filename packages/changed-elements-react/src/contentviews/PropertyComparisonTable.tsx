@@ -120,14 +120,14 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
           {manager.wantTypeOfChange && changedElement && <ElementChanges changedElement={changedElement} />}
         </div>
         {
-          manager.wantAppUi && !PropertyComparisonFrontstage.isSideBySide &&
+          !PropertyComparisonFrontstage.isSideBySide &&
           <OverviewOpacitySlider
             currentVersion={manager.currentVersion?.displayName}
             targetVersion={manager.targetVersion?.displayName}
           />
         }
         <div className="settings">
-          {manager.wantAppUi && <SideBySideToggle manager={manager} selection={selection} />}
+          <SideBySideToggle manager={manager} selection={selection} />
           <ToggleSwitch
             label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.onlyChangedProps")}
             checked={showChangedOnly}
