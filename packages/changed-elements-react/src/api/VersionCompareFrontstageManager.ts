@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { UiFramework, type FrontstageReadyEventArgs } from "@itwin/appui-react";
+import { FrontstageDef, UiFramework, WidgetState, type FrontstageReadyEventArgs } from "@itwin/appui-react";
 import { BeEvent, DbOpcode, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport, ViewState
@@ -12,7 +12,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 
 import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
 import { VersionCompareActionTypes } from "../store/VersionCompareStore.js";
-import { changedElementsWidgetAttachToViewportEvent } from "../widgets/ChangedElementsWidget.js";
+import { ChangedElementsWidget, changedElementsWidgetAttachToViewportEvent } from "../widgets/ChangedElementsWidget.js";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
 import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
@@ -129,7 +129,7 @@ export class VersionCompareFrontstageManager {
       }
 
       if (this._mainComparisonStageIds.has(args.frontstageDef.id)) {
-        await this._onMainComparisonFrontstageOpened();
+        await this._onMainComparisonFrontstageOpened(args.frontstageDef);
       }
     }
   };
@@ -220,16 +220,6 @@ export class VersionCompareFrontstageManager {
       () => this._mainViewportState!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
-      this._mainComparisonStageIds,
-      this._manager.options.appUiOptions?.propertyComparisonOptions?.frontstageProps,
-      {
-        verticalTools:
-          this._manager.options.appUiOptions?.propertyComparisonOptions
-            ?.verticalTools,
-        horizontalTools:
-          this._manager.options.appUiOptions?.propertyComparisonOptions
-            ?.horizontalTools,
-      },
     );
     UiFramework.frontstages.addFrontstageProvider(stage);
 
@@ -415,7 +405,7 @@ export class VersionCompareFrontstageManager {
   }
 
   /** Handler for when the main comparison frontstage is opened. Used to set colorization and overrides if we are in an active version compare session */
-  private async _onMainComparisonFrontstageOpened() {
+  private async _onMainComparisonFrontstageOpened(frontstageDef: FrontstageDef): Promise<void> {
     // Ensure we are using the cached provider props so that we restore visualization properly
     enableVersionCompareVisualizationCaching(true);
 
@@ -433,6 +423,9 @@ export class VersionCompareFrontstageManager {
       vp?.changeView(this._mainViewportState);
       this._mainViewportState = undefined;
     }
+
+    const changedElementsWidget = frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId);
+    changedElementsWidget?.setWidgetState(this._manager.isComparing ? WidgetState.Open : WidgetState.Hidden);
 
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.frontstageManagerMainComparisonFrontstageOpened);
   }

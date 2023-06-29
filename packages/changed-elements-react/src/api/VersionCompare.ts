@@ -2,14 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { UiError, getClassName, type CommonToolbarItem } from "@itwin/appui-abstract";
-import { FrontstageConfig, ReducerRegistryInstance, StateManager, SyncUiEventDispatcher } from "@itwin/appui-react";
+import { UiError, getClassName } from "@itwin/appui-abstract";
+import { ReducerRegistryInstance, StateManager, SyncUiEventDispatcher } from "@itwin/appui-react";
 import type { AccessToken } from "@itwin/core-bentley";
 import type { ModelProps } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ScreenViewport, ViewState } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
-import { ReactNode } from "react";
 import type { Store } from "redux";
 
 import { VersionCompareReducer } from "../store/VersionCompareStore.js";
@@ -29,48 +28,6 @@ export interface VersionCompareFeatureTracking {
 interface IVersionCompareClientFactory {
   /** Return a changed elements client that will give the processed change data. */
   createChangedElementsClient: () => ChangedElementsClientBase;
-}
-
-/** Options for the property comparison frontstage. */
-export interface PropertyComparisonOptions {
-  /** Override for the tile loading indicator used in the property comparison stage. */
-  tileLoadingIndicator?: ReactNode;
-
-  /**
-   * Partial frontstage props to change the property comparison stage as apps desire.
-   *
-   * Note: Property compare defines the top-left zone to have some version compare specific isolate and clear tool. If
-   * you want to maintain that functionality, but want to append tools to that zone, use verticalTools and
-   * horizontalTools options instead.
-   */
-  frontstageProps?: Partial<FrontstageConfig>;
-
-  /** Vertical tools to add to the property comparison frontstage. */
-  verticalTools?: CommonToolbarItem[];
-
-  /** Horizontal tools to add to the property comparison frontstage. */
-  horizontalTools?: CommonToolbarItem[];
-}
-
-/** Options for AppUi applications version compare visualization. */
-export interface AppUiVisualizationOptions {
-  /* frontstageIds Frontstage Ids where version compare will be available. */
-  frontstageIds?: string[];
-
-  /** Options for property comparison frontstage. */
-  propertyComparisonOptions?: PropertyComparisonOptions;
-}
-
-/** Options for simple visualization for non-AppUi applications. */
-export interface SimpleVisualizationOptions {
-  /**
-   * Should return the main viewport your application wants to display the comparison in. If using side-by-side display,
-   * this will be the "current version" viewport.
-   */
-  getPrimaryViewport: () => ScreenViewport;
-
-  /** Whether to show modified elements in both before and after states. */
-  showBothModified?: boolean;
 }
 
 export interface VersionCompareOptions {
@@ -126,19 +83,12 @@ export interface VersionCompareOptions {
    */
   getManageNamedVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 
-  /** Visualization options for AppUi applications. */
-  appUiOptions?: AppUiVisualizationOptions;
-
-  /** Visualization options for applications without AppUi support. */
-  simpleVisualizationOptions?: SimpleVisualizationOptions;
-
   getAccessToken?: () => Promise<AccessToken>;
   createVisualizationHandler: (manager: VersionCompareManager) => VisualizationHandler;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
-  private static _options: VersionCompareOptions | undefined;
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
   private static _versionCompareStateKeyInStore = "versionCompareState"; // default name
@@ -169,14 +119,9 @@ export class VersionCompare {
 
   /**
    * Initializes the version compare package.
-   * @param frontstageIds Frontstage Ids where version compare will be available
    * @param options Options for comparison
-   * @param propertyComparisonOptions [optional] options for property comparison
    */
   public static initialize(options: VersionCompareOptions): void {
-    // Store options
-    VersionCompare._options = options;
-
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
 
@@ -205,24 +150,6 @@ initializing VersionCompare module, or do not define 'process.env.IMJS_URL_PREFI
     }
 
     ReducerRegistryInstance.registerReducer(VersionCompare._versionCompareStateKeyInStore, VersionCompareReducer);
-  }
-
-  /**
-   * Update the options for the property comparison frontstage. Only useful for AppUi applications using the property
-   * comparison stage.
-   */
-  public static setPropertyComparisonOptions(propertyComparisonOptions?: PropertyComparisonOptions): void {
-    // Update optiions
-    if (VersionCompare._options) {
-      if (VersionCompare._options.appUiOptions === undefined) {
-        VersionCompare._options.appUiOptions = { propertyComparisonOptions };
-      } else {
-        VersionCompare._options.appUiOptions.propertyComparisonOptions = propertyComparisonOptions;
-      }
-
-      // Re-create manager with new options
-      VersionCompare._manager = new VersionCompareManager(VersionCompare._options);
-    }
   }
 
   public static dispatchActionToStore(type: string, payload: unknown, immediateSync = false): void {

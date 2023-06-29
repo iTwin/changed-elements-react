@@ -2,9 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import {
-  ConfigurableCreateInfo, UiFramework, WidgetControl, WidgetState, type FrontstageReadyEventArgs, type WidgetConfig
-} from "@itwin/appui-react";
+import { ConfigurableCreateInfo, UiFramework, WidgetControl, WidgetState, type WidgetConfig } from "@itwin/appui-react";
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
 import { ScrollPositionMaintainer } from "@itwin/core-react";
@@ -384,19 +382,6 @@ const onStartFailed = (): void => {
     ?.setWidgetState(WidgetState.Hidden);
 };
 
-const onFrontstageReady = (args: FrontstageReadyEventArgs): void => {
-  const manager = VersionCompare.manager;
-  if (manager === undefined) {
-    return;
-  }
-
-  const frontstageIds = new Set(manager.options.appUiOptions?.frontstageIds ?? []);
-  if (frontstageIds.has(args.frontstageDef.id)) {
-    const widget = args.frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId);
-    widget?.setWidgetState(manager.isComparing ? WidgetState.Open : WidgetState.Hidden);
-  }
-};
-
 /**
  * Setup events for changed elements widget to react to frontstage activated and version compare events to
  * auto-hide/show the widget.
@@ -405,7 +390,6 @@ export const bindChangedElementsWidgetEvents = (manager: VersionCompareManager):
   manager.versionCompareStarting.addListener(onComparisonStarting);
   manager.versionCompareStopped.addListener(onComparisonStopped);
   manager.versionCompareStartFailed.addListener(onStartFailed);
-  UiFramework.frontstages.onFrontstageReadyEvent.addListener(onFrontstageReady);
 };
 
 /** Clean-up events that make the widget automatically react to frontstage activated and version compare events. */
@@ -413,7 +397,6 @@ export const unbindChangedElementsWidgetEvents = (manager: VersionCompareManager
   manager.versionCompareStarting.removeListener(onComparisonStarting);
   manager.versionCompareStopped.removeListener(onComparisonStopped);
   manager.versionCompareStartFailed.removeListener(onStartFailed);
-  UiFramework.frontstages.onFrontstageReadyEvent.removeListener(onFrontstageReady);
 
   // Ensure widget gets closed
   onComparisonStopped();

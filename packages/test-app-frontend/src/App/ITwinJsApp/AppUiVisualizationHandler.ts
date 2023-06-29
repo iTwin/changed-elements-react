@@ -3,10 +3,15 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppUiVisualizationOptions, MainVisualizationOptions, PropertyComparisonFrontstage, SideBySideVisualizationManager,
-  VersionCompareFrontstageManager, VersionCompareManager, VersionCompareVisualizationManager, VisualizationHandler,
-  bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents
+  PropertyComparisonFrontstage, VersionCompareFrontstageManager, bindChangedElementsWidgetEvents,
+  unbindChangedElementsWidgetEvents, type MainVisualizationOptions, type SideBySideVisualizationManager,
+  type VersionCompareManager, type VersionCompareVisualizationManager, type VisualizationHandler
 } from "@itwin/changed-elements-react";
+
+export interface AppUiVisualizationOptions {
+  /* Frontstage Ids where version compare will be available. */
+  frontstageIds: string[];
+}
 
 /**
  * Handles setting up version compare visualization for AppUi applications. This expects that the app has frontstages
@@ -16,7 +21,7 @@ export class AppUiVisualizationHandler implements VisualizationHandler {
   private _frontstageManager: VersionCompareFrontstageManager | undefined;
 
   public constructor(private _manager: VersionCompareManager, options: AppUiVisualizationOptions) {
-    const frontstageIds = new Set(options?.frontstageIds ?? []);
+    const frontstageIds = new Set(options.frontstageIds);
     this._frontstageManager = new VersionCompareFrontstageManager(
       frontstageIds,
       PropertyComparisonFrontstage.id,

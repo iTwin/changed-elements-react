@@ -4,8 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 import type { ContentLayoutProps, LayoutVerticalSplitProps } from "@itwin/appui-abstract";
 import {
-  ContentGroup, ContentLayoutDef, FrontstageConfig, FrontstageProvider, StatusBarComposer, UiFramework,
-  ViewToolWidgetComposer, type ContentProps, FrontstageActivatedEventArgs
+  ContentGroup, ContentLayoutDef, FrontstageActivatedEventArgs, FrontstageConfig, FrontstageProvider, StatusBarComposer,
+  UiFramework, ViewToolWidgetComposer, type ContentProps
 } from "@itwin/appui-react";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 
@@ -13,7 +13,7 @@ import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { PropertyComparisonTableControl } from "../contentviews/PropertyComparisonTable.js";
 import { PropertyComparisonViewportControl } from "../contentviews/PropertyComparisonViewport.js";
 import { DummyTool } from "../tools/DummyTool.js";
-import { PropertyComparisonToolWidget, type ToolWidgetProps } from "../widgets/PropertyComparisonToolWidget.js";
+import { PropertyComparisonToolWidget } from "../widgets/PropertyComparisonToolWidget.js";
 
 import "./PropertyComparisonFrontstage.scss";
 
@@ -49,8 +49,6 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
    * @param secondaryIModel Target IModelConnection being compared against
    * @param getPrimaryViewState Function to retrieve the view state for the current iModel
    * @param getSecondaryViewState Function to retrieve the view state for the target iModel
-   * @param mainFrontstageId Main Frontstage Id to return to
-   * @param frontstageProps [optional] frontstage props to customize the property comparison frontstage
    */
   constructor(
     public manager: VersionCompareManager,
@@ -58,9 +56,6 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     public secondaryIModel: IModelConnection,
     public getPrimaryViewState: () => ViewState,
     public getSecondaryViewState: () => ViewState,
-    public mainFrontstageIds: Set<string>,
-    public frontstageProps?: Partial<FrontstageConfig>,
-    public propertyCompareToolWidgetProps?: ToolWidgetProps,
   ) {
     super();
     if (!UiFramework.controls.isRegistered(PropertyComparisonFrontstage.viewportContentId)) {
@@ -279,7 +274,7 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
       contentGroup: PropertyComparisonFrontstage._sideBySideContentGroup,
       contentManipulation: {
         id: "PropertyComparisonToolWidget",
-        content: <PropertyComparisonToolWidget {...this.propertyCompareToolWidgetProps} />,
+        content: <PropertyComparisonToolWidget />,
       },
       statusBar: {
         id: "VersionCompareStatusBar",
@@ -289,7 +284,6 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
         id: "ViewNavigation",
         content: <ViewToolWidgetComposer />,
       },
-      ...this.frontstageProps,
     };
   }
 }
