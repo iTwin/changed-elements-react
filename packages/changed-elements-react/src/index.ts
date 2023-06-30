@@ -4,13 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 export { type FilterData, type FilterOptions, type SavedFiltersManager } from "./SavedFiltersManager.js";
 export { VersionCompareContext, type VersionCompareContextValue } from "./VersionCompareContext.js";
+export { type ChangedElementEntry } from "./api/ChangedElementEntryCache.js";
 export * from "./api/ChangedElementsApiClient.js";
 export * from "./api/ChangedElementsClientBase.js";
 export * from "./api/ChangedElementsManager.js";
 export * from "./api/SideBySideVisualizationManager.js";
 export * from "./api/VerboseMessages.js";
 export * from "./api/VersionCompare.js";
-export * from "./api/VersionCompareFrontstageManager.js";
 export { VersionCompareManager } from "./api/VersionCompareManager.js";
 export * from "./api/VersionCompareTiles.js";
 export * from "./api/VersionCompareVisualization.js";
@@ -23,3 +23,4 @@ export * from "./tools/DummyTool.js";
 export * from "./widgets/ChangedElementsWidget.js";
 export * from "./widgets/PropertyComparisonToolWidget.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
+export { ModelsCategoryCache } from "./api/ModelsCategoryCache.js";

@@ -3,10 +3,12 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  PropertyComparisonFrontstage, VersionCompareFrontstageManager, bindChangedElementsWidgetEvents,
-  unbindChangedElementsWidgetEvents, type MainVisualizationOptions, type SideBySideVisualizationManager,
-  type VersionCompareManager, type VersionCompareVisualizationManager, type VisualizationHandler
+  PropertyComparisonFrontstage, bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents,
+  type MainVisualizationOptions, type SideBySideVisualizationManager, type VersionCompareManager,
+  type VersionCompareVisualizationManager, type VisualizationHandler
 } from "@itwin/changed-elements-react";
+
+import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager";
 
 export interface AppUiVisualizationOptions {
   /* Frontstage Ids where version compare will be available. */
