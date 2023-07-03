@@ -7,24 +7,21 @@ import {
   ContentGroup, ContentLayoutDef, FrontstageActivatedEventArgs, FrontstageConfig, FrontstageProvider, StatusBarComposer,
   UiFramework, ViewToolWidgetComposer, type ContentProps
 } from "@itwin/appui-react";
+import { PropertyComparisonViewportControl, VersionCompareManager } from "@itwin/changed-elements-react";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 
-import { VersionCompareManager } from "../api/VersionCompareManager.js";
-import { PropertyComparisonTableControl } from "../contentviews/PropertyComparisonTable.js";
-import { PropertyComparisonViewportControl } from "../contentviews/PropertyComparisonViewport.js";
-import { DummyTool } from "../tools/DummyTool.js";
-import { PropertyComparisonToolWidget } from "../widgets/PropertyComparisonToolWidget.js";
+import { DummyTool } from "./DummyTool";
+import { PropertyComparisonTableControl } from "./PropertyComparisonTable";
+import { PropertyComparisonToolWidget } from "./PropertyComparisonToolWidget";
 
 import "./PropertyComparisonFrontstage.scss";
 
 /**
- * Frontstage with two viewports for showing current and target versions of an iModel
- * and the property comparison table content view
- * Can be given frontstage props via constructor to override/customize the zones
+ * Frontstage with two viewports for showing current and target versions of an iModel and the property comparison table
+ * content view. Can be given frontstage props via constructor to override/customize the zones.
  */
 export class PropertyComparisonFrontstage extends FrontstageProvider {
   public static readonly id = "VersionCompare_PropertyComparisonFrontstage";
-  public id = PropertyComparisonFrontstage.id;
   public static readonly viewportContentId = "VersionCompare_PropertyComparisonFrontstageViewportContent";
   public static readonly propertyComparisonTableContentId = "VersionCompare_PropertyComparisonTableContent";
 
@@ -42,8 +39,10 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
   private static _sideBySideContentGroup: ContentGroup;
   private static _overviewContentGroup: ContentGroup;
 
+  public id = PropertyComparisonFrontstage.id;
+
   /**
-   * Constructor
+   * Constructor.
    * @param manager Version Compare Manager Object
    * @param primaryIModel Current IModelConnection
    * @param secondaryIModel Target IModelConnection being compared against

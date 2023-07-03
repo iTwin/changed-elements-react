@@ -4,10 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import { FrontstageDef, UiFramework, WidgetState, type FrontstageReadyEventArgs } from "@itwin/appui-react";
 import {
-  ChangedElementEntry, ChangedElementsWidget, ModelsCategoryCache, PropertyComparisonFrontstage,
-  SideBySideVisualizationManager, VersionCompare, VersionCompareActionTypes, VersionCompareManager,
-  VersionCompareVisualizationManager, changedElementsWidgetAttachToViewportEvent,
-  enableVersionCompareVisualizationCaching
+  ChangedElementEntry, ChangedElementsWidget, ModelsCategoryCache, SideBySideVisualizationManager, VersionCompare,
+  VersionCompareActionTypes, VersionCompareManager, VersionCompareVisualizationManager,
+  changedElementsWidgetAttachToViewportEvent, enableVersionCompareVisualizationCaching
 } from "@itwin/changed-elements-react";
 import { BeEvent, DbOpcode, Logger, type Id64String } from "@itwin/core-bentley";
 import {
@@ -15,6 +14,8 @@ import {
 } from "@itwin/core-frontend";
 import { KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+
+import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
 
 /** Manages version compare workflows based on design review's use case. */
 export class VersionCompareFrontstageManager {
