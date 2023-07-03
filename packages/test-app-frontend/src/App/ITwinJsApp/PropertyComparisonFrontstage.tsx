@@ -7,12 +7,13 @@ import {
   ContentGroup, ContentLayoutDef, FrontstageActivatedEventArgs, FrontstageConfig, FrontstageProvider, StatusBarComposer,
   UiFramework, ViewToolWidgetComposer, type ContentProps
 } from "@itwin/appui-react";
-import { PropertyComparisonViewportControl, VersionCompareManager } from "@itwin/changed-elements-react";
+import { VersionCompareManager } from "@itwin/changed-elements-react";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 
 import { DummyTool } from "./DummyTool";
 import { PropertyComparisonTableControl } from "./PropertyComparisonTable";
 import { PropertyComparisonToolWidget } from "./PropertyComparisonToolWidget";
+import { PropertyComparisonViewportControl } from "./PropertyComparisonViewport";
 
 import "./PropertyComparisonFrontstage.scss";
 

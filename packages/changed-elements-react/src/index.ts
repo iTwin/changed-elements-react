@@ -17,7 +17,6 @@ export * from "./api/VersionCompareTiles.js";
 export * from "./api/VersionCompareVisualization.js";
 export type { MainVisualizationOptions, VisualizationHandler } from "./api/VisualizationHandler.js";
 export * from "./contentviews/PropertyComparisonTable.js";
-export * from "./contentviews/PropertyComparisonViewport.js";
 export * from "./store/VersionCompareStore.js";
 export * from "./widgets/ChangedElementsWidget.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
