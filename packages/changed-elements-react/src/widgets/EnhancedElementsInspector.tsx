@@ -3,17 +3,17 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { type PrimitiveValue } from "@itwin/appui-abstract";
-import { UiFramework } from "@itwin/appui-react";
 import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Logger } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
 import { SvgFolder, SvgVisibilityHalf, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import {
-  Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, ProgressRadial, ToggleSwitch
+  Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, Modal, ModalButtonBar, ModalContent,
+  ProgressRadial, ToggleSwitch
 } from "@itwin/itwinui-react";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
-import { Component, createRef, type ReactElement } from "react";
+import { Component, createRef, useState, type ReactElement, type SetStateAction } from "react";
 
 import { type FilterOptions } from "../SavedFiltersManager.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
@@ -194,13 +194,16 @@ interface FilterHeaderProps {
 }
 
 function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
+  const [advancedFilterDialogData, setAdvancedFilterDialogData] = useState<PropertyFilter[]>();
+
   /** Handle saving the advanced filter changes. */
-  const handleAdvancedFilteringSave = (filterData: PropertyFilter[]) => {
+  const handleAdvancedFilteringSave = () => {
     const opts = props.options;
-    for (const data of filterData) {
+    for (const data of advancedFilterDialogData ?? []) {
       opts.wantedProperties.set(data.name, data.visible ?? false);
     }
 
+    setAdvancedFilterDialogData(undefined);
     props.onFilterChange(opts);
   };
 
@@ -261,19 +264,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
 
       props.onLoadLabels?.(true);
 
-      // Open dialog
-      if (props.iModelConnection) {
-        UiFramework.dialogs.modal.open(
-          <AdvancedFilterDialog
-            data={finalData}
-            showValues={false}
-            onFilterSelected={handleFilterSelected}
-            getCurrentFilterOptions={getCurrentFilterOptions}
-            onSave={handleAdvancedFilteringSave}
-            iModelConnection={props.iModelConnection}
-          />,
-        );
-      }
+      setAdvancedFilterDialogData(finalData);
     } catch (e) {
       // Ensure that if something fails, we let the consumer know we are 'done' loading
       Logger.logError(VersionCompare.logCategory, "Advanced Dialog Opening Error: " + e);
@@ -379,6 +370,31 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
   // For now, re-order toggles so that extra modified menu is at the right
   return (
     <div className="filter-header">
+      <Modal
+        title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.settingsTitle")}
+        isOpen={!!advancedFilterDialogData}
+        style={{ width: "40%", minWidth: 500, minHeight: 400 }}
+        onClose={() => setAdvancedFilterDialogData(undefined)}
+      >
+        <ModalContent>
+          {
+            advancedFilterDialogData &&
+            <AdvancedFilterDialog
+              data={advancedFilterDialogData}
+              setData={setAdvancedFilterDialogData as (args: SetStateAction<PropertyFilter[]>) => void}
+              showValues={false}
+              onFilterSelected={handleFilterSelected}
+              getCurrentFilterOptions={getCurrentFilterOptions}
+            />
+          }
+        </ModalContent>
+        <ModalButtonBar>
+          <Button styleType="high-visibility" onClick={handleAdvancedFilteringSave}>
+            {IModelApp.localization.getLocalizedString("VersionCompare:filters.apply")}
+          </Button>
+          <Button>{IModelApp.localization.getLocalizedString("UiCore:dialog.cancel")}</Button>
+        </ModalButtonBar>
+      </Modal>
       <ExpandableSearchBar
         size="small"
         styleType="borderless"
