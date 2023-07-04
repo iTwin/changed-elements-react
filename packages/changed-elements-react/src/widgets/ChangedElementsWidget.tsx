@@ -2,15 +2,14 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ConfigurableCreateInfo, UiFramework, WidgetControl, WidgetState, type WidgetConfig } from "@itwin/appui-react";
+import { UiFramework } from "@itwin/appui-react";
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
 } from "@itwin/core-frontend";
-import { ScrollPositionMaintainer } from "@itwin/core-react";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement, createRef } from "react";
+import { Component, ReactElement } from "react";
 
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
@@ -23,11 +22,10 @@ import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
 import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
-import "./ChangedElementsWidget.scss";
-import {
-  ChangedElementsInspector as EnhancedInspector, ChangedElementsListComponent as EnhancedListComponent
-} from "./EnhancedElementsInspector.js";
+import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import { openSelectDialog } from "./VersionCompareSelectWidget.js";
+
+import "./ChangedElementsWidget.scss";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -161,7 +159,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     }
 
     return (
-      <EnhancedInspector
+      <ChangedElementsInspector
         manager={this.state.manager}
         onFilterChange={this._onFilterChange}
         onShowAll={this._showAll}
@@ -371,83 +369,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     );
   }
 }
-
-export interface ChangedElementsWidgetControlOptions {
-  manager?: VersionCompareManager | undefined;
-}
-
-export class ChangedElementsWidgetControl extends WidgetControl {
-  private _activeTreeRef = createRef<HTMLDivElement>();
-  private _maintainScrollPosition?: ScrollPositionMaintainer;
-
-  constructor(info: ConfigurableCreateInfo, options: ChangedElementsWidgetControlOptions) {
-    super(info, options);
-
-    // Pass in a ref object to let us maintain scroll position
-    this.reactNode = <ChangedElementsWidget manager={options?.manager} rootElementRef={this._activeTreeRef} />;
-  }
-
-  public override saveTransientState(): void {
-    if (this._activeTreeRef.current) {
-      this._maintainScrollPosition = new ScrollPositionMaintainer(this._activeTreeRef.current);
-    }
-  }
-
-  /** Return true so that we maintain state when the widget is closed and do clean-up of scroll position maintainer. */
-  public override restoreTransientState(): boolean {
-    this._maintainScrollPosition?.dispose();
-    this._maintainScrollPosition = undefined;
-    return true;
-  }
-}
-
-const onComparisonStarting = (): void => {
-  // Open/Close comparison legend
-  UiFramework.frontstages.activeFrontstageDef
-    ?.findWidgetDef(ChangedElementsWidget.widgetId)
-    ?.setWidgetState(WidgetState.Open);
-};
-
-const onComparisonStopped = (): void => {
-  EnhancedListComponent.cleanMaintainedState();
-};
-
-const onStartFailed = (): void => {
-  // Open/Close comparison legend
-  UiFramework.frontstages.activeFrontstageDef
-    ?.findWidgetDef(ChangedElementsWidget.widgetId)
-    ?.setWidgetState(WidgetState.Hidden);
-};
-
-/**
- * Setup events for changed elements widget to react to frontstage activated and version compare events to
- * auto-hide/show the widget.
- */
-export const bindChangedElementsWidgetEvents = (manager: VersionCompareManager): void => {
-  manager.versionCompareStarting.addListener(onComparisonStarting);
-  manager.versionCompareStopped.addListener(onComparisonStopped);
-  manager.versionCompareStartFailed.addListener(onStartFailed);
-};
-
-/** Clean-up events that make the widget automatically react to frontstage activated and version compare events. */
-export const unbindChangedElementsWidgetEvents = (manager: VersionCompareManager): void => {
-  manager.versionCompareStarting.removeListener(onComparisonStarting);
-  manager.versionCompareStopped.removeListener(onComparisonStopped);
-  manager.versionCompareStartFailed.removeListener(onStartFailed);
-
-  // Ensure widget gets closed
-  onComparisonStopped();
-};
-
-/** Returns a React element containing the ChangedElementsWidgetControl in a ui-framework Widget. */
-export const getChangedElementsWidget = (): WidgetConfig => {
-  return {
-    id: ChangedElementsWidget.widgetId,
-    label: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLegend"),
-    defaultState: WidgetState.Hidden,
-    icon: "icon-list",
-  };
-};
 
 /**
  * Make sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with

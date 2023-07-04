@@ -2,14 +2,15 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { UiFramework, WidgetState } from "@itwin/appui-react";
 import {
-  bindChangedElementsWidgetEvents, unbindChangedElementsWidgetEvents, type MainVisualizationOptions,
+  ChangedElementsListComponent, ChangedElementsWidget, type MainVisualizationOptions,
   type SideBySideVisualizationManager, type VersionCompareManager, type VersionCompareVisualizationManager,
   type VisualizationHandler
 } from "@itwin/changed-elements-react";
 
-import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager";
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
+import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager";
 
 export interface AppUiVisualizationOptions {
   /* Frontstage Ids where version compare will be available. */
@@ -114,4 +115,42 @@ export class AppUiVisualizationHandler implements VisualizationHandler {
 
     unbindChangedElementsWidgetEvents(this._manager);
   }
+}
+
+/**
+ * Setup events for changed elements widget to react to frontstage activated and version compare events to
+ * auto-hide/show the widget.
+ */
+function bindChangedElementsWidgetEvents(manager: VersionCompareManager): void {
+  manager.versionCompareStarting.addListener(onComparisonStarting);
+  manager.versionCompareStopped.addListener(onComparisonStopped);
+  manager.versionCompareStartFailed.addListener(onStartFailed);
+}
+
+/** Clean-up events that make the widget automatically react to frontstage activated and version compare events. */
+function unbindChangedElementsWidgetEvents(manager: VersionCompareManager): void {
+  manager.versionCompareStarting.removeListener(onComparisonStarting);
+  manager.versionCompareStopped.removeListener(onComparisonStopped);
+  manager.versionCompareStartFailed.removeListener(onStartFailed);
+
+  // Ensure widget gets closed
+  onComparisonStopped();
+}
+
+function onComparisonStarting(): void {
+  // Open/Close comparison legend
+  UiFramework.frontstages.activeFrontstageDef
+    ?.findWidgetDef(ChangedElementsWidget.widgetId)
+    ?.setWidgetState(WidgetState.Open);
+}
+
+function onComparisonStopped(): void {
+  ChangedElementsListComponent.cleanMaintainedState();
+}
+
+function onStartFailed(): void {
+  // Open/Close comparison legend
+  UiFramework.frontstages.activeFrontstageDef
+    ?.findWidgetDef(ChangedElementsWidget.widgetId)
+    ?.setWidgetState(WidgetState.Hidden);
 }
