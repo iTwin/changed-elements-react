@@ -27,10 +27,10 @@ import { ReactElement, useEffect, useState } from "react";
 
 import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
-import { AppUiVisualizationHandler } from "./AppUiVisualizationHandler";
+import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
+import { UIFramework } from "./AppUi/UiFramework";
+import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
-import { VersionCompareReducer } from "./redux/VersionCompareStore";
-import { UIFramework } from "./ui-framework/UiFramework";
 
 export interface ITwinJsAppProps {
   iTwinId: string;

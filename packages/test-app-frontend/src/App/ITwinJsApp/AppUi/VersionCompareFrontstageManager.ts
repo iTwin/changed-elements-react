@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  FrontstageDef, UiFramework, WidgetState, type FrontstageReadyEventArgs, StateManager, SyncUiEventDispatcher
+  FrontstageDef, StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageReadyEventArgs
 } from "@itwin/appui-react";
 import {
   ChangedElementEntry, ChangedElementsWidget, ModelsCategoryCache, SideBySideVisualizationManager, VersionCompare,
@@ -160,7 +160,7 @@ export class VersionCompareFrontstageManager {
     // Reset
     this._mainViewportState = undefined;
     // Get view state from options if passed
-    const appViewState = this._manager.options.getPropertyComparisonViewState?.(currentSelection)
+    const appViewState = this._manager.options.getPropertyComparisonViewState?.(currentSelection);
     if (appViewState === undefined) {
       const vp = IModelApp.viewManager.selectedView;
       if (vp) {
@@ -233,8 +233,8 @@ export class VersionCompareFrontstageManager {
     };
 
     const currentFocusedElement = this._manager.changedElementsManager.entryCache
-        .getAll()
-        .find((value) => value.opcode === DbOpcode.Update && selectionHas(currentSelection, value.id));
+      .getAll()
+      .find((value) => value.opcode === DbOpcode.Update && selectionHas(currentSelection, value.id));
 
     // We can only do property comparison on modified elements, so both elements should've been found
     return currentFocusedElement !== undefined;
