@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { CommonToolbarItem, ToolbarHelper, ToolItemDef, UiFramework } from "@itwin/appui-react";
+import { UiFramework } from "@itwin/appui-react";
 import { BeEvent, Logger } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority
@@ -911,33 +911,5 @@ export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?:
 
   UiFramework.dialogs.modal.open(
     <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
-  );
-};
-
-/**
- * Tool Button that will open the version compare dialog and allow for starting the comparison.
- * @param manager VersionCompareManager
- * @param iModel iModel that will be used to find the changesets
- * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of
- *                      elements/categories/models change from the app
- */
-export const openSelectDialogToolButton = (
-  iModel: IModelConnection,
-  onViewUpdated?: BeEvent<(args?: unknown) => void>,
-): CommonToolbarItem => {
-  const onExecute = async () => {
-    await openSelectDialog(iModel, onViewUpdated);
-  };
-
-  return ToolbarHelper.createToolbarItemFromItemDef(
-    0,
-    new ToolItemDef(
-      {
-        toolId: "VersionCompareSelectTool",
-        iconSpec: "icon-compare",
-        labelKey: "VersionCompare:versionCompare.versionCompareBeta",
-      },
-      onExecute,
-    ),
   );
 };
