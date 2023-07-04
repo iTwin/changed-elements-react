@@ -3,10 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { UiFramework } from "@itwin/appui-react";
-import { BeEvent, Logger } from "@itwin/core-bentley";
-import {
-  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority
-} from "@itwin/core-frontend";
+import { Logger } from "@itwin/core-bentley";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { MinimalChangeset, NamedVersion, NamedVersionState } from "@itwin/imodels-client-management";
 import {
   Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
@@ -803,7 +801,6 @@ export interface VersionCompareSelectDialogState {
 
 export interface VersionCompareSelectDialogProps {
   iModelConnection: IModelConnection;
-  onViewOpened?: BeEvent<(args?: unknown) => void>;
 }
 
 /** Version Compare Select Dialog to start compariosn with by selecting a target named version */
@@ -879,37 +876,18 @@ export class VersionCompareSelectDialog extends Component<
   }
 }
 
-/** Show error when we don't have a proper access token from the app to use. */
-export const showNotValidAccessTokenError = () => {
-  const brief = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_invalidToken");
-  IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief));
-};
-
 /**
  * Open the version compare dialog and allow for starting the comparison
  * @param manager VersionCompareManager
  * @param iModel iModel that will be used to find the changesets
  * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of elements/categories/models change from the app
  */
-export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?: BeEvent<(args?: unknown) => void>) => {
+export const openSelectDialog = async (iModel: IModelConnection) => {
   if (iModel.iModelId === undefined || iModel.iTwinId === undefined) {
     throw new Error("openSelectDialogToolButton: IModel is not properly defined");
   }
 
-  const manager = VersionCompare.manager;
-  if (manager === undefined) {
-    throw new Error(
-      "Programmer Error: VersionCompare package must be initialized before using the openSelectDialog function",
-    );
-  }
-
-  const accessToken = await VersionCompare.getAccessToken();
-  if (accessToken === undefined) {
-    showNotValidAccessTokenError();
-    return;
-  }
-
   UiFramework.dialogs.modal.open(
-    <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
+    <VersionCompareSelectDialog iModelConnection={iModel} />,
   );
 };
