@@ -2,7 +2,6 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { UiFramework } from "@itwin/appui-react";
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
@@ -23,7 +22,7 @@ import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
-import { openSelectDialog } from "./VersionCompareSelectWidget.js";
+import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 import "./ChangedElementsWidget.scss";
 
@@ -31,6 +30,9 @@ export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: Scree
 
 /** Props for changed elements widget. */
 export interface ChangedElementsWidgetProps {
+  /** IModel Connection that is being visualized. */
+  iModelConnection: IModelConnection;
+
   /** Optional manager if you don't want the default static VersionCompare.manager to be used. */
   manager?: VersionCompareManager;
 
@@ -48,6 +50,7 @@ export interface ChangedElementsWidgetState {
   message: string;
   description?: string;
   menuOpened: boolean;
+  versionSelectDialogVisible: boolean;
   reportDialogVisible: boolean;
   reportProperties: ReportProperty[] | undefined;
 }
@@ -90,6 +93,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel,
       targetIModel,
       elements,
+      versionSelectDialogVisible: false,
       reportDialogVisible: false,
       reportProperties: undefined,
     });
@@ -130,6 +134,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
       description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      versionSelectDialogVisible: false,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
@@ -232,10 +237,11 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _handleCompare = async (): Promise<void> => {
-    const iModelConnection = UiFramework.getIModelConnection();
-    if (iModelConnection) {
-      await openSelectDialog(iModelConnection);
-    }
+    this.setState({ versionSelectDialogVisible: true });
+  };
+
+  private _handleVersionSelectDialogClose = (): void => {
+    this.setState({ versionSelectDialogVisible: false });
   };
 
   private _handleStopCompare = async (): Promise<void> => {
@@ -346,12 +352,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override render(): ReactElement {
     return (
       <>
-        <ReportGeneratorDialog
-          isOpen={this.state.reportDialogVisible}
-          onClose={this.closeReportDialog}
-          manager={this.state.manager}
-          initialProperties={this.state.reportProperties}
-        />
         <WidgetComponent data-testid="comparison-legend-widget">
           <WidgetComponent.Header>
             <WidgetComponent.Header.Label>
@@ -365,6 +365,17 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
         </WidgetComponent>
+        <ReportGeneratorDialog
+          isOpen={this.state.reportDialogVisible}
+          onClose={this.closeReportDialog}
+          manager={this.state.manager}
+          initialProperties={this.state.reportProperties}
+        />
+        <VersionCompareSelectDialog
+          iModelConnection={this.props.iModelConnection}
+          isOpen={this.state.versionSelectDialogVisible}
+          onClose={this._handleVersionSelectDialogClose}
+        />
       </>
     );
   }
