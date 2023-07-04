@@ -4,7 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import { ConfigurableCreateInfo, UiFramework, WidgetControl, WidgetState, type WidgetConfig } from "@itwin/appui-react";
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
+import {
+  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
+} from "@itwin/core-frontend";
 import { ScrollPositionMaintainer } from "@itwin/core-react";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
@@ -20,7 +22,7 @@ import { CenteredDiv } from "../common/CenteredDiv.js";
 import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
 import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
-import { openReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
+import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import "./ChangedElementsWidget.scss";
 import {
   ChangedElementsInspector as EnhancedInspector, ChangedElementsListComponent as EnhancedListComponent
@@ -48,6 +50,8 @@ export interface ChangedElementsWidgetState {
   message: string;
   description?: string;
   menuOpened: boolean;
+  reportDialogVisible: boolean;
+  reportProperties: ReportProperty[] | undefined;
 }
 
 /**
@@ -88,6 +92,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel,
       targetIModel,
       elements,
+      reportDialogVisible: false,
+      reportProperties: undefined,
     });
   };
 
@@ -126,6 +132,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
       description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      reportDialogVisible: false,
+      reportProperties: undefined,
     };
   }
 
@@ -134,6 +142,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.state.manager.versionCompareStarted.removeListener(this._onComparisonStarted);
     this.state.manager.loadingProgressEvent.removeListener(this._onProgressEvent);
     this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
+    reportIsBeingGenerated = false;
   }
 
   private _currentFilterOptions: FilterOptions | undefined;
@@ -261,7 +270,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       }));
     }
 
-    openReportGeneratorDialog(this.state.manager, properties.length !== 0 ? properties : undefined);
+    this.openReportDialog(properties.length > 0 ? properties : undefined);
   };
 
   private getHeader(): ReactElement {
@@ -291,15 +300,15 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         {
           this.state.manager.wantReportGeneration &&
           this.state.loaded &&
-            <IconButton
-              size="small"
-              styleType="borderless"
-              onClick={this._handleReportGeneration}
-              title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
-            >
-              <SvgExport />
-            </IconButton>
-          }
+          <IconButton
+            size="small"
+            styleType="borderless"
+            onClick={this._handleReportGeneration}
+            title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
+          >
+            <SvgExport />
+          </IconButton>
+        }
         {
           this.state.loaded &&
           <IconButton
@@ -316,21 +325,49 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     );
   }
 
+  private openReportDialog = (properties: ReportProperty[] | undefined): void => {
+    if (reportIsBeingGenerated) {
+      IModelApp.notifications.outputMessage(
+        new NotifyMessageDetails(
+          OutputMessagePriority.Error,
+          IModelApp.localization.getLocalizedString("VersionCompare:report.reportInProgressError_brief"),
+        ),
+      );
+      return;
+    }
+
+    reportIsBeingGenerated = true;
+    this.setState({ reportDialogVisible: true, reportProperties: properties });
+  };
+
+  private closeReportDialog = (): void => {
+    reportIsBeingGenerated = false;
+    this.setState({ reportDialogVisible: false, reportProperties: undefined });
+  };
+
   public override render(): ReactElement {
     return (
-      <WidgetComponent data-testid="comparison-legend-widget">
-        <WidgetComponent.Header>
-          <WidgetComponent.Header.Label>
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
-          </WidgetComponent.Header.Label>
-          <WidgetComponent.Header.Actions>
-            {this.getHeader()}
-          </WidgetComponent.Header.Actions>
-        </WidgetComponent.Header>
-        <WidgetComponent.Body data-testid="comparison-legend-widget-content">
-          {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
-        </WidgetComponent.Body>
-      </WidgetComponent>
+      <>
+        <ReportGeneratorDialog
+          isOpen={this.state.reportDialogVisible}
+          onClose={this.closeReportDialog}
+          manager={this.state.manager}
+          initialProperties={this.state.reportProperties}
+        />
+        <WidgetComponent data-testid="comparison-legend-widget">
+          <WidgetComponent.Header>
+            <WidgetComponent.Header.Label>
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
+            </WidgetComponent.Header.Label>
+            <WidgetComponent.Header.Actions>
+              {this.getHeader()}
+            </WidgetComponent.Header.Actions>
+          </WidgetComponent.Header>
+          <WidgetComponent.Body data-testid="comparison-legend-widget-content">
+            {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
+          </WidgetComponent.Body>
+        </WidgetComponent>
+      </>
     );
   }
 }
@@ -411,3 +448,9 @@ export const getChangedElementsWidget = (): WidgetConfig => {
     icon: "icon-list",
   };
 };
+
+/**
+ * Make sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with
+ * requests.
+ *  */
+let reportIsBeingGenerated = false;

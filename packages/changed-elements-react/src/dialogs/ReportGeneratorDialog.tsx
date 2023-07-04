@@ -2,11 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { DialogButtonStyle, DialogButtonType } from "@itwin/appui-abstract";
-import { UiFramework } from "@itwin/appui-react";
 import { IModelApp, NotifyMessageDetails, OutputMessagePriority } from "@itwin/core-frontend";
-import { Dialog, LoadingSpinner, SearchBox } from "@itwin/core-react";
-import { Checkbox, Input, Select, ToggleSwitch } from "@itwin/itwinui-react";
+import { LoadingSpinner, SearchBox } from "@itwin/core-react";
+import { Button, Checkbox, Input, Modal, ModalButtonBar, ModalContent, Select, ToggleSwitch } from "@itwin/itwinui-react";
 import { SelectOption } from "@itwin/itwinui-react/cjs";
 import * as React from "react";
 import type { CellProps } from "react-table";
@@ -18,9 +16,6 @@ import { PropertyLabelCache } from "./PropertyLabelCache.js";
 import { Table } from "./Table.js";
 
 import "./ReportGeneratorDialog.scss";
-
-/** Makes sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with requests */
-let reportBeingGenerated = false;
 
 interface ReportPropertyWithExport extends ReportProperty {
   wantExport: boolean;
@@ -49,6 +44,10 @@ interface ReportGeneratorDialogState {
 
 /** Props for change report dialog */
 export interface ReportGeneratorDialogProps {
+  /** Whether the dialog is open */
+  isOpen: boolean;
+  /** Invoked when dialog is closed */
+  onClose: () => void;
   /** Version Compare Manager that is currently active */
   manager: VersionCompareManager;
   /** Properties to pre-select in the dialog */
@@ -120,11 +119,6 @@ export class ReportGeneratorDialog extends React.Component<
     return wantedProperties;
   };
 
-  /** Handle closing the dialog */
-  private _handleClose = () => {
-    UiFramework.dialogs.modal.close();
-  };
-
   /** Builds and downloads the report using the given generator */
   private _generateReport = async (generator: ReportGeneratorBase) => {
     const success = await generator.buildReport();
@@ -172,11 +166,8 @@ export class ReportGeneratorDialog extends React.Component<
 
   /** Handle pressing OK and generating the report */
   private _handleOk = async () => {
-    // Ensure no new reports can be triggered again while waiting for one
-    reportBeingGenerated = true;
-
     // Close the dialog
-    UiFramework.dialogs.modal.close();
+    this.props.onClose();
 
     // Notify user process will take a bit
     IModelApp.notifications.outputMessage(
@@ -191,9 +182,6 @@ export class ReportGeneratorDialog extends React.Component<
     const generator = this._createReportGenerator(this.state.reportType);
     // Generate the report and download
     await this._generateReport(generator);
-
-    // We are done generating a report
-    reportBeingGenerated = false;
   };
 
   /** Handle filename changes */
@@ -331,97 +319,75 @@ export class ReportGeneratorDialog extends React.Component<
 
   public override render() {
     return (
-      <Dialog
+      <Modal
         title={IModelApp.localization.getLocalizedString("VersionCompare:report.changeReport")}
-        opened={true}
-        width={"500px"}
-        onClose={this._handleClose}
-        buttonCluster={[
-          {
-            type: DialogButtonType.OK,
-            buttonStyle: DialogButtonStyle.Blue,
-            onClick: this._handleOk,
-            disabled: this.state.loading,
-          },
-          {
-            type: DialogButtonType.Cancel,
-            onClick: this._handleClose,
-          },
-        ]}
+        isOpen={this.props.isOpen}
+        style={{ width: 500 }}
+        onClose={this.props.onClose}
       >
-        {this.state.loading ? (
-          <LoadingSpinner />
-        ) : (
-          <div className="change-report-dialog">
-            <div className="change-report-dialog-row">
-              <div className="change-report-dialog-row-label">
-                {IModelApp.localization.getLocalizedString("VersionCompare:report.filename")}
-              </div>
-              <Input
-                defaultValue={this.state.name}
-                className="change-report-text-area-2"
-                onChange={this._handleFilenameChange}
-              />
-            </div>
-            <div className="change-report-dialog-row">
-              <div className="change-report-dialog-row-label">
-                {IModelApp.localization.getLocalizedString("VersionCompare:report.reportType")}
-              </div>
-              <Select<ReportType>
-                className="change-report-select-type"
-                value={this._getCurrentReportTypeOption()}
-                options={this._getValidReportTypeOptions()}
-                onChange={this._onReportTypeChange}
-              />
-            </div>
-            {this.state.reportType === ReportType.ChangedElements && (
-              <>
-                <div className="change-report-dialog-row">
-                  <SearchBox
-                    className="change-report-property-search"
-                    onValueChanged={this._handleSearchBox}
-                    valueChangedDelay={250}
-                    onClear={() => this._handleSearchBox("")}
-                  />
+        <ModalContent>
+          {this.state.loading ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="change-report-dialog">
+              <div className="change-report-dialog-row">
+                <div className="change-report-dialog-row-label">
+                  {IModelApp.localization.getLocalizedString("VersionCompare:report.filename")}
                 </div>
-                <div className="change-report-dialog-property-table">
-                  {this._renderPropertyTable()}
+                <Input
+                  defaultValue={this.state.name}
+                  className="change-report-text-area-2"
+                  onChange={this._handleFilenameChange}
+                />
+              </div>
+              <div className="change-report-dialog-row">
+                <div className="change-report-dialog-row-label">
+                  {IModelApp.localization.getLocalizedString("VersionCompare:report.reportType")}
                 </div>
-                <div className="change-report-dialog-row">
-                  <ToggleSwitch
-                    className="change-report-dialog-toggle"
-                    title={IModelApp.localization.getLocalizedString("VersionCompare:report.onlyVisibleTooltip")}
-                    onChange={this._onExportVisibleToggle}
-                  />
-                  <div className="change-report-dialog-row-toggle-label">
-                    {IModelApp.localization.getLocalizedString("VersionCompare:report.onlyVisible")}
+                <Select<ReportType>
+                  className="change-report-select-type"
+                  value={this._getCurrentReportTypeOption()}
+                  options={this._getValidReportTypeOptions()}
+                  onChange={this._onReportTypeChange}
+                />
+              </div>
+              {this.state.reportType === ReportType.ChangedElements && (
+                <>
+                  <div className="change-report-dialog-row">
+                    <SearchBox
+                      className="change-report-property-search"
+                      onValueChanged={this._handleSearchBox}
+                      valueChangedDelay={250}
+                      onClear={() => this._handleSearchBox("")}
+                    />
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </Dialog>
+                  <div className="change-report-dialog-property-table">
+                    {this._renderPropertyTable()}
+                  </div>
+                  <div className="change-report-dialog-row">
+                    <ToggleSwitch
+                      className="change-report-dialog-toggle"
+                      title={IModelApp.localization.getLocalizedString("VersionCompare:report.onlyVisibleTooltip")}
+                      onChange={this._onExportVisibleToggle}
+                    />
+                    <div className="change-report-dialog-row-toggle-label">
+                      {IModelApp.localization.getLocalizedString("VersionCompare:report.onlyVisible")}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </ModalContent>
+        <ModalButtonBar>
+          <Button styleType="high-visibility" onClick={this._handleOk}>
+            {IModelApp.localization.getLocalizedString("UiCore:dialog.ok")}
+          </Button>
+          <Button onClick={this.props.onClose}>
+            {IModelApp.localization.getLocalizedString("UiCore:dialog.cancel")}
+          </Button>
+        </ModalButtonBar>
+      </Modal>
     );
   }
 }
-
-/** Opens the Change Report Generation Dialog if no reports are in progress */
-export const openReportGeneratorDialog = (
-  manager: VersionCompareManager,
-  properties?: ReportProperty[],
-) => {
-  if (reportBeingGenerated) {
-    // Notify something went wrong
-    IModelApp.notifications.outputMessage(
-      new NotifyMessageDetails(
-        OutputMessagePriority.Error,
-        IModelApp.localization.getLocalizedString("VersionCompare:report.reportInProgressError_brief"),
-      ),
-    );
-    return;
-  }
-
-  // Open dialog
-  UiFramework.dialogs.modal.open(<ReportGeneratorDialog manager={manager} initialProperties={properties} />);
-};
