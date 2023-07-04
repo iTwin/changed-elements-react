@@ -5,12 +5,13 @@
 import { ConfigurableCreateInfo, ContentControl, UiFramework } from "@itwin/appui-react";
 import {
   PropertyComparisonTable, updateVersionComparisonTransparencies, type PropertyComparisonTableProps,
-  type VersionCompareManager, type VersionCompareState
+  type VersionCompareManager
 } from "@itwin/changed-elements-react";
-import { connect } from "react-redux";
 import { IModelApp } from "@itwin/core-frontend";
+import { connect } from "react-redux";
 
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
+import { type VersionCompareState } from "./redux/VersionCompareStore";
 
 export interface PropertyComparisonTableControlOptions {
   manager?: VersionCompareManager | undefined;

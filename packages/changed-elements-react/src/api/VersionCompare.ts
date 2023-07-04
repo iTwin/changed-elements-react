@@ -2,16 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { UiError, getClassName } from "@itwin/appui-abstract";
-import { ReducerRegistryInstance, StateManager, SyncUiEventDispatcher } from "@itwin/appui-react";
+import { getClassName } from "@itwin/appui-abstract";
 import type { AccessToken } from "@itwin/core-bentley";
 import type { ModelProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
-import type { Store } from "redux";
 
-import { VersionCompareReducer } from "../store/VersionCompareStore.js";
 import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
@@ -91,8 +88,6 @@ export interface VersionCompareOptions {
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
-  private static _versionCompareStateKeyInStore = "versionCompareState"; // default name
-  private static _complaint = "Version Compare Data is not initialized";
 
   public static get logCategory(): string {
     return "VersionCompare";
@@ -148,25 +143,6 @@ default endpoint '${this.defaultEndpoint}'. To suppress this error, specify chan
 initializing VersionCompare module, or do not define 'process.env.IMJS_URL_PREFIX'.`);
       }
     }
-
-    ReducerRegistryInstance.registerReducer(VersionCompare._versionCompareStateKeyInStore, VersionCompareReducer);
-  }
-
-  public static dispatchActionToStore(type: string, payload: unknown, immediateSync = false): void {
-    VersionCompare.store.dispatch({ type, payload });
-    if (immediateSync) {
-      SyncUiEventDispatcher.dispatchImmediateSyncUiEvent(type);
-    } else {
-      SyncUiEventDispatcher.dispatchSyncUiEvent(type);
-    }
-  }
-
-  public static get store(): Store<unknown> {
-    if (!StateManager.isInitialized(true)) {
-      throw new UiError(VersionCompare.loggerCategory(this), VersionCompare._complaint);
-    }
-
-    return StateManager.store;
   }
 
   /** @internal */

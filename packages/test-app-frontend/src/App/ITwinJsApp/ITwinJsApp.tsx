@@ -3,8 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, StagePanelLocation, StagePanelSection,
-  StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager, UiItemsProvider, type Widget
+  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance, StagePanelLocation,
+  StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager,
+  UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import { ChangedElementsWidget, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
@@ -28,6 +29,7 @@ import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
 import { AppUiVisualizationHandler } from "./AppUiVisualizationHandler";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
+import { VersionCompareReducer } from "./redux/VersionCompareStore";
 import { UIFramework } from "./ui-framework/UiFramework";
 
 export interface ITwinJsAppProps {
@@ -142,6 +144,8 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
   });
+
+  ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
 }
 
 function useIModel(

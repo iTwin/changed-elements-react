@@ -2,11 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { FrontstageDef, UiFramework, WidgetState, type FrontstageReadyEventArgs } from "@itwin/appui-react";
+import {
+  FrontstageDef, UiFramework, WidgetState, type FrontstageReadyEventArgs, StateManager, SyncUiEventDispatcher
+} from "@itwin/appui-react";
 import {
   ChangedElementEntry, ChangedElementsWidget, ModelsCategoryCache, SideBySideVisualizationManager, VersionCompare,
-  VersionCompareActionTypes, VersionCompareManager, VersionCompareVisualizationManager,
-  changedElementsWidgetAttachToViewportEvent, enableVersionCompareVisualizationCaching
+  VersionCompareManager, VersionCompareVisualizationManager, changedElementsWidgetAttachToViewportEvent,
+  enableVersionCompareVisualizationCaching
 } from "@itwin/changed-elements-react";
 import { BeEvent, DbOpcode, Logger, type Id64String } from "@itwin/core-bentley";
 import {
@@ -16,6 +18,7 @@ import { KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
+import { VersionCompareActionTypes } from "./redux/VersionCompareStore";
 
 /** Manages version compare workflows based on design review's use case. */
 export class VersionCompareFrontstageManager {
@@ -187,7 +190,8 @@ export class VersionCompareFrontstageManager {
       keys.push(...currentKeys);
     }
 
-    VersionCompare.dispatchActionToStore(VersionCompareActionTypes.SET_SELECTION_KEYS, new KeySet(keys));
+    StateManager.store.dispatch({ type: VersionCompareActionTypes.SET_SELECTION_KEYS, payload: new KeySet(keys) });
+    SyncUiEventDispatcher.dispatchSyncUiEvent(VersionCompareActionTypes.SET_SELECTION_KEYS);
 
     const stage = new PropertyComparisonFrontstage(
       this._manager,
