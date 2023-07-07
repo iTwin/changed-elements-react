@@ -2,27 +2,25 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { UiFramework, type FrontstageReadyEventArgs } from "@itwin/appui-react";
+import {
+  FrontstageDef, StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageReadyEventArgs
+} from "@itwin/appui-react";
+import {
+  ChangedElementEntry, ChangedElementsWidget, ModelsCategoryCache, SideBySideVisualizationManager, VersionCompare,
+  VersionCompareManager, VersionCompareVisualizationManager, changedElementsWidgetAttachToViewportEvent,
+  enableVersionCompareVisualizationCaching
+} from "@itwin/changed-elements-react";
 import { BeEvent, DbOpcode, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport, ViewState
 } from "@itwin/core-frontend";
-import { KeySet, type InstanceKey, type Key } from "@itwin/presentation-common";
+import { KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
-import { VersionCompareActionTypes } from "../store/VersionCompareStore.js";
-import { changedElementsWidgetAttachToViewportEvent } from "../widgets/ChangedElementsWidget.js";
-import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
-import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
-import { SideBySideVisualizationManager } from "./SideBySideVisualizationManager.js";
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
-import { VersionCompare } from "./VersionCompare.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
-import { enableVersionCompareVisualizationCaching } from "./VersionCompareTiles.js";
-import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
+import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
+import { VersionCompareActionTypes } from "./redux/VersionCompareStore";
 
-/** Manages version compare workflows based on design review's use case */
+/** Manages version compare workflows based on design review's use case. */
 export class VersionCompareFrontstageManager {
   private _mainViewportState: ViewState | undefined;
   private _targetViewportState: ViewState | undefined;
@@ -31,12 +29,10 @@ export class VersionCompareFrontstageManager {
   private _changedElementEntries: ChangedElementEntry[] | undefined;
 
   public visualizationManager: VersionCompareVisualizationManager | undefined;
-  public propertyComparisonVisualizationManager:
-    | SideBySideVisualizationManager
-    | undefined;
+  public propertyComparisonVisualizationManager: SideBySideVisualizationManager | undefined;
 
   /**
-   * Constructor
+   * Constructor.
    * @param _mainComparisonStageIds Frontstage Ids used to host the version compare visualization
    * @param _propertyComparisonStageId Frontstage Id used for Side-by-Side Property Comparison
    * @param _manager Version Compare Manager object
@@ -50,13 +46,14 @@ export class VersionCompareFrontstageManager {
   }
 
   /**
-   * Attaches itself to the current viewport and initializes the version comparison visualization
+   * Attaches itself to the current viewport and initializes the version comparison visualization.
    * @param _currentIModel Current IModelConnection
    * @param targetIModel Target IModelConnection being compared against
    * @param changedElementEntries Changed Element Entries to initialize comparison visualization
    * @param changedModels [optional] Changed Model Ids used for optimization
    * @param unchangedModels [optional] Unchanged Model Ids used for optimization
-   * @param onViewChanged [optional] The application may raise this event to let version compare UI components know they need to refresh
+   * @param onViewChanged [optional] The application may raise this event to let version compare UI components know they
+   *                      need to refresh
    * @param showTargetModified [optional] Show the modified elements on the secondary connection
    */
   public async initializeSingleViewComparison(
@@ -84,15 +81,11 @@ export class VersionCompareFrontstageManager {
       onViewChanged,
       showTargetModified,
     );
-    await ModelsCategoryCache.load(
-      _currentIModel,
-      targetIModel,
-      changedElementEntries,
-    );
+    await ModelsCategoryCache.load(_currentIModel, targetIModel, changedElementEntries);
     await this.visualizationManager.attachToViewport(viewport);
   }
 
-  /** Cleans up the visualization managers */
+  /** Cleans up the visualization managers. */
   public async cleanUp() {
     ModelsCategoryCache.clear();
     if (this.visualizationManager) {
@@ -106,13 +99,13 @@ export class VersionCompareFrontstageManager {
     }
   }
 
-  /** Cleans up and dettaches from Frontstage events to trigger comparison visualization */
+  /** Cleans up and dettaches from Frontstage events to trigger comparison visualization. */
   public async detach() {
     await this.cleanUp();
     UiFramework.frontstages.onFrontstageReadyEvent.removeListener(this._onFrontstageReady);
   }
 
-  /** Handler for frontstage ready */
+  /** Handler for frontstage ready. */
   private _onFrontstageReady = async (args: FrontstageReadyEventArgs) => {
     if (
       args.frontstageDef.id !== this._propertyComparisonStageId &&
@@ -129,12 +122,12 @@ export class VersionCompareFrontstageManager {
       }
 
       if (this._mainComparisonStageIds.has(args.frontstageDef.id)) {
-        await this._onMainComparisonFrontstageOpened();
+        await this._onMainComparisonFrontstageOpened(args.frontstageDef);
       }
     }
   };
 
-  /** Sets the initial view states of property comparison frontstage */
+  /** Sets the initial view states of property comparison frontstage. */
   private _setupSideBySideViewStates() {
     if (!this._targetViewportState || !this._mainViewportState) {
       return;
@@ -155,7 +148,7 @@ export class VersionCompareFrontstageManager {
   }
 
   /**
-   * Opens the side by side property comparison frontstage and maintains selection to zoom to the given element on open
+   * Opens the side by side property comparison frontstage and maintains selection to zoom to the given element on open.
    * @param currentIModel Current IModelConnection
    * @param targetIModel Target IModelConnection being compared against
    */
@@ -167,9 +160,7 @@ export class VersionCompareFrontstageManager {
     // Reset
     this._mainViewportState = undefined;
     // Get view state from options if passed
-    const appViewState = this._manager.options.getPropertyComparisonViewState
-      ? this._manager.options.getPropertyComparisonViewState(currentSelection)
-      : undefined;
+    const appViewState = this._manager.options.getPropertyComparisonViewState?.(currentSelection);
     if (appViewState === undefined) {
       const vp = IModelApp.viewManager.selectedView;
       if (vp) {
@@ -181,36 +172,26 @@ export class VersionCompareFrontstageManager {
 
     // Create a view state for the target connection
     if (this._mainViewportState) {
-      this._targetViewportState =
-        await SideBySideVisualizationManager.cloneViewState(
-          this._mainViewportState,
-          targetIModel,
-        );
+      this._targetViewportState = await SideBySideVisualizationManager.cloneViewState(
+        this._mainViewportState,
+        targetIModel,
+      );
     }
 
     // Set elements to emphasize during property comparison
-    this._emphasizedElements =
-      await SideBySideVisualizationManager.getHiliteElements(
-        currentIModel,
-        targetIModel,
-      );
+    this._emphasizedElements = await SideBySideVisualizationManager.getHiliteElements(currentIModel, targetIModel);
 
     // Make read-write key set
     const keys: InstanceKey[] = [];
     for (const pair of currentSelection.instanceKeys) {
       const className = pair[0];
       const ids = pair[1];
-      const currentKeys: InstanceKey[] = [...ids].map((id: string) => ({
-        id,
-        className,
-      }));
+      const currentKeys: InstanceKey[] = [...ids].map((id: string) => ({ id, className }));
       keys.push(...currentKeys);
     }
 
-    VersionCompare.dispatchActionToStore(
-      VersionCompareActionTypes.SET_SELECTION_KEYS,
-      new KeySet(keys),
-    );
+    StateManager.store.dispatch({ type: VersionCompareActionTypes.SET_SELECTION_KEYS, payload: new KeySet(keys) });
+    SyncUiEventDispatcher.dispatchSyncUiEvent(VersionCompareActionTypes.SET_SELECTION_KEYS);
 
     const stage = new PropertyComparisonFrontstage(
       this._manager,
@@ -220,44 +201,29 @@ export class VersionCompareFrontstageManager {
       () => this._mainViewportState!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
-      this._mainComparisonStageIds,
-      this._manager.options.appUiOptions?.propertyComparisonOptions?.frontstageProps,
-      {
-        verticalTools:
-          this._manager.options.appUiOptions?.propertyComparisonOptions
-            ?.verticalTools,
-        horizontalTools:
-          this._manager.options.appUiOptions?.propertyComparisonOptions
-            ?.horizontalTools,
-      },
     );
     UiFramework.frontstages.addFrontstageProvider(stage);
 
     // Clear selection before we start property comparison
-    Presentation.selection.clearSelection(
-      "SideBySideVisualizationManager",
-      currentIModel,
-    );
-    Presentation.selection.clearSelection(
-      "SideBySideVisualizationManager",
-      targetIModel,
-    );
+    Presentation.selection.clearSelection("SideBySideVisualizationManager", currentIModel);
+    Presentation.selection.clearSelection("SideBySideVisualizationManager", targetIModel);
 
     const frontstageDef = await UiFramework.frontstages.getFrontstageDef(this._propertyComparisonStageId);
     if (undefined !== frontstageDef) {
-      // Activate property comparison frontstage which should trigger the version compare frontstage manager to start the visualization
+      // Activate property comparison frontstage which should trigger the version compare frontstage manager to start
+      // the visualization
       await UiFramework.frontstages.openNestedFrontstage(frontstageDef);
     }
   }
 
   /**
-   * Checks if the element is an element relevant for side by side comparison (modified element)
+   * Checks if the element is an element relevant for side by side comparison (modified element).
    * @param currentSelection Current KeySet for selection set to check
    */
   private _canDoPropertyComparison(currentSelection: Readonly<KeySet>): boolean {
     const selectionHas = (keySet: Readonly<KeySet>, id: string) => {
       let found = false;
-      keySet.forEach((key: Key) => {
+      keySet.forEach((key) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (undefined !== (key as any).id && (key as any).id === id) {
           found = true;
@@ -266,27 +232,21 @@ export class VersionCompareFrontstageManager {
       return found;
     };
 
-    const currentFocusedElement =
-      this._manager.changedElementsManager.entryCache
-        .getAll()
-        .find((value: ChangedElementEntry) => {
-          return (
-            value.opcode === DbOpcode.Update &&
-            selectionHas(currentSelection, value.id)
-          );
-        });
+    const currentFocusedElement = this._manager.changedElementsManager.entryCache
+      .getAll()
+      .find((value) => value.opcode === DbOpcode.Update && selectionHas(currentSelection, value.id));
 
     // We can only do property comparison on modified elements, so both elements should've been found
     return currentFocusedElement !== undefined;
   }
 
   /**
-   * Finds the focused element in comparison based on selection of current and target iModel
+   * Finds the focused element in comparison based on selection of current and target iModel.
    * @param currentSelection KeySet to use
    */
   private _findFocusedElementFromSelection(currentSelection: Readonly<KeySet>): boolean {
     this._focusedElementKey = undefined;
-    currentSelection.forEach((value: Key) => {
+    currentSelection.forEach((value) => {
       if (
         this._focusedElementKey === undefined &&
         Object.prototype.hasOwnProperty.call(value, "id") &&
@@ -299,16 +259,12 @@ export class VersionCompareFrontstageManager {
   }
 
   /**
-   * Opens property comparison frontstage if possible. If not, uses IModelApp.notifications to show errors
+   * Opens property comparison frontstage if possible. If not, uses IModelApp.notifications to show errors.
    * @param currentConnection Current IModelConnection
    * @param targetConnection Target IModelConnection being compared against
    */
-  public async initializePropertyComparison(
-    currentConnection: IModelConnection,
-    targetConnection: IModelConnection,
-  ) {
-    const currentSelection =
-      Presentation.selection.getSelection(currentConnection);
+  public async initializePropertyComparison(currentConnection: IModelConnection, targetConnection: IModelConnection) {
+    const currentSelection = Presentation.selection.getSelection(currentConnection);
 
     // Check if there's any selected elements
     if (currentSelection.instanceKeysCount === 0) {
@@ -318,9 +274,7 @@ export class VersionCompareFrontstageManager {
       const detailed = IModelApp.localization.getLocalizedString(
         "VersionCompare:versionCompare.error_propertyComparisonNoElement",
       );
-      IModelApp.notifications.outputMessage(
-        new NotifyMessageDetails(OutputMessagePriority.Error, brief, detailed),
-      );
+      IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief, detailed));
       return;
     }
 
@@ -355,14 +309,10 @@ export class VersionCompareFrontstageManager {
     }
 
     // Initialize actual property comparison
-    await this.openSideBySideFrontstage(
-      currentConnection,
-      targetConnection,
-      currentSelection,
-    );
+    await this.openSideBySideFrontstage(currentConnection, targetConnection, currentSelection);
   }
 
-  /** Setups side by side visualization */
+  /** Setups side by side visualization. */
   public setupSideBySideVisualization = async () => {
     if (
       !this._manager.currentIModel ||
@@ -378,11 +328,9 @@ export class VersionCompareFrontstageManager {
     for (const vp of IModelApp.viewManager) {
       vps.push(vp);
     }
+
     if (vps.length < 2) {
-      Logger.logError(
-        VersionCompare.logCategory,
-        "Expected 2 viewports to initialize side by side visualization",
-      );
+      Logger.logError(VersionCompare.logCategory, "Expected 2 viewports to initialize side by side visualization");
       return;
     }
 
@@ -406,16 +354,14 @@ export class VersionCompareFrontstageManager {
   private async _onPropertyComparisonFrontstageOpened() {
     // Avoid caching any changes to the view state made during property compare overview mode
     enableVersionCompareVisualizationCaching(false);
-
     await this.setupSideBySideVisualization();
-
-    VersionCompareUtils.outputVerbose(
-      VersionCompareVerboseMessages.frontstageManagerPropertyComparisonFrontstageOpened,
-    );
   }
 
-  /** Handler for when the main comparison frontstage is opened. Used to set colorization and overrides if we are in an active version compare session */
-  private async _onMainComparisonFrontstageOpened() {
+  /**
+   * Handler for when the main comparison frontstage is opened. Used to set colorization and overrides if we are in an
+   * active version compare session.
+   */
+  private async _onMainComparisonFrontstageOpened(frontstageDef: FrontstageDef): Promise<void> {
     // Ensure we are using the cached provider props so that we restore visualization properly
     enableVersionCompareVisualizationCaching(true);
 
@@ -434,7 +380,8 @@ export class VersionCompareFrontstageManager {
       this._mainViewportState = undefined;
     }
 
-    VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.frontstageManagerMainComparisonFrontstageOpened);
+    const changedElementsWidget = frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId);
+    changedElementsWidget?.setWidgetState(this._manager.isComparing ? WidgetState.Open : WidgetState.Hidden);
   }
 
   /** Stops property comparison */

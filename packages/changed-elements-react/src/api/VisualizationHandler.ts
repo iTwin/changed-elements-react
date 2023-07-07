@@ -12,24 +12,12 @@ export interface MainVisualizationOptions {
   focusedSelection?: KeySet;
 }
 
-/**
- * Handler for visualizing a comparison in viewports
- */
-export abstract class VisualizationHandler {
-  public abstract enableVisualization(
-    options?: MainVisualizationOptions
-  ): Promise<void>;
-
-  public abstract enableSideBySideVisualization(): Promise<void>;
-
-  public abstract startPropertyComparison(): Promise<void>;
-
-  public abstract cleanUp(): Promise<void>;
-
-  public abstract getSingleViewVisualizationManager():
-    | VersionCompareVisualizationManager
-    | undefined;
-  public abstract getDualViewVisualizationManager():
-    | SideBySideVisualizationManager
-    | undefined;
+/** Handler for visualizing a comparison in viewports. */
+export interface VisualizationHandler {
+  enableVisualization(options?: MainVisualizationOptions): Promise<void>;
+  enableSideBySideVisualization(): Promise<void>;
+  startPropertyComparison(): Promise<void>;
+  cleanUp(): Promise<void>;
+  getSingleViewVisualizationManager(): VersionCompareVisualizationManager | undefined;
+  getDualViewVisualizationManager(): SideBySideVisualizationManager | undefined;
 }

@@ -3,8 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, StagePanelLocation, StagePanelSection,
-  StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager, UiItemsProvider, type Widget
+  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance, StagePanelLocation,
+  StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager,
+  UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import { ChangedElementsWidget, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
@@ -26,8 +27,10 @@ import { ReactElement, useEffect, useState } from "react";
 
 import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
+import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
+import { UIFramework } from "./AppUi/UiFramework";
+import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
-import { UIFramework } from "./ui-framework/UiFramework";
 
 export interface ITwinJsAppProps {
   iTwinId: string;
@@ -136,10 +139,13 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     getAccessToken: () => authorizationClient.getAccessToken(),
     wantReportGeneration: true,
     wantTooltipAugment: true,
-    appUiOptions: {
-      frontstageIds: [MainFrontstageProvider.name],
-    },
+    createVisualizationHandler: (manager) => new AppUiVisualizationHandler(
+      manager,
+      { frontstageIds: [MainFrontstageProvider.name] },
+    ),
   });
+
+  ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
 }
 
 function useIModel(
@@ -247,6 +253,10 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    return [{ id: "ChangedElementsWidget", content: <ChangedElementsWidget /> }];
+    return [{
+      id: "ChangedElementsWidget",
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      content: <ChangedElementsWidget iModelConnection={UiFramework.getIModelConnection()!} />,
+    }];
   }
 }

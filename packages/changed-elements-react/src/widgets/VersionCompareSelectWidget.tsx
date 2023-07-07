@@ -2,11 +2,8 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { CommonToolbarItem, ToolbarHelper, ToolItemDef, UiFramework } from "@itwin/appui-react";
-import { BeEvent, Logger } from "@itwin/core-bentley";
-import {
-  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority
-} from "@itwin/core-frontend";
+import { Logger } from "@itwin/core-bentley";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { MinimalChangeset, NamedVersion, NamedVersionState } from "@itwin/imodels-client-management";
 import {
   Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
@@ -803,7 +800,8 @@ export interface VersionCompareSelectDialogState {
 
 export interface VersionCompareSelectDialogProps {
   iModelConnection: IModelConnection;
-  onViewOpened?: BeEvent<(args?: unknown) => void>;
+  isOpen: boolean;
+  onClose?: (() => void) | undefined;
 }
 
 /** Version Compare Select Dialog to start compariosn with by selecting a target named version */
@@ -821,15 +819,15 @@ export class VersionCompareSelectDialog extends Component<
     };
   }
 
-  private async _handleOk(): Promise<void> {
+  private _handleOk = async (): Promise<void> => {
     this.versionSelectComponentRef.current?.startComparison();
 
-    UiFramework.dialogs.modal.close();
+    this.props.onClose?.();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   }
 
-  private _handleCancel(): void {
-    UiFramework.dialogs.modal.close();
+  private _handleCancel = (): void => {
+    this.props.onClose?.();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   }
 
@@ -851,8 +849,8 @@ export class VersionCompareSelectDialog extends Component<
       <Modal
         className="version-compare-dialog"
         title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
-        isOpen={true}
-        onClose={this._handleCancel.bind(this)}
+        isOpen={this.props.isOpen}
+        onClose={this._handleCancel}
       >
         <ModalContent>
           <VersionCompareSelectComponent
@@ -866,11 +864,11 @@ export class VersionCompareSelectDialog extends Component<
           <Button
             styleType="high-visibility"
             disabled={this.state.targetVersion === undefined}
-            onClick={this._handleOk.bind(this)}
+            onClick={this._handleOk}
           >
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
           </Button>
-          <Button onClick={this._handleCancel.bind(this)}>
+          <Button onClick={this._handleCancel}>
             {IModelApp.localization.getLocalizedString("UiCore:dialog.cancel")}
           </Button>
         </ModalButtonBar>
@@ -878,66 +876,3 @@ export class VersionCompareSelectDialog extends Component<
     );
   }
 }
-
-/** Show error when we don't have a proper access token from the app to use. */
-export const showNotValidAccessTokenError = () => {
-  const brief = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_invalidToken");
-  IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief));
-};
-
-/**
- * Open the version compare dialog and allow for starting the comparison
- * @param manager VersionCompareManager
- * @param iModel iModel that will be used to find the changesets
- * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of elements/categories/models change from the app
- */
-export const openSelectDialog = async (iModel: IModelConnection, onViewUpdated?: BeEvent<(args?: unknown) => void>) => {
-  if (iModel.iModelId === undefined || iModel.iTwinId === undefined) {
-    throw new Error("openSelectDialogToolButton: IModel is not properly defined");
-  }
-
-  const manager = VersionCompare.manager;
-  if (manager === undefined) {
-    throw new Error(
-      "Programmer Error: VersionCompare package must be initialized before using the openSelectDialog function",
-    );
-  }
-
-  const accessToken = await VersionCompare.getAccessToken();
-  if (accessToken === undefined) {
-    showNotValidAccessTokenError();
-    return;
-  }
-
-  UiFramework.dialogs.modal.open(
-    <VersionCompareSelectDialog iModelConnection={iModel} onViewOpened={onViewUpdated} />,
-  );
-};
-
-/**
- * Tool Button that will open the version compare dialog and allow for starting the comparison.
- * @param manager VersionCompareManager
- * @param iModel iModel that will be used to find the changesets
- * @param onViewUpdated [optional] event to let version compare UI elements know if visibility of
- *                      elements/categories/models change from the app
- */
-export const openSelectDialogToolButton = (
-  iModel: IModelConnection,
-  onViewUpdated?: BeEvent<(args?: unknown) => void>,
-): CommonToolbarItem => {
-  const onExecute = async () => {
-    await openSelectDialog(iModel, onViewUpdated);
-  };
-
-  return ToolbarHelper.createToolbarItemFromItemDef(
-    0,
-    new ToolItemDef(
-      {
-        toolId: "VersionCompareSelectTool",
-        iconSpec: "icon-compare",
-        labelKey: "VersionCompare:versionCompare.versionCompareBeta",
-      },
-      onExecute,
-    ),
-  );
-};

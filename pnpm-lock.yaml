@@ -53,9 +53,6 @@ importers:
       '@itwin/appui-abstract':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)
-      '@itwin/appui-react':
-        specifier: ^4.0.1
-        version: 4.0.1(@itwin/appui-abstract@4.0.0)(@itwin/appui-layout-react@4.0.1)(@itwin/components-react@4.0.1)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-frontend@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/core-react@4.0.1)(@itwin/core-telemetry@4.0.0)(@itwin/imodel-components-react@4.0.1)(react-dom@17.0.0)(react-redux@7.2.2)(react@17.0.0)(redux@4.1.0)
       '@itwin/components-react':
         specifier: ^4.0.1
         version: 4.0.1(@itwin/appui-abstract@4.0.0)(@itwin/core-bentley@4.0.0)(@itwin/core-react@4.0.1)(react-dom@17.0.0)(react@17.0.0)
@@ -74,12 +71,6 @@ importers:
       '@itwin/core-react':
         specifier: ^4.0.1
         version: 4.0.1(@itwin/appui-abstract@4.0.0)(@itwin/core-bentley@4.0.0)(react-dom@17.0.0)(react@17.0.0)
-      '@itwin/core-telemetry':
-        specifier: ^4.0.0
-        version: 4.0.0(@itwin/core-geometry@4.0.0)
-      '@itwin/imodel-components-react':
-        specifier: ^4.0.1
-        version: 4.0.1(@itwin/appui-abstract@4.0.0)(@itwin/components-react@4.0.1)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-frontend@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/core-react@4.0.1)(react-dom@17.0.0)(react@17.0.0)
       '@itwin/itwinui-react':
         specifier: ^2.11.2
         version: 2.11.2(react-dom@17.0.0)(react@17.0.0)
@@ -814,6 +805,7 @@ packages:
       react-dom: 17.0.0(react@17.0.0)
       react-transition-group: 4.4.5(react-dom@17.0.0)(react@17.0.0)
       zustand: 4.3.8(immer@9.0.6)(react@17.0.0)
+    dev: false
 
   /@itwin/appui-react@4.0.1(@itwin/appui-abstract@4.0.0)(@itwin/appui-layout-react@4.0.1)(@itwin/components-react@4.0.1)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-frontend@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/core-react@4.0.1)(@itwin/core-telemetry@4.0.0)(@itwin/imodel-components-react@4.0.1)(react-dom@17.0.0)(react-redux@7.2.2)(react@17.0.0)(redux@4.1.0):
     resolution: {integrity: sha512-Y8IVnJ4YiQQe9/BkmY2UdKqD0OCmh8jY49Rjk/AdvceOJqRjvByE0hN+WN+R8rfC6VK4lbR7Qpq7GyALdQfdZw==}
@@ -858,6 +850,7 @@ packages:
       react-redux: 7.2.2(react-dom@17.0.0)(react@17.0.0)(redux@4.1.0)
       redux: 4.1.0
       rxjs: 6.6.7
+    dev: false
 
   /@itwin/cloud-agnostic-core@1.6.0:
     resolution: {integrity: sha512-IKj3lxaVQqGezz7bkFjKEf9g7Bk4i2cu2aCJsd9HnV2gn79lo8oU0UiPJ+kuVtMsEcN/yRq/EXk/IR/VnNkLKA==}
@@ -1157,6 +1150,7 @@ packages:
 
   /@itwin/itwinui-icons@1.16.0:
     resolution: {integrity: sha512-m3s28MitTRtCo7hAIjMB7787KGsjvPhxN9QucmTaKXxDJLahb51fqq4YXgZBpyLw39tbAMETXmbdEdzN6HnK4w==}
+    dev: false
 
   /@itwin/itwinui-illustrations-react@2.0.1(react-dom@17.0.0)(react@17.0.0):
     resolution: {integrity: sha512-uUrr/O3hpL8r0ZSSRExZ68RTxLbR7mlZFytpCLa9qwJqxvdWgTJaZhR3rSOad6HBfqk6KOGlOGz569BuWrD9Lw==}
@@ -5050,6 +5044,7 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 17.0.0
+    dev: false
 
   /util.inherits@1.0.3:
     resolution: {integrity: sha512-gMirHcfcq5D87nXDwbZqf5vl65S0mpMZBsHXJsXOO3Hc3G+JoQLwgaJa1h+PL7h3WhocnuLqoe8CuvMlztkyCA==}
@@ -5415,3 +5410,4 @@ packages:
       immer: 9.0.6
       react: 17.0.0
       use-sync-external-store: 1.2.0(react@17.0.0)
+    dev: false

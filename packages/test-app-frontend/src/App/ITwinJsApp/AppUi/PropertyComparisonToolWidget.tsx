@@ -7,12 +7,11 @@ import {
   BackstageAppButton, CommandItemDef, HideIsolateEmphasizeActionHandler, SyncUiEventId, ToolbarComposer, ToolbarHelper,
   ToolbarItem, ToolbarOrientation, ToolbarUsage, ToolItemDef, ToolWidgetComposer, UiFramework
 } from "@itwin/appui-react";
+import { SideBySideVisualizationManager, VersionCompare } from "@itwin/changed-elements-react";
 import { EmphasizeElements, IModelApp } from "@itwin/core-frontend";
 import { Component, type ReactElement, type ReactNode } from "react";
 
-import { SideBySideVisualizationManager } from "../api/SideBySideVisualizationManager.js";
-import { VersionCompare } from "../api/VersionCompare.js";
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
+import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
 
 import "./PropertyComparisonToolWidget.override.css";
 
@@ -78,14 +77,7 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
   private clearIsolate = async () => {
     // Setup correct color overrides
     if (VersionCompare.manager) {
-      const frontstageIds = new Set(VersionCompare.manager.options.appUiOptions?.frontstageIds ?? []);
-      if (frontstageIds.has(UiFramework.frontstages.activeFrontstageId)) {
-        const visualizationManager =
-          VersionCompare.manager?.visualization?.getSingleViewVisualizationManager();
-        if (visualizationManager !== undefined) {
-          await visualizationManager.resetDisplay();
-        }
-      } else if (
+      if (
         UiFramework.frontstages.activeFrontstageId === PropertyComparisonFrontstage.id &&
         VersionCompare.manager.currentIModel &&
         VersionCompare.manager.targetIModel
@@ -95,8 +87,7 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
             VersionCompare.manager.currentIModel,
             VersionCompare.manager.targetIModel,
           );
-        const propertyVisualizationManager =
-          VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
+        const propertyVisualizationManager = VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
         if (propertyVisualizationManager !== undefined) {
           await propertyVisualizationManager.emphasizeSet(hiliteSet);
         }
@@ -107,14 +98,13 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
   public override render() {
     const isolateSelected = () => {
       if (VersionCompare.manager?.currentIModel) {
-        const elements =
-          VersionCompare.manager?.currentIModel.selectionSet.elements;
+        const elements = VersionCompare.manager?.currentIModel.selectionSet.elements;
         for (const vp of IModelApp.viewManager) {
           EmphasizeElements.getOrCreate(vp).isolateElements(elements, vp, true); // Hide all but selected elements
         }
+
         if (PropertyComparisonFrontstage.isSideBySide) {
-          const propertyVisualizationManager =
-            VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
+          const propertyVisualizationManager = VersionCompare.manager?.visualization?.getDualViewVisualizationManager();
           if (propertyVisualizationManager) {
             propertyVisualizationManager.setupViewportsOverrides(true);
           }

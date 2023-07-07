@@ -5,14 +5,12 @@
 import {
   PropertyRecord, PropertyValueFormat, type ArrayValue, type PrimitiveValue, type StructValue
 } from "@itwin/appui-abstract";
-import { ContentControl, type ConfigurableCreateInfo, UiFramework } from "@itwin/appui-react";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { IconButton, Slider, Table, Text, ToggleSwitch, type TableProps } from "@itwin/itwinui-react";
 import type { KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { memo, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { connect } from "react-redux";
 
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
 import { SvgChevronDown, SvgChevronUp } from "@itwin/itwinui-icons-react";
@@ -20,54 +18,20 @@ import { useVersionCompare } from "../VersionCompareContext.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import type { ChangedElementsManager } from "../api/ChangedElementsManager.js";
 import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
-import { VersionCompare } from "../api/VersionCompare.js";
 import type { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { updateVersionComparisonTransparencies } from "../api/VersionCompareTiles.js";
-import { PropertyComparisonFrontstage } from "../frontstages/PropertyComparisonFrontstage.js";
-import type { VersionCompareState } from "../store/VersionCompareStore.js";
 
 import "./PropertyComparisonTable.scss";
-
-export interface PropertyComparisonTableControlOptions {
-  manager?: VersionCompareManager | undefined;
-}
-
-export class PropertyComparisonTableControl extends ContentControl {
-  constructor(info: ConfigurableCreateInfo, options: PropertyComparisonTableControlOptions) {
-    super(info, options);
-
-    if (options.manager === undefined) {
-      logErrorAndThrow(
-        "Property Comparison Table Control should be passed a VersionCompareManager object as application Data (applicationData.manager)",
-      );
-    }
-
-    this.reactNode = <ConnectedPropertyComparisonTable manager={options.manager} />;
-  }
-}
-
-function logErrorAndThrow(errorMessage: string): never {
-  Logger.logError(VersionCompare.logCategory, errorMessage);
-  throw new Error(errorMessage);
-}
-
-const ConnectedPropertyComparisonTable = connect(mapStateToProps)(PropertyComparisonTable);
-
-function mapStateToProps(
-  state: { versionCompareState: VersionCompareState; },
-  ownProps: PropertyComparisonTableProps,
-): PropertyComparisonTableProps {
-  return {
-    manager: ownProps.manager,
-    selection: state.versionCompareState.selection,
-  };
-}
 
 export interface PropertyComparisonTableProps {
   manager: VersionCompareManager;
 
   /** KeySet of the selection to display results for in the table. */
   selection?: KeySet;
+
+  isSideBySide?: boolean | undefined;
+
+  onSideBySideToggle?: (() => void) | undefined;
 }
 
 export function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
@@ -120,14 +84,19 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
           {manager.wantTypeOfChange && changedElement && <ElementChanges changedElement={changedElement} />}
         </div>
         {
-          manager.wantAppUi && !PropertyComparisonFrontstage.isSideBySide &&
+          !props.isSideBySide &&
           <OverviewOpacitySlider
             currentVersion={manager.currentVersion?.displayName}
             targetVersion={manager.targetVersion?.displayName}
           />
         }
         <div className="settings">
-          {manager.wantAppUi && <SideBySideToggle manager={manager} selection={selection} />}
+          <SideBySideToggle
+            manager={manager}
+            selection={selection}
+            isSideBySide={props.isSideBySide}
+            onSideBySideToggle={props.onSideBySideToggle}
+          />
           <ToggleSwitch
             label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.onlyChangedProps")}
             checked={showChangedOnly}
@@ -634,36 +603,16 @@ function handleOpacitySliderChange(values: readonly number[]): void {
 interface SideBySideToggleProps {
   manager: VersionCompareManager;
   selection: KeySet | undefined;
+  isSideBySide?: boolean | undefined;
+  onSideBySideToggle?: () => void | undefined;
 }
 
 function SideBySideToggle(props: SideBySideToggleProps): ReactElement {
-  const handleSideBySideToggle = async () => {
-    // toggleLayout() will cause current component to unmount and re-mount
-    await PropertyComparisonFrontstage.toggleLayout();
-
-    const activeFrontstageDef = UiFramework.frontstages.activeFrontstageDef;
-    if (activeFrontstageDef?.id !== PropertyComparisonFrontstage.id) {
-      return;
-    }
-
-    if (PropertyComparisonFrontstage.isOverview) {
-      await props.manager.enableVisualization(true, props.selection);
-
-      // Set transparency to center since slider starts in center
-      const vp = IModelApp.viewManager.getFirstOpenView();
-      if (vp) {
-        updateVersionComparisonTransparencies(vp, 0.5, 0.5);
-      }
-    } else if (PropertyComparisonFrontstage.isSideBySide) {
-      await props.manager.enableSideBySideVisualization();
-    }
-  };
-
   return (
     <ToggleSwitch
       label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.sideBySide")}
-      checked={PropertyComparisonFrontstage.isSideBySide}
-      onChange={handleSideBySideToggle}
+      checked={props.isSideBySide}
+      onChange={props.onSideBySideToggle}
     />
   );
 }

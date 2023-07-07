@@ -2,15 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import {
-  ConfigurableCreateInfo, UiFramework, WidgetControl, WidgetState, type FrontstageReadyEventArgs, type WidgetConfig
-} from "@itwin/appui-react";
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
-import { ScrollPositionMaintainer } from "@itwin/core-react";
+import {
+  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
+} from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement, createRef } from "react";
+import { Component, ReactElement } from "react";
 
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
@@ -22,17 +20,19 @@ import { CenteredDiv } from "../common/CenteredDiv.js";
 import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
 import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
-import { openReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
+import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
+import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
+import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
+
 import "./ChangedElementsWidget.scss";
-import {
-  ChangedElementsInspector as EnhancedInspector, ChangedElementsListComponent as EnhancedListComponent
-} from "./EnhancedElementsInspector.js";
-import { openSelectDialog } from "./VersionCompareSelectWidget.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
 /** Props for changed elements widget. */
 export interface ChangedElementsWidgetProps {
+  /** IModel Connection that is being visualized. */
+  iModelConnection: IModelConnection;
+
   /** Optional manager if you don't want the default static VersionCompare.manager to be used. */
   manager?: VersionCompareManager;
 
@@ -50,6 +50,9 @@ export interface ChangedElementsWidgetState {
   message: string;
   description?: string;
   menuOpened: boolean;
+  versionSelectDialogVisible: boolean;
+  reportDialogVisible: boolean;
+  reportProperties: ReportProperty[] | undefined;
 }
 
 /**
@@ -90,6 +93,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel,
       targetIModel,
       elements,
+      versionSelectDialogVisible: false,
+      reportDialogVisible: false,
+      reportProperties: undefined,
     });
   };
 
@@ -128,6 +134,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
       description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      versionSelectDialogVisible: false,
+      reportDialogVisible: false,
+      reportProperties: undefined,
     };
   }
 
@@ -136,6 +145,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.state.manager.versionCompareStarted.removeListener(this._onComparisonStarted);
     this.state.manager.loadingProgressEvent.removeListener(this._onProgressEvent);
     this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
+    reportIsBeingGenerated = false;
   }
 
   private _currentFilterOptions: FilterOptions | undefined;
@@ -154,7 +164,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     }
 
     return (
-      <EnhancedInspector
+      <ChangedElementsInspector
         manager={this.state.manager}
         onFilterChange={this._onFilterChange}
         onShowAll={this._showAll}
@@ -227,10 +237,11 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _handleCompare = async (): Promise<void> => {
-    const iModelConnection = UiFramework.getIModelConnection();
-    if (iModelConnection) {
-      await openSelectDialog(iModelConnection);
-    }
+    this.setState({ versionSelectDialogVisible: true });
+  };
+
+  private _handleVersionSelectDialogClose = (): void => {
+    this.setState({ versionSelectDialogVisible: false });
   };
 
   private _handleStopCompare = async (): Promise<void> => {
@@ -263,7 +274,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       }));
     }
 
-    openReportGeneratorDialog(this.state.manager, properties.length !== 0 ? properties : undefined);
+    this.openReportDialog(properties.length > 0 ? properties : undefined);
   };
 
   private getHeader(): ReactElement {
@@ -292,19 +303,18 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         }
         {
           this.state.manager.wantReportGeneration &&
-          this.state.manager.wantAppUi &&
           this.state.loaded &&
-            <IconButton
-              size="small"
-              styleType="borderless"
-              onClick={this._handleReportGeneration}
-              title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
-            >
-              <SvgExport />
-            </IconButton>
-          }
+          <IconButton
+            size="small"
+            styleType="borderless"
+            onClick={this._handleReportGeneration}
+            title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
+          >
+            <SvgExport />
+          </IconButton>
+        }
         {
-          this.state.loaded && this.state.manager.wantAppUi &&
+          this.state.loaded &&
           <IconButton
             size="small"
             styleType="borderless"
@@ -319,113 +329,60 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     );
   }
 
+  private openReportDialog = (properties: ReportProperty[] | undefined): void => {
+    if (reportIsBeingGenerated) {
+      IModelApp.notifications.outputMessage(
+        new NotifyMessageDetails(
+          OutputMessagePriority.Error,
+          IModelApp.localization.getLocalizedString("VersionCompare:report.reportInProgressError_brief"),
+        ),
+      );
+      return;
+    }
+
+    reportIsBeingGenerated = true;
+    this.setState({ reportDialogVisible: true, reportProperties: properties });
+  };
+
+  private closeReportDialog = (): void => {
+    reportIsBeingGenerated = false;
+    this.setState({ reportDialogVisible: false, reportProperties: undefined });
+  };
+
   public override render(): ReactElement {
     return (
-      <WidgetComponent data-testid="comparison-legend-widget">
-        <WidgetComponent.Header>
-          <WidgetComponent.Header.Label>
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
-          </WidgetComponent.Header.Label>
-          <WidgetComponent.Header.Actions>
-            {this.getHeader()}
-          </WidgetComponent.Header.Actions>
-        </WidgetComponent.Header>
-        <WidgetComponent.Body data-testid="comparison-legend-widget-content">
-          {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
-        </WidgetComponent.Body>
-      </WidgetComponent>
+      <>
+        <WidgetComponent data-testid="comparison-legend-widget">
+          <WidgetComponent.Header>
+            <WidgetComponent.Header.Label>
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
+            </WidgetComponent.Header.Label>
+            <WidgetComponent.Header.Actions>
+              {this.getHeader()}
+            </WidgetComponent.Header.Actions>
+          </WidgetComponent.Header>
+          <WidgetComponent.Body data-testid="comparison-legend-widget-content">
+            {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
+          </WidgetComponent.Body>
+        </WidgetComponent>
+        <ReportGeneratorDialog
+          isOpen={this.state.reportDialogVisible}
+          onClose={this.closeReportDialog}
+          manager={this.state.manager}
+          initialProperties={this.state.reportProperties}
+        />
+        <VersionCompareSelectDialog
+          iModelConnection={this.props.iModelConnection}
+          isOpen={this.state.versionSelectDialogVisible}
+          onClose={this._handleVersionSelectDialogClose}
+        />
+      </>
     );
   }
 }
 
-export interface ChangedElementsWidgetControlOptions {
-  manager?: VersionCompareManager | undefined;
-}
-
-export class ChangedElementsWidgetControl extends WidgetControl {
-  private _activeTreeRef = createRef<HTMLDivElement>();
-  private _maintainScrollPosition?: ScrollPositionMaintainer;
-
-  constructor(info: ConfigurableCreateInfo, options: ChangedElementsWidgetControlOptions) {
-    super(info, options);
-
-    // Pass in a ref object to let us maintain scroll position
-    this.reactNode = <ChangedElementsWidget manager={options?.manager} rootElementRef={this._activeTreeRef} />;
-  }
-
-  public override saveTransientState(): void {
-    if (this._activeTreeRef.current) {
-      this._maintainScrollPosition = new ScrollPositionMaintainer(this._activeTreeRef.current);
-    }
-  }
-
-  /** Return true so that we maintain state when the widget is closed and do clean-up of scroll position maintainer. */
-  public override restoreTransientState(): boolean {
-    this._maintainScrollPosition?.dispose();
-    this._maintainScrollPosition = undefined;
-    return true;
-  }
-}
-
-const onComparisonStarting = (): void => {
-  // Open/Close comparison legend
-  UiFramework.frontstages.activeFrontstageDef
-    ?.findWidgetDef(ChangedElementsWidget.widgetId)
-    ?.setWidgetState(WidgetState.Open);
-};
-
-const onComparisonStopped = (): void => {
-  EnhancedListComponent.cleanMaintainedState();
-};
-
-const onStartFailed = (): void => {
-  // Open/Close comparison legend
-  UiFramework.frontstages.activeFrontstageDef
-    ?.findWidgetDef(ChangedElementsWidget.widgetId)
-    ?.setWidgetState(WidgetState.Hidden);
-};
-
-const onFrontstageReady = (args: FrontstageReadyEventArgs): void => {
-  const manager = VersionCompare.manager;
-  if (manager === undefined) {
-    return;
-  }
-
-  const frontstageIds = new Set(manager.options.appUiOptions?.frontstageIds ?? []);
-  if (frontstageIds.has(args.frontstageDef.id)) {
-    const widget = args.frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId);
-    widget?.setWidgetState(manager.isComparing ? WidgetState.Open : WidgetState.Hidden);
-  }
-};
-
 /**
- * Setup events for changed elements widget to react to frontstage activated and version compare events to
- * auto-hide/show the widget.
- */
-export const bindChangedElementsWidgetEvents = (manager: VersionCompareManager): void => {
-  manager.versionCompareStarting.addListener(onComparisonStarting);
-  manager.versionCompareStopped.addListener(onComparisonStopped);
-  manager.versionCompareStartFailed.addListener(onStartFailed);
-  UiFramework.frontstages.onFrontstageReadyEvent.addListener(onFrontstageReady);
-};
-
-/** Clean-up events that make the widget automatically react to frontstage activated and version compare events. */
-export const unbindChangedElementsWidgetEvents = (manager: VersionCompareManager): void => {
-  manager.versionCompareStarting.removeListener(onComparisonStarting);
-  manager.versionCompareStopped.removeListener(onComparisonStopped);
-  manager.versionCompareStartFailed.removeListener(onStartFailed);
-  UiFramework.frontstages.onFrontstageReadyEvent.removeListener(onFrontstageReady);
-
-  // Ensure widget gets closed
-  onComparisonStopped();
-};
-
-/** Returns a React element containing the ChangedElementsWidgetControl in a ui-framework Widget. */
-export const getChangedElementsWidget = (): WidgetConfig => {
-  return {
-    id: ChangedElementsWidget.widgetId,
-    label: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLegend"),
-    defaultState: WidgetState.Hidden,
-    icon: "icon-list",
-  };
-};
+ * Make sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with
+ * requests.
+ *  */
+let reportIsBeingGenerated = false;

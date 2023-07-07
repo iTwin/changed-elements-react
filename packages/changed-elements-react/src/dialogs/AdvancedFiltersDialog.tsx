@@ -2,14 +2,14 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { DialogButtonStyle, DialogButtonType } from "@itwin/appui-abstract";
-import { UiFramework } from "@itwin/appui-react";
 import type { Id64String } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Dialog, ImageCheckBox, SearchBox } from "@itwin/core-react";
+import { IModelApp } from "@itwin/core-frontend";
+import { ImageCheckBox, SearchBox } from "@itwin/core-react";
 import { SvgProgressBackwardCircular } from "@itwin/itwinui-icons-react";
 import { Checkbox, IconButton, Text } from "@itwin/itwinui-react";
-import { ChangeEventHandler, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback, useEffect, useMemo, useState, type ChangeEventHandler, type ReactElement, type SetStateAction
+} from "react";
 import type { CellProps, Row } from "react-table";
 
 import { FilterOptions, SavedFiltersManager } from "../SavedFiltersManager.js";
@@ -83,130 +83,107 @@ function CheckboxHeader(props: CheckboxHeaderProps): ReactElement {
 
 export interface AdvancedFilterDialogProps {
   data: PropertyFilter[];
+  setData: (arg: SetStateAction<PropertyFilter[]>) => void;
   showValues?: boolean;
-  onSave?: (filterSettings: PropertyFilter[]) => void;
-  iModelConnection: IModelConnection;
   getCurrentFilterOptions: () => FilterOptions;
   onFilterSelected?: (filterOptions: FilterOptions) => void;
 }
 
 export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactElement {
-  const { data, showValues, onSave, onFilterSelected, getCurrentFilterOptions } = props;
+  const { data, setData, showValues, onFilterSelected, getCurrentFilterOptions } = props;
 
   // Current searchbox text filter
   const [filter, setFilter] = useState("");
-  // List of all data (modifed)
-  const [modifiedData, setModifiedData] = useState<PropertyFilter[]>([]);
   // true if no results found
   const [noResults, setNoResults] = useState(false);
   // true if we are editing the saved filters
   const [showEditTable, setShowEditTable] = useState(false);
 
-  // Called when the save button on the dialog is clicked
-  const onSaveClick = useCallback(
-    () => {
-      UiFramework.dialogs.modal.close();
-      onSave?.(modifiedData);
-    },
-    [onSave, modifiedData],
-  );
-
-  // Called when the cancel button on the dialog is clicked
-  const onCancel = useCallback(() => { UiFramework.dialogs.modal.close(); }, []);
-
   // Called when the rows have changed in the Table
   const onRowsChanged = useCallback((rows: Row<PropertyFilter>[]) => { setNoResults(rows.length === 0); }, []);
 
-  // Initialize the modified data with the data passed in
-  useEffect(
-    () => {
-      // Clone the array since we're modal
-      const newData = data.map((a) => ({ ...a }));
-      setModifiedData(newData);
-    },
-    [data],
-  );
-
-  // Update all rows with the visible boolean after edit
-  const updateAllData = (cellProps: CellProps<PropertyFilter>, visibility: boolean) => {
-    const updatedData = cellProps.data.slice();
-    cellProps.rows.forEach((row) => (updatedData[row.index].visible = visibility));
-    setModifiedData(updatedData);
-  };
-
-  // Update single row with the visible boolean after edit
-  const onVisibilityClick = (cellProps: CellProps<PropertyFilter>, visibility: boolean) => {
-    setModifiedData(
-      (old) => old.map((row, index) => index === cellProps.row.index ? { ...row, visible: visibility } : row),
-    );
-  };
-
   // Columns in the table
   const columns = useMemo(
-    () => [
-      {
-        Header: "Name",
-        columns: [
-          {
-            accessor: "visible",
-            id: "visibility",
-            align: "center",
-            width: 15,
-            disableSortBy: true,
-            Header: (propsH: CellProps<PropertyFilter>) => {
-              return <CheckboxHeader cellProps={propsH} updateData={updateAllData} />;
+    () => {
+      // Update all rows with the visible boolean after edit
+      const updateAllData = (cellProps: CellProps<PropertyFilter>, visibility: boolean) => {
+        const updatedData = cellProps.data.slice();
+        cellProps.rows.forEach((row) => (updatedData[row.index].visible = visibility));
+        setData(updatedData);
+      };
+
+      // Update single row with the visible boolean after edit
+      const onVisibilityClick = (cellProps: CellProps<PropertyFilter>, visibility: boolean) => {
+        setData(
+          (old) => old.map((row, index) => index === cellProps.row.index ? { ...row, visible: visibility } : row),
+        );
+      };
+
+      return [
+        {
+          Header: "Name",
+          columns: [
+            {
+              accessor: "visible",
+              id: "visibility",
+              align: "center",
+              width: 15,
+              disableSortBy: true,
+              Header: (propsH: CellProps<PropertyFilter>) => {
+                return <CheckboxHeader cellProps={propsH} updateData={updateAllData} />;
+              },
+              Cell: (props: CellProps<PropertyFilter>) => {
+                const value = props.cell.value;
+                return (
+                  <ImageCheckBox
+                    imageOn="icon-visibility"
+                    imageOff="icon-visibility-hide-2"
+                    checked={value}
+                    onClick={(checked) => onVisibilityClick(props, checked)}
+                  />
+                );
+              },
             },
-            Cell: (props: CellProps<PropertyFilter>) => {
-              const value = props.cell.value;
-              return (
-                <ImageCheckBox
-                  imageOn="icon-visibility"
-                  imageOff="icon-visibility-hide-2"
-                  checked={value}
-                  onClick={(checked) => onVisibilityClick(props, checked)}
-                />
-              );
+            {
+              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.property"),
+              accessor: "label",
+              id: "label",
+              filter: "includes",
+              Cell: (props: CellProps<PropertyFilter>) => <PropertyLabel cellProps={props} />,
             },
-          },
-          {
-            Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.property"),
-            accessor: "label",
-            id: "label",
-            filter: "includes",
-            Cell: (props: CellProps<PropertyFilter>) => <PropertyLabel cellProps={props} />,
-          },
-          {
-            Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.numberOfElements"),
-            accessor: "ids.length",
-            id: "elements",
-            width: 50,
-          },
-          {
-            Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.values"),
-            accessor: "value",
-            id: "value",
-            width: 80,
-            hidden: !showValues,
-            canFilter: false,
-            disableFilters: true,
-            Cell: (props: CellProps<PropertyFilter>) => {
-              const value = props.cell.value;
-              return value === "**Varies**"
-                ? <Text className="filter-dialog-value-varies" isMuted>{value}</Text>
-                : <span>{value}</span>;
+            {
+              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.numberOfElements"),
+              accessor: "ids.length",
+              id: "elements",
+              width: 50,
             },
-          },
-        ],
-      },
-    ],
-    [showValues],
+            {
+              Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.values"),
+              accessor: "value",
+              id: "value",
+              width: 80,
+              hidden: !showValues,
+              canFilter: false,
+              disableFilters: true,
+              Cell: (props: CellProps<PropertyFilter>) => {
+                const value = props.cell.value;
+                return value === "**Varies**"
+                  ? <Text className="filter-dialog-value-varies" isMuted>{value}</Text>
+                  : <span>{value}</span>;
+              },
+            },
+          ],
+        },
+      ];
+    },
+    [setData, showValues],
   );
 
   // Called from the filter selector. Update current filter options with the properties updated in the this dialog
   const getCurrentFilterOptionsWithProperties = () => {
     const currentOptions = { ...getCurrentFilterOptions() };
     currentOptions.wantedProperties.clear();
-    for (const propData of modifiedData) {
+    for (const propData of data) {
       currentOptions.wantedProperties.set(propData.name, propData.visible ?? false);
     }
 
@@ -217,7 +194,7 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
   const onFilterSelectedWithProperties = (options: FilterOptions) => {
     if (onFilterSelected) {
       // Update the filters visibility
-      setModifiedData((prev) => {
+      setData((prev) => {
         return prev.map((currentFilter) => ({
           ...currentFilter,
           visible: options.wantedProperties.get(currentFilter.name) ?? false,
@@ -258,7 +235,7 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
       <div className="filter-dialog-content">
         <Table<PropertyFilter>
           columns={columns}
-          data={modifiedData}
+          data={data}
           columnSortBy={[{ id: "name", desc: false }]}
           searchText={filter}
           onRowsChanged={onRowsChanged}
@@ -299,31 +276,9 @@ export function AdvancedFilterDialog(props: AdvancedFilterDialogProps): ReactEle
     );
   };
 
-  return (
-    <Dialog
-      title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.settingsTitle")}
-      opened={true}
-      resizable={false}
-      movable={true}
-      modal={true}
-      width="40%"
-      minWidth={500}
-      minHeight={400}
-      onClose={onCancel}
-      buttonCluster={[
-        {
-          type: DialogButtonType.OK,
-          buttonStyle: DialogButtonStyle.Blue,
-          onClick: onSaveClick,
-          label: IModelApp.localization.getLocalizedString("VersionCompare:filters.apply"),
-        },
-        {
-          type: DialogButtonType.Cancel,
-          onClick: onCancel,
-        },
-      ]}
-    >
-      {showEditTable && savedFilters ? renderEditSavedFilters(savedFilters) : renderMainDialog()}
-    </Dialog>
-  );
+  if (showEditTable && savedFilters) {
+    return renderEditSavedFilters(savedFilters);
+  }
+
+  return renderMainDialog();
 }

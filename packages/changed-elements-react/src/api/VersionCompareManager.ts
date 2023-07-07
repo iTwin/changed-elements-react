@@ -12,13 +12,11 @@ import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
 
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
-import { AppUiVisualizationHandler } from "./AppUiVisualizationHandler.js";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { ChangedElementsApiClient, type ChangesetChunk } from "./ChangedElementsApiClient.js";
 import { ChangedElementsManager } from "./ChangedElementsManager.js";
 import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { ChangesetCache } from "./ChangesetCache.js";
-import { SimpleVisualizationHandler } from "./SimpleVisualizationHandler.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
@@ -72,16 +70,7 @@ export class VersionCompareManager {
 
   /** Create the proper visualization handler based on options */
   private _initializeVisualizationHandler(): void {
-    // Undefined defaults to true for this option
-    if (this.wantAppUi && this.options.appUiOptions) {
-      this._visualizationHandler = new AppUiVisualizationHandler(this, this.options.appUiOptions);
-    } else if (this.options.simpleVisualizationOptions !== undefined) {
-      this._visualizationHandler = new SimpleVisualizationHandler(this, this.options.simpleVisualizationOptions);
-    } else {
-      throw new Error(
-        "Cannot start visualization if no appUiOptions or simpleVisualizationOptions are provided to version compare",
-      );
-    }
+    this._visualizationHandler = this.options.createVisualizationHandler(this);
   }
 
   /** Visualization Handler for comparison */
@@ -117,11 +106,6 @@ export class VersionCompareManager {
 
   public get wantReportGeneration(): boolean {
     return this.options.wantReportGeneration ?? false;
-  }
-
-  public get wantAppUi(): boolean {
-    return this.options.appUiOptions !== undefined &&
-      (this.options.wantAppUi === undefined || this.options.wantAppUi === true);
   }
 
   /** Triggers when version compare processing is starting. */
