@@ -12,6 +12,7 @@
     "name": "Bentley Systems, Inc.",
     "url": "https://www.bentley.com"
   },
+  "types": "./lib/cjs/index.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -78,6 +79,7 @@
     "@itwin/core-frontend": "^4.0.0",
     "@itwin/core-geometry": "^4.0.0",
     "@itwin/core-react": "^4.0.1",
+    "@itwin/imodels-client-management": "^4.0.0",
     "@itwin/itwinui-react": "^2.11.2",
     "@itwin/presentation-common": "^4.0.0",
     "@itwin/presentation-components": "^4.0.0",
@@ -86,7 +88,6 @@
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "dependencies": {
-    "@itwin/imodels-client-management": "^4.0.0",
     "@itwin/itwinui-icons-react": "^2.2.0",
     "react-table": "^7.8.0",
     "react-window": "^1.8.8",
