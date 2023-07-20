@@ -13,7 +13,7 @@ import {
   ProgressRadial, ToggleSwitch
 } from "@itwin/itwinui-react";
 import { Presentation, type SelectionChangeEventArgs } from "@itwin/presentation-frontend";
-import { Component, createRef, useState, type ReactElement, type SetStateAction } from "react";
+import { Component, createRef, useState, type ReactElement, type Ref, type SetStateAction } from "react";
 
 import { type FilterOptions } from "../SavedFiltersManager.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
@@ -36,6 +36,7 @@ export interface ChangedElementsInspectorProps {
   onShowAll: () => Promise<void>;
   onHideAll: () => Promise<void>;
   onInvert: () => Promise<void>;
+  listRef?: Ref<HTMLDivElement>;
 }
 
 /** Get the ChangedElementEntry in a TreeNodeItem. */
@@ -54,6 +55,7 @@ export class ChangedElementsInspector extends Component<ChangedElementsInspector
 
     return (
       <ChangedElementsListComponent
+        listRef={this.props.listRef}
         dataProvider={this.props.manager.changedElementsManager.entryCache.dataProvider}
         manager={this.props.manager}
         onFilterChange={this.props.onFilterChange}
@@ -443,6 +445,7 @@ export interface ChangedElementsListProps {
   onShowAll: () => Promise<void>;
   onHideAll: () => Promise<void>;
   onInvert: () => Promise<void>;
+  listRef?: Ref<HTMLDivElement>;
 }
 
 export interface ChangedElementsListState {
@@ -1310,6 +1313,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
           pathClicked={this._handlePathClick}
         />
         <ElementsList
+          ref={this.props.listRef}
           nodes={nodes}
           loadNodes={this._loadNodes}
           isLoaded={this._isNodeLoaded}

@@ -165,6 +165,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 
     return (
       <ChangedElementsInspector
+        listRef={this.props.rootElementRef}
         manager={this.state.manager}
         onFilterChange={this._onFilterChange}
         onShowAll={this._showAll}
