@@ -194,6 +194,7 @@ interface FilterHeaderProps {
 }
 
 function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
+  const [advancedFilterDialogShown, setAdvancedFilterDialogShown] = useState(false);
   const [advancedFilterDialogData, setAdvancedFilterDialogData] = useState<PropertyFilter[]>();
 
   /** Handle saving the advanced filter changes. */
@@ -203,7 +204,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
       opts.wantedProperties.set(data.name, data.visible ?? false);
     }
 
-    setAdvancedFilterDialogData(undefined);
+    setAdvancedFilterDialogShown(false);
     props.onFilterChange(opts);
   };
 
@@ -265,6 +266,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
       props.onLoadLabels?.(true);
 
       setAdvancedFilterDialogData(finalData);
+      setAdvancedFilterDialogShown(true);
     } catch (e) {
       // Ensure that if something fails, we let the consumer know we are 'done' loading
       Logger.logError(VersionCompare.logCategory, "Advanced Dialog Opening Error: " + e);
@@ -372,27 +374,26 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
     <div className="filter-header">
       <Modal
         title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.settingsTitle")}
-        isOpen={!!advancedFilterDialogData}
+        isOpen={advancedFilterDialogShown}
         style={{ width: "40%", minWidth: 500, minHeight: 400 }}
-        onClose={() => setAdvancedFilterDialogData(undefined)}
+        onClose={() => setAdvancedFilterDialogShown(false)}
       >
         <ModalContent>
-          {
-            advancedFilterDialogData &&
-            <AdvancedFilterDialog
-              data={advancedFilterDialogData}
-              setData={setAdvancedFilterDialogData as (args: SetStateAction<PropertyFilter[]>) => void}
-              showValues={false}
-              onFilterSelected={handleFilterSelected}
-              getCurrentFilterOptions={getCurrentFilterOptions}
-            />
-          }
+          <AdvancedFilterDialog
+            data={advancedFilterDialogData ?? []}
+            setData={setAdvancedFilterDialogData as (args: SetStateAction<PropertyFilter[]>) => void}
+            showValues={false}
+            onFilterSelected={handleFilterSelected}
+            getCurrentFilterOptions={getCurrentFilterOptions}
+          />
         </ModalContent>
         <ModalButtonBar>
           <Button styleType="high-visibility" onClick={handleAdvancedFilteringSave}>
             {IModelApp.localization.getLocalizedString("VersionCompare:filters.apply")}
           </Button>
-          <Button>{IModelApp.localization.getLocalizedString("UiCore:dialog.cancel")}</Button>
+          <Button onClick={() => setAdvancedFilterDialogShown(false)}>
+            {IModelApp.localization.getLocalizedString("UiCore:dialog.cancel")}
+          </Button>
         </ModalButtonBar>
       </Modal>
       <ExpandableSearchBar
