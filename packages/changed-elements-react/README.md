@@ -2,7 +2,7 @@
 
 ## About
 
-This package provides React components that help implement iTwin version comparison forkflows. These components are designed to communicate with [iTwin Platform Changed Elements API](https://developer.bentley.com/apis/changed-elements/), which is used to retrieve data about iModel change history.
+This package provides React components that help implement iTwin version comparison workflows. These components are designed to communicate with [iTwin Platform Changed Elements API](https://developer.bentley.com/apis/changed-elements/), which is used to retrieve data about iModel change history.
 
 ## Installation
 
