@@ -104,11 +104,7 @@ export function IModelTile(props: IModelTileProps): ReactElement {
     <Tile
       name={props.name}
       description={props.description ?? <Text isSkeleton />}
-      thumbnail={
-        thumbnail
-          ? <img style={{ objectFit: "cover" }} src={thumbnail} alt="" />
-          : <div ref={divRef} id="imodel-thumbnail-placeholder" />
-      }
+      thumbnail={thumbnail ?? <div ref={divRef} id="imodel-thumbnail-placeholder" />}
       isActionable
       onClick={() => navigate(`/open-imodel/${props.iTwinId}/${props.iModelId}`)}
     />
