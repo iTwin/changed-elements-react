@@ -61,7 +61,6 @@ export function createAuthorizationProvider(config: AuthorizationProviderConfig)
 
   return function AuthorizationProvider(props: PropsWithChildren<unknown>): ReactElement {
     const [authorizationContextValue, setAuthorizationContextValue] = useState<AuthorizationContext>({
-      userManager,
       state: AuthorizationState.Pending,
       user: undefined,
       userAuthorizationClient: undefined,
@@ -69,54 +68,61 @@ export function createAuthorizationProvider(config: AuthorizationProviderConfig)
       signOut,
     });
 
+    const internalAuthorizationContextValue = useRef<InternalAuthorizationContext>({
+      userManager,
+      loadUser: (user) => {
+        setAuthorizationContextValue({
+          state: AuthorizationState.SignedIn,
+          user,
+          userAuthorizationClient: new AuthClient(userManager),
+          signIn,
+          signOut,
+        });
+      },
+    }).current;
+
     useEffect(
       () => {
-        const handleUserLoaded = (user: User) => {
-          setAuthorizationContextValue({
-            userManager,
-            state: AuthorizationState.SignedIn,
-            user,
-            userAuthorizationClient: new AuthClient(userManager),
-            signIn,
-            signOut,
-          });
-        };
-
         const handleUserUnloaded = () => {
           setAuthorizationContextValue({
-            userManager,
             state: AuthorizationState.SignedOut,
             user: undefined,
             userAuthorizationClient: undefined,
             signIn,
             signOut,
           });
-        }
+        };
 
-        userManager.events.addUserLoaded(handleUserLoaded);
+        userManager.events.addUserLoaded(internalAuthorizationContextValue.loadUser);
         userManager.events.addUserUnloaded(handleUserUnloaded);
 
         return () => {
-          userManager.events.removeUserLoaded(handleUserLoaded);
+          userManager.events.removeUserLoaded(internalAuthorizationContextValue.loadUser);
           userManager.events.removeUserUnloaded(handleUserUnloaded);
         };
       },
-      [],
+      [internalAuthorizationContextValue],
     );
 
     return (
       <authorizationContext.Provider value={authorizationContextValue}>
-        {props.children}
+        <internalAuthorizationContext.Provider value={internalAuthorizationContextValue}>
+          {props.children}
+        </internalAuthorizationContext.Provider>
       </authorizationContext.Provider>
     );
   };
 }
 
 export type AuthorizationContext = {
-  userManager: UserManager;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
 } & (AuthorizationContextWithUser | AuthorizationContextWithoutUser);
+
+interface InternalAuthorizationContext {
+  userManager: UserManager;
+  loadUser: (user: User) => void;
+}
 
 interface AuthorizationContextWithUser {
   state: AuthorizationState.SignedIn;
@@ -152,7 +158,6 @@ export function useAuthorization(): AuthorizationContext {
 }
 
 const authorizationContext = createContext<AuthorizationContext>({
-  userManager: new UserManager({ authority: "", client_id: "", redirect_uri: "" }),
   state: AuthorizationState.Offline,
   user: undefined,
   userAuthorizationClient: undefined,
@@ -160,9 +165,14 @@ const authorizationContext = createContext<AuthorizationContext>({
   signOut: async () => { },
 });
 
+const internalAuthorizationContext = createContext<InternalAuthorizationContext>({
+  userManager: new UserManager({ authority: "", client_id: "", redirect_uri: "" }),
+  loadUser: () => { },
+});
+
 /** Finalizes signin process when user is redirected back to the application. */
 export function SignInCallback(): ReactElement {
-  const { userManager } = useAuthorization();
+  const { userManager } = useContext(internalAuthorizationContext);
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<OAuthError>();
 
@@ -236,7 +246,7 @@ interface AuthenticationErrorProps {
 }
 
 function AuthenticationError(props: AuthenticationErrorProps): ReactElement {
-  const { userManager } = useAuthorization();
+  const { userManager } = useContext(internalAuthorizationContext);
 
   if (props.error.code === "invalid_scope") {
     return (
@@ -280,7 +290,7 @@ function getTroubleshootingText(userManager: UserManager): ReactNode {
 
 /** Finalizes signin process for silent authorization when iframe is redirected back to the application. */
 export function SignInSilentCallback(): ReactElement {
-  const { userManager } = useAuthorization();
+  const { userManager } = useContext(internalAuthorizationContext);
   useEffect(
     () => {
       void (async () => {
@@ -299,7 +309,8 @@ export function SignInSilentCallback(): ReactElement {
 }
 
 export function SignInSilent(): ReactElement {
-  const { userManager, state } = useAuthorization();
+  const { state } = useAuthorization();
+  const { userManager, loadUser } = useContext(internalAuthorizationContext);
   const inProgress = useRef(false);
 
   useEffect(
@@ -314,6 +325,12 @@ export function SignInSilent(): ReactElement {
       let disposed = false;
       void (async () => {
         try {
+          const user = await userManager.getUser();
+          if (user && !user.expired) {
+            loadUser(user);
+            return;
+          }
+
           await userManager.signinSilent();
         } catch (error) {
           if (disposed) {
@@ -329,7 +346,7 @@ export function SignInSilent(): ReactElement {
       })();
       return () => { disposed = true; };
     },
-    [state, userManager],
+    [loadUser, state, userManager],
   );
 
   return <></>;
