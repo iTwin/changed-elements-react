@@ -12,18 +12,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@itwin/core-backend": "^4.0.0",
-    "@itwin/core-bentley": "^4.0.0",
-    "@itwin/core-common": "^4.0.0",
-    "@itwin/express-server": "^4.0.0",
-    "@itwin/imodels-access-backend": "^4.0.0",
-    "@itwin/imodels-client-authoring": "^4.0.0",
-    "@itwin/presentation-backend": "^4.0.0",
-    "@itwin/presentation-common": "^4.0.0",
+    "@itwin/core-backend": "^4.0.6",
+    "@itwin/core-bentley": "^4.0.6",
+    "@itwin/core-common": "^4.0.6",
+    "@itwin/express-server": "^4.0.6",
+    "@itwin/imodels-access-backend": "^4.0.3",
+    "@itwin/imodels-client-authoring": "^4.1.1",
+    "@itwin/presentation-backend": "^4.0.6",
+    "@itwin/presentation-common": "^4.0.6",
     "@types/dotenv-flow": "^3.2.0",
     "@types/node": "^18.0.0",
     "dotenv-flow": "^3.2.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.1.6"
   }
 }
