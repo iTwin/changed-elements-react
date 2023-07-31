@@ -2,9 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import {
-  PropertyRecord, PropertyValueFormat, type ArrayValue, type PrimitiveValue, type StructValue
-} from "@itwin/appui-abstract";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { IconButton, Slider, Table, Text, ToggleSwitch, type TableProps } from "@itwin/itwinui-react";
@@ -405,13 +403,13 @@ function processPropertyRecord(
           id: `${currentCategory}.${propertyName}`,
           category: currentCategory,
           propertyName,
-          value: (record.value as PrimitiveValue).displayValue ?? "",
+          value: record.value.displayValue ?? "",
         });
         break;
       }
 
     case PropertyValueFormat.Array:
-      for (const valueRecord of (record.value as ArrayValue).items) {
+      for (const valueRecord of record.value.items) {
         processPropertyRecord(
           rows,
           currentCategory,
@@ -423,7 +421,7 @@ function processPropertyRecord(
       break;
 
     case PropertyValueFormat.Struct:
-      for (const memberValue of Object.values((record.value as StructValue).members)) {
+      for (const memberValue of Object.values(record.value.members)) {
         processPropertyRecord(
           rows,
           currentCategory,

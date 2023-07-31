@@ -394,7 +394,7 @@ export class ChangedElementEntryCache {
         ids.push(id);
       },
     );
-    const entries = await this.getCached(ids);
+    const entries = this.getCached(ids);
     if (this._labels !== undefined) {
       return this._labels.populateEntries(entries);
     }

@@ -330,7 +330,7 @@ export const accumulateChanges = (
   forward?: boolean,
 ): void => {
   changeset.elements.forEach((elementId: string, index: number) => {
-    const opcode = changeset.opcodes[index] as DbOpcode;
+    const opcode = changeset.opcodes[index];
     const classId = changeset.classIds[index];
     const parentId =
       changeset.parentIds !== undefined
