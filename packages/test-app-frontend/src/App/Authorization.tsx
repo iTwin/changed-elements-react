@@ -48,7 +48,7 @@ export function createAuthorizationProvider(config: AuthorizationProviderConfig)
       await userManager.signinSilent();
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error(`Silent sign in failed: ${error}`);
+      console.error(`Silent sign in failed: ${error as string}`);
     }
   });
 

@@ -2,14 +2,14 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Icon, type CommonProps, type IconSpec } from "@itwin/core-react";
+import { Icon, type CommonProps } from "@itwin/core-react";
 import { Text } from "@itwin/itwinui-react";
 import { type ReactElement } from "react";
 
 import "./EmptyStateComponent.scss";
 
 interface Props extends CommonProps {
-  icon?: IconSpec;
+  icon?: string;
   title?: string;
   description?: string;
 }

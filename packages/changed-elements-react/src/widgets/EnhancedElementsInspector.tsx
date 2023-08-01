@@ -271,7 +271,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
       setAdvancedFilterDialogShown(true);
     } catch (e) {
       // Ensure that if something fails, we let the consumer know we are 'done' loading
-      Logger.logError(VersionCompare.logCategory, "Advanced Dialog Opening Error: " + e);
+      Logger.logError(VersionCompare.logCategory, "Advanced Dialog Opening Error: " + (e as string));
       props.onLoadLabels?.(true);
     }
   };

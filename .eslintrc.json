@@ -2,7 +2,7 @@
   "root": true,
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended-type-checked"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -32,11 +32,20 @@
     "@typescript-eslint/member-delimiter-style": [ "warn", { "singleline": { "requireLast": true } } ],
     "@typescript-eslint/no-confusing-void-expression": [ "warn", { "ignoreArrowShorthand": true } ],
     "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/no-misused-promises": [ "error", { "checksVoidReturn": false } ],
+    "@typescript-eslint/no-redundant-type-constituents": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-enum-comparison": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
     "@typescript-eslint/no-unused-vars": [ "warn", { "argsIgnorePattern": "^_" } ],
     "@typescript-eslint/quotes": "warn",
     "@typescript-eslint/return-await": "warn",
-    "@typescript-eslint/switch-exhaustiveness-check": "warn"
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/switch-exhaustiveness-check": "warn",
+    "@typescript-eslint/unbound-method": "off"
   },
   "overrides": [
     {

@@ -239,7 +239,7 @@ export class ChangesTooltipProvider implements ToolTipProvider {
     } else {
       const div = document.createElement("div");
       div.innerHTML = getTypeOfChangeTooltipHtmlFormat(entry);
-      (tooltipString as HTMLElement).append(div);
+      tooltipString.append(div);
       return tooltipString;
     }
   }

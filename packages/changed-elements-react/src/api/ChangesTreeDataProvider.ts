@@ -365,7 +365,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       models +
       ")" +
       (filterIsPrivate ? " AND IsPrivate = false" : "");
-    const response = await iModel.query(ecsql, undefined, {
+    const response = iModel.query(ecsql, undefined, {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     });
     const idsOfClass: string[] = [];

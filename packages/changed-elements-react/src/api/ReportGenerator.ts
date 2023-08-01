@@ -5,9 +5,7 @@
 import { DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat, TypeOfChange } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import {
-  DisplayValue, Field, KeySet, type DisplayValuesArray, type DisplayValuesMap, type InstanceKey
-} from "@itwin/presentation-common";
+import { DisplayValue, Field, KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
@@ -414,7 +412,7 @@ export class ReportGenerator extends ReportGeneratorBase {
 
     if (DisplayValue.isArray(val)) {
       let parsed = "";
-      for (const innerVal of val as DisplayValuesArray) {
+      for (const innerVal of val) {
         parsed = this._parseDisplayValue(innerVal) + "; ";
       }
       return parsed;
@@ -422,8 +420,8 @@ export class ReportGenerator extends ReportGeneratorBase {
 
     if (DisplayValue.isMap(val)) {
       let parsed = "";
-      for (const key in val as DisplayValuesMap) {
-        parsed = key + ":" + val[key] + "; ";
+      for (const key in val) {
+        parsed = key + ":" + this._parseDisplayValue(val[key]) + "; ";
       }
       return parsed;
     }
@@ -749,8 +747,7 @@ export class ReportGenerator extends ReportGeneratorBase {
         IModelApp.localization.getLocalizedString("VersionCompare:report.success"),
       );
     } catch (e) {
-      const error =
-        IModelApp.localization.getLocalizedString("VersionCompare:report.failure") + `:${e}`;
+      const error = IModelApp.localization.getLocalizedString("VersionCompare:report.failure") + `:${e as string}`;
       this._reportProgress(error);
       // Throw for parent to catch it as a failure
       throw new Error(error);

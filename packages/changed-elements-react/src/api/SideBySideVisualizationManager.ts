@@ -283,7 +283,7 @@ export class SideBySideVisualizationManager {
             ),
           0.5,
           0.95,
-          this._primaryViewport as ScreenViewport,
+          this._primaryViewport,
         );
       const secondaryDecoration: ViewportLabelDecoration =
         new ViewportLabelDecoration(
@@ -294,7 +294,7 @@ export class SideBySideVisualizationManager {
             ),
           0.5,
           0.95,
-          this._secondaryViewport as ScreenViewport,
+          this._secondaryViewport,
         );
       this._decorator = new SideBySideLabelDecorator(
         primaryDecoration,
@@ -332,7 +332,7 @@ export class SideBySideVisualizationManager {
       this._secondaryViewport
     ) {
       const spatialView = this._primaryViewport.view as SpatialViewState;
-      await (this._secondaryViewport as ScreenViewport).addViewedModels(spatialView.modelSelector.models);
+      await this._secondaryViewport.addViewedModels(spatialView.modelSelector.models);
     }
   }
 

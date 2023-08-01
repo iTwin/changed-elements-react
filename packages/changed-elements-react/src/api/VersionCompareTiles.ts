@@ -948,7 +948,7 @@ export async function updateVersionComparisonDisplayOptions(
 ) {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    (existing as Provider).updateOptions(options);
+    existing.updateOptions(options);
   }
 }
 
@@ -971,7 +971,7 @@ export function cacheVersionComparisonDisplayProvider(vp: Viewport): void {
     undefined !== existing &&
     existing instanceof Provider
   ) {
-    cachedProviderProps = (existing as Provider).toJSON();
+    cachedProviderProps = existing.toJSON();
     cachedPerModelCategoryProps = [];
     for (const override of vp.perModelCategoryVisibility) {
       cachedPerModelCategoryProps.push({
@@ -991,7 +991,7 @@ export function cleanupCachedVersionComparisonDisplayProvider(): void {
 export function isVersionComparisonDisplayUsingContextTools(vp: Viewport): boolean {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    return (existing as Provider).isEmphasizingHidingOrIsolating();
+    return existing.isEmphasizingHidingOrIsolating();
   }
 
   return false;
@@ -1003,7 +1003,7 @@ export function updateVersionCompareDisplayEntries(
 ): boolean {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    (existing as Provider).setChangedElems(entries);
+    existing.setChangedElems(entries);
     return true;
   }
 
@@ -1013,7 +1013,7 @@ export function updateVersionCompareDisplayEntries(
 export function getVersionComparisonNeverDrawn(vp: Viewport): Set<string> {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    return (existing as Provider).getNeverDrawn();
+    return existing.getNeverDrawn();
   }
   return new Set<string>();
 }
@@ -1021,21 +1021,21 @@ export function getVersionComparisonNeverDrawn(vp: Viewport): Set<string> {
 export function isolateVersionCompare(vp: Viewport, ids: Id64Arg): void {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    (existing as Provider).isolateElements(ids, true);
+    existing.isolateElements(ids, true);
   }
 }
 
 export function clearEmphasizedVersionCompare(vp: Viewport): void {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    (existing as Provider).clearEmphasizedElements();
+    existing.clearEmphasizedElements();
   }
 }
 
 export function getVersionComparisonAlwaysDrawn(vp: Viewport): Set<string> {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    return (existing as Provider).getExclusiveAlwaysDrawn();
+    return existing.getExclusiveAlwaysDrawn();
   }
   return new Set<string>();
 }
@@ -1052,8 +1052,8 @@ export function enableVersionCompareVisualizationCaching(value: boolean): void {
 export function getEmphasizeElementsProps(vp: Viewport): EmphasizeElementsProps | undefined {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    return (existing as Provider).isEmphasizingHidingOrIsolating()
-      ? (existing as Provider).toEmphasizeElementsProps()
+    return existing.isEmphasizingHidingOrIsolating()
+      ? existing.toEmphasizeElementsProps()
       : undefined;
   }
   return undefined;

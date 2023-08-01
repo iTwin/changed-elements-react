@@ -91,11 +91,11 @@ describe("Models Category Cache Tests", () => {
   it("Should restore cache when using different comparisons/changesets", async () => {
     // Mock iModel connections with query functions that return the bindings
     const currentIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
-    (currentIModel.changeset.id as string) = "changesetA";
+    (currentIModel.changeset.id as unknown as string) = "changesetA";
     const targetIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
-    (targetIModel.changeset.id as string) = "changesetB";
+    (targetIModel.changeset.id as unknown as string) = "changesetB";
     const targetIModel2 = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
-    (targetIModel2.changeset.id as string) = "changesetC";
+    (targetIModel2.changeset.id as unknown as string) = "changesetC";
 
     // Mock some entries
     const mockEntries10 = mockChangedElementEntries(10);
