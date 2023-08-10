@@ -18,7 +18,7 @@ To begin using this package in your application, you will need to:
 2. Provide `<VersionCompareContext />` somewhere in your app.
 
     ```tsx
-      <VersionCompareContext>
+      <VersionCompareContext iModelsClient={iTwinIModelsClient}>
         <App />
       </VersionCompareContext>
     ```
