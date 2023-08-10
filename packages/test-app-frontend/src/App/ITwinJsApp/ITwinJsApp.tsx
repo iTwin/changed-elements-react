@@ -7,7 +7,9 @@ import {
   StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager,
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
-import { ChangedElementsWidget, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
+import {
+  ChangedElementsWidget, ITwinIModelsClient, VersionCompare, VersionCompareContext
+} from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
@@ -23,7 +25,7 @@ import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { toaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useMemo, useState } from "react";
 
 import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
@@ -77,6 +79,15 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
     [iModel],
   );
 
+  const iModelsClient = useMemo(
+    () => new ITwinIModelsClient({
+      baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
+      getAccessToken: () => props.authorizationClient.getAccessToken(),
+      showHiddenNamedVersions: true,
+    }),
+    [props.authorizationClient],
+  );
+
   if (loadingState === "opening-imodel") {
     return <LoadingScreen>Opening iModel...</LoadingScreen>;
   }
@@ -91,7 +102,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <VersionCompareContext savedFilters={savedFilters}>
+      <VersionCompareContext iModelsClient={iModelsClient} savedFilters={savedFilters}>
         <UIFramework>
           <ConfigurableUiContent />
         </UIFramework>
@@ -134,7 +145,6 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ]);
 
   VersionCompare.initialize({
-    iModelsClient,
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
     getAccessToken: () => authorizationClient.getAccessToken(),
     wantReportGeneration: true,

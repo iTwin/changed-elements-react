@@ -4,18 +4,18 @@
 *--------------------------------------------------------------------------------------------*/
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { MinimalChangeset, NamedVersion, NamedVersionState } from "@itwin/imodels-client-management";
 import {
   Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
 } from "@itwin/itwinui-react";
 import {
-  Component, createRef, forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState
+  Component, createRef, forwardRef, useEffect, useImperativeHandle, useMemo, useState, type ReactElement, type ReactNode
 } from "react";
 
+import { useVersionCompare } from "../VersionCompareContext.js";
 import type { ChangedElementsApiClient, ChangesetChunk, ChangesetStatus } from "../api/ChangedElementsApiClient.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
-import { useVersionCompare } from "../VersionCompareContext.js";
+import { Changeset, NamedVersion } from "../clients/iModelsClient.js";
 
 import "./VersionCompareSelectWidget.scss";
 
@@ -154,7 +154,7 @@ interface UsePagedNamedVersionLoaderResult {
   namedVersions: NamedVersions;
 
   /** Changesets in descending index order. */
-  changesets: MinimalChangeset[];
+  changesets: Changeset[];
 }
 
 interface NamedVersions {
@@ -162,25 +162,11 @@ interface NamedVersions {
   currentVersion: VersionState | undefined;
 }
 
-interface PagedNamedVersionLoaderStateCache {
-  iTwinId: string;
-  iModelId: string;
-  changesetId: string;
-  changesetStatusIterable: SuspendableAsyncIterable<ChangesetStatus[]>;
-  currentNamedVersionIndex: number;
-  result: UsePagedNamedVersionLoaderResult;
-}
-
-let pagedNamedVersionLoaderStateCache: PagedNamedVersionLoaderStateCache | undefined;
-
 function usePagedNamedVersionLoader(
   iModelConnection: IModelConnection | undefined,
 ): UsePagedNamedVersionLoaderResult | undefined {
-  // The cache is stored in a global variable but it can only have one owner
-  const cache = useRef(pagedNamedVersionLoaderStateCache);
-  pagedNamedVersionLoaderStateCache = undefined;
-
   const [result, setResult] = useState<UsePagedNamedVersionLoaderResult>();
+  const { iModelsClient } = useVersionCompare();
 
   useEffect(
     () => {
@@ -199,9 +185,9 @@ function usePagedNamedVersionLoader(
       let disposed = false;
       void (async () => {
         const [namedVersions, changesets] = await Promise.all([
-          manager.changesetCache.getVersions(iModelId),
-          // Changesets are assumed to be in descending index order
-          manager.changesetCache.getOrderedChangesets(iModelId),
+          iModelsClient.getNamedVersions({ iModelId }),
+          // Changesets need to be in descending index order
+          iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse()),
         ]);
         if (disposed) {
           return;
@@ -250,20 +236,10 @@ function usePagedNamedVersionLoader(
             ),
             changesetId: changesetId,
             changesetIndex: -1,
-            name: "",
             description: null,
             createdDateTime: "",
-            _links: { changeset: null, creator: null },
-            state: NamedVersionState.Hidden,
-            application: null,
-            getCreator: async () => undefined,
-            getChangeset: async () => undefined,
           };
         }
-
-        const visibleNamedVersions = sortedNamedVersions
-          .map(({ namedVersion }) => namedVersion)
-          .filter(({ state }) => state !== NamedVersionState.Hidden);
 
         const currentVersionState: VersionState = {
           version: currentVersion,
@@ -272,58 +248,46 @@ function usePagedNamedVersionLoader(
           numberProcessedChangesets: 0,
         };
 
-        // Initialize iteration if we cannot continue from cache
-        if (
-          !cache.current ||
-          cache.current.iTwinId !== iTwinId ||
-          cache.current.iModelId !== iModelId ||
-          cache.current.changesetId !== changesetId
-        ) {
-          const client = VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
-          const pageIterator = client.getChangesetsPaged({
-            iTwinId,
-            iModelId,
-            skip: changesets.length,
-            backwards: true,
-          });
-          const splitChangesets = splitBeforeEach(
-            flatten(map(pageIterator, (changeset) => changeset.reverse())),
-            (changeset) => changeset.id,
-            [
-              currentVersion.changesetId,
-              ...visibleNamedVersions.map(({ changesetId }) => changesetId),
-            ],
-          );
-          cache.current = {
-            iTwinId,
-            iModelId,
-            changesetId,
-            changesetStatusIterable: suspendable(skip(splitChangesets, 1)),
-            currentNamedVersionIndex: 0,
-            result: {
-              namedVersions: {
-                entries: visibleNamedVersions.map((namedVersion) => ({
-                  version: namedVersion,
-                  state: VersionProcessedState.Verifying,
-                  numberNeededChangesets: 0,
-                  numberProcessedChangesets: 0,
-                })),
-                currentVersion: currentVersionState,
-              },
-              changesets,
-            },
-          };
-        }
+        const client = VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
+        const pageIterator = client.getChangesetsPaged({
+          iTwinId,
+          iModelId,
+          skip: changesets.length,
+          backwards: true,
+        });
+        const splitChangesets = splitBeforeEach(
+          flatten(map(pageIterator, (changeset) => changeset.reverse())),
+          (changeset) => changeset.id,
+          [
+            currentVersion.changesetId,
+            ...sortedNamedVersions.map(({ namedVersion: { changesetId } }) => changesetId),
+          ],
+        );
 
-        // We have obtained the current state, notify component
-        const currentState = cache.current;
+        let currentNamedVersionIndex = 0;
+        const currentState = {
+          result: {
+            namedVersions: {
+              entries: sortedNamedVersions.map(({ namedVersion }) => ({
+                version: namedVersion,
+                state: VersionProcessedState.Verifying,
+                numberNeededChangesets: 0,
+                numberProcessedChangesets: 0,
+              })),
+              currentVersion: currentVersionState,
+            },
+            changesets,
+          },
+        };
+
         setResult(currentState.result);
-        if (visibleNamedVersions.length === 0) {
+        if (sortedNamedVersions.length === 0) {
           return;
         }
 
+        const changesetStatusIterable = skip(splitChangesets, 1);
         let result: IteratorResult<ChangesetStatus[]>;
-        while (result = await currentState.changesetStatusIterable.get(), !result.done) {
+        while (result = await changesetStatusIterable.next(), !result.done) {
           // We must avoid modifying the current state cache if component is unmounted
           if (disposed) {
             return;
@@ -333,16 +297,16 @@ function usePagedNamedVersionLoader(
           const numProcessedChangesets = changesets.reduce((acc, curr) => acc + Number(curr.ready), 0);
           const isProcessed = changesets.length === numProcessedChangesets;
           const newEntries = currentState.result.namedVersions.entries.map((entry, index) => {
-            if (index === currentState.currentNamedVersionIndex) {
+            if (index === currentNamedVersionIndex) {
               return {
-                version: visibleNamedVersions[currentState.currentNamedVersionIndex],
+                version: sortedNamedVersions[currentNamedVersionIndex].namedVersion,
                 state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
               };
             }
 
-            if (index > currentState.currentNamedVersionIndex && !isProcessed) {
+            if (index > currentNamedVersionIndex && !isProcessed) {
               return {
                 version: entry.version,
                 state: VersionProcessedState.Processing,
@@ -364,21 +328,18 @@ function usePagedNamedVersionLoader(
             break;
           }
 
-          currentState.currentNamedVersionIndex += 1;
-          if (currentState.currentNamedVersionIndex === visibleNamedVersions.length) {
+          currentNamedVersionIndex += 1;
+          if (currentNamedVersionIndex === sortedNamedVersions.length) {
             break;
           }
-
-          void currentState.changesetStatusIterable.next();
         }
       })();
 
       return () => {
         disposed = true;
-        pagedNamedVersionLoaderStateCache = cache.current;
       };
     },
-    [iModelConnection],
+    [iModelConnection, iModelsClient],
   );
 
   return result;
@@ -434,24 +395,6 @@ async function* skip<T>(iterable: AsyncIterable<T>, n: number): AsyncGenerator<T
   }
 
   return result.value;
-}
-
-interface SuspendableAsyncIterable<T> {
-  /** Returns a promise to the currently awaited iterator value. Starts iteration if it has not been started yet. */
-  get(): Promise<IteratorResult<T>>;
-
-  /** Advances the iterator and returns a promise to the next emitted value. */
-  next(): Promise<IteratorResult<T>>;
-}
-
-/** Decouples iterator advancement and value retrieval. Iteration begins on the first `get` or `next` call. */
-function suspendable<T>(iterable: AsyncIterable<T>): SuspendableAsyncIterable<T> {
-  const it = iterable[Symbol.asyncIterator]();
-  let current: Promise<IteratorResult<T>> | undefined;
-  return {
-    get: () => (current ??= it.next()),
-    next: () => (current = it.next()),
-  };
 }
 
 enum VersionProcessedState {
@@ -824,12 +767,12 @@ export class VersionCompareSelectDialog extends Component<
 
     this.props.onClose?.();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
-  }
+  };
 
   private _handleCancel = (): void => {
     this.props.onClose?.();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
-  }
+  };
 
   private _onVersionSelected = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
     this.setState({

@@ -5,6 +5,7 @@
 import { DbOpcode, Logger } from "@itwin/core-bentley";
 import type { ChangedElements } from "@itwin/core-common";
 
+import type { HalLinks } from "../clients/common.js";
 import type { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompare } from "./VersionCompare.js";
 
@@ -228,10 +229,6 @@ export interface ChangesetStatus {
   index: number;
   ready: boolean;
 }
-
-type HalLinks<T extends Array<string | undefined>> = {
-  [K in keyof T as T[K] & string]: { href: string; };
-};
 
 function getChangesetsPaged(
   args: GetChangesetsArgs & { backwards?: boolean; },

@@ -4,9 +4,11 @@
 *--------------------------------------------------------------------------------------------*/
 import { createContext, PropsWithChildren, ReactElement, useContext, useMemo } from "react";
 
-import { SavedFiltersManager } from "./SavedFiltersManager.js";
+import type { IModelsClient } from "./clients/iModelsClient.js";
+import type { SavedFiltersManager } from "./SavedFiltersManager.js";
 
 export interface VersionCompareContextProps {
+  iModelsClient: IModelsClient;
   savedFilters?: SavedFiltersManager | undefined;
 }
 
@@ -16,8 +18,11 @@ export interface VersionCompareContextProps {
  */
 export function VersionCompareContext(props: PropsWithChildren<VersionCompareContextProps>): ReactElement {
   const value = useMemo(
-    () => ({ savedFilters: props.savedFilters }),
-    [props.savedFilters],
+    () => ({
+      iModelsClient: props.iModelsClient,
+      savedFilters: props.savedFilters,
+    }),
+    [props.iModelsClient, props.savedFilters],
   );
   return <versionCompareContext.Provider value={value}>{props.children}</versionCompareContext.Provider>;
 }
@@ -38,6 +43,7 @@ Example:
 }
 
 export interface VersionCompareContextValue {
+  iModelsClient: IModelsClient;
   savedFilters: SavedFiltersManager | undefined;
 }
 

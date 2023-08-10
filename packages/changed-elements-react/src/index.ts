@@ -16,6 +16,10 @@ export { VersionCompareManager } from "./api/VersionCompareManager.js";
 export * from "./api/VersionCompareTiles.js";
 export * from "./api/VersionCompareVisualization.js";
 export type { MainVisualizationOptions, VisualizationHandler } from "./api/VisualizationHandler.js";
+export type {
+  Changeset, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion,
+} from "./clients/iModelsClient.js";
+export { ITwinIModelsClient, type ITwinIModelsClientParams } from "./clients/iTwinIModelsClient.js";
 export * from "./contentviews/PropertyComparisonTable.js";
 export * from "./widgets/ChangedElementsWidget.js";
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";
