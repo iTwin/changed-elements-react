@@ -38,9 +38,6 @@ importers:
 
   packages/changed-elements-react:
     dependencies:
-      '@itwin/imodels-client-management':
-        specifier: ^4.1.1
-        version: 4.1.1
       '@itwin/itwinui-icons-react':
         specifier: ^2.2.0
         version: 2.2.0(react-dom@17.0.0)(react@17.0.0)

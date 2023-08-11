@@ -9,10 +9,10 @@ import {
   ViewState3d
 } from "@itwin/core-frontend";
 import { Range3d } from "@itwin/core-geometry";
-import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 import type { InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
+import type { NamedVersion } from "../clients/iModelsClient.js";
 import { SideBySideLabelDecorator, ViewportLabelDecoration } from "../contentviews/ViewportLabel.js";
 import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
@@ -36,8 +36,8 @@ export class SideBySideVisualizationManager {
   constructor(
     private _currentIModel: IModelConnection,
     private _targetIModel: IModelConnection,
-    private _currentVersion: MinimalNamedVersion,
-    private _targetVersion: MinimalNamedVersion,
+    private _currentVersion: NamedVersion,
+    private _targetVersion: NamedVersion,
     private _focusedElementKey: InstanceKey | undefined,
     private _changedElements: ChangedElementEntry[],
     private _primaryViewport: ScreenViewport,

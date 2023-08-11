@@ -6,7 +6,6 @@ import { getClassName } from "@itwin/appui-abstract";
 import type { AccessToken } from "@itwin/core-bentley";
 import type { ModelProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
-import { IModelsClient } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
 
 import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
@@ -28,9 +27,6 @@ interface IVersionCompareClientFactory {
 }
 
 export interface VersionCompareOptions {
-  /** Client that gives access to iTwin Platform iModels API. */
-  iModelsClient: IModelsClient;
-
   /**
    * Base URL for iTwin Platform Changed Elements API.
    * @default "https://api.bentley.com/changedelements"

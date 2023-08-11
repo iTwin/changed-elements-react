@@ -8,15 +8,14 @@ import {
   CheckpointConnection, GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, NotifyMessageDetails,
   OutputMessagePriority
 } from "@itwin/core-frontend";
-import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 import { KeySet } from "@itwin/presentation-common";
 
+import type { NamedVersion } from "../clients/iModelsClient.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { ChangedElementsApiClient, type ChangesetChunk } from "./ChangedElementsApiClient.js";
 import { ChangedElementsManager } from "./ChangedElementsManager.js";
 import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
-import { ChangesetCache } from "./ChangesetCache.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
@@ -37,9 +36,6 @@ export class VersionCompareManager {
   /** Changed Elements Manager responsible for maintaining the elements obtained from the service */
   public changedElementsManager: ChangedElementsManager;
 
-  /** Cache for changesets and named versions */
-  public changesetCache: ChangesetCache;
-
   private _visualizationHandler: VisualizationHandler | undefined;
   private _hasTypeOfChange = false;
   private _hasPropertiesForFiltering = false;
@@ -54,8 +50,6 @@ export class VersionCompareManager {
    * @param options VersionCompareOptions interface for customizing the experience
    */
   constructor(public options: VersionCompareOptions) {
-    this.changesetCache = new ChangesetCache(options.iModelsClient);
-
     // Only register namespace once
     void IModelApp.localization.registerNamespace(VersionCompareManager.namespace);
 
@@ -134,10 +128,10 @@ export class VersionCompareManager {
   public loadingProgressEvent = new BeEvent<(message: string) => void>();
 
   /** Current Version for comparison. */
-  public currentVersion: MinimalNamedVersion | undefined;
+  public currentVersion: NamedVersion | undefined;
 
   /** Target Version for comparison. */
-  public targetVersion: MinimalNamedVersion | undefined;
+  public targetVersion: NamedVersion | undefined;
 
   private _currentIModel: IModelConnection | undefined;
   private _targetIModel: IModelConnection | undefined;
@@ -220,8 +214,8 @@ export class VersionCompareManager {
    */
   public async getChangedElements(
     currentIModel: IModelConnection,
-    current: MinimalNamedVersion,
-    target: MinimalNamedVersion,
+    current: NamedVersion,
+    target: NamedVersion,
     changesetChunks?: ChangesetChunk[],
   ): Promise<ChangedElements[]> {
     const projectId = currentIModel.iTwinId;
@@ -254,8 +248,8 @@ export class VersionCompareManager {
    */
   public async startComparison(
     currentIModel: IModelConnection,
-    currentVersion: MinimalNamedVersion,
-    targetVersion: MinimalNamedVersion,
+    currentVersion: NamedVersion,
+    targetVersion: NamedVersion,
     _onViewChanged?: BeEvent<(args: unknown) => void>,
     changesetChunks?: ChangesetChunk[],
   ): Promise<boolean> {
