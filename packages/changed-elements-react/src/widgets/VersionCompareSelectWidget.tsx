@@ -220,6 +220,13 @@ function usePagedNamedVersionLoader(
         }
 
         sortedNamedVersions.sort((a, b) => a.changesetReverseIndex - b.changesetReverseIndex);
+        if (sortedNamedVersions.length === 0) {
+          setResult({
+            namedVersions: { entries: [], currentVersion: undefined },
+            changesets: [],
+          });
+          return;
+        }
 
         // Obtain current named version or manufacture an entry for one
         let currentVersion: NamedVersion;
