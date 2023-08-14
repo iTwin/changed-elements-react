@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * `VersionCompare.initialize` no longer accepts `iModelsClient` instance. Instead, you have to supply an object which implements our custom `IModelsClient` interface to `VersionCompareContext`. We expose a default client implementation as `ITwinIModelsClient`.
 
+### Fixes
+
+* Fix `VersionCompareSelectDialog` getting stuck in loading state when there are no named versions present.
+
 ### Minor changes
 
 * `VersionCompareSelectDialog` now updates named version list every time it is mounted.
