@@ -17,7 +17,7 @@ import { Component, createRef, useState, type ReactElement, type Ref, type SetSt
 
 import { type FilterOptions } from "../SavedFiltersManager.js";
 import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
-import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider.js";
+import { ChangesTreeDataProvider, isModelElementChanges } from "../api/ChangesTreeDataProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
@@ -788,23 +788,16 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return this._wantShowEntry(entry, opts);
   };
 
-  /** Merges two arrays into a single one. */
-  private _mergeEntryArrays = (a: ChangedElementEntry[], b: ChangedElementEntry[]): ChangedElementEntry[] => {
-    return [...a, ...b];
-  };
-
   /** Obtains the children nodes of the models, creates their entries, and visualizes them. */
   private _visualizeModelNodes = async (nodes: TreeNodeItem[], options?: FilterOptions): Promise<void> => {
     // Handle model nodes: Get the children entries they already have into an array
-    const entries = nodes
-      .map((node) => this.props.dataProvider.getModelAllChildElementEntries(node.id))
-      .reduce(this._mergeEntryArrays, []);
-
     const filter = options
       ? (entry: ChangedElementEntry) => this._filterEntryWithGivenOptions(entry, options)
       : this._filterEntryWithOptions;
+    const modelIds = new Set(nodes.map((value) => value.id));
+    const entries = this.props.dataProvider.getEntriesWithModelIds(modelIds, filter);
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries.filter(filter));
+    await visualizationManager?.setFocusedElements(entries);
   };
 
   /**
@@ -955,10 +948,29 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return false;
   };
 
+  /** Returns true if the model node has any entries internally that match the filter options */
+  private _wantShowModelNode(node: TreeNodeItem, options: FilterOptions): boolean {
+    const modelChanges = node.extendedData?.modelChanges;
+    if (!isModelElementChanges(modelChanges)) {
+      return true;
+    }
+
+    return (
+      (options.wantAdded && modelChanges.hasInserts) ||
+      (options.wantDeleted && modelChanges.hasDeletions) ||
+      (options.wantModified && modelChanges.hasUpdates && (options.wantedTypeOfChange & modelChanges.typeOfChange) > 0)
+    );
+  }
+
   /** Returns true if the node matches the filter options. */
   private _wantShowNode = (node: TreeNodeItem, options: FilterOptions): boolean => {
     if (node.extendedData === undefined) {
       return false;
+    }
+
+    // If we defer model node loading, use the summarized ModelElementChanges for filtering model nodes faster
+    if (node.extendedData?.isModel) {
+      return isDefaultFilterOptions(options) || this._wantShowModelNode(node, options);
     }
 
     const opcode = node.extendedData.element !== undefined ? node.extendedData.element.opcode : undefined;
