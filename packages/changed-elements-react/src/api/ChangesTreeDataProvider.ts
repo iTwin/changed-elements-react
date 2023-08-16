@@ -23,12 +23,31 @@ enum ModelNodeType {
   NonGeometric,
 }
 
+// Used to keep track of the types of change and opcodes contained in a model
+export interface ModelElementChanges {
+  hasInserts: boolean;
+  hasUpdates: boolean;
+  hasDeletions: boolean;
+  typeOfChange: number;
+}
+
+export function isModelElementChanges(input: unknown): input is ModelElementChanges {
+  return !!input
+    && typeof input === "object"
+    && (input as Record<string, unknown>).hasInserts !== undefined
+    && (input as Record<string, unknown>).hasUpdates !== undefined
+    && (input as Record<string, unknown>).hasDeletions !== undefined
+    && (input as Record<string, unknown>).typeOfChange !== undefined;
+}
+
 /**
  * Provider for changed elements tree that contains even unchanged elements
  * The roots of the tree are all the changed top assembly (elements without parents) found in the changes
  */
 export class ChangesTreeDataProvider implements ITreeDataProvider {
   private _rootElements: Set<string>;
+  private _loadingLabel: string;
+  private _rootEntries: ChangedElementEntry[] | undefined;
   private _models: TreeNodeItem[] | undefined;
   private _currentLabelProvider: PresentationLabelsProvider | undefined;
   private _targetLabelProvider: PresentationLabelsProvider | undefined;
@@ -64,6 +83,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
         imodel: this._manager.targetIModel,
       });
     }
+    this._loadingLabel = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loading");
   }
 
   private get _elements() {
@@ -183,11 +203,13 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     return this._manager.changedElementsManager.entryCache.getEntries(set);
   }
 
+  public getRootEntries(): ChangedElementEntry[] {
+    this._rootEntries ??= this.getEntriesFromIds(this._rootElements);
+    return this._rootEntries;
+  }
+
   private _getNode = (element: ChangedElementEntry): DelayLoadedTreeNodeItem => {
-    const label =
-      element.label !== undefined && element.label !== ""
-        ? element.label
-        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loading");
+    const label = element.label !== undefined && element.label !== "" ? element.label : this._loadingLabel;
     return {
       id: element.id,
       label: PropertyRecord.fromString(label),
@@ -319,7 +341,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     // Default label to the props names or class name if we don't have a name
     const label = modelLabel ?? props.name ?? props.classFullName;
     // Return a node that has a fake "element" with all the children elements of the model
-    return {
+    const result: DelayLoadedTreeNodeItem = {
       id: props.id !== undefined ? props.id : "unknown-model-id",
       label: PropertyRecord.fromString(label),
       hasChildren: true,
@@ -329,6 +351,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
         modelProps: props,
         modelId: props.id,
         childrenEntries,
+        childrenLoaded: childrenEntries.length > 0,
         element: {
           id: props.id,
           opcode: markAsDelete ? DbOpcode.Delete : DbOpcode.Update,
@@ -337,6 +360,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
         },
       },
     };
+    return result;
   }
 
   /**
@@ -461,6 +485,10 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     targetNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
 
     this._models = [...currentNodes, ...targetNodes];
+
+    // Release, as it will be unused after the creation of models
+    this._rootEntries = undefined;
+
     return this._models;
   }
 
@@ -512,7 +540,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
    * that are relevant in the comparison session
    */
   private _getModelIdsFromRootEntries(filterFunc?: (entry: ChangedElementEntry) => boolean): Set<string> {
-    const rootEntries = this.getEntriesFromIds(this._rootElements);
+    const rootEntries = this.getRootEntries();
     const modelIds = new Set<string>();
     rootEntries.forEach((entry: ChangedElementEntry) => {
       if (entry.modelId && (filterFunc === undefined || filterFunc(entry))) {
@@ -522,6 +550,42 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       }
     });
     return modelIds;
+  }
+
+  /**
+   * Goes through the root entries and determines the types of changes contained in a model. For filtering purposes
+   * without going to the children entries again during widget.
+   */
+  private _getModelChangesFromRootEntries(
+    filterFunc?: (entry: ChangedElementEntry) => boolean,
+  ): Map<string, ModelElementChanges> {
+    const rootEntries = this.getRootEntries();
+    const results = new Map<string, ModelElementChanges>();
+
+    // Accumulate what type of changes a model node has so that we know how to filter the nodes without inspecting the children
+    rootEntries.forEach((entry: ChangedElementEntry) => {
+      if (entry.modelId && (filterFunc === undefined || filterFunc(entry))) {
+        if (Id64.isValid(entry.modelId)) {
+          const existing = results.get(entry.modelId);
+          if (existing === undefined) {
+            const modelChanges: ModelElementChanges = {
+              hasDeletions: entry.opcode === DbOpcode.Delete,
+              hasInserts: entry.opcode === DbOpcode.Insert,
+              hasUpdates: entry.opcode === DbOpcode.Update,
+              typeOfChange: entry.type,
+            };
+            results.set(entry.modelId, modelChanges);
+          } else {
+            existing.hasDeletions = existing.hasDeletions || entry.opcode === DbOpcode.Delete;
+            existing.hasInserts = existing.hasInserts || entry.opcode === DbOpcode.Insert;
+            existing.hasUpdates = existing.hasUpdates || entry.opcode === DbOpcode.Update;
+            existing.typeOfChange |= entry.type;
+          }
+        }
+      }
+    });
+
+    return results;
   }
 
   /**
@@ -555,17 +619,8 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       // Only add the node related to either all models or the specific
       // 2d model being viewed
       if (this._baseModelId === undefined || prop.id === this._baseModelId) {
-        const labelId =
-          this._manager.changedElementsManager.modelToParentModelMap?.get(
-            prop.id,
-          ) ?? prop.id;
-        const modelNode = this._createNodeFromModel(
-          prop,
-          this._getChangedModelChildrenById(prop.id),
-          modelType,
-          markAsDelete,
-          labelMap.get(labelId),
-        );
+        const labelId = this._manager.changedElementsManager.modelToParentModelMap?.get(prop.id) ?? prop.id;
+        const modelNode = this._createNodeFromModel(prop, [], modelType, markAsDelete, labelMap.get(labelId));
         models.push(modelNode);
       }
     }
@@ -741,6 +796,16 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       found2dModels,
       markAsDelete,
     );
+
+    // Store ype of changes that a model's elements have for faster filtering
+    const modelChanges = this._getModelChangesFromRootEntries(filterFunc);
+    for (const node of nodes) {
+      if (node.extendedData) {
+        const changes = modelChanges.get(node.id);
+        node.extendedData.modelChanges = changes;
+      }
+    }
+
     // TODO: Remove duplicates and handle multi-nodes
     return nodes.sort((a: TreeNodeItem, b: TreeNodeItem) =>
       a.label.property.displayLabel.localeCompare(b.label.property.displayLabel),
@@ -748,12 +813,14 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   }
 
   private _getChangedModelChildrenById(modelId: string): TreeNodeItem[] {
-    return this.getEntriesFromIds(this._rootElements)
-      .filter(
-        (entry: ChangedElementEntry) =>
-          entry.modelId !== undefined && entry.modelId === modelId,
-      )
-      .map((entry: ChangedElementEntry) => this._getNode(entry));
+    const output = [];
+    for (const entry of this.getRootEntries()) {
+      if (entry.modelId !== undefined && entry.modelId === modelId) {
+        output.push(this._getNode(entry));
+      }
+    }
+
+    return output;
   }
 
   private _getChangedModelChildrenCount(modelNode: TreeNodeItem): number {
@@ -948,6 +1015,18 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       .filter(
         (entry: ChangedElementEntry | undefined) => entry !== undefined,
       ) as ChangedElementEntry[];
+
+    // Handle loading model children on actual load of the node
+    for (const node of nodes) {
+      if (this._isModelNode(node) && node.extendedData?.childrenLoaded === false) {
+        const childrenNodes = this._getChangedModelChildrenById(node.id);
+        const childrenEntries: string[] = childrenNodes.map((node) => node.extendedData?.element.id ?? "");
+        node.extendedData.childrenEntries = childrenEntries;
+        node.extendedData.element.children = this._getAllChildrenOfNodes(childrenNodes);
+        node.extendedData.childrenLoaded = true;
+      }
+    }
+
     await this._loadEntries(entries);
   };
 
@@ -971,6 +1050,21 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
         entries.push(pair[1]);
       }
     }
+    return entries;
+  }
+
+  /** Get entries with model ids based on a filter function. */
+  public getEntriesWithModelIds(
+    modelIds: Set<string>,
+    filterFunc: (entry: ChangedElementEntry) => boolean,
+  ): ChangedElementEntry[] {
+    const entries = [];
+    for (const pair of this._elements) {
+      if (pair[1].modelId !== undefined && modelIds.has(pair[1].modelId) && filterFunc(pair[1])) {
+        entries.push(pair[1]);
+      }
+    }
+
     return entries;
   }
 

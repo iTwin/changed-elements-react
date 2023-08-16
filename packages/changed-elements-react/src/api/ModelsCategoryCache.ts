@@ -17,6 +17,11 @@ const getElementModelsByIds = async (
   targetConnection: IModelConnection,
   elementIds: string[],
 ): Promise<Set<string>> => {
+  // Don't try to query if we have an empty array
+  if (elementIds.length === 0) {
+    return new Set();
+  }
+
   const modelIds = new Set<string>();
   const chunkSize = 800;
   // TODO: Check if distinct works properly here
@@ -64,38 +69,38 @@ const getElementCategories = async (targetConnection: IModelConnection): Promise
   return categoryIds;
 };
 
-/**
- * Gets the categories that are no longer in the current iModel but are in target iModel
- * @param currentConnection Current IModel
- * @param targetConnection Target IModel
- */
-const getNotCurrentCategories = async (
-  currentConnection: IModelConnection,
-  targetConnection: IModelConnection,
-): Promise<Set<string>> => {
-  const currentCategories = await getElementCategories(currentConnection);
-  const targetCategories = await getElementCategories(targetConnection);
-  const notPresentCategories = new Set<string>();
-  for (const cat of targetCategories) {
-    if (!currentCategories.has(cat)) {
-      notPresentCategories.add(cat);
-    }
-  }
-  return notPresentCategories;
-};
+/** Interface to maintain category information for comparison. */
+export interface ComparisonCategorySets {
+  allCategories: Set<string>;
+  deletedCategories: Set<string>;
+}
 
 /**
- * Gets the categories that are no longer in the current iModel but are in target iModel
+ * Get all categories and deleted categories based on both iModel connections.
  * @param currentConnection Current IModel
  * @param targetConnection Target IModel
  */
-const getAllCategories = async (
+const getCategorySets = async (
   currentConnection: IModelConnection,
   targetConnection: IModelConnection,
-): Promise<Set<string>> => {
+): Promise<ComparisonCategorySets> => {
   const currentCategories = await getElementCategories(currentConnection);
   const targetCategories = await getElementCategories(targetConnection);
-  return new Set([...currentCategories, ...targetCategories]);
+  const deletedCategories = new Set<string>();
+  // Find categories that got deleted
+  for (const cat of targetCategories) {
+    if (!currentCategories.has(cat)) {
+      deletedCategories.add(cat);
+    }
+  }
+
+  // Put together all categories
+  const allCategories = new Set<string>(currentCategories);
+  for (const category of targetCategories) {
+    allCategories.add(category);
+  }
+
+  return { allCategories, deletedCategories };
 };
 
 export interface ModelsCategoryData {
@@ -143,10 +148,17 @@ export class ModelsCategoryCache {
     ) {
       // Find ids for deleted and modified elements
       const deletedElementIds: string[] = [];
+      const deletedElementModelIds: string[] = [];
       const updatedElementIds: string[] = [];
       for (const changedElement of changedElements) {
         if (changedElement.opcode === DbOpcode.Delete) {
-          deletedElementIds.push(changedElement.id);
+          // Only load the ones that we don't have model Ids for, as these model Ids will be the appropriate old version
+          // model Id.
+          if (!changedElement.modelId) {
+            deletedElementIds.push(changedElement.id);
+          } else {
+            deletedElementModelIds.push(changedElement.modelId);
+          }
         } else if (changedElement.opcode === DbOpcode.Update) {
           updatedElementIds.push(changedElement.id);
         }
@@ -156,13 +168,14 @@ export class ModelsCategoryCache {
         targetIModel,
         deletedElementIds,
       );
+      // Add all the model Ids we already had on change info
+      for (const modelId of deletedElementModelIds) {
+        deletedElementsModels.add(modelId);
+      }
+
       // Ensure categories that no longer exist in the iModel are added to the viewport
       // So that elements that used to exist in those categories are displayed
-      const categories = await getAllCategories(currentIModel, targetIModel);
-      const deletedCategories = await getNotCurrentCategories(
-        currentIModel,
-        targetIModel,
-      );
+      const categoryInfo = await getCategorySets(currentIModel, targetIModel);
       // Get model ids for updated models
       const updatedElementsModels = await getElementModelsByIds(
         targetIModel,
@@ -180,8 +193,8 @@ export class ModelsCategoryCache {
       this._cache = {
         deletedElementsModels,
         updatedElementsModels,
-        categories,
-        deletedCategories,
+        categories: categoryInfo.allCategories,
+        deletedCategories: categoryInfo.deletedCategories,
       };
     }
   }
