@@ -297,16 +297,7 @@
 }
 
 .no-named-versions-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 50vh;
   margin: auto;
-  font-size: var(--iui-font-size-2);
-  background-color: var(--iui-color-background-backdrop);
-  border: solid;
-  border-color: var(--iui-color-border);
-  border-width: 1px;
 }
 
 .version-selector-manage-link {

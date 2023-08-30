@@ -5,7 +5,7 @@
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
-  Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
+  Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio, Text
 } from "@itwin/itwinui-react";
 import {
   Component, createRef, forwardRef, useEffect, useImperativeHandle, useMemo, useState, type ReactElement, type ReactNode
@@ -469,9 +469,9 @@ const VersionCompareSelectorInner = forwardRef<
               onVersionClicked={props.onVersionClicked}
             />
           ) : (
-            <div className="no-named-versions-message">
-              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noNamedVersions")}
-            </div>
+            <Text className="no-named-versions-message" variant="leading">
+              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.noPastNamedVersions")}
+            </Text>
           )
         }
         {
