@@ -1,6 +1,7 @@
 coverage
 lib
 node_modules
+.cache
 
 npm-debug.log*
 pnpm-debug.log*
