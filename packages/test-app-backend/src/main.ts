@@ -18,6 +18,7 @@ void (async () => {
   Logger.initializeToConsole();
   Logger.setLevelDefault(LogLevel.Info);
   await IModelHost.startup({
+    cacheDir: "./.cache",
     hubAccess: new BackendIModelsAccess(
       new IModelsClient({ api: { baseUrl: `https://${process.env.VITE_URL_PREFIX}api.bentley.com/imodels` } }),
     ),

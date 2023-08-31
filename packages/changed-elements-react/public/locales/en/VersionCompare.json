@@ -88,6 +88,7 @@
     "noDescription": "No description",
     "scrollToChangedProperty": "Cycle to next changed property",
     "noNamedVersions": "No named versions found in iModel to do comparison",
+    "noPastNamedVersions": "There are no past named versions to compare against.",
     "error_versionCompareNotEnabledForIModel": "Version Comparison is not enabled for this iModel.",
     "error_versionCompareNotEnabledForIModel_Click": "to go to IModel Manager",
     "clickHere": "Click here",
