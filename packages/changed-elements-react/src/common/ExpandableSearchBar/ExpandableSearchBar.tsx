@@ -3,7 +3,6 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
-import type { CommonProps } from "@itwin/core-react";
 import { SvgBlank, SvgClose, SvgSearch } from "@itwin/itwinui-icons-react";
 import { IconButton, Input } from "@itwin/itwinui-react";
 import {
@@ -14,7 +13,7 @@ import { FilterBar } from "./FilterBar.js";
 
 import "./ExpandableSearchBar.scss";
 
-export interface ExpandableSearchBarProps extends CommonProps {
+export interface ExpandableSearchBarProps {
   /** Modify size of the search button. */
   size?: "small" | "large";
 
@@ -60,7 +59,6 @@ export function ExpandableSearchBar({
   size,
   styleType,
   children,
-  className,
   valueChangedDelay,
   onChange,
   setFocus = false,
@@ -116,10 +114,10 @@ export function ExpandableSearchBar({
   );
 
   return (
-    <div className={`expandable-search-bar ${className ?? ""}`}>
-      <div className="expandable-search-bar-container">
+    <div className="iTwinChangedElements__expandable-search-bar">
+      <div className="iTwinChangedElements__expandable-search-bar-container">
         {children}
-        <div className={`expandable-search-bar-wrapper ${expanded ? "expanded" : ""}`}>
+        <div className={`iTwinChangedElements__expandable-search-bar-wrapper ${expanded ? "expanded" : ""}`}>
           <Input
             size={size}
             value={searchText ?? ""}
@@ -133,7 +131,7 @@ export function ExpandableSearchBar({
           </IconButton>
         </div>
         <IconButton
-          className="expandable-search-bar-icon-wrapper"
+          className="iTwinChangedElements__expandable-search-bar-icon-wrapper"
           size={size}
           styleType={styleType}
           onClick={onToggleSearch}
