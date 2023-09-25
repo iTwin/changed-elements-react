@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## [0.3.1](https://github.com/iTwin/changed-elements-react/tree/v0.3.1/packages/changed-elements-react) - 2023-08-31
+
 ### Patch changes
 
-* `VersionCompareSelectDialog` - change empty state appearance.
+* Change empty state appearance of `VersionCompareSelectDialog`.
+* Improve changed elements widget startup performance by deferring model node loading.
 
 ## [0.3.0](https://github.com/iTwin/changed-elements-react/tree/v0.3.0/packages/changed-elements-react) - 2023-08-14
 
