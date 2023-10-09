@@ -366,17 +366,23 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
         </WidgetComponent>
-        <ReportGeneratorDialog
-          isOpen={this.state.reportDialogVisible}
-          onClose={this.closeReportDialog}
-          manager={this.state.manager}
-          initialProperties={this.state.reportProperties}
-        />
-        <VersionCompareSelectDialog
-          iModelConnection={this.props.iModelConnection}
-          isOpen={this.state.versionSelectDialogVisible}
-          onClose={this._handleVersionSelectDialogClose}
-        />
+        {
+          this.state.reportDialogVisible &&
+          <ReportGeneratorDialog
+            isOpen
+            onClose={this.closeReportDialog}
+            manager={this.state.manager}
+            initialProperties={this.state.reportProperties}
+          />
+        }
+        {
+          this.state.versionSelectDialogVisible &&
+          <VersionCompareSelectDialog
+            isOpen
+            iModelConnection={this.props.iModelConnection}
+            onClose={this._handleVersionSelectDialogClose}
+          />
+        }
       </>
     );
   }
