@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## [0.3.3](https://github.com/iTwin/changed-elements-react/tree/v0.3.3/packages/changed-elements-react) - 2023-10-10
+
 ### Fixes
 
 * Fix `ReportGeneratorDialog` not listing any changed properties.
