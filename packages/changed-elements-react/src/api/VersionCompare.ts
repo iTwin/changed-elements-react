@@ -93,6 +93,15 @@ export class VersionCompare {
     return VersionCompare._manager;
   }
 
+  public static async isChangeTrackingEnabled(iTwinId: string, iModelId: string): Promise<boolean> {
+    const client = VersionCompare.clientFactory.createChangedElementsClient();
+    if (client instanceof ChangedElementsApiClient) {
+      return client.getTracking(iTwinId, iModelId);
+    }
+
+    return false;
+  }
+
   public static getAccessToken(): Promise<AccessToken> {
     if (!VersionCompare._getAccessToken) {
       throw new Error("AccessToken not found!");
