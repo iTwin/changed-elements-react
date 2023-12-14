@@ -154,11 +154,11 @@ importers:
         specifier: ^4.0.6
         version: 4.0.6(@itwin/core-backend@4.0.6)
       '@itwin/imodels-access-backend':
-        specifier: ^4.0.3
+        specifier: ^4.1.3
         version: 4.1.3(@itwin/core-backend@4.0.6)(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(inversify@6.0.1)(reflect-metadata@0.1.13)
       '@itwin/imodels-client-authoring':
-        specifier: ^4.1.1
-        version: 4.1.1(inversify@6.0.1)(reflect-metadata@0.1.13)
+        specifier: ^4.2.2
+        version: 4.2.2(inversify@6.0.1)(reflect-metadata@0.1.13)
       '@itwin/presentation-backend':
         specifier: ^4.0.6
         version: 4.0.6(@itwin/core-backend@4.0.6)(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-quantity@4.0.6)(@itwin/ecschema-metadata@4.0.6)(@itwin/presentation-common@4.0.6)
@@ -220,10 +220,10 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0(@itwin/appui-abstract@4.0.6)(@itwin/components-react@4.3.0)(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-frontend@4.0.6)(@itwin/core-geometry@4.0.6)(@itwin/core-quantity@4.0.6)(@itwin/core-react@4.3.0)(react-dom@17.0.0)(react@17.0.0)
       '@itwin/imodels-access-frontend':
-        specifier: ^4.0.4
-        version: 4.0.4(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-frontend@4.0.6)
+        specifier: ^4.1.3
+        version: 4.1.3(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-frontend@4.0.6)
       '@itwin/imodels-client-management':
-        specifier: ^4.1.1
+        specifier: ^4.2.2
         version: 4.2.2
       '@itwin/itwinui-icons-react':
         specifier: ^2.2.0
@@ -1155,8 +1155,8 @@ packages:
       - debug
     dev: false
 
-  /@itwin/imodels-access-frontend@4.0.4(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-frontend@4.0.6):
-    resolution: {integrity: sha512-uDbuYG+cGhatWNucms20gH9NuG8FVTjs5r9LMal280gFS6BVvwGrRTjUbaKFPTfg9i90SC86VPXH/XlWN5HnMw==}
+  /@itwin/imodels-access-frontend@4.1.3(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-frontend@4.0.6):
+    resolution: {integrity: sha512-XgfL/dEfDI/ufmE+waHTlkJ8ftvcEJ50gUNHsWWFR8O3wGLDO4eGN7EaH4ExUvP3jLBByyaX63z3q7gkp8HuaQ==}
     peerDependencies:
       '@itwin/core-bentley': ^4.0.0
       '@itwin/core-common': ^4.0.0
@@ -1165,23 +1165,10 @@ packages:
       '@itwin/core-bentley': 4.0.6
       '@itwin/core-common': 4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-geometry@4.0.6)
       '@itwin/core-frontend': 4.0.6(@itwin/appui-abstract@4.0.6)(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-geometry@4.0.6)(@itwin/core-orbitgt@4.0.6)(@itwin/core-quantity@4.0.6)
-      '@itwin/imodels-client-management': 4.1.1
+      '@itwin/imodels-access-common': 4.1.3(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)
+      '@itwin/imodels-client-management': 4.2.2
     transitivePeerDependencies:
       - debug
-    dev: false
-
-  /@itwin/imodels-client-authoring@4.1.1(inversify@6.0.1)(reflect-metadata@0.1.13):
-    resolution: {integrity: sha512-PePks67/ft28lxsUSdX8RvGEUMWC9ggJpi5ZHXyvlguBzXMdi+Aq76EFu+luTDAxtkMP6Vw8E62oGHYGvck1lA==}
-    dependencies:
-      '@azure/storage-blob': 12.15.0
-      '@itwin/imodels-client-management': 4.1.1
-      '@itwin/object-storage-azure': 2.2.1(inversify@6.0.1)(reflect-metadata@0.1.13)
-      '@itwin/object-storage-core': 2.2.1(inversify@6.0.1)(reflect-metadata@0.1.13)
-    transitivePeerDependencies:
-      - debug
-      - encoding
-      - inversify
-      - reflect-metadata
     dev: false
 
   /@itwin/imodels-client-authoring@4.2.2(inversify@6.0.1)(reflect-metadata@0.1.13):
@@ -1196,14 +1183,6 @@ packages:
       - encoding
       - inversify
       - reflect-metadata
-    dev: false
-
-  /@itwin/imodels-client-management@4.1.1:
-    resolution: {integrity: sha512-vW2U5Iv0Lv2juz/fj/tCFIUwXJ2zH5LyBr4LkrERd0FE24knVg5ryl5yzHLTVb+VUtsNvh6ImLnMSiqQ3Zw3iQ==}
-    dependencies:
-      axios: 1.6.2
-    transitivePeerDependencies:
-      - debug
     dev: false
 
   /@itwin/imodels-client-management@4.2.2:
