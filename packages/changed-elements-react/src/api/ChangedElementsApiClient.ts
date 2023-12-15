@@ -200,6 +200,20 @@ export class ChangedElementsApiClient implements ChangedElementsClientBase {
 
     return false;
   }
+
+  public async getTracking(iTwinId: string, iModelId: string): Promise<boolean> {
+    const response = await callITwinApi(
+      `/tracking?iTwinId=${iTwinId}&iModelId=${iModelId}`,
+      { baseUrl: this.baseUrl, getAccessToken: this.getAccessToken },
+    );
+
+    if (!response.ok) {
+      await throwBadResponseCodeError(response, "Failed to get change tracking status.");
+    }
+
+    const json = await response.json();
+    return json.enabled;
+  }
 }
 
 interface ChangesetCache {
