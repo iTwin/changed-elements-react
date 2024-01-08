@@ -6,7 +6,7 @@
 export interface CallITwinApiParams {
   method?: "GET" | "POST";
   url: string;
-  getAccessToken: () => Promise<string>;
+  getAccessToken?: () => Promise<string>;
   signal?: AbortSignal | undefined;
   headers?: Record<string, string> | undefined;
   body?: Record<string, unknown> | undefined;
@@ -15,7 +15,7 @@ export interface CallITwinApiParams {
 export async function callITwinApi(args: CallITwinApiParams): Promise<Record<string, unknown>> {
   const response = await fetch(
     args.url,
-    {
+    args.getAccessToken ? {
       method: args.method,
       headers: {
         ...args.headers,
@@ -23,7 +23,15 @@ export async function callITwinApi(args: CallITwinApiParams): Promise<Record<str
       },
       body: args.body && JSON.stringify(args.body),
       signal: args.signal,
-    },
+    } :
+      {
+        method: args.method,
+        headers: {
+          ...args.headers,
+        },
+        body: args.body && JSON.stringify(args.body),
+        signal: args.signal,
+      },
   );
 
   if (!response.ok) {

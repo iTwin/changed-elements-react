@@ -48,7 +48,7 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
       observer.observe(element);
       return () => observer.unobserve(element);
     },
-    [data, ],
+    [data],
   );
 
   return (
@@ -133,7 +133,7 @@ function VersionPicker(props: VersionPickerProps): ReactElement {
 interface ComparisonLoaderProps {
   iTwinId: string;
   iModelId: string;
-  currentChangeset: Changeset;
+  currentChangeset: string;
   baseChangesetId: string;
   data: UseVersionSelectorResult;
   onStartComparison?: (currentChangesetId: string, targetChangesetId: string, changedElements: ChangedElements) => void;
@@ -153,7 +153,7 @@ function ComparisonLoader(props: ComparisonLoaderProps): ReactElement {
           startChangesetId: props.data.changesets[props.data.changesets.findIndex(
             ({ id }) => id === props.baseChangesetId,
           ) - 1].id,
-          endChangesetId: props.currentChangeset.id,
+          endChangesetId: props.currentChangeset,
         });
         if (disposed) {
           return;
@@ -172,7 +172,7 @@ function ComparisonLoader(props: ComparisonLoaderProps): ReactElement {
         if (comparisonJob.status === "Completed") {
           const changedElements = await changedElementsClient.getComparisonJobResult({ comparisonJob });
           if (!disposed) {
-            (0, props.onStartComparison)?.(props.currentChangeset.id, props.baseChangesetId, changedElements);
+            (0, props.onStartComparison)?.(props.currentChangeset, props.baseChangesetId, changedElements);
           }
         }
       })();

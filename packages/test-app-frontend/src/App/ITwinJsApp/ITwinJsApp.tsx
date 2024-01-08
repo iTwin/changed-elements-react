@@ -24,7 +24,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useState } from "react";
 
-import { applyUrlPrefix } from "../../environment";
+import { applyUrlPrefix, urlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
 import { UIFramework } from "./ui-framework/UiFramework";
@@ -98,7 +98,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 }
 
 const changedElementsClient = new ITwinChangedElementsClient({
-  baseUrl: "https://dev-api.bentley.com/changedelements",
+  baseUrl: `https://${urlPrefix}api.bentley.com/changedelements`,
   getAccessToken: VersionCompare.getAccessToken,
 });
 

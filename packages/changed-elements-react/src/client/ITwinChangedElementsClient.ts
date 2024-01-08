@@ -7,13 +7,13 @@ import type {
   PostComparisonJobParams
 } from "./ChangedElementsClient.js";
 import { callITwinApi } from "./iTwinApi.js";
-
 export interface ITwinChangedElementsClientParams {
   baseUrl: string;
   getAccessToken: () => Promise<string>;
 }
 
 export class ITwinChangedElementsClient implements ChangedElementsClient {
+  private acceptHeader = "application/vnd.bentley.itwin-platform.v2+json"
   private baseUrl: string;
   private getAccessToken: () => Promise<string>;
 
@@ -29,7 +29,7 @@ export class ITwinChangedElementsClient implements ChangedElementsClient {
       getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: {
-        Accept: "application/vnd.bentley.dp-comparison-jobs2+json",
+        Accept: this.acceptHeader,
         ...args.headers,
       },
       body: args.body,
@@ -37,13 +37,13 @@ export class ITwinChangedElementsClient implements ChangedElementsClient {
   }
 
   public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements> {
+    //todo fix this direct download from href ?
     return callITwinApi({
       url: args.comparisonJob.comparison.href,
       method: "GET",
-      getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: {
-        Accept: "application/vnd.bentley.dp-comparison-jobs2+json",
+        Accept: this.acceptHeader,
         ...args.headers,
       },
       body: args.body,
@@ -57,7 +57,7 @@ export class ITwinChangedElementsClient implements ChangedElementsClient {
       getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: {
-        Accept: "application/vnd.bentley.dp-comparison-jobs2+json",
+        Accept: this.acceptHeader,
         ...args.headers,
       },
       body: {
