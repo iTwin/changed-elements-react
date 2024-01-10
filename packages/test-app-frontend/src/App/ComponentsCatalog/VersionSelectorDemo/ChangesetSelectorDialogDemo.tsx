@@ -29,7 +29,7 @@ export function ChangesetSelectDialogDemo(): ReactElement {
       <ChangesetSelectDialog
         iTwinId=""
         iModelId=""
-        currentChangeset={changesets[0]}
+        currentChangesetId={changesets[0]}
         getChangesetInfo={getChangesetInfo}
       />
     </VersionCompareContext>
@@ -46,7 +46,7 @@ export function ChangesetSelectDialogLoading(): ReactElement {
       <ChangesetSelectDialog
         iTwinId=""
         iModelId=""
-        currentChangeset={changesets[0]}
+        currentChangesetId={changesets[0]}
         getChangesetInfo={getChangesetInfo}
       />
     </VersionCompareContext>
@@ -66,7 +66,7 @@ export function ChangesetSelectDialogNoChangesets(): ReactElement {
       <ChangesetSelectDialog
         iTwinId=""
         iModelId=""
-        currentChangeset={changesets[0]}
+        currentChangesetId={changesets[0]}
         getChangesetInfo={getChangesetInfo}
       />
     </VersionCompareContext>
@@ -87,7 +87,7 @@ export function ChangesetSelectDialogError(): ReactElement {
       <ChangesetSelectDialog
         iTwinId=""
         iModelId=""
-        currentChangeset={changesets[0]}
+        currentChangesetId={changesets[0]}
         getChangesetInfo={getChangesetInfo}
       />
     </VersionCompareContext>
@@ -123,7 +123,7 @@ export function ChangesetSelectDialogManyChangesets(): ReactElement {
       <ChangesetSelectDialog
         iTwinId=""
         iModelId=""
-        currentChangeset={changesets[0]}
+        currentChangesetId={changesets[0]}
         getChangesetInfo={getChangesetInfo}
       />
     </VersionCompareContext>

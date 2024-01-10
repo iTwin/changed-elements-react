@@ -41,12 +41,11 @@ export function ChangesetList(props: ChangesetListProps): ReactElement {
     <List className="iTwinChangedElements__changeset-list">
       {currentChangeset && currentNamedVersion && <NamedVersionRow namedVersion={currentNamedVersion} isRequired={isRequired} />}
       {currentChangeset && <ChangesetRow changeset={currentChangeset} current required={!!baseChangeset} />}
-      {changesets.map((changeset) => {
+      {changesets.filter(changeset=>namedVersions.has(changeset.id)).map((changeset) => {
         const isBase = changeset.id === baseChangeset?.id;
         if (isBase) {
           isRequired = false;
         }
-
         const namedVersion = namedVersions.get(changeset.id);
         return (
           <Fragment key={changeset.id}>

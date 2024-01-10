@@ -12,11 +12,12 @@ import { Changeset } from "./NamedVersionSelector.js";
 import { ChangesetInfo, UseVersionSelectorResult, useVersionSelector } from "./useVersionSelector.js";
 
 import "./ChangesetSelectDialog.css";
+import { IModelApp, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 
 export interface ChangesetSelectDialogProps {
   iTwinId: string;
   iModelId: string;
-  currentChangeset: Changeset;
+  currentChangesetId: string;
   getChangesetInfo: () => AsyncIterable<ChangesetInfo>;
   onStartComparison?: (currentChangesetId: string, targetChangesetId: string, changedElements: ChangedElements) => void;
 }
@@ -25,9 +26,29 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
   const data = useVersionSelector(props.getChangesetInfo);
   const [baseVersion, setBaseVersion] = useState<string>();
   const [selectedChangesetId, setSelectedChangeset] = useState<string>();
-
+  const [error, setError] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const renderComparisonLoader = () => {
+    try {
+      return (
+        <>
+          <Text variant="subheading">Preparing comparison</Text>
+          <ComparisonLoader
+            iTwinId={props.iTwinId}
+            iModelId={props.iModelId}
+            currentChangesetId={props.currentChangesetId}
+            baseChangesetId={baseVersion as string}
+            data={data}
+            onStartComparison={props.onStartComparison}
+          />
+        </>
+      );
+    } catch (error) {
+      setError(true);
+      setBaseVersion(undefined);
+    }
+  }
   useEffect(
     () => {
       const element = progressRef.current;
@@ -53,10 +74,9 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
 
   return (
     <div className="iTwinChangedElements__changeset-select-dialog">
-      <Text variant="subheading">Select version for comparison</Text>
+      {error ? <Text variant="subheading" style={{color:"red"}}> An error occurred with the selected comparison please try again.</Text> : <Text variant="subheading">Select version for comparison.</Text>}
       <div ref={contentRef} style={{ gridArea: "content", overflow: "auto" }}>
-        {
-          !baseVersion &&
+        {!baseVersion ?
           <>
             {
               <>
@@ -64,7 +84,7 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
                   (data.changesets.length > 0 || (data.status === "ready" && !data.loadMore)) &&
                   <VersionPicker
                     iModelId={props.iModelId}
-                    changesetId={props.currentChangeset.id}
+                    changesetId={props.currentChangesetId}
                     data={data}
                     selectedChangesetId={selectedChangesetId}
                     onChangesetSelected={setSelectedChangeset}
@@ -80,32 +100,24 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
               </div>
             }
           </>
-        }
-        {
-          baseVersion &&
-          <>
-            <Text variant="subheading">Preparing comparison</Text>
-            <ComparisonLoader
-              iTwinId={props.iTwinId}
-              iModelId={props.iModelId}
-              currentChangeset={props.currentChangeset}
-              baseChangesetId={baseVersion}
-              data={data}
-              onStartComparison={props.onStartComparison}
-            />
-          </>
+          :
+          renderComparisonLoader()
         }
       </div>
-      <div style={{ gridArea: "buttons", display: "flex", justifyContent: "end", gap: "var(--iui-size-xs)" }}>
+      <div style={{ gridArea: "buttons", display: "flex", justifyContent: "end", gap: "var(--iui-size-xs)", position:"relative", bottom:"0" }}>
         <Button
           styleType="high-visibility"
           disabled={!selectedChangesetId}
-          onClick={() => setBaseVersion(selectedChangesetId)}>
+          onClick={() => {
+            setBaseVersion(selectedChangesetId);
+            setError(false);
+          }}>
           Start comparison
         </Button>
         <Button onClick={() => setBaseVersion(undefined)}>Cancel</Button>
       </div>
     </div>
+
   );
 }
 
@@ -133,7 +145,7 @@ function VersionPicker(props: VersionPickerProps): ReactElement {
 interface ComparisonLoaderProps {
   iTwinId: string;
   iModelId: string;
-  currentChangeset: string;
+  currentChangesetId: string;
   baseChangesetId: string;
   data: UseVersionSelectorResult;
   onStartComparison?: (currentChangesetId: string, targetChangesetId: string, changedElements: ChangedElements) => void;
@@ -141,51 +153,58 @@ interface ComparisonLoaderProps {
 
 function ComparisonLoader(props: ComparisonLoaderProps): ReactElement {
   const { changedElementsClient } = useVersionCompare();
-
   useEffect(
     () => {
       let disposed = false;
-      void (async () => {
-        let { comparisonJob } = await postOrGetComparisonJob({
-          changedElementsClient,
-          iTwinId: props.iTwinId,
-          iModelId: props.iModelId,
-          startChangesetId: props.data.changesets[props.data.changesets.findIndex(
-            ({ id }) => id === props.baseChangesetId,
-          ) - 1].id,
-          endChangesetId: props.currentChangeset,
-        });
-        if (disposed) {
-          return;
-        }
+      void (
+        async () => {
+            let { comparisonJob } = await postOrGetComparisonJob({
+              changedElementsClient,
+              iTwinId: props.iTwinId,
+              iModelId: props.iModelId,
+              startChangesetId: props.data.changesets[props.data.changesets.findIndex(
+                ({ id }) => id === props.baseChangesetId,
+              ) - 1].id,
+              endChangesetId: props.currentChangesetId,
+            });
+            if (disposed) {
+              return;
+            }
+          IModelApp.notifications.outputMessage(
+            new NotifyMessageDetails(
+              OutputMessagePriority.Warning,
+              "Comparison Processing",
+              `Comparing ${props.data.changesets.find(({ id }) => id === props.currentChangesetId)?.description ?? "current changeset"} with ${props.data.changesets.find(({ id }) => id === props.baseChangesetId)?.description}.`,
+              OutputMessageType.Sticky,
+            ),
+          );
+            while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+              ({ comparisonJob } = await changedElementsClient.getComparisonJob({
+                iModelId: props.iModelId,
+                iTwinId: props.iTwinId,
+                jobId: comparisonJob.jobId,
+                headers: { "Content-Type": "application/json" },
+              }));
+            }
 
-        while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          ({ comparisonJob } = await changedElementsClient.getComparisonJob({
-            iModelId: props.iModelId,
-            iTwinId: props.iTwinId,
-            jobId: comparisonJob.jobId,
-            headers: { "Content-Type": "application/json" },
-          }));
-        }
-
-        if (comparisonJob.status === "Completed") {
-          const changedElements = await changedElementsClient.getComparisonJobResult({ comparisonJob });
-          if (!disposed) {
-            (0, props.onStartComparison)?.(props.currentChangeset, props.baseChangesetId, changedElements);
-          }
-        }
-      })();
+          if (comparisonJob.status === "Completed") {
+            const changedElements = await changedElementsClient.getComparisonJobResult({ comparisonJob });
+              if (!disposed) {
+                (0, props.onStartComparison)?.(props.currentChangesetId, props.baseChangesetId, changedElements);
+              }
+            }
+        })();
 
       return () => { disposed = true; };
     },
-    [props.iTwinId, props.iModelId, props.data, changedElementsClient, props.baseChangesetId, props.currentChangeset, props.onStartComparison],
+    [props.iTwinId, props.iModelId, props.data, changedElementsClient, props.baseChangesetId, props.currentChangesetId, props.onStartComparison],
   );
 
   return (
     <div style={{ display: "grid" }}>
       <Text>
-        Comparing {props.currentChangeset?.description} with {props.data.changesets.find(({ id }) => id === props.baseChangesetId)?.description}
+        You may close widget while comparison is being prepared.
       </Text>
       <ProgressRadial style={{ placeSelf: "center" }} size="large" indeterminate />
       <ChangesetList

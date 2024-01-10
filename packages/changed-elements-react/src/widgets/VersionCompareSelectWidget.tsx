@@ -11,7 +11,7 @@ import {
   MinimalChangeset, MinimalNamedVersion, NamedVersion, NamedVersionState
 } from "@itwin/imodels-client-management";
 import {
-  Button, Dialog, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
+  Button, Dialog, IconButton, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio
 } from "@itwin/itwinui-react";
 import {
   Component, createRef, forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState
@@ -27,6 +27,10 @@ import { ChangesetSelectDialog } from "../VersionSelector/ChangesetSelectDialog.
 import { ChangesetInfo } from "../VersionSelector/useVersionSelector.js";
 
 import "./VersionCompareSelectWidget.scss";
+import { SvgClose } from "@itwin/itwinui-react/esm/core/utils";
+import { UIFramework } from '../../../test-app-frontend/src/App/ITwinJsApp/ui-framework/UiFramework';
+import { Widget } from "../common/Widget/Widget.js";
+import { Size } from '../AutoSizer';
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
@@ -950,15 +954,29 @@ export const openSelectDialog = async (iModel: IModelConnection) => {
     };
     await manager.startComparison(iModel, currentVersion, targetVersion, [changedElements]);
   };
-
   UiFramework.dialogs.modal.open(
     <Dialog isOpen>
       <Dialog.Main>
         <Dialog.Content>
+          <Widget.TitleBar>
+            <Widget.TitleBar.Title>
+              Version Compare
+            </Widget.TitleBar.Title>
+            <Widget.TitleBar.Content>
+              <IconButton
+                size='small'
+                styleType='borderless'
+                onClick={() => UiFramework.dialogs.modal.close()}
+                aria-label='Close'
+              >
+                <SvgClose />
+              </IconButton>
+            </Widget.TitleBar.Content>
+          </Widget.TitleBar>
           <ChangesetSelectDialog
             iTwinId={iModel.iTwinId}
             iModelId={iModel.iModelId}
-            currentChangeset={iModel.changeset.id}
+            currentChangesetId={iModel.changeset.id}
             onStartComparison={handleStartComparison}
             getChangesetInfo={getChangesetInfo(manager, iModel.iModelId)}
           />
@@ -966,10 +984,6 @@ export const openSelectDialog = async (iModel: IModelConnection) => {
       </Dialog.Main>
     </Dialog>,
   );
-
-  // UiFramework.dialogs.modal.open(
-  //   <VersionCompareSelectDialog iModelConnection={iModel} />,
-  // );
 };
 
 function getChangesetInfo(manager: VersionCompareManager, iModelId: string): () => AsyncIterable<ChangesetInfo> {
