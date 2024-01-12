@@ -63,6 +63,8 @@
 .iTwinChangedElements__changeset-list .iui-list-item {
   display: grid;
   grid: 1fr / auto auto 1fr auto auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .iTwinChangedElements__list-icon {

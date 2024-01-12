@@ -15,6 +15,7 @@ export interface ChangesetListProps {
   selectedChangesetId?: string | undefined;
   onChangesetSelected?: ((changesetId: string) => void) | undefined;
   actionable?: boolean;
+  onlyNamedVersions: boolean;
 }
 
 export function ChangesetList(props: ChangesetListProps): ReactElement {
@@ -37,30 +38,38 @@ export function ChangesetList(props: ChangesetListProps): ReactElement {
   const baseChangeset = changesets.find(({ id }) => id === props.selectedChangesetId);
 
   let isRequired = !!baseChangeset;
+  const createChangeSetRows = (changeset:Changeset) => {
+    const isBase = changeset.id === baseChangeset?.id;
+    if (isBase) {
+      isRequired = false;
+    }
+    const namedVersion = namedVersions.get(changeset.id);
+    return (
+      <Fragment key={changeset.id}>
+        {namedVersion && <NamedVersionRow namedVersion={namedVersion} isRequired={isBase || isRequired} />}
+        <ChangesetRow
+          key={changeset.id}
+          changeset={changeset}
+          isBase={isBase}
+          required={isRequired}
+          actionable={props.actionable}
+          onClick={handleChangesetClicked}
+        />
+        <IconStraightHorizontal/>
+      </Fragment>
+    );
+  }
   return (
     <List className="iTwinChangedElements__changeset-list">
-      {currentChangeset && currentNamedVersion && <NamedVersionRow namedVersion={currentNamedVersion} isRequired={isRequired} />}
+      {currentChangeset && currentNamedVersion && <NamedVersionRow namedVersion={currentNamedVersion} current isRequired={isRequired} />}
       {currentChangeset && <ChangesetRow changeset={currentChangeset} current required={!!baseChangeset} />}
-      {changesets.filter(changeset=>namedVersions.has(changeset.id)).map((changeset) => {
-        const isBase = changeset.id === baseChangeset?.id;
-        if (isBase) {
-          isRequired = false;
-        }
-        const namedVersion = namedVersions.get(changeset.id);
-        return (
-          <Fragment key={changeset.id}>
-            {namedVersion && <NamedVersionRow namedVersion={namedVersion} isRequired={isBase || isRequired} />}
-            <ChangesetRow
-              key={changeset.id}
-              changeset={changeset}
-              isBase={isBase}
-              required={isRequired}
-              actionable={props.actionable}
-              onClick={handleChangesetClicked}
-            />
-          </Fragment>
-        );
-      })}
+      <IconStraightHorizontal />
+      {props.onlyNamedVersions ?
+        changesets.filter(changeset => namedVersions.has(changeset.id)).map(createChangeSetRows,
+        ) : changesets.map(
+          createChangeSetRows,
+        )
+      }
     </List>
   );
 }
@@ -68,14 +77,17 @@ export function ChangesetList(props: ChangesetListProps): ReactElement {
 interface NamedVersionRowProps {
   namedVersion: NamedVersion;
   isRequired: boolean;
+  current?: boolean;
 }
 
 function NamedVersionRow(props: NamedVersionRowProps) {
   return (
     <ListItem style={{ paddingBlock: 0 }}>
-      <IconStraight required={props.isRequired} />
+      {
+        //<IconStraight required={props.isRequired} /> todo reimplement when finished feedback says this is currently confusing
+      }
       <div />
-      <Text variant="small">{props.namedVersion.displayName}</Text>
+      <Text variant="small"><code>{props.namedVersion.displayName} </code> Date: {formatDate(new Date(props.namedVersion.date))} {props.current ? "| Current Version" : "" } </Text>
       <div />
     </ListItem>
   );
@@ -101,14 +113,10 @@ const ChangesetRow = memo(
         active={props.isBase}
         onClick={() => props.onClick?.(props.changeset)}
       >
-        {props.changeset.isProcessed ? <IconProcessed required={props.required} /> : <IconUnprocessed required={props.required} />}
-        <Code>{props.changeset.id.slice(0, 8)}</Code>
+        {
+        //props.changeset.isProcessed ? <IconProcessed required={props.required} /> : <IconUnprocessed required={props.required} /> //todo reimplement when finished feedback says this is currently confusing
+        }
         <Text>{props.changeset.description}</Text>
-        {!props.current && <Text></Text>}
-        {props.current && <Text>Active version</Text>}
-        <div style={{ display: "grid", justifyItems: "end" }}>
-          <Text title={props.changeset.date.toLocaleString()}>{formatDate(props.changeset.date)}</Text>
-        </div>
       </ListItem>
     );
   },
@@ -124,6 +132,15 @@ export function IconStraight(props: IconProps): ReactElement {
     <svg className="iTwinChangedElements__list-icon" data-required={props.required} viewBox="0 0 32 32">
       <path d="M 16 -16 L 16 48" />
     </svg>
+  );
+}
+
+export function IconStraightHorizontal(): ReactElement {
+  return (
+    <svg width="100%" height="2">
+      <line x1="0" y1="0" x2="100%" y2="0" style={{ stroke: "rgb(0,0,0)", strokeWidth: "2" }} />
+    </svg>
+
   );
 }
 

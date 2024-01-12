@@ -28,9 +28,7 @@ import { ChangesetInfo } from "../VersionSelector/useVersionSelector.js";
 
 import "./VersionCompareSelectWidget.scss";
 import { SvgClose } from "@itwin/itwinui-react/esm/core/utils";
-import { UIFramework } from '../../../test-app-frontend/src/App/ITwinJsApp/ui-framework/UiFramework';
 import { Widget } from "../common/Widget/Widget.js";
-import { Size } from '../AutoSizer';
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
@@ -955,24 +953,12 @@ export const openSelectDialog = async (iModel: IModelConnection) => {
     await manager.startComparison(iModel, currentVersion, targetVersion, [changedElements]);
   };
   UiFramework.dialogs.modal.open(
-    <Dialog isOpen>
-      <Dialog.Main>
-        <Dialog.Content>
-          <Widget.TitleBar>
-            <Widget.TitleBar.Title>
-              Version Compare
-            </Widget.TitleBar.Title>
-            <Widget.TitleBar.Content>
-              <IconButton
-                size='small'
-                styleType='borderless'
-                onClick={() => UiFramework.dialogs.modal.close()}
-                aria-label='Close'
-              >
-                <SvgClose />
-              </IconButton>
-            </Widget.TitleBar.Content>
-          </Widget.TitleBar>
+    <Modal
+      isOpen
+      title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
+      onClose={()=>UiFramework.dialogs.modal.close()}
+    >
+        <ModalContent>
           <ChangesetSelectDialog
             iTwinId={iModel.iTwinId}
             iModelId={iModel.iModelId}
@@ -980,9 +966,8 @@ export const openSelectDialog = async (iModel: IModelConnection) => {
             onStartComparison={handleStartComparison}
             getChangesetInfo={getChangesetInfo(manager, iModel.iModelId)}
           />
-        </Dialog.Content>
-      </Dialog.Main>
-    </Dialog>,
+        </ModalContent>
+    </Modal>,
   );
 };
 

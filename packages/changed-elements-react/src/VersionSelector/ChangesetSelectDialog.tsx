@@ -74,7 +74,7 @@ export function ChangesetSelectDialog(props: ChangesetSelectDialogProps): ReactE
 
   return (
     <div className="iTwinChangedElements__changeset-select-dialog">
-      {error ? <Text variant="subheading" style={{color:"red"}}> An error occurred with the selected comparison please try again.</Text> : <Text variant="subheading">Select version for comparison.</Text>}
+      {error ? <Text variant="subheading" style={{color:"red"}}> An error occurred with the selected comparison please try again.</Text> : <Text variant="subheading">Select Version To Compare With Current.</Text>}
       <div ref={contentRef} style={{ gridArea: "content", overflow: "auto" }}>
         {!baseVersion ?
           <>
@@ -138,6 +138,7 @@ function VersionPicker(props: VersionPickerProps): ReactElement {
       selectedChangesetId={props.selectedChangesetId}
       onChangesetSelected={props.onChangesetSelected}
       actionable
+      onlyNamedVersions={true}
     />
   );
 }
@@ -210,6 +211,7 @@ function ComparisonLoader(props: ComparisonLoaderProps): ReactElement {
       <ChangesetList
         changesets={props.data.changesets.slice(0, props.data.changesets.findIndex(({ id }) => id === props.baseChangesetId))}
         namedVersions={props.data.namedVersions}
+        onlyNamedVersions={false}
       />
     </div>
   );
