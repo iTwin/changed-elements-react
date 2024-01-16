@@ -147,7 +147,6 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
           });
       }
     } else if (targetVersion && props.iModelConnection) {
-      const currentVersion = result?.namedVersions.currentVersion?.version;
       const currentVersionMin: MinimalNamedVersion = {
         id: props.iModelConnection.changeset.id,
         displayName: "",
@@ -170,10 +169,18 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
           endChangesetId: currentVersionMin.changesetId as string,
         });
         while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
+          IModelApp.notifications.outputMessage(
+            new NotifyMessageDetails(
+              OutputMessagePriority.Info,
+              "Comparison Running",
+              `Comparison status: ${comparisonJob.status}`,
+              OutputMessageType.Toast,
+            ),
+          );
           await new Promise((resolve) => setTimeout(resolve, 5000));
           ({ comparisonJob } = await comparisonJobClient.getComparisonJob({
-            iModelId: props.iModelConnection?.iTwinId as string,
-            iTwinId: props.iModelConnection?.iModelId as string,
+            iModelId: props.iModelConnection?.iModelId as string,
+            iTwinId: props.iModelConnection?.iTwinId as string,
             jobId: comparisonJob.jobId,
             headers: { "Content-Type": "application/json" },
           }));
@@ -213,10 +220,10 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
     });
     IModelApp.notifications.outputMessage(
       new NotifyMessageDetails(
-        OutputMessagePriority.Warning,
+        OutputMessagePriority.Info,
         "Comparison Processing",
-        undefined,
-        OutputMessageType.Sticky,
+        "A comparison job is running we will notify you when completed",
+        OutputMessageType.Toast,
       ),
     );
   } catch (error: unknown) {
@@ -363,7 +370,7 @@ function usePagedNamedVersionLoader(
         const currentState = {
           result: {
             namedVersions: {
-              entries: sortedNamedVersions.map(({ namedVersion }) => ({
+              entries: sortedNamedVersions.map(({ namedVersion }) => ({ //todo add jobStatus to this
                 version: namedVersion,
                 state: VersionProcessedState.Verifying,
                 numberNeededChangesets: 0,
@@ -394,7 +401,7 @@ function usePagedNamedVersionLoader(
           const newEntries = currentState.result.namedVersions.entries.map((entry, index) => {
             if (index === currentNamedVersionIndex) {
               return {
-                version: sortedNamedVersions[currentNamedVersionIndex].namedVersion,
+                version: sortedNamedVersions[currentNamedVersionIndex].namedVersion, //todo add jobStatus to this
                 state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
