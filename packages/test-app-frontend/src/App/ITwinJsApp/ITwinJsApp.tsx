@@ -8,7 +8,7 @@ import {
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ITwinIModelsClient, VersionCompare, VersionCompareContext
+  ChangedElementsWidget, ITwinChangedElementsClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
@@ -27,7 +27,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useMemo, useState } from "react";
 
-import { applyUrlPrefix } from "../../environment";
+import { applyUrlPrefix, urlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
 import { UIFramework } from "./AppUi/UiFramework";
@@ -79,12 +79,24 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
     [iModel],
   );
 
-  const iModelsClient = useMemo(
-    () => new ITwinIModelsClient({
-      baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
-      getAccessToken: () => props.authorizationClient.getAccessToken(),
-      showHiddenNamedVersions: true,
-    }),
+   const iModelsClient = useMemo(
+     () => {
+      return new ITwinIModelsClient({
+         baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
+         getAccessToken: () => props.authorizationClient.getAccessToken(),
+         showHiddenNamedVersions: true,
+       });
+     },
+     [props.authorizationClient],
+   );
+
+  const comparisonJobClient = useMemo(
+    () => {
+     return new ITwinChangedElementsClient({
+       baseUrl: applyUrlPrefix(`https://api.bentley.com/changedelements`),
+        getAccessToken: VersionCompare.getAccessToken,
+      });
+    },
     [props.authorizationClient],
   );
 
@@ -102,7 +114,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <VersionCompareContext iModelsClient={iModelsClient} savedFilters={savedFilters}>
+      <VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}  savedFilters={savedFilters}>
         <UIFramework>
           <ConfigurableUiContent />
         </UIFramework>

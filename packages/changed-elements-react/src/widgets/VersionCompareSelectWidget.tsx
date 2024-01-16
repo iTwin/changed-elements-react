@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Logger } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 import {
   Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio, Text
 } from "@itwin/itwinui-react";
@@ -18,6 +18,8 @@ import { VersionCompare } from "../api/VersionCompare.js";
 import { Changeset, NamedVersion } from "../clients/iModelsClient.js";
 
 import "./VersionCompareSelectWidget.scss";
+import { ChangedElementsClient, ComparisonJob } from "../clients/ChangedElementsClient.js";
+import { MinimalNamedVersion } from '@itwin/imodels-client-management';
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
@@ -54,7 +56,7 @@ export const VersionCompareSelectComponent = forwardRef<
 >(
   function VersionCompareSelectComponent(props, ref): ReactElement {
     // Throw if context is not provided
-    useVersionCompare();
+    const{comparisonJobClient}=useVersionCompare();
 
     const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
@@ -65,7 +67,7 @@ export const VersionCompareSelectComponent = forwardRef<
 
     const versionSelector = (
       namedVersions: NamedVersions | undefined,
-      handleStartComparison: (targetVersion: NamedVersion | undefined) => void,
+      handleStartComparison: (targetVersion: NamedVersion | undefined, comparisonJobClient?: ChangedElementsClient) => void,
     ) => {
       if (!namedVersions) {
         return (
@@ -91,7 +93,7 @@ export const VersionCompareSelectComponent = forwardRef<
           currentVersion={namedVersions.currentVersion}
           selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
           onVersionClicked={handleVersionClicked}
-          onStartComparison={() => handleStartComparison(targetVersion)}
+          onStartComparison={() => handleStartComparison(targetVersion,comparisonJobClient)}
           wantTitle={props.wantTitle}
           wantCompareButton={props.wantCompareButton}
           compareButton={props.compareButton}
@@ -118,35 +120,121 @@ interface PagedNamedVersionProviderProps {
 
 function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): ReactElement {
   const result = usePagedNamedVersionLoader(props.iModelConnection);
-  const handleStartComparison = async (targetVersion: NamedVersion | undefined) => {
+  const handleStartComparison = async (targetVersion: NamedVersion | undefined, comparisonJobClient?: ChangedElementsClient) => {
     if (VersionCompare.manager?.isComparing) {
       await VersionCompare.manager?.stopComparison();
     }
+    if (!comparisonJobClient) {
+      const currentVersion = result?.namedVersions.currentVersion?.version;
+      if (currentVersion && targetVersion && props.iModelConnection) {
+        const currentIndex = result.changesets.findIndex((changeset) => changeset.id === currentVersion.changesetId);
+        const targetIndex = result.changesets.findIndex((changeset) => changeset.id === targetVersion.changesetId);
+        const relevantChangesets = result.changesets.slice(currentIndex, targetIndex - currentIndex).reverse();
 
-    const currentVersion = result?.namedVersions.currentVersion?.version;
-    if (currentVersion && targetVersion && props.iModelConnection) {
-      const currentIndex = result.changesets.findIndex((changeset) => changeset.id === currentVersion.changesetId);
-      const targetIndex = result.changesets.findIndex((changeset) => changeset.id === targetVersion.changesetId);
-      const relevantChangesets = result.changesets.slice(currentIndex, targetIndex - currentIndex).reverse();
+        const chunkSize = 200;
+        const chunks: ChangesetChunk[] = [];
+        for (let i = 0; i < relevantChangesets.length; i += chunkSize) {
+          chunks.push({
+            startChangesetId: relevantChangesets[i].id,
+            endChangesetId: relevantChangesets[Math.min(i + chunkSize, relevantChangesets.length) - 1].id,
+          });
+        }
 
-      const chunkSize = 200;
-      const chunks: ChangesetChunk[] = [];
-      for (let i = 0; i < relevantChangesets.length; i += chunkSize) {
-        chunks.push({
-          startChangesetId: relevantChangesets[i].id,
-          endChangesetId: relevantChangesets[Math.min(i + chunkSize, relevantChangesets.length) - 1].id,
-        });
+        VersionCompare.manager
+          ?.startComparison(props.iModelConnection, currentVersion, targetVersion, undefined, chunks)
+          .catch((e) => {
+            Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+          });
       }
+    } else if (targetVersion && props.iModelConnection) {
+      const currentVersion = result?.namedVersions.currentVersion?.version;
+      const currentVersionMin: MinimalNamedVersion = {
+        id: props.iModelConnection.changeset.id,
+        displayName: "",
+        changesetId: props.iModelConnection.changeset.id,
+        changesetIndex: -1,
+      };
+      const targetVersionMin: MinimalNamedVersion = {
+        id: targetVersion.id,
+        displayName: "",
+        changesetId: targetVersion.changesetId,
+        changesetIndex: -1,
+      };
 
-      VersionCompare.manager
-        ?.startComparison(props.iModelConnection, currentVersion, targetVersion, undefined, chunks)
-        .catch((e) => {
-          Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+      const runStartComparisonV2 = async () => {
+        let { comparisonJob }= await postOrGetComparisonJob({
+          changedElementsClient:comparisonJobClient,
+          iTwinId: props.iModelConnection?.iTwinId as string,
+          iModelId: props.iModelConnection?.iModelId as string,
+          startChangesetId: targetVersion.changesetId as string,
+          endChangesetId: currentVersionMin.changesetId as string,
         });
+        while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          ({ comparisonJob } = await comparisonJobClient.getComparisonJob({
+            iModelId: props.iModelConnection?.iTwinId as string,
+            iTwinId: props.iModelConnection?.iModelId as string,
+            jobId: comparisonJob.jobId,
+            headers: { "Content-Type": "application/json" },
+          }));
+        }
+
+        if (comparisonJob.status === "Completed") {
+          const changedElements = await comparisonJobClient.getComparisonJobResult({ comparisonJob });
+           VersionCompare.manager?.startComparisonV2(props.iModelConnection as IModelConnection, currentVersionMin, targetVersionMin, [changedElements.changedElements]).catch((e) => {
+            Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+          });
+        }
+      }
+      runStartComparisonV2();
     }
   };
 
   return props.children(result?.namedVersions, handleStartComparison);
+}
+
+interface PostOrGetComparisonJobParams {
+  changedElementsClient: ChangedElementsClient;
+  iTwinId: string;
+  iModelId: string;
+  startChangesetId: string;
+  endChangesetId: string;
+}
+
+async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
+  let result: ComparisonJob;
+  try {
+    result = await args.changedElementsClient.postComparisonJob({
+      iTwinId: args.iTwinId,
+      iModelId: args.iModelId,
+      startChangesetId: args.startChangesetId,
+      endChangesetId: args.endChangesetId,
+      headers: { "Content-Type": "application/json" },
+    });
+    IModelApp.notifications.outputMessage(
+      new NotifyMessageDetails(
+        OutputMessagePriority.Warning,
+        "Comparison Processing",
+        undefined,
+        OutputMessageType.Sticky,
+      ),
+    );
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "code" in error && error.code !== "ComparisonExists") {
+      throw error;
+    }
+
+    result = await args.changedElementsClient.getComparisonJob({
+      iTwinId: args.iTwinId,
+      iModelId: args.iModelId,
+      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  return result;
 }
 
 interface UsePagedNamedVersionLoaderResult {
@@ -769,11 +857,13 @@ export class VersionCompareSelectDialog extends Component<
     };
   }
 
-  private _handleOk = async (): Promise<void> => {
-    this.versionSelectComponentRef.current?.startComparison();
+  private _handleOk = async (comparisonJobClient?: ChangedElementsClient): Promise<void> => {
+    if (!comparisonJobClient) {
+      this.versionSelectComponentRef.current?.startComparison();
 
-    this.props.onClose?.();
-    VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
+      this.props.onClose?.();
+      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
+    }
   };
 
   private _handleCancel = (): void => {
@@ -814,7 +904,9 @@ export class VersionCompareSelectDialog extends Component<
           <Button
             styleType="high-visibility"
             disabled={this.state.targetVersion === undefined}
-            onClick={this._handleOk}
+            onClick={() => {
+              this._handleOk();
+            }}
           >
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
           </Button>

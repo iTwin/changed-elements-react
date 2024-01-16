@@ -89,7 +89,7 @@ const AuthorizationProvider = clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx"
     redirect_uri: "/auth/callback",
     silent_redirect_uri: "/auth/silent",
     post_logout_redirect_uri: "/",
-    scope: "users:read imodels:read imodelaccess:read changedelements:read itwins:read",
+    scope: "users:read imodels:read imodelaccess:read changedelements:read itwins:read changedelements:modify",
   });
 
 function SetupEnvHint(): ReactElement {
