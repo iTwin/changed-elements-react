@@ -262,7 +262,7 @@ function usePagedNamedVersionLoader(
   iModelConnection: IModelConnection | undefined,
 ): UsePagedNamedVersionLoaderResult | undefined {
   const [result, setResult] = useState<UsePagedNamedVersionLoaderResult>();
-  const { iModelsClient } = useVersionCompare();
+  const { iModelsClient ,comparisonJobClient } = useVersionCompare();
 
   useEffect(
     () => {
@@ -344,11 +344,13 @@ function usePagedNamedVersionLoader(
           };
         }
 
+        const currentComparisonJobStatus: jobStatus = "unknown"
         const currentVersionState: VersionState = {
           version: currentVersion,
           state: VersionProcessedState.Processed,
           numberNeededChangesets: 0,
           numberProcessedChangesets: 0,
+          hasComparisonJob: currentComparisonJobStatus,
         };
 
         const client = VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
@@ -371,11 +373,12 @@ function usePagedNamedVersionLoader(
         const currentState = {
           result: {
             namedVersions: {
-              entries: sortedNamedVersions.map(({ namedVersion }) => ({ //todo add jobStatus to this
+              entries: sortedNamedVersions.map(({ namedVersion }) => ({
                 version: namedVersion,
                 state: VersionProcessedState.Verifying,
                 numberNeededChangesets: 0,
                 numberProcessedChangesets: 0,
+                hasComparisonJob: (currentComparisonJobStatus) as jobStatus,
               })),
               currentVersion: currentVersionState,
             },
@@ -406,6 +409,7 @@ function usePagedNamedVersionLoader(
                 state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
+                hasComparisonJob: entry.hasComparisonJob,
               };
             }
 
@@ -415,6 +419,7 @@ function usePagedNamedVersionLoader(
                 state: VersionProcessedState.Processing,
                 numberNeededChangesets: 0,
                 numberProcessedChangesets: 0,
+                hasComparisonJob: entry.hasComparisonJob,
               };
             }
 
@@ -435,6 +440,30 @@ function usePagedNamedVersionLoader(
           if (currentNamedVersionIndex === sortedNamedVersions.length) {
             break;
           }
+        }
+        if (comparisonJobClient) {
+          currentState.result.namedVersions.entries = await Promise.all(currentState.result.namedVersions.entries.map(async entry => {
+            let hasComparisonJob:jobStatus = entry.hasComparisonJob
+
+            try {
+                const res = await comparisonJobClient.getComparisonJob({
+                  iTwinId: iModelConnection.iTwinId as string,
+                  iModelId: iModelConnection.iModelId as string,
+                  jobId: `${entry.version.changesetId}-${iModelConnection.changeset.id}`,
+                })
+                if (res) {
+                  hasComparisonJob="completed"
+                }
+            } catch (_) {}
+          return entry = {
+              version: entry.version,
+              state: VersionProcessedState.Processed ,
+              numberNeededChangesets: entry.numberNeededChangesets,
+              numberProcessedChangesets: entry.numberProcessedChangesets,
+              hasComparisonJob: hasComparisonJob,
+            }
+          }));
+          setResult(currentState.result);
         }
       })();
 
@@ -507,11 +536,14 @@ enum VersionProcessedState {
   Unavailable,
 }
 
+type jobStatus = "unknown" | "completed" | "not started"
+
 export interface VersionState {
   version: NamedVersion;
   state: VersionProcessedState;
   numberNeededChangesets: number;
   numberProcessedChangesets: number;
+  hasComparisonJob?: jobStatus;
 }
 
 interface VersionCompareSelectorInnerProps {
