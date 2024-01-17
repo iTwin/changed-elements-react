@@ -56,7 +56,7 @@ export const VersionCompareSelectComponent = forwardRef<
 >(
   function VersionCompareSelectComponent(props, ref): ReactElement {
     // Throw if context is not provided
-    const{comparisonJobClient}=useVersionCompare();
+    const { comparisonJobClient } = useVersionCompare();
 
     const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
@@ -93,7 +93,7 @@ export const VersionCompareSelectComponent = forwardRef<
           currentVersion={namedVersions.currentVersion}
           selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
           onVersionClicked={handleVersionClicked}
-          onStartComparison={() => handleStartComparison(targetVersion,comparisonJobClient)}
+          onStartComparison={() => handleStartComparison(targetVersion, comparisonJobClient)}
           wantTitle={props.wantTitle}
           wantCompareButton={props.wantCompareButton}
           compareButton={props.compareButton}
@@ -161,19 +161,25 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
       };
 
       const runStartComparisonV2 = async () => {
-        let { comparisonJob }= await postOrGetComparisonJob({
-          changedElementsClient:comparisonJobClient,
+        let { comparisonJob } = await postOrGetComparisonJob({
+          changedElementsClient: comparisonJobClient,
           iTwinId: props.iModelConnection?.iTwinId as string,
           iModelId: props.iModelConnection?.iModelId as string,
           startChangesetId: targetVersion.changesetId as string,
           endChangesetId: currentVersionMin.changesetId as string,
         });
+        if (comparisonJob.status === "Completed") {
+          const changedElements = await comparisonJobClient.getComparisonJobResult({ comparisonJob });
+          VersionCompare.manager?.startComparisonV2(props.iModelConnection as IModelConnection, currentVersionMin, targetVersionMin, [changedElements.changedElements]).catch((e) => {
+            Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+          });
+        }
         while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
           IModelApp.notifications.outputMessage(
             new NotifyMessageDetails(
               OutputMessagePriority.Info,
               "Comparison Running",
-              `Comparison status: ${comparisonJob.status}`,
+              `Comparison status: ${comparisonJob.status}.`,
               OutputMessageType.Toast,
             ),
           );
@@ -184,15 +190,18 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
             jobId: comparisonJob.jobId,
             headers: { "Content-Type": "application/json" },
           }));
+          if (comparisonJob.status === "Completed") {
+            IModelApp.notifications.outputMessage(
+              new NotifyMessageDetails(
+                OutputMessagePriority.Info,
+                "Comparison Completed",
+                `Please click to view comparison LINK`,
+                OutputMessageType.Sticky,
+              ),
+            );
+          }
         }
-
-        if (comparisonJob.status === "Completed") {
-          const changedElements = await comparisonJobClient.getComparisonJobResult({ comparisonJob });
-           VersionCompare.manager?.startComparisonV2(props.iModelConnection as IModelConnection, currentVersionMin, targetVersionMin, [changedElements.changedElements]).catch((e) => {
-            Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-          });
-        }
-      }
+      };
       runStartComparisonV2();
     }
   };
@@ -218,14 +227,6 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
       endChangesetId: args.endChangesetId,
       headers: { "Content-Type": "application/json" },
     });
-    IModelApp.notifications.outputMessage(
-      new NotifyMessageDetails(
-        OutputMessagePriority.Info,
-        "Comparison Processing",
-        "A comparison job is running we will notify you when completed",
-        OutputMessageType.Toast,
-      ),
-    );
   } catch (error: unknown) {
     if (error && typeof error === "object" && "code" in error && error.code !== "ComparisonExists") {
       throw error;
@@ -814,6 +815,7 @@ function DateAndCurrent(props: DateAndCurrentProps): ReactElement {
         {props.createdDate ? new Date(props.createdDate).toDateString() : ""}
       </div>
       {props.children}
+      <text className="job-status" style={{}} >Comparison Status: WIP</text>
     </div>
   );
 }

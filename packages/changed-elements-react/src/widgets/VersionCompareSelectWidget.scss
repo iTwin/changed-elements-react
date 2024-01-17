@@ -148,7 +148,6 @@
         padding-bottom: var(--iui-size-2xs);
         cursor: default;
       }
-
       > .current-show {
         color: white;
         font-size: var(--iui-font-size-0);
@@ -159,6 +158,14 @@
       }
     }
   }
+}
+
+.job-status {
+  text-align: right;
+  color: var(--iui-color-text-muted);
+  font-size: var(--iui-font-size-0);
+  padding-bottom: var(--iui-size-2xs);
+  cursor: default;
 }
 
 .vc-entry {
