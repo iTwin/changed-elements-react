@@ -151,6 +151,7 @@
       > .current-show {
         color: white;
         font-size: var(--iui-font-size-0);
+        padding: 0px 8px;
         background-color: var(--iui-color-background-positive);
         border-radius: 4px;
         text-align: center;
@@ -160,11 +161,33 @@
   }
 }
 
-.job-status {
-  text-align: right;
-  color: var(--iui-color-text-muted);
+.job-status-complete{
+  color: white;
   font-size: var(--iui-font-size-0);
-  padding-bottom: var(--iui-size-2xs);
+  padding: 0px 8px;
+  background-color: var(--iui-color-background-positive);
+  border-radius: 4px;
+  text-align: center;
+  cursor: default;
+}
+
+.job-status-progress{
+  color: black;
+  font-size: var(--iui-font-size-0);
+  padding: 0px 8px;
+  background-color: var(--iui-color-background-seabuckthorn);
+  border-radius: 4px;
+  text-align: center;
+  cursor: default;
+}
+
+.job-status-not-started{
+  color: black;
+  font-size: var(--iui-font-size-0);
+  padding: 0px 8px;
+  background-color: var(--iui-color-background-disabled);
+  border-radius: 4px;
+  text-align: center;
   cursor: default;
 }
 
@@ -224,6 +247,7 @@
       background-color: var(--iui-color-background-positive);
       text-align: center;
       border-radius: 4px;
+      padding: 0px 8px;
       cursor: default;
     }
   }
