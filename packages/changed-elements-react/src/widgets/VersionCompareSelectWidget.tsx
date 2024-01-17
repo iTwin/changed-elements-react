@@ -402,14 +402,29 @@ function usePagedNamedVersionLoader(
           const changesets = result.value;
           const numProcessedChangesets = changesets.reduce((acc, curr) => acc + Number(curr.ready), 0);
           const isProcessed = changesets.length === numProcessedChangesets;
-          const newEntries = currentState.result.namedVersions.entries.map((entry, index) => {
+          const newEntries = await Promise.all( currentState.result.namedVersions.entries.map(async (entry, index) => {
+            let hasComparisonJob: jobStatus = entry.hasComparisonJob
+            if (comparisonJobClient && index === currentNamedVersionIndex) {
+              try {
+                const res = await comparisonJobClient.getComparisonJob({
+                  iTwinId: iModelConnection.iTwinId as string,
+                  iModelId: iModelConnection.iModelId as string,
+                  jobId: `${entry.version.changesetId}-${iModelConnection.changeset.id}`,
+                });
+                if (res) {
+                  hasComparisonJob = "ready";
+                }
+              } catch (_) {
+                hasComparisonJob = "not ready"
+              }
+            }
             if (index === currentNamedVersionIndex) {
               return {
-                version: sortedNamedVersions[currentNamedVersionIndex].namedVersion, //todo add jobStatus to this
+                version: sortedNamedVersions[currentNamedVersionIndex].namedVersion,
                 state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
-                hasComparisonJob: entry.hasComparisonJob,
+                hasComparisonJob: hasComparisonJob,
               };
             }
 
@@ -419,12 +434,12 @@ function usePagedNamedVersionLoader(
                 state: VersionProcessedState.Processing,
                 numberNeededChangesets: 0,
                 numberProcessedChangesets: 0,
-                hasComparisonJob: entry.hasComparisonJob,
+                hasComparisonJob: hasComparisonJob,
               };
             }
 
             return entry;
-          });
+          }));
 
           currentState.result = {
             namedVersions: { currentVersion: currentVersionState, entries: newEntries },
@@ -440,30 +455,6 @@ function usePagedNamedVersionLoader(
           if (currentNamedVersionIndex === sortedNamedVersions.length) {
             break;
           }
-        }
-        if (comparisonJobClient) {
-          currentState.result.namedVersions.entries = await Promise.all(currentState.result.namedVersions.entries.map(async entry => {
-            let hasComparisonJob:jobStatus = entry.hasComparisonJob
-
-            try {
-                const res = await comparisonJobClient.getComparisonJob({
-                  iTwinId: iModelConnection.iTwinId as string,
-                  iModelId: iModelConnection.iModelId as string,
-                  jobId: `${entry.version.changesetId}-${iModelConnection.changeset.id}`,
-                })
-                if (res) {
-                  hasComparisonJob="completed"
-                }
-            } catch (_) {}
-          return entry = {
-              version: entry.version,
-              state: VersionProcessedState.Processed ,
-              numberNeededChangesets: entry.numberNeededChangesets,
-              numberProcessedChangesets: entry.numberProcessedChangesets,
-              hasComparisonJob: hasComparisonJob,
-            }
-          }));
-          setResult(currentState.result);
         }
       })();
 
@@ -536,7 +527,7 @@ enum VersionProcessedState {
   Unavailable,
 }
 
-type jobStatus = "unknown" | "completed" | "not started"
+type jobStatus = "unknown" | "ready" | "not ready"
 
 export interface VersionState {
   version: NamedVersion;
@@ -767,12 +758,12 @@ function VersionListEntry(props: VersionListEntryProps): ReactElement {
   };
   const getAvailableDate = () => {
     return (
-      <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
+      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
         <div className="state-div">
           <div className={getStateDivClassname()}>{getStateDivMessage()}</div>
           {getStateSecondRow()}
         </div>
-      </DateAndCurrent>
+      </DateCurrentAndJobStatus>
     );
   };
 
@@ -802,9 +793,9 @@ function VersionListEntry(props: VersionListEntryProps): ReactElement {
       {
         props.versionState.state === VersionProcessedState.Verifying
           ? <>
-            <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
+            <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
-            </DateAndCurrent>
+            </DateCurrentAndJobStatus>
             <ProgressLinear indeterminate />
           </>
           : isAvailable
@@ -826,11 +817,11 @@ function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
-      <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
+      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
         <div className="current-show">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
-      </DateAndCurrent>
+      </DateCurrentAndJobStatus>
     </div>
   );
 }
@@ -838,16 +829,17 @@ function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
 interface DateAndCurrentProps {
   createdDate?: string;
   children: ReactNode;
+  jobStatus?:jobStatus;
 }
 
-function DateAndCurrent(props: DateAndCurrentProps): ReactElement {
+function DateCurrentAndJobStatus(props: DateAndCurrentProps): ReactElement {
   return (
     <div className="date-and-current">
       <div className="date">
         {props.createdDate ? new Date(props.createdDate).toDateString() : ""}
       </div>
       {props.children}
-      <text className="job-status" style={{}} >Comparison Status: WIP</text>
+      <Text className="job-status">{props.jobStatus==undefined || props.jobStatus==="unknown" ? "":`Job: ${props.jobStatus}` }</Text>
     </div>
   );
 }
