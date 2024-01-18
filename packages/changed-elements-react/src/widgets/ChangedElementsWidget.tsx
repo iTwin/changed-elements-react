@@ -6,10 +6,9 @@ import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
 } from "@itwin/core-frontend";
-import { SvgAdd, SvgCompare, SvgExport, SvgInfo, SvgStop } from "@itwin/itwinui-icons-react";
-import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
+import { SvgAdd, SvgCompare, SvgExport, SvgInfo, SvgStop, SvgWindowPopout } from "@itwin/itwinui-icons-react";
+import { IconButton, InformationPanel, InformationPanelBody, InformationPanelContent, InformationPanelHeader, InformationPanelWrapper, ProgressRadial } from "@itwin/itwinui-react";
 import { Component, ReactElement } from "react";
-
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ReportProperty } from "../api/ReportGenerator.js";
@@ -66,7 +65,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 
   private readonly WidgetInfo =  <>
     Discover what has changed between the two iModel versions. To get started, click
-    <SvgAdd style={{margin:'0px 4px'}} /> button. Then choose the version to compare with ,
+    + button. Then choose the version to compare with ,
     and the data processing will begin in the background. Processing time may vary based on the data complexity.A notification will appear when results are available.
   </>
 
@@ -380,44 +379,50 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override render(): ReactElement {
     return (
       <>
-        <WidgetComponent data-testid="comparison-legend-widget">
-          <WidgetComponent.Header>
-            <WidgetComponent.Header.Label>
-              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
-            </WidgetComponent.Header.Label>
-            <WidgetComponent.Header.Actions>
-              {this.getHeader()}
-            </WidgetComponent.Header.Actions>
-          </WidgetComponent.Header>
-          <WidgetComponent.Body data-testid="comparison-legend-widget-content">
-            {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
-          </WidgetComponent.Body>
-        </WidgetComponent>
-        {
-          this.state.reportDialogVisible &&
-          <ReportGeneratorDialog
-            isOpen
-            onClose={this.closeReportDialog}
-            manager={this.state.manager}
-            initialProperties={this.state.reportProperties}
-          />
-        }
-        {
-          this.state.versionSelectDialogVisible &&
-          <VersionCompareSelectDialog
-            isOpen
-            iModelConnection={this.props.iModelConnection}
-            onClose={this._handleVersionSelectDialogClose}
-          />
-        }
-        {
-          this.state.informationDialogVisible &&
-          <InformationDialog
-            information={this.WidgetInfo}
-            title={"Version Compare"}
-            onClose={this._handleInfoDialogClose}
-          />
-        }
+        <InformationPanelWrapper>
+          <WidgetComponent data-testid="comparison-legend-widget">
+            <WidgetComponent.Header>
+              <WidgetComponent.Header.Label>
+                {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
+              </WidgetComponent.Header.Label>
+              <WidgetComponent.Header.Actions>
+                {this.getHeader()}
+              </WidgetComponent.Header.Actions>
+            </WidgetComponent.Header>
+            <WidgetComponent.Body data-testid="comparison-legend-widget-content">
+              {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
+            </WidgetComponent.Body>
+          </WidgetComponent>
+          {
+            this.state.reportDialogVisible &&
+            <ReportGeneratorDialog
+              isOpen
+              onClose={this.closeReportDialog}
+              manager={this.state.manager}
+              initialProperties={this.state.reportProperties}
+            />
+          }
+          {
+            this.state.versionSelectDialogVisible &&
+            <VersionCompareSelectDialog
+              isOpen
+              iModelConnection={this.props.iModelConnection}
+              onClose={this._handleVersionSelectDialogClose}
+            />
+          }
+          <InformationPanel isOpen={this.state.informationDialogVisible} style={{width:"100%"}}>
+            <InformationPanelHeader
+              onClose={this._handleInfoDialogClose}
+            >
+              Version Compare Info
+            </InformationPanelHeader>
+            <InformationPanelBody style={{ borderBottom: "1px solid grey" }}>
+              <InformationPanelContent>
+                {this.WidgetInfo}
+              </InformationPanelContent>
+            </InformationPanelBody>
+          </InformationPanel>
+        </InformationPanelWrapper>
       </>
     );
   }
