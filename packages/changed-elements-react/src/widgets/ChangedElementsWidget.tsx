@@ -6,7 +6,7 @@ import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
 } from "@itwin/core-frontend";
-import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
+import { SvgAdd, SvgCompare, SvgExport, SvgInfo, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
 import { Component, ReactElement } from "react";
 
@@ -25,6 +25,7 @@ import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 import "./ChangedElementsWidget.scss";
+import InformationDialog from "../dialogs/InformationDialog.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -51,6 +52,7 @@ export interface ChangedElementsWidgetState {
   description?: string;
   menuOpened: boolean;
   versionSelectDialogVisible: boolean;
+  informationDialogVisible: boolean;
   reportDialogVisible: boolean;
   reportProperties: ReportProperty[] | undefined;
 }
@@ -61,6 +63,12 @@ export interface ChangedElementsWidgetState {
  */
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
+
+  private readonly WidgetInfo =  <>
+    Discover what has changed between the two iModel versions. To get started, click
+    <SvgAdd style={{margin:'0px 4px'}} /> button. Then choose the version to compare with ,
+    and the data processing will begin in the background. Processing time may vary based on the data complexity.A notification will appear when results are available.
+  </>
 
   private _onComparisonStarting = (): void => {
     this.setState({
@@ -94,6 +102,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       targetIModel,
       elements,
       versionSelectDialogVisible: false,
+      informationDialogVisible: false,
       reportDialogVisible: false,
       reportProperties: undefined,
     });
@@ -135,6 +144,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
       description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       versionSelectDialogVisible: false,
+      informationDialogVisible: false,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
@@ -241,6 +251,14 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ versionSelectDialogVisible: true });
   };
 
+  private _handleInfo = ():void => {
+    this.setState({ informationDialogVisible: true });
+  };
+
+  private _handleInfoDialogClose = (): void => {
+    this.setState({ informationDialogVisible: false });
+  };
+
   private _handleVersionSelectDialogClose = (): void => {
     this.setState({ versionSelectDialogVisible: false });
   };
@@ -289,6 +307,15 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           data-testid="comparison-legend-widget-compare"
         >
           <SvgAdd />
+        </IconButton>
+        <IconButton
+          size="small"
+          styleType="borderless"
+          onClick={this._handleInfo}
+          title={"Information"}
+          data-testid="comparison-legend-widget-information"
+        >
+          <SvgInfo />
         </IconButton>
         {
           this.state.loaded &&
@@ -381,6 +408,14 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             isOpen
             iModelConnection={this.props.iModelConnection}
             onClose={this._handleVersionSelectDialogClose}
+          />
+        }
+        {
+          this.state.informationDialogVisible &&
+          <InformationDialog
+            information={this.WidgetInfo}
+            title={"Version Compare"}
+            onClose={this._handleInfoDialogClose}
           />
         }
       </>
