@@ -8,8 +8,9 @@ import { jobStatus } from "./JobStatus";
 import { VersionProcessedState } from "./VersionProcessedState";
 import { NamedVersions } from "./NamedVersions";
 import { ChangedElementsClient } from "../../clients/ChangedElementsClient";
+import "./VersionCompareSelectWidget.scss";
 
-interface UsePagedNamedVersionLoaderResult {
+export interface UsePagedNamedVersionLoaderResult {
   /** Named versions to display in the list. */
   namedVersions: NamedVersions;
 

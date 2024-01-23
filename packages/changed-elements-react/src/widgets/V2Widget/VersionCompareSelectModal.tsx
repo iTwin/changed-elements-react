@@ -3,7 +3,8 @@ import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-reac
 import { createRef, useState } from "react";
 import { VersionCompareUtils, VersionCompareVerboseMessages, NamedVersion, VersionCompare } from "../..";
 import { ChangedElementsClient } from "../../clients/ChangedElementsClient";
-import { VersionCompareSelectComponent } from "../VersionCompareSelectWidget";
+import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
+import "./VersionCompareSelectWidget.scss";
 
 export interface VersionCompareSelectDialogProps {
   iModelConnection: IModelConnection;
@@ -15,7 +16,7 @@ interface VersionCompareSelectComponentAttributes {
   startComparison: () => void;
 }
 
-function VersionCompareSelectDialog(props: VersionCompareSelectDialogProps) {
+export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProps) {
 
   const [targetVersion, setTargetVersion] = useState<NamedVersion|undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
@@ -42,13 +43,12 @@ function VersionCompareSelectDialog(props: VersionCompareSelectDialogProps) {
   return (
     <Modal
       className="version-compare-dialog"
-      title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
+      title={"V2 WIP"}
       isOpen={props.isOpen}
       onClose={_handleCancel}
     >
       <ModalContent>
         <VersionCompareSelectComponent
-          ref={versionSelectComponentRef}
           iModelConnection={props.iModelConnection}
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}

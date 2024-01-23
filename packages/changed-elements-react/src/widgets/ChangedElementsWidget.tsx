@@ -21,11 +21,11 @@ import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
-import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 import "./ChangedElementsWidget.scss";
 import InformationDialog from "../dialogs/InformationDialog.js";
 import InfoButton from "../common/InformationButton.js";
+import { VersionCompareSelectDialog } from "./V2Widget/VersionCompareSelectModal.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
