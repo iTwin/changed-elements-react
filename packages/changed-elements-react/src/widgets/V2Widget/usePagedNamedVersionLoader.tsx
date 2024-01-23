@@ -24,8 +24,6 @@ type pagedState = {
       entries: {
         version: NamedVersion;
         state: VersionProcessedState;
-        numberNeededChangesets: number;
-        numberProcessedChangesets: number;
         hasComparisonJob: jobStatus;
       }[];
       currentVersion: VersionState;
@@ -89,8 +87,6 @@ export function usePagedNamedVersionLoader(
               entries: sortedNamedVersions.map(({ namedVersion }) => ({
                 version: namedVersion,
                 state: VersionProcessedState.Verifying,
-                numberNeededChangesets: 0,
-                numberProcessedChangesets: 0,
                 hasComparisonJob: (currentComparisonJobStatus) as jobStatus,
               })),
               currentVersion: currentVersionState,
@@ -195,25 +191,6 @@ const getOrManufactureCurrentNamedVersion = (namedVersions: namedVersionAndIndex
   }
 };
 
-const createChangesetStatusIterable = (iTwinId: string, iModelId: string, changesets: Changeset[], currentVersion: NamedVersion, namedVersions: namedVersionAndIndex[]) => {
-  const client = VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
-  const pageIterator = client.getChangesetsPaged({
-    iTwinId,
-    iModelId,
-    skip: changesets.length,
-    backwards: true,
-  });
-  const splitChangesets = splitBeforeEach(
-    flatten(map(pageIterator, (changeset) => changeset.reverse())),
-    (changeset) => changeset.id,
-    [
-      currentVersion.changesetId,
-      ...namedVersions.map(({ namedVersion: { changesetId } }) => changesetId),
-    ],
-  );
-  return skip(splitChangesets, 1);
-};
-
 type processChangesetsArgs = {
   iTwinId: string;
   iModelId: string;
@@ -229,41 +206,13 @@ type processChangesetsArgs = {
 };
 
 const processChangesetsAndUpdateResultState = async (args: processChangesetsArgs) => {
-  const changesetStatusIterable = createChangesetStatusIterable(args.iTwinId, args.iModelId, args.changesets, args.currentVersion, args.namedVersions);
-  let result: IteratorResult<ChangesetStatus[]>;
-  let currentNamedVersionIndex = 0;
-  while (result = await changesetStatusIterable.next(), !result.done) {
-    // We must avoid modifying the current state cache if component is unmounted
-    if (args.disposed) {
-      return;
-    }
-
-    const changesets = result.value;
-    const numProcessedChangesets = changesets.reduce((acc, curr) => acc + Number(curr.ready), 0);
-    const isProcessed = changesets.length === numProcessedChangesets;
-    const newEntries = await Promise.all(args.currentState.result.namedVersions.entries.map(async (entry, index) => {
+    const newEntries = await Promise.all(args.currentState.result.namedVersions.entries.map(async (entry) => {
       const hasComparisonJob: jobStatus = args.comparisonJobClient ? await getJobStatus(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, args.currentChangeSetId) : entry.hasComparisonJob;
-      if (index === currentNamedVersionIndex) {
-        return {
-          version: args.namedVersions[currentNamedVersionIndex].namedVersion,
-          state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
-          numberNeededChangesets: changesets.length,
-          numberProcessedChangesets: numProcessedChangesets,
-          hasComparisonJob: hasComparisonJob,
-        };
-      }
-
-      if (index > currentNamedVersionIndex && !isProcessed) {
         return {
           version: entry.version,
-          state: VersionProcessedState.Processing,
-          numberNeededChangesets: 0,
-          numberProcessedChangesets: 0,
+          state: VersionProcessedState.Processed,
           hasComparisonJob: hasComparisonJob,
         };
-      }
-
-      return entry;
     }));
 
     args.currentState.result = {
@@ -271,26 +220,14 @@ const processChangesetsAndUpdateResultState = async (args: processChangesetsArgs
       changesets: args.currentState.result.changesets,
     };
     args.setResult(args.currentState.result);
-
-    if (!isProcessed) {
-      break;
-    }
-
-    currentNamedVersionIndex += 1;
-    if (currentNamedVersionIndex === args.namedVersions.length) {
-      break;
-    }
-  }
 };
 
 type entry = {
   version: NamedVersion;
   state: VersionProcessedState;
-  numberNeededChangesets: number;
-  numberProcessedChangesets: number;
   hasComparisonJob: jobStatus;
 };
-const getJobStatus = async (comparisonJobClient: ChangedElementsClient, entry: entry, iTwinId: string, iModelId: string, currentChangesetId): Promise<jobStatus> => {
+const getJobStatus = async (comparisonJobClient: ChangedElementsClient, entry: entry, iTwinId: string, iModelId: string, currentChangesetId:string): Promise<jobStatus> => {
   try {
     const res = await comparisonJobClient.getComparisonJob({
       iTwinId: iTwinId,

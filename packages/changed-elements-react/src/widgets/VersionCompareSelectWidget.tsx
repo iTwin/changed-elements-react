@@ -543,7 +543,7 @@ enum VersionProcessedState {
 
 type jobStatus = "Unknown" | "Ready" | "Not Started" | "In Progress";
 
-export interface VersionState {
+ interface VersionState {
   version: NamedVersion;
   state: VersionProcessedState;
   numberNeededChangesets: number;
