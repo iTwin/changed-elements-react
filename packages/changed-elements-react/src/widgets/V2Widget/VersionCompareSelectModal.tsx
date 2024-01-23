@@ -1,10 +1,15 @@
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { createRef, useState } from "react";
+import { useRef, useState } from "react";
 import { VersionCompareUtils, VersionCompareVerboseMessages, NamedVersion, VersionCompare } from "../..";
-import { ChangedElementsClient } from "../../clients/ChangedElementsClient";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import "./VersionCompareSelectWidget.scss";
+import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
+import { UsePagedNamedVersionLoaderResult, usePagedNamedVersionLoader } from "./usePagedNamedVersionLoader";
+import { ChangedElementsClient, ComparisonJob, ComparisonJobCompleted } from "../../clients/ChangedElementsClient";
+import { Logger } from "@itwin/core-bentley";
+import { toaster } from "@itwin/itwinui-react";
+import "./VersionCompareSelectWidget.scss";
+import { useVersionCompare } from "../../VersionCompareContext";
 
 export interface VersionCompareSelectDialogProps {
   iModelConnection: IModelConnection;
@@ -12,19 +17,22 @@ export interface VersionCompareSelectDialogProps {
   onClose?: (() => void) | undefined;
 }
 
-interface VersionCompareSelectComponentAttributes {
-  startComparison: () => void;
-}
-
 export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProps) {
-
+  const { comparisonJobClient } = useVersionCompare();
+  if (!comparisonJobClient) {
+    throw new Error("V2 Client Is Not Initialized In Given Context.");
+  }
   const [targetVersion, setTargetVersion] = useState<NamedVersion|undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
- const versionSelectComponentRef = createRef<VersionCompareSelectComponentAttributes>();
-
-  const _handleOk = async (comparisonJobClient?: ChangedElementsClient): Promise<void> => {
-    if (!comparisonJobClient) {
-      versionSelectComponentRef.current?.startComparison();
+  const result = usePagedNamedVersionLoader(props.iModelConnection);
+  const _handleOk = async (): Promise<void> => {
+    if (comparisonJobClient && result?.namedVersions && targetVersion) {
+      void handleStartComparison({
+        targetVersion: targetVersion,
+        comparisonJobClient: comparisonJobClient,
+        result: result,
+        iModelConnection: props.iModelConnection,
+      });
       props.onClose?.();
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
     }
@@ -52,12 +60,13 @@ export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProp
           iModelConnection={props.iModelConnection}
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
+          comparisonPagedResult={result}
         />
       </ModalContent>
       <ModalButtonBar>
         <Button
           styleType="high-visibility"
-          disabled={targetVersion === undefined}
+          disabled={targetVersion === undefined || result?.namedVersions === undefined}
           onClick={() => {
             void _handleOk();
           }}
@@ -71,3 +80,159 @@ export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProp
     </Modal>
   );
 }
+
+
+type handelStartComparisonArgs = {
+  targetVersion: NamedVersion;
+  comparisonJobClient: ChangedElementsClient;
+  result: UsePagedNamedVersionLoaderResult;
+  iModelConnection: IModelConnection;
+};
+
+const handleStartComparison = async (args: handelStartComparisonArgs) => {
+  if (VersionCompare.manager?.isComparing) {
+    await VersionCompare.manager?.stopComparison();
+  }
+  const currentVersion = args.result.namedVersions.currentVersion?.version;
+  if (args.targetVersion && currentVersion) {
+    runStartComparisonV2({
+      targetVersion: args.targetVersion,
+      comparisonJobClient: args.comparisonJobClient,
+      iModelConnection: args.iModelConnection,
+      currentVersion: currentVersion,
+    }).catch((e) => {
+      Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+    });
+  }
+};
+
+type runStartComparisonV2Args = {
+  targetVersion: NamedVersion;
+  comparisonJobClient: ChangedElementsClient;
+  iModelConnection: IModelConnection;
+  currentVersion: NamedVersion;
+};
+
+const runStartComparisonV2 = async (args: runStartComparisonV2Args) => {
+  let { comparisonJob } = await postOrGetComparisonJob({
+    changedElementsClient: args.comparisonJobClient,
+    iTwinId: args.iModelConnection?.iTwinId as string,
+    iModelId: args.iModelConnection?.iModelId as string,
+    startChangesetId: args.targetVersion.changesetId as string,
+    endChangesetId: args.currentVersion.changesetId as string,
+  });
+  if (comparisonJob.status === "Completed") {
+    void runMangerStartComparisonV2({
+      comparisonJob: { comparisonJob: comparisonJob },
+      comparisonJobClient: args.comparisonJobClient,
+      iModelConnection: args.iModelConnection,
+      targetVersion: args.targetVersion,
+      currentVersion: args.currentVersion,
+    });
+  }
+  while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
+    toastComparisonProcessing(args.currentVersion, args.targetVersion);
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    comparisonJob = (await postOrGetComparisonJob({
+      changedElementsClient: args.comparisonJobClient,
+      iTwinId: args.iModelConnection?.iTwinId as string,
+      iModelId: args.iModelConnection?.iModelId as string,
+      startChangesetId: args.targetVersion.changesetId as string,
+      endChangesetId: args.currentVersion.changesetId as string,
+    })).comparisonJob;
+    if (comparisonJob.status === "Completed") {
+      toastComparisonComplete({
+        comparisonJob: { comparisonJob: comparisonJob },
+        comparisonJobClient: args.comparisonJobClient,
+        iModelConnection: args.iModelConnection,
+        targetVersion: args.targetVersion,
+        currentVersion: args.currentVersion,
+      });
+    }
+  }
+};
+
+interface PostOrGetComparisonJobParams {
+  changedElementsClient: ChangedElementsClient;
+  iTwinId: string;
+  iModelId: string;
+  startChangesetId: string;
+  endChangesetId: string;
+}
+
+async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
+  let result: ComparisonJob;
+  try {
+    result = await args.changedElementsClient.postComparisonJob({
+      iTwinId: args.iTwinId,
+      iModelId: args.iModelId,
+      startChangesetId: args.startChangesetId,
+      endChangesetId: args.endChangesetId,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "code" in error && error.code !== "ComparisonExists") {
+      throw error;
+    }
+
+    result = await args.changedElementsClient.getComparisonJob({
+      iTwinId: args.iTwinId,
+      iModelId: args.iModelId,
+      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  return result;
+}
+
+type runManagerStartComparisonV2Args = {
+  comparisonJob: ComparisonJobCompleted;
+  comparisonJobClient: ChangedElementsClient;
+  iModelConnection: IModelConnection;
+  targetVersion: NamedVersion;
+  currentVersion: NamedVersion;
+};
+const runMangerStartComparisonV2 = async (args: runManagerStartComparisonV2Args) => {
+  const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
+  VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {
+    Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+  });
+};
+
+
+const toastComparisonProcessing = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
+  IModelApp.notifications.outputMessage(
+    new NotifyMessageDetails(
+      OutputMessagePriority.Info,
+      "iModel versions ",
+      `iModel versions <${currentVersion?.displayName}> and <${targetVersion.displayName}> are being processed in the background. You will receive a notification upon completion.`,
+      OutputMessageType.Toast,
+    ),
+  );
+};
+
+const toastComparisonComplete = (args: runManagerStartComparisonV2Args) => {
+  toaster.setSettings({
+    placement: "bottom",
+  });
+  toaster.positive(`iModel versions <${args.currentVersion?.displayName}> and <${args.targetVersion.displayName}> comparisons job is complete.`, {
+    hasCloseButton: true,
+    link: {
+      title: "View The Report",
+      onClick: () => {
+        void runMangerStartComparisonV2({
+          comparisonJob: args.comparisonJob,
+          comparisonJobClient: args.comparisonJobClient,
+          iModelConnection: args.iModelConnection,
+          targetVersion: args.targetVersion,
+          currentVersion: args.currentVersion,
+        });
+        toaster.closeAll();
+      },
+    },
+    type: "persisting",
+  });
+};

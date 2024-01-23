@@ -12,7 +12,6 @@ interface VersionCompareSelectorInnerProps {
   currentVersion: VersionState | undefined;
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
-  onStartComparison: () => void;
   wantTitle: boolean | undefined;
   versionsUrl?: string | undefined;
 }
@@ -57,13 +56,6 @@ export function VersionCompareSelectorInner(props:VersionCompareSelectorInnerPro
           <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
           </a>
-        </div>
-      }
-      {
-        <div className="version-selector-footer">
-          <Button onClick={props.onStartComparison}>
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
-          </Button>
         </div>
       }
     </div>
