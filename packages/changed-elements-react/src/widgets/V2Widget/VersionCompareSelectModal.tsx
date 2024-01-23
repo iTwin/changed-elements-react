@@ -60,7 +60,7 @@ export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProp
           iModelConnection={props.iModelConnection}
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
-          comparisonPagedResult={result}
+          namedVersions={result?.namedVersions}
         />
       </ModalContent>
       <ModalButtonBar>
@@ -188,14 +188,14 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
   return result;
 }
 
-type runManagerStartComparisonV2Args = {
+type managerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;
   comparisonJobClient: ChangedElementsClient;
   iModelConnection: IModelConnection;
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;
 };
-const runMangerStartComparisonV2 = async (args: runManagerStartComparisonV2Args) => {
+const runMangerStartComparisonV2 = async (args: managerStartComparisonV2Args) => {
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {
     Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
@@ -214,7 +214,7 @@ const toastComparisonProcessing = (currentVersion: NamedVersion, targetVersion: 
   );
 };
 
-const toastComparisonComplete = (args: runManagerStartComparisonV2Args) => {
+const toastComparisonComplete = (args: managerStartComparisonV2Args) => {
   toaster.setSettings({
     placement: "bottom",
   });
