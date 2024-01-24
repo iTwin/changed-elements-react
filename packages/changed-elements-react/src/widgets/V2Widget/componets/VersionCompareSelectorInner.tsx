@@ -1,10 +1,10 @@
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
-import { NamedVersion } from "../../..";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
-import "./styles/VersionCompareSelectWidget.scss";
 import { VersionState } from "../models/VersionState";
+import { NamedVersion } from "../../../clients/iModelsClient";
+import "./styles/VersionCompareSelectWidget.scss";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];

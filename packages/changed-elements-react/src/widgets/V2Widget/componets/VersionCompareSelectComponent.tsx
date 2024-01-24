@@ -1,10 +1,11 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { useMemo, useState } from "react";
-import { NamedVersion, ChangesetChunk } from "../../..";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
-import "./styles/VersionCompareSelectWidget.scss";
 import { NamedVersions } from "../models/NamedVersions";
+import { NamedVersion } from "../../../clients/iModelsClient";
+import { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
+import "./styles/VersionCompareSelectWidget.scss";
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {

@@ -1,11 +1,11 @@
 import { ReactElement, ReactNode } from "react";
-import { jobStatus } from "../models/JobStatus";
-import { VersionProcessedState } from "../VersionProcessedState";
 import { ProgressLinear, ProgressRadial, Radio, Text } from "@itwin/itwinui-react";
 import { IModelApp } from "@itwin/core-frontend";
+import { jobStatus } from "../models/JobStatus";
+import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
-import "./styles/VersionCompareSelectWidget.scss";
 import { VersionState } from "../models/VersionState";
+import "./styles/VersionCompareSelectWidget.scss";
 
 
 interface CurrentVersionEntryProps {
@@ -164,7 +164,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
     return (
       <div className="date-and-current">
         <div className="vc-spinner-container">
-          <div className="vc-spinner-percentage">{percentage}</div>
+          <div className="vc-spinner-percentage">{100}</div>
         </div>
         <ProgressRadial indeterminate />
       </div>

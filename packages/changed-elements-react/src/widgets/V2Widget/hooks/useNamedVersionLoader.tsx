@@ -1,11 +1,11 @@
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useState, useEffect } from "react";
-import { NamedVersion, IModelsClient } from "../../..";
 import { jobStatus } from "../models/JobStatus";
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersions } from "../models/NamedVersions";
 import { ComparisonJobClient } from "../../../clients/ChangedElementsClient";
 import { VersionState } from "../models/VersionState";
+import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 
 export type namedVersionLoaderResult = {
   /** Named versions to display in the list. */

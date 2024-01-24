@@ -1,14 +1,16 @@
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
 import { useState } from "react";
-import { VersionCompareUtils, VersionCompareVerboseMessages, NamedVersion, VersionCompare } from "../../..";
-import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
-import { namedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
-import "./styles/VersionCompareSelectWidget.scss";
+import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
+import { namedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
+import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
+import { NamedVersion } from "../../../clients/iModelsClient";
+import { VersionCompare } from "../../../api/VersionCompare";
+import "./styles/VersionCompareSelectWidget.scss";
 
 export interface VersionCompareSelectDialogProps {
   iModelConnection: IModelConnection;
