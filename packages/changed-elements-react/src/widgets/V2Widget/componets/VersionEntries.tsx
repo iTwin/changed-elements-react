@@ -12,12 +12,15 @@ interface CurrentVersionEntryProps {
   versionState: VersionState;
 }
 
+/**
+ * Component for current version.
+ */
 export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
   const isProcessed = props.versionState.state === VersionProcessedState.Processed;
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
+      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.jobStatus}>
         <div className="job-status-not-started">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
@@ -87,6 +90,9 @@ interface VersionListEntryProps {
   onClicked: (targetVersion: NamedVersion) => void;
 }
 
+/**
+ * Named Version List Entry.
+ */
 export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const handleClick = async () => {
     if (props.versionState.state !== VersionProcessedState.Processed) {
@@ -113,9 +119,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
         return "";
       case VersionProcessedState.Processing: {
         return IModelApp.localization.getLocalizedString(
-          props.versionState.numberNeededChangesets === props.versionState.numberProcessedChangesets
-            ? "VersionCompare:versionCompare.processed"
-            : "VersionCompare:versionCompare.processing",
+          "VersionCompare:versionCompare.processed",
         );
       }
       case VersionProcessedState.Unavailable:
@@ -126,13 +130,13 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const getStateSecondRow = () => {
     switch (props.versionState.state) {
       case VersionProcessedState.Processing: {
-        const processedStateMsg =
-          (props.versionState.numberNeededChangesets === 0
-            ? 0
-            : Math.floor(
-              (props.versionState.numberProcessedChangesets / props.versionState.numberNeededChangesets) * 100,
-            )) + "%";
-        return <div className="state-second-row">{processedStateMsg}</div>;
+        // const processedStateMsg =
+        //   (props.versionState.numberNeededChangesets === 0
+        //     ? 0
+        //     : Math.floor(
+        //       (props.versionState.numberProcessedChangesets / props.versionState.numberNeededChangesets) * 100,
+        //     )) + "%";
+        return <div className="state-second-row">{100}</div>;
       }
       case VersionProcessedState.Unavailable:
         return <span className="state-second-row-warning icon icon-status-warning" />;
@@ -155,12 +159,12 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
     }
   };
   const getProcessSpinner = () => {
-    const percentage =
-      props.versionState.numberNeededChangesets === 0
-        ? 0
-        : Math.floor(
-          (props.versionState.numberProcessedChangesets / props.versionState.numberNeededChangesets) * 100,
-        );
+    // const percentage =
+    //   props.versionState.numberNeededChangesets === 0
+    //     ? 0
+    //     : Math.floor(
+    //       (props.versionState.numberProcessedChangesets / props.versionState.numberNeededChangesets) * 100,
+    //     );
     return (
       <div className="date-and-current">
         <div className="vc-spinner-container">
@@ -181,7 +185,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   };
   const getAvailableDate = () => {
     return (
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
+      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.jobStatus}>
         <div className="state-div">
           <div className={getStateDivClassname()}>{getStateDivMessage()}</div>
           {getStateSecondRow()}
@@ -216,7 +220,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
       {
         props.versionState.state === VersionProcessedState.Verifying
           ? <>
-            <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
+            <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.jobStatus}>
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
             </DateCurrentAndJobStatus>
             <ProgressLinear indeterminate />

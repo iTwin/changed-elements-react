@@ -12,13 +12,18 @@ import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/VersionCompareSelectWidget.scss";
 
+/** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogProps {
+  /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
+  /** Should modal be opened. */
   isOpen: boolean;
-  onClose?: (() => void) | undefined;
+  /** onClose triggered when user clicks start comparison or closes dialog.*/
+  onClose: (() => void) | undefined;
 }
 
-export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProps) {
+/** VersionCompareSelectDialogV2 use comparison jobs for processing. */
+export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogProps) {
   const { comparisonJobClient, iModelsClient } = useVersionCompare();
   if (!comparisonJobClient) {
     throw new Error("V2 Client Is Not Initialized In Given Context.");
@@ -156,7 +161,7 @@ const runStartComparisonV2 = async (args: runStartComparisonV2Args) => {
   }
 };
 
-interface PostOrGetComparisonJobParams {
+type PostOrGetComparisonJobParams = {
   changedElementsClient: ComparisonJobClient;
   iTwinId: string;
   iModelId: string;

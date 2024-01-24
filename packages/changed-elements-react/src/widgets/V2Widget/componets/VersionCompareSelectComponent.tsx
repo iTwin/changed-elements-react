@@ -21,14 +21,14 @@ export interface VersionCompareSelectorProps {
   /** Configure the 'Manage Named Versions' URL. */
   getManageVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 
+  /** Named Versions to be displayed */
   namedVersions: NamedVersions | undefined;
 }
 
 
 
 /**
- * Component that let's the user select which named version to compare to. Will automatically call
- * VersionCompare.manager.startComparison with the proper inputs when user presses OK.
+ * Component that let's the user select which named version to compare to.
  */
 export function VersionCompareSelectComponent(props: VersionCompareSelectorProps) {
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();

@@ -12,6 +12,9 @@ interface VersionListProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
 }
 
+/**
+ * Component that named versions.
+ */
 export function VersionList(props: VersionListProps): ReactElement {
   return (
     <div className="version-compare-row version-compare-list">

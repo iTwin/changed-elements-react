@@ -1,12 +1,15 @@
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useState, useEffect } from "react";
-import { jobStatus } from "../models/JobStatus";
+import { jobStatus } from '../models/JobStatus';
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersions } from "../models/NamedVersions";
 import { ComparisonJobClient } from "../../../clients/ChangedElementsClient";
 import { VersionState } from "../models/VersionState";
 import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 
+/**
+ * Result type for versionLoader.
+ */
 export type namedVersionLoaderResult = {
   /** Named versions to display in the list. */
   namedVersions: NamedVersions;
@@ -25,6 +28,9 @@ type namedVersionLoaderState = {
   };
 };
 
+/**
+ * Loads name versions and their job status compared to current version iModel is targeting.
+ */
 export const useNamedVersionLoader = (
   iModelConnection: IModelConnection,
   iModelsClient: IModelsClient,
@@ -145,7 +151,7 @@ const processChangesetsAndUpdateResultState = async (args: processChangesetsArgs
     return {
       version: entry.version,
       state: VersionProcessedState.Processed,
-      hasComparisonJob: hasComparisonJob,
+      jobStatus: hasComparisonJob,
     };
   }));
   args.namedVersionLoaderState.result = {

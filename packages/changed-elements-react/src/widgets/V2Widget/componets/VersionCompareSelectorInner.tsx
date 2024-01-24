@@ -15,6 +15,9 @@ interface VersionCompareSelectorInnerProps {
   versionsUrl?: string | undefined;
 }
 
+/**
+ * Component that houses named version list.
+ */
 export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps) {
   return (
     <div className="version-compare-selector">

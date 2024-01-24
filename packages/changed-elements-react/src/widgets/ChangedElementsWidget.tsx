@@ -25,7 +25,7 @@ import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import "./ChangedElementsWidget.scss";
 import InformationDialog from "../dialogs/InformationDialog.js";
 import InfoButton from "../common/InformationButton.js";
-import { VersionCompareSelectDialog } from "./V2Widget/componets/VersionCompareSelectModal.js";
+import { VersionCompareSelectDialogV2 } from "./V2Widget/componets/VersionCompareSelectModal.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -396,7 +396,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         }
         {
           this.state.versionSelectDialogVisible &&
-          <VersionCompareSelectDialog
+          <VersionCompareSelectDialogV2
             isOpen
             iModelConnection={this.props.iModelConnection}
             onClose={this._handleVersionSelectDialogClose}
