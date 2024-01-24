@@ -48,6 +48,7 @@ export const useNamedVersionLoader = (
       const iTwinId = iModelConnection?.iTwinId;
       const iModelId = iModelConnection?.iModelId;
       const currentChangeSetId = iModelConnection?.changeset.id;
+      const currentChangeSetIndex = iModelConnection?.changeset.index;
       let disposed = false;
       if (!iTwinId || !iModelId || !currentChangeSetId) {
         setResultNoNamedVersions();
@@ -104,8 +105,8 @@ export const useNamedVersionLoader = (
   return result;
 };
 
-const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string): NamedVersion => {
-  const currentNamedVersion = namedVersions.find(version => version.changesetId === currentChangeSetId);
+const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string, currentChangeSetIndex: number): NamedVersion => {
+  const currentNamedVersion = namedVersions.find(version => (version.changesetId === currentChangeSetId || version.changesetIndex === currentChangeSetIndex));
   if (currentNamedVersion) {
     return currentNamedVersion;
   }
@@ -120,20 +121,21 @@ const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentCh
 };
 
 const sortNamedVersions = (namedVersions: NamedVersion[], currentNamedVersion: NamedVersion, onError: () => void) => {
-  const currentChangeSetDate = !currentNamedVersion.createdDateTime ? new Date() : new Date(currentNamedVersion.createdDateTime);
-  const namedVersionsOlderThanCurrentVersion = namedVersions.filter(version => new Date(version.createdDateTime) <= currentChangeSetDate);
+  //if current index is 0 then no need to filter. All change sets are older than current.
+  const namedVersionsOlderThanCurrentVersion = currentNamedVersion.changesetIndex !== 0 ? namedVersions.filter(version => version.changesetIndex <= currentNamedVersion.changesetIndex) :
+  namedVersions;
   if (namedVersionsOlderThanCurrentVersion.length === 0) {
     onError();
     return;
   }
-  const sortedNamedVersionsByDate = namedVersionsOlderThanCurrentVersion.sort((a, b) => {
-    const dateA = new Date(a.createdDateTime);
-    const dateB = new Date(b.createdDateTime);
+  const sortedNamedVersionsByIndex = namedVersionsOlderThanCurrentVersion.sort((a, b) => {
+    const indexA = a.changesetIndex
+    const indexB = b.changesetIndex
 
     // Sort in descending order (newest first)
-    return dateB.getTime() - dateA.getTime();
+    return indexB - indexA;
   });
-  return sortedNamedVersionsByDate;
+  return sortedNamedVersionsByIndex;
 };
 
 type processChangesetsArgs = {

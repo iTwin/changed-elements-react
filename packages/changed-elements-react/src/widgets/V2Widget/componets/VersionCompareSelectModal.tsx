@@ -22,7 +22,13 @@ export interface VersionCompareSelectDialogProps {
   onClose: (() => void) | undefined;
 }
 
-/** VersionCompareSelectDialogV2 use comparison jobs for processing. */
+/** VersionCompareSelectDialogV2 use comparison jobs for processing.
+ * Requires context of:
+ *<VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}>
+ * ...
+ *</VersionCompareContext>
+ * @throws Exception if context does not include iModelsClient and comparisonJobClient.
+*/
 export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogProps) {
   const { comparisonJobClient, iModelsClient } = useVersionCompare();
   if (!comparisonJobClient) {

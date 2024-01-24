@@ -57,7 +57,7 @@ function DateCurrentAndJobStatus(props: DateAndCurrentProps): ReactElement {
         {props.createdDate ? new Date(props.createdDate).toDateString() : ""}
       </div>
       {props.children}
-      <Text className={jobStatusClass}>{props.jobStatus == undefined || props.jobStatus === "Unknown" ? "" : `${props.jobStatus}`}</Text>
+      <Text className={jobStatusClass}>{props.jobStatus === undefined || props.jobStatus === "Unknown" ? "" : `${props.jobStatus}`}</Text>
     </div>
   );
 }
