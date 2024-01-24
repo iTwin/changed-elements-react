@@ -1,11 +1,11 @@
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { VersionCompareUtils, VersionCompareVerboseMessages, NamedVersion, VersionCompare } from "../..";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import "./VersionCompareSelectWidget.scss";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
-import { UsePagedNamedVersionLoaderResult, usePagedNamedVersionLoader } from "./usePagedNamedVersionLoader";
-import { ChangedElementsClient, ComparisonJob, ComparisonJobCompleted } from "../../clients/ChangedElementsClient";
+import { namedVersionLoaderResult, useNamedVersionLoader } from "./usePagedNamedVersionLoader";
+import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../clients/ChangedElementsClient";
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
 import "./VersionCompareSelectWidget.scss";
@@ -18,13 +18,16 @@ export interface VersionCompareSelectDialogProps {
 }
 
 export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProps) {
-  const { comparisonJobClient } = useVersionCompare();
+  const { comparisonJobClient, iModelsClient } = useVersionCompare();
   if (!comparisonJobClient) {
     throw new Error("V2 Client Is Not Initialized In Given Context.");
   }
-  const [targetVersion, setTargetVersion] = useState<NamedVersion|undefined>(undefined);
+  if (!iModelsClient) {
+    throw new Error("V1 Client Is Not Initialized In Given Context.");
+  }
+  const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
-  const result = usePagedNamedVersionLoader(props.iModelConnection);
+  const result = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient);
   const _handleOk = async (): Promise<void> => {
     if (comparisonJobClient && result?.namedVersions && targetVersion) {
       void handleStartComparison({
@@ -84,8 +87,8 @@ export function VersionCompareSelectDialog(props: VersionCompareSelectDialogProp
 
 type handelStartComparisonArgs = {
   targetVersion: NamedVersion;
-  comparisonJobClient: ChangedElementsClient;
-  result: UsePagedNamedVersionLoaderResult;
+  comparisonJobClient: ComparisonJobClient;
+  result: namedVersionLoaderResult;
   iModelConnection: IModelConnection;
 };
 
@@ -108,7 +111,7 @@ const handleStartComparison = async (args: handelStartComparisonArgs) => {
 
 type runStartComparisonV2Args = {
   targetVersion: NamedVersion;
-  comparisonJobClient: ChangedElementsClient;
+  comparisonJobClient: ComparisonJobClient;
   iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
 };
@@ -153,7 +156,7 @@ const runStartComparisonV2 = async (args: runStartComparisonV2Args) => {
 };
 
 interface PostOrGetComparisonJobParams {
-  changedElementsClient: ChangedElementsClient;
+  changedElementsClient: ComparisonJobClient;
   iTwinId: string;
   iModelId: string;
   startChangesetId: string;
@@ -190,7 +193,7 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
 
 type managerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;
-  comparisonJobClient: ChangedElementsClient;
+  comparisonJobClient: ComparisonJobClient;
   iModelConnection: IModelConnection;
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;

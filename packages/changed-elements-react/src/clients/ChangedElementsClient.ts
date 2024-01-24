@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { DbOpcode } from "@itwin/core-bentley";
 
-export interface ChangedElementsClient {
+export interface ComparisonJobClient {
   /** Gets comparison job status. Throws on encountering an error or receiving non-success response code. */
   getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob>;
 

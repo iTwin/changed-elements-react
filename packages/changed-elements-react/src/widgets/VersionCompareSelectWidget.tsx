@@ -18,7 +18,7 @@ import { VersionCompare } from "../api/VersionCompare.js";
 import { Changeset, NamedVersion } from "../clients/iModelsClient.js";
 
 import "./VersionCompareSelectWidget.scss";
-import { ChangedElementsClient, ComparisonJob } from "../clients/ChangedElementsClient.js";
+import { ComparisonJobClient, ComparisonJob } from "../clients/ChangedElementsClient.js";
 
 
 /** Options for VersionCompareSelectComponent. */
@@ -67,7 +67,7 @@ export const VersionCompareSelectComponent = forwardRef<
 
     const versionSelector = (
       namedVersions: NamedVersions | undefined,
-      handleStartComparison: (targetVersion: NamedVersion | undefined, comparisonJobClient?: ChangedElementsClient) => void,
+      handleStartComparison: (targetVersion: NamedVersion | undefined, comparisonJobClient?: ComparisonJobClient) => void,
     ) => {
       if (!namedVersions) {
         return (
@@ -122,7 +122,7 @@ interface PagedNamedVersionProviderProps {
 
 function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): ReactElement {
   const result = usePagedNamedVersionLoader(props.iModelConnection);
-  const handleStartComparison = async (targetVersion: NamedVersion | undefined, comparisonJobClient?: ChangedElementsClient) => {
+  const handleStartComparison = async (targetVersion: NamedVersion | undefined, comparisonJobClient?: ComparisonJobClient) => {
     if (VersionCompare.manager?.isComparing) {
       await VersionCompare.manager?.stopComparison();
     }
@@ -211,7 +211,7 @@ function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): React
 }
 
 interface PostOrGetComparisonJobParams {
-  changedElementsClient: ChangedElementsClient;
+  changedElementsClient: ComparisonJobClient;
   iTwinId: string;
   iModelId: string;
   startChangesetId: string;
@@ -543,7 +543,7 @@ enum VersionProcessedState {
 
 type jobStatus = "Unknown" | "Ready" | "Not Started" | "In Progress";
 
- interface VersionState {
+interface VersionState {
   version: NamedVersion;
   state: VersionProcessedState;
   numberNeededChangesets: number;
@@ -919,7 +919,7 @@ export class VersionCompareSelectDialog extends Component<
     };
   }
 
-  private _handleOk = async (comparisonJobClient?: ChangedElementsClient): Promise<void> => {
+  private _handleOk = async (comparisonJobClient?: ComparisonJobClient): Promise<void> => {
     if (!comparisonJobClient) {
       this.versionSelectComponentRef.current?.startComparison();
 

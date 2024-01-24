@@ -1,7 +1,7 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { useMemo, useState } from "react";
 import { NamedVersion, ChangesetChunk } from "../..";
-import { UsePagedNamedVersionLoaderResult } from "./usePagedNamedVersionLoader";
+import { namedVersionLoaderResult } from "./usePagedNamedVersionLoader";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
 import "./VersionCompareSelectWidget.scss";

@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  ChangedElements, ChangedElementsClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
+  ChangedElements, ComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
   PostComparisonJobParams
 } from "./ChangedElementsClient.js";
 import { callITwinApi } from "./iTwinApi.js";
@@ -12,8 +12,8 @@ export interface ITwinChangedElementsClientParams {
   getAccessToken: () => Promise<string>;
 }
 
-export class ITwinChangedElementsClient implements ChangedElementsClient {
-  private acceptHeader = "application/vnd.bentley.itwin-platform.v2+json"
+export class ITwinComparisonJobClient implements ComparisonJobClient {
+  private acceptHeader = "application/vnd.bentley.itwin-platform.v2+json";
   private baseUrl: string;
   private getAccessToken: () => Promise<string>;
 
@@ -37,7 +37,6 @@ export class ITwinChangedElementsClient implements ChangedElementsClient {
   }
 
   public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements> {
-    //todo fix this direct download from href ?
     return callITwinApi({
       url: args.comparisonJob.comparison.href,
       method: "GET",
