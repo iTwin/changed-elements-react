@@ -57,7 +57,7 @@ export const useNamedVersionLoader = (
 
       void (async () => {
         const namedVersions = await iModelsClient.getNamedVersions({ iModelId });
-        const currentNamedVersion = getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId);
+        const currentNamedVersion = getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId,currentChangeSetIndex);
         const sortedNamedVersions = sortNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions);
         if (!sortedNamedVersions || sortedNamedVersions.length === 0) {
           setResultNoNamedVersions();
@@ -105,7 +105,7 @@ export const useNamedVersionLoader = (
   return result;
 };
 
-const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string, currentChangeSetIndex: number): NamedVersion => {
+const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string, currentChangeSetIndex?: number): NamedVersion => {
   const currentNamedVersion = namedVersions.find(version => (version.changesetId === currentChangeSetId || version.changesetIndex === currentChangeSetIndex));
   if (currentNamedVersion) {
     return currentNamedVersion;
