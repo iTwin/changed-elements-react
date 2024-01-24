@@ -1,11 +1,11 @@
 import { ReactElement, ReactNode } from "react";
-import { jobStatus } from "./JobStatus";
-import { VersionProcessedState } from "./VersionProcessedState";
+import { jobStatus } from "../models/JobStatus";
+import { VersionProcessedState } from "../VersionProcessedState";
 import { ProgressLinear, ProgressRadial, Radio, Text } from "@itwin/itwinui-react";
-import { VersionState } from "../VersionCompareSelectWidget";
 import { IModelApp } from "@itwin/core-frontend";
-import { NamedVersion } from "../../clients/iModelsClient";
-import "./VersionCompareSelectWidget.scss";
+import { NamedVersion } from "../../../clients/iModelsClient";
+import "./styles/VersionCompareSelectWidget.scss";
+import { VersionState } from "../models/VersionState";
 
 
 interface CurrentVersionEntryProps {

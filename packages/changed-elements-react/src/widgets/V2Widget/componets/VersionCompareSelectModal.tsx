@@ -1,15 +1,14 @@
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
 import { useState } from "react";
-import { VersionCompareUtils, VersionCompareVerboseMessages, NamedVersion, VersionCompare } from "../..";
+import { VersionCompareUtils, VersionCompareVerboseMessages, NamedVersion, VersionCompare } from "../../..";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
-import "./VersionCompareSelectWidget.scss";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
-import { namedVersionLoaderResult, useNamedVersionLoader } from "./usePagedNamedVersionLoader";
-import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../clients/ChangedElementsClient";
+import { namedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
+import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
-import "./VersionCompareSelectWidget.scss";
-import { useVersionCompare } from "../../VersionCompareContext";
+import "./styles/VersionCompareSelectWidget.scss";
+import { useVersionCompare } from "../../../VersionCompareContext";
 
 export interface VersionCompareSelectDialogProps {
   iModelConnection: IModelConnection;
@@ -198,6 +197,7 @@ type managerStartComparisonV2Args = {
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;
 };
+
 const runMangerStartComparisonV2 = async (args: managerStartComparisonV2Args) => {
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {

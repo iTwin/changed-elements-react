@@ -1,21 +1,15 @@
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useState, useEffect } from "react";
-import { NamedVersion, IModelsClient } from "../..";
-import { jobStatus } from "./JobStatus";
-import { VersionProcessedState } from "./VersionProcessedState";
-import { NamedVersions } from "./NamedVersions";
-import { ComparisonJobClient } from "../../clients/ChangedElementsClient";
-import "./VersionCompareSelectWidget.scss";
+import { NamedVersion, IModelsClient } from "../../..";
+import { jobStatus } from "../models/JobStatus";
+import { VersionProcessedState } from "../VersionProcessedState";
+import { NamedVersions } from "../models/NamedVersions";
+import { ComparisonJobClient } from "../../../clients/ChangedElementsClient";
+import { VersionState } from "../models/VersionState";
 
 export type namedVersionLoaderResult = {
   /** Named versions to display in the list. */
   namedVersions: NamedVersions;
-};
-
-type VersionState = {
-  version: NamedVersion;
-  state: VersionProcessedState;
-  jobStatus?: jobStatus;
 };
 
 type namedVersionLoaderState = {
@@ -31,11 +25,11 @@ type namedVersionLoaderState = {
   };
 };
 
-export function useNamedVersionLoader(
+export const useNamedVersionLoader = (
   iModelConnection: IModelConnection,
   iModelsClient: IModelsClient,
   comparisonJobClient: ComparisonJobClient,
-): namedVersionLoaderResult | undefined {
+) => {
   const [result, setResult] = useState<namedVersionLoaderResult>();
   const setResultNoNamedVersions = () => {
     setResult({
@@ -102,7 +96,7 @@ export function useNamedVersionLoader(
   );
 
   return result;
-}
+};
 
 const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string): NamedVersion => {
   const currentNamedVersion = namedVersions.find(version => version.changesetId === currentChangeSetId);

@@ -1,4 +1,5 @@
-import { VersionState } from "../VersionCompareSelectWidget";
+import { VersionState } from "./VersionState";
+
 
 export interface NamedVersions {
   entries: VersionState[];

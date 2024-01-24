@@ -1,11 +1,10 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { useMemo, useState } from "react";
-import { NamedVersion, ChangesetChunk } from "../..";
-import { namedVersionLoaderResult } from "./usePagedNamedVersionLoader";
+import { NamedVersion, ChangesetChunk } from "../../..";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
-import "./VersionCompareSelectWidget.scss";
-import { NamedVersions } from "./NamedVersions";
+import "./styles/VersionCompareSelectWidget.scss";
+import { NamedVersions } from "../models/NamedVersions";
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
@@ -39,9 +38,9 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
   );
   const handleVersionClicked = (targetVersion: NamedVersion) => {
     setTargetVersion(targetVersion);
-    if (props.namedVersions) {
+    if (props.namedVersions && props.namedVersions.currentVersion) {
       props.onVersionSelected?.(
-        props.namedVersions.currentVersion!.version,
+        props.namedVersions.currentVersion.version,
         targetVersion,
       );
     }

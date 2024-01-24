@@ -1,11 +1,10 @@
 import { IModelApp } from "@itwin/core-frontend";
-import { Button, Text } from "@itwin/itwinui-react";
-import { ReactNode } from "react";
-import { NamedVersion } from "../..";
-import { VersionState } from "../VersionCompareSelectWidget";
+import { Text } from "@itwin/itwinui-react";
+import { NamedVersion } from "../../..";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
-import "./VersionCompareSelectWidget.scss";
+import "./styles/VersionCompareSelectWidget.scss";
+import { VersionState } from "../models/VersionState";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
@@ -16,7 +15,7 @@ interface VersionCompareSelectorInnerProps {
   versionsUrl?: string | undefined;
 }
 
-export function VersionCompareSelectorInner(props:VersionCompareSelectorInnerProps) {
+export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps) {
   return (
     <div className="version-compare-selector">
       {

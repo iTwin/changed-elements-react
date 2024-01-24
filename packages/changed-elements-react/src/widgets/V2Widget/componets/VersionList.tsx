@@ -1,9 +1,9 @@
 import { IModelApp } from "@itwin/core-frontend";
-import { ReactElement, ReactNode } from "react";
-import { NamedVersion } from "../..";
-import { VersionState } from "../VersionCompareSelectWidget";
+import { ReactElement } from "react";
+import { NamedVersion } from "../../..";
 import { VersionListEntry } from "./VersionEntries";
-import "./VersionCompareSelectWidget.scss";
+import "./styles/VersionCompareSelectWidget.scss";
+import { VersionState } from "../models/VersionState";
 
 interface VersionListProps {
   entries: VersionState[];

@@ -25,7 +25,7 @@ import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import "./ChangedElementsWidget.scss";
 import InformationDialog from "../dialogs/InformationDialog.js";
 import InfoButton from "../common/InformationButton.js";
-import { VersionCompareSelectDialog } from "./V2Widget/VersionCompareSelectModal.js";
+import { VersionCompareSelectDialog } from "./V2Widget/componets/VersionCompareSelectModal.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
