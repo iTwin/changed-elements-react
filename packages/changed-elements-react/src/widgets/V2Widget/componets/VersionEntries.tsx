@@ -1,7 +1,8 @@
-import { ReactElement, ReactNode } from "react";
-import { ProgressLinear, ProgressRadial, Radio, Text, Badge, BadgeProps } from "@itwin/itwinui-react";
+import { ReactElement, ReactNode, useEffect, useState } from "react";
+import { ProgressLinear, Radio, Badge } from "@itwin/itwinui-react";
+import { useInView } from 'react-intersection-observer';
 import { IModelApp } from "@itwin/core-frontend";
-import { JobStatus } from "../models/JobStatus";
+import { JobStatus, JobStatusAndJobProgress, JobProgress } from '../models/JobStatus';
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
@@ -20,11 +21,11 @@ export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactEleme
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={"Unknown"}>
+      <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime} jobStatus={"Unknown"}>
         <div className="date">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
-      </DateCurrentAndJobStatus>
+      </DateCurrentAndJobInfo>
     </div>
   );
 }
@@ -33,13 +34,17 @@ interface DateAndCurrentProps {
   createdDate?: string;
   children: ReactNode;
   jobStatus?: JobStatus;
+  jobProgress?: JobProgress;
 }
 
-function DateCurrentAndJobStatus(props: DateAndCurrentProps): ReactElement {
+function DateCurrentAndJobInfo(props: DateAndCurrentProps): ReactElement {
   let jobBadgeBackground;
   switch (props.jobStatus) {
     case "Available":
       jobBadgeBackground = "celery";
+      break;
+    case "Queued":
+      jobBadgeBackground = "sunglow";
       break;
     case "Processing":
       jobBadgeBackground = "poloblue";
@@ -51,7 +56,7 @@ function DateCurrentAndJobStatus(props: DateAndCurrentProps): ReactElement {
       jobBadgeBackground = "froly";
       break;
     default:
-      jobBadgeBackground = "froly";
+      jobBadgeBackground = "ash";
       break;
   }
   return (
@@ -85,7 +90,6 @@ function VersionNameAndDescription(props: VersionNameAndDescriptionProps): React
 
 interface VersionListEntryProps {
   versionState: VersionState;
-  previousEntry: VersionState;
   isSelected: boolean;
   onClicked: (targetVersion: NamedVersion) => void;
 }
@@ -94,6 +98,35 @@ interface VersionListEntryProps {
  * Named Version List Entry.
  */
 export function VersionListEntry(props: VersionListEntryProps): ReactElement {
+  const [jobProgressAndJobStatus, setJobProgressAndJobStatus] = useState<JobStatusAndJobProgress>();
+  const [ref, inView] = useInView({
+    triggerOnce: false, // Change to true if you want the event to only trigger once
+  });
+
+  const shouldUpdateJobProgress = inView && (props.versionState.jobStatus === "Processing" || props.versionState.jobStatus === "Queued")
+  useEffect(() => {
+    let intervalId: NodeJS.Timer | undefined;
+
+    const fetchData = async () => {
+      if (!shouldUpdateJobProgress || !props.versionState.updateJobProgress)
+        return;
+      // Fetch data from API and update state
+      const response = await props.versionState.updateJobProgress();
+      setJobProgressAndJobStatus(response);
+    };
+
+    if (inView) {
+      void fetchData();
+      intervalId = setInterval(fetchData, 5000); // 5000 ms = 5 seconds
+    } else {
+      clearInterval(intervalId);
+    }
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [inView, props.versionState]);
+
   const handleClick = async () => {
     if (props.versionState.state !== VersionProcessedState.Processed) {
       return;
@@ -127,76 +160,19 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
         return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.unavailable");
     }
   };
-  const getStateSecondRow = () => {
-    switch (props.versionState.state) {
-      case VersionProcessedState.Processing: {
-        // const processedStateMsg =
-        //   (props.versionState.numberNeededChangesets === 0
-        //     ? 0
-        //     : Math.floor(
-        //       (props.versionState.numberProcessedChangesets / props.versionState.numberNeededChangesets) * 100,
-        //     )) + "%";
-        return <div className="state-second-row">{100}</div>;
-      }
-      case VersionProcessedState.Unavailable:
-        return <span className="state-second-row-warning icon icon-status-warning" />;
-      case VersionProcessedState.Processed:
-      default:
-        return undefined;
-    }
-  };
-  const getTooltipMessage = () => {
-    switch (props.versionState.state) {
-      case VersionProcessedState.Verifying:
-        return "";
-      case VersionProcessedState.Processed:
-        return "";
-      case VersionProcessedState.Processing:
-        return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_processing");
-      case VersionProcessedState.Unavailable:
-      default:
-        return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_unavailable");
-    }
-  };
-  const getProcessSpinner = () => {
-    // const percentage =
-    //   props.versionState.numberNeededChangesets === 0
-    //     ? 0
-    //     : Math.floor(
-    //       (props.versionState.numberProcessedChangesets / props.versionState.numberNeededChangesets) * 100,
-    //     );
-    return (
-      <div className="date-and-current">
-        <div className="vc-spinner-container">
-          <div className="vc-spinner-percentage">{100}</div>
-        </div>
-        <ProgressRadial indeterminate />
-      </div>
-    );
-  };
-  const getWaitingMessage = () => {
-    return (
-      <div className="date-and-current">
-        <div className="vc-waiting">
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.waiting")}
-        </div>
-      </div>
-    );
-  };
   const getAvailableDate = () => {
     return (
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.jobStatus}>
+      <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime}
+        jobStatus={!jobProgressAndJobStatus ? props.versionState.jobStatus : jobProgressAndJobStatus.jobStatus }
+        jobProgress={!jobProgressAndJobStatus ? props.versionState.jobProgress : jobProgressAndJobStatus.jobProgress}>
         <div className="state-div">
           <div className={getStateDivClassname()}>{getStateDivMessage()}</div>
-          {getStateSecondRow()}
         </div>
-      </DateCurrentAndJobStatus>
+      </DateCurrentAndJobInfo>
     );
   };
 
   const isProcessed = props.versionState.state === VersionProcessedState.Processed;
-  const isPreviousAvailable = props.previousEntry.state === VersionProcessedState.Processed;
-  const isAvailable = isProcessed && isPreviousAvailable;
   return (
     <div
       className={
@@ -207,7 +183,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
           : "vc-entry unprocessed"
       }
       onClick={handleClick}
-      title={getTooltipMessage()}
+      ref={ref}
     >
       <div className="vcs-checkbox">
         <Radio
@@ -220,16 +196,15 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
       {
         props.versionState.state === VersionProcessedState.Verifying
           ? <>
-            <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.jobStatus}>
+            <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime}
+              jobStatus={!jobProgressAndJobStatus ? props.versionState.jobStatus : jobProgressAndJobStatus.jobStatus}
+              jobProgress={!jobProgressAndJobStatus ? props.versionState.jobProgress : jobProgressAndJobStatus.jobProgress}
+            >
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
-            </DateCurrentAndJobStatus>
+            </DateCurrentAndJobInfo>
             <ProgressLinear indeterminate />
           </>
-          : isAvailable
-            ? getAvailableDate()
-            : isPreviousAvailable
-              ? getProcessSpinner()
-              : getWaitingMessage()
+          : getAvailableDate()
       }
     </div>
   );

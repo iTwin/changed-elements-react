@@ -10,36 +10,16 @@ interface VersionListProps {
   currentVersion: VersionState;
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
-  iModelConnection: IModelConnection;
 }
 
 /**
  * Component that named versions.
  */
 export function VersionList(props: VersionListProps): ReactElement {
-  const [entries, setEntries] = useState<VersionState[]>();
-  useEffect(
-    () => {
-      const iTwinId = props.iModelConnection?.iTwinId;
-      const iModelId = props.iModelConnection?.iModelId;
-      const currentChangeSetId = props.iModelConnection?.changeset.id;
-      let disposed = false;
-      if (!iTwinId || !iModelId || !currentChangeSetId) {
-        return;
-      }
-
-      void (async () => {
-
-      })();
-    },
-    [props.iModelConnection?.changeset.id, props.iModelConnection?.iModelId, props.iModelConnection?.iTwinId, props.selectedVersionChangesetId],
-  );
-  // todo set up use effect to get job progress
-  // todo setup useState for current job progress
   return (
     <div className="version-compare-row version-compare-list">
       <div className="version-container-table">
-        <div className="version-container-header">
+        <div className="version-container-header" style={{ borderBottom:"solid 2px black"}}>
           <div className="version-header">
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versions")}
           </div>

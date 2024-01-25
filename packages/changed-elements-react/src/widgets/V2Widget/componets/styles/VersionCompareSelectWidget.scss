@@ -166,42 +166,6 @@
   }
 }
 
-.job-status-complete {
-  color: white;
-  font-size: var(--iui-font-size-0);
-  padding: 0px 8px;
-  background-color: var(--iui-color-background-positive);
-  border-radius: 4px;
-  text-align: center;
-  cursor: default;
-  box-sizing: border-box;
-  width: 100px;
-}
-
-.job-status-progress {
-  color: black;
-  font-size: var(--iui-font-size-0);
-  padding: 0px 8px;
-  background-color: var(--iui-color-background-seabuckthorn);
-  border-radius: 4px;
-  text-align: center;
-  cursor: default;
-  box-sizing: border-box;
-  width: 100px;
-}
-
-.job-status-not-started {
-  color: black;
-  font-size: var(--iui-font-size-0);
-  padding: 0px 8px;
-  background-color: var(--iui-color-background-disabled);
-  border-radius: 4px;
-  text-align: center;
-  cursor: default;
-  box-sizing: border-box;
-  width: 100px;
-}
-
 .vc-entry {
   display: grid;
   grid: 1fr 0 / auto 1fr auto;
@@ -270,7 +234,6 @@
 
 .version-container-header {
   display: flex;
-  border-bottom: solid 2px black;
   > .version-header {
     flex: 1 0;
     margin: var(--iui-size-xs);

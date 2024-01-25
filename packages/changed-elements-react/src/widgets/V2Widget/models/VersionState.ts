@@ -1,7 +1,7 @@
 
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionProcessedState } from "../VersionProcessedState";
-import { JobProgress, JobStatus } from "./JobStatus";
+import { JobProgress, JobStatus, JobStatusAndJobProgress } from "./JobStatus";
 
 
 
@@ -10,5 +10,6 @@ export type VersionState = {
   state: VersionProcessedState;
   jobStatus?: JobStatus;
   jobProgress?: JobProgress;
-  //todo add job id so we can only update one entry
+  jobId?: string;
+  updateJobProgress?: () => Promise<JobStatusAndJobProgress>;
 };
