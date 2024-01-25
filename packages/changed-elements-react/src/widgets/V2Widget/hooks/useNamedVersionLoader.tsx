@@ -1,9 +1,9 @@
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useState, useEffect } from "react";
-import { jobStatus } from '../models/JobStatus';
+import { JobStatus, JobProgress } from '../models/JobStatus';
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersions } from "../models/NamedVersions";
-import { ComparisonJobClient } from "../../../clients/ChangedElementsClient";
+import { ComparisonJobClient, ComparisonJobQueued, ComparisonJobStarted } from "../../../clients/ChangedElementsClient";
 import { VersionState } from "../models/VersionState";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 
@@ -21,7 +21,8 @@ type namedVersionLoaderState = {
       entries: {
         version: NamedVersion;
         state: VersionProcessedState;
-        jobStatus: jobStatus;
+        jobStatus: JobStatus;
+        jobProgress:JobProgress,
       }[];
       currentVersion: VersionState;
     };
@@ -70,19 +71,25 @@ export const useNamedVersionLoader = (
         if (disposed) {
           return;
         }
-        const currentComparisonJobStatus: jobStatus = "Unknown";
+        const initialComparisonJobStatus: JobStatus = "Unknown";
+        const initialJobProgress: JobProgress = {
+          numberCompleted: 0,
+          totalToComplete: 0,
+        };
         const currentState: namedVersionLoaderState = {
           result: {
             namedVersions: {
               entries: sortedNamedVersions.map((namedVersion) => ({
                 version: namedVersion,
                 state: VersionProcessedState.Verifying,
-                jobStatus: currentComparisonJobStatus,
+                jobStatus: initialComparisonJobStatus,
+                jobProgress: initialJobProgress,
               })),
               currentVersion: {
                 version: currentNamedVersion,
                 state: VersionProcessedState.Processed,
-                jobStatus: currentComparisonJobStatus,
+                jobStatus: initialComparisonJobStatus,
+                jobProgress: initialJobProgress,
               },
             },
           },
@@ -171,11 +178,12 @@ type processChangesetsArgs = {
 const processChangesetsAndUpdateResultState = async (args: processChangesetsArgs) => {
   const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.result.namedVersions.entries.map(async (entry) => {
-    const jobStatus: jobStatus = await getJobStatus(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+    const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatus(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     return {
       version: entry.version,
       state: VersionProcessedState.Processed,
-      jobStatus: jobStatus,
+      jobStatus: jobStatusAndJobProgress.jobStatus,
+      jobProgress:jobStatusAndJobProgress.jobProgress
     };
   }));
   args.namedVersionLoaderState.result = {
@@ -187,10 +195,15 @@ const processChangesetsAndUpdateResultState = async (args: processChangesetsArgs
 type entry = {
   version: NamedVersion;
   state: VersionProcessedState;
-  hasComparisonJob: jobStatus;
+  jobStatus: JobStatus;
+  jobProgress: JobProgress,
 };
 
-const getJobStatus = async (comparisonJobClient: ComparisonJobClient, entry: entry, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<jobStatus> => {
+type JobStatusAndJobProgress = {
+  jobStatus: JobStatus;
+  jobProgress: JobProgress;
+};
+const getJobStatus = async (comparisonJobClient: ComparisonJobClient, entry: entry, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<JobStatusAndJobProgress> => {
   try {
     const res = await comparisonJobClient.getComparisonJob({
       iTwinId: iTwinId,
@@ -200,17 +213,56 @@ const getJobStatus = async (comparisonJobClient: ComparisonJobClient, entry: ent
     if (res) {
       switch (res.comparisonJob.status) {
         case "Completed":
-          return "Ready";
-        case "Queued":
-          return "In Progress";
-        case "Started":
-          return "In Progress";
+          return {
+            jobStatus: "Available",
+            jobProgress: {
+              numberCompleted: 0,
+              totalToComplete: 0,
+            },
+          };
+        case "Queued": {
+          return {
+            jobStatus: "Processing",
+            jobProgress: {
+              numberCompleted: 0,
+              totalToComplete:0,
+            },
+          };
+        }
+        case "Started": {
+          const progressingJob = res as ComparisonJobStarted
+          return {
+            jobStatus: "Processing",
+            jobProgress: {
+              numberCompleted: progressingJob.comparisonJob.comparisonProgress,
+              totalToComplete: progressingJob.comparisonJob.comparisonProgressTotal,
+            },
+          };
+        }
         case "Error":
-          return "Not Started";
+          return {
+            jobStatus: "Error",
+            jobProgress: {
+              numberCompleted: 0,
+              totalToComplete: 0,
+            },
+          };
       }
     }
-    return "Unknown";
+    return {
+      jobStatus: "Unknown",
+      jobProgress: {
+        numberCompleted: 0,
+        totalToComplete: 0,
+      },
+    };
   } catch (_) {
-    return "Not Started";
+    return {
+      jobStatus: "Not Processed",
+      jobProgress: {
+        numberCompleted: 0,
+        totalToComplete: 0,
+      },
+    };
   }
 };

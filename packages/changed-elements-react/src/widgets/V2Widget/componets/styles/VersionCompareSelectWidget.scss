@@ -157,11 +157,16 @@
         text-align: center;
         cursor: default;
       }
+      > .description {
+        color: var(--iui-color-text-muted);
+        font-size: var(--iui-font-size-0);
+        cursor: default;
+      }
     }
   }
 }
 
-.job-status-complete{
+.job-status-complete {
   color: white;
   font-size: var(--iui-font-size-0);
   padding: 0px 8px;
@@ -173,7 +178,7 @@
   width: 100px;
 }
 
-.job-status-progress{
+.job-status-progress {
   color: black;
   font-size: var(--iui-font-size-0);
   padding: 0px 8px;
@@ -182,10 +187,10 @@
   text-align: center;
   cursor: default;
   box-sizing: border-box;
-  width:100px;
+  width: 100px;
 }
 
-.job-status-not-started{
+.job-status-not-started {
   color: black;
   font-size: var(--iui-font-size-0);
   padding: 0px 8px;
@@ -194,7 +199,7 @@
   text-align: center;
   cursor: default;
   box-sizing: border-box;
-  width:100px ;
+  width: 100px;
 }
 
 .vc-entry {
@@ -265,12 +270,7 @@
 
 .version-container-header {
   display: flex;
-  border-left: solid;
-  border-right: solid;
-  border-top: solid;
-  border-color: var(--iui-color-border);
-  border-width: 1px;
-
+  border-bottom: solid 2px black;
   > .version-header {
     flex: 1 0;
     margin: var(--iui-size-xs);
@@ -280,8 +280,7 @@
     text-align: left;
   }
 
-  > .date-header {
-    flex: 0 1;
+  > .status-header {
     margin: var(--iui-size-xs);
     font-weight: var(--iui-font-weight-bold);
     font-size: var(--iui-font-size-1);
@@ -310,6 +309,9 @@
     &.version-compare-list {
       flex: 1;
       overflow: hidden;
+      border-color: var(--iui-color-border);
+      border-width: 1px;
+      border: solid;
     }
 
     > .version-compare-label {

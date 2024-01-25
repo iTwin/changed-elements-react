@@ -66,7 +66,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   return (
     <Modal
       className="version-compare-dialog"
-      title={"V2 WIP"}
+      title={"Version Compare Tech Preview"}
       isOpen={props.isOpen}
       onClose={_handleCancel}
     >

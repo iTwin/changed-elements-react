@@ -1,7 +1,7 @@
 import { ReactElement, ReactNode } from "react";
-import { ProgressLinear, ProgressRadial, Radio, Text } from "@itwin/itwinui-react";
+import { ProgressLinear, ProgressRadial, Radio, Text, Badge, BadgeProps } from "@itwin/itwinui-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { jobStatus } from "../models/JobStatus";
+import { JobStatus } from "../models/JobStatus";
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
@@ -20,8 +20,8 @@ export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactEleme
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.jobStatus}>
-        <div className="job-status-not-started">
+      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={"Unknown"}>
+        <div className="date">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
       </DateCurrentAndJobStatus>
@@ -32,32 +32,32 @@ export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactEleme
 interface DateAndCurrentProps {
   createdDate?: string;
   children: ReactNode;
-  jobStatus?: jobStatus;
+  jobStatus?: JobStatus;
 }
 
 function DateCurrentAndJobStatus(props: DateAndCurrentProps): ReactElement {
-  let jobStatusClass;
+  let jobBadgeBackground;
   switch (props.jobStatus) {
-    case "Ready":
-      jobStatusClass = "job-status-complete";
+    case "Available":
+      jobBadgeBackground = "celery";
       break;
-    case "In Progress":
-      jobStatusClass = "job-status-progress";
+    case "Processing":
+      jobBadgeBackground = "poloblue";
       break;
-    case "Not Started":
-      jobStatusClass = "job-status-not-started";
+    case "Not Processed":
+      jobBadgeBackground = "ash";
+      break;
+    case "Error":
+      jobBadgeBackground = "froly";
       break;
     default:
-      jobStatusClass = "";
+      jobBadgeBackground = "froly";
       break;
   }
   return (
     <div className="date-and-current">
-      <div className="date">
-        {props.createdDate ? new Date(props.createdDate).toDateString() : ""}
-      </div>
       {props.children}
-      <Text className={jobStatusClass}>{props.jobStatus === undefined || props.jobStatus === "Unknown" ? "" : `${props.jobStatus}`}</Text>
+      {props.jobStatus === undefined || props.jobStatus === "Unknown" ? <></> : <Badge backgroundColor={jobBadgeBackground}>{`${props.jobStatus}`}</Badge>}
     </div>
   );
 }
