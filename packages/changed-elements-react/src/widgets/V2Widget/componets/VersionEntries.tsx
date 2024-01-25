@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode, useEffect, useState } from "react";
-import { ProgressLinear, Radio, Badge } from "@itwin/itwinui-react";
+import { ProgressLinear, Radio, Badge,Text } from "@itwin/itwinui-react";
 import { useInView } from 'react-intersection-observer';
 import { IModelApp } from "@itwin/core-frontend";
 import { JobStatus, JobStatusAndJobProgress, JobProgress } from '../models/JobStatus';
@@ -63,6 +63,7 @@ function DateCurrentAndJobInfo(props: DateAndCurrentProps): ReactElement {
     <div className="date-and-current">
       {props.children}
       {props.jobStatus === undefined || props.jobStatus === "Unknown" ? <></> : <Badge backgroundColor={jobBadgeBackground}>{`${props.jobStatus}`}</Badge>}
+      {props.jobProgress === undefined || props.jobProgress.totalToComplete === 0 ? <></> : <Text>{`Progress: ${props.jobProgress.numberCompleted}/${props.jobProgress.totalToComplete}`}</Text>}
     </div>
   );
 }
@@ -103,7 +104,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
     triggerOnce: false, // Change to true if you want the event to only trigger once
   });
 
-  const shouldUpdateJobProgress = inView && (props.versionState.jobStatus === "Processing" || props.versionState.jobStatus === "Queued")
+  const shouldUpdateJobProgress = inView && (props.versionState.jobStatus === "Processing" || props.versionState.jobStatus === "Queued" || jobProgressAndJobStatus)
   useEffect(() => {
     let intervalId: NodeJS.Timer | undefined;
 
