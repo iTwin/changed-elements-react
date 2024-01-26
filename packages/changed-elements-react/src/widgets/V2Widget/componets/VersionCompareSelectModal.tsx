@@ -4,13 +4,14 @@ import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriorit
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
-import { namedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
+import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
 import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/VersionCompareSelectWidget.scss";
+
 
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogProps {
@@ -97,14 +98,14 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
 }
 
 
-type handelStartComparisonArgs = {
+type HandleStartComparisonArgs = {
   targetVersion: NamedVersion;
   comparisonJobClient: ComparisonJobClient;
-  result: namedVersionLoaderResult;
+  result: NamedVersionLoaderResult;
   iModelConnection: IModelConnection;
 };
 
-const handleStartComparison = async (args: handelStartComparisonArgs) => {
+const handleStartComparison = async (args: HandleStartComparisonArgs) => {
   if (VersionCompare.manager?.isComparing) {
     await VersionCompare.manager?.stopComparison();
   }
@@ -121,14 +122,14 @@ const handleStartComparison = async (args: handelStartComparisonArgs) => {
   }
 };
 
-type runStartComparisonV2Args = {
+type RunStartComparisonV2Args = {
   targetVersion: NamedVersion;
   comparisonJobClient: ComparisonJobClient;
   iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
 };
 
-const runStartComparisonV2 = async (args: runStartComparisonV2Args) => {
+const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   let { comparisonJob } = await postOrGetComparisonJob({
     changedElementsClient: args.comparisonJobClient,
     iTwinId: args.iModelConnection?.iTwinId as string,
@@ -146,7 +147,7 @@ const runStartComparisonV2 = async (args: runStartComparisonV2Args) => {
     });
   }
   while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
-    toastComparisonProcessing(args.currentVersion, args.targetVersion);
+    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     comparisonJob = (await postOrGetComparisonJob({
       changedElementsClient: args.comparisonJobClient,
@@ -156,7 +157,7 @@ const runStartComparisonV2 = async (args: runStartComparisonV2Args) => {
       endChangesetId: args.currentVersion.changesetId as string,
     })).comparisonJob;
     if (comparisonJob.status === "Completed") {
-      toastComparisonComplete({
+      toastComparisonJobComplete({
         comparisonJob: { comparisonJob: comparisonJob },
         comparisonJobClient: args.comparisonJobClient,
         iModelConnection: args.iModelConnection,
@@ -173,7 +174,7 @@ type PostOrGetComparisonJobParams = {
   iModelId: string;
   startChangesetId: string;
   endChangesetId: string;
-}
+};
 
 async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
   let result: ComparisonJob;
@@ -203,7 +204,7 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
   return result;
 }
 
-type managerStartComparisonV2Args = {
+type ManagerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;
   comparisonJobClient: ComparisonJobClient;
   iModelConnection: IModelConnection;
@@ -211,7 +212,11 @@ type managerStartComparisonV2Args = {
   currentVersion: NamedVersion;
 };
 
-const runMangerStartComparisonV2 = async (args: managerStartComparisonV2Args) => {
+const runMangerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
+  if (VersionCompare.manager?.isComparing) {
+    return;
+  }
+  toastComparisonVisualizationStarting();
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {
     Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
@@ -219,18 +224,18 @@ const runMangerStartComparisonV2 = async (args: managerStartComparisonV2Args) =>
 };
 
 
-const toastComparisonProcessing = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
+const toastComparisonJobProcessing = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
       OutputMessagePriority.Info,
-      "iModel versions ",
+      "Version Compare",
       `iModel versions <${currentVersion?.displayName}> and <${targetVersion.displayName}> are being processed in the background. You will receive a notification upon completion.`,
       OutputMessageType.Toast,
     ),
   );
 };
 
-const toastComparisonComplete = (args: managerStartComparisonV2Args) => {
+const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) => {
   toaster.setSettings({
     placement: "bottom",
   });
@@ -239,6 +244,7 @@ const toastComparisonComplete = (args: managerStartComparisonV2Args) => {
     link: {
       title: "View The Report",
       onClick: () => {
+        toaster.closeAll();
         void runMangerStartComparisonV2({
           comparisonJob: args.comparisonJob,
           comparisonJobClient: args.comparisonJobClient,
@@ -246,9 +252,19 @@ const toastComparisonComplete = (args: managerStartComparisonV2Args) => {
           targetVersion: args.targetVersion,
           currentVersion: args.currentVersion,
         });
-        toaster.closeAll();
       },
     },
     type: "persisting",
   });
+};
+
+const toastComparisonVisualizationStarting = () => {
+  IModelApp.notifications.outputMessage(
+    new NotifyMessageDetails(
+      OutputMessagePriority.Info,
+      "Version Compare",
+      "Comparison Visualization Starting",
+      OutputMessageType.Toast,
+    ),
+  );
 };

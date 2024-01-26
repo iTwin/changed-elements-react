@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode, useEffect, useState } from "react";
-import { ProgressLinear, Radio, Badge,Text } from "@itwin/itwinui-react";
+import { ProgressLinear, Radio, Badge, Text } from "@itwin/itwinui-react";
 import { useInView } from 'react-intersection-observer';
 import { IModelApp } from "@itwin/core-frontend";
 import { JobStatus, JobStatusAndJobProgress, JobProgress } from '../models/JobStatus';
@@ -99,35 +99,6 @@ interface VersionListEntryProps {
  * Named Version List Entry.
  */
 export function VersionListEntry(props: VersionListEntryProps): ReactElement {
-  const [jobProgressAndJobStatus, setJobProgressAndJobStatus] = useState<JobStatusAndJobProgress>();
-  const [ref, inView] = useInView({
-    triggerOnce: false, // Change to true if you want the event to only trigger once
-  });
-
-  const shouldUpdateJobProgress = inView && (props.versionState.jobStatus === "Processing" || props.versionState.jobStatus === "Queued" || jobProgressAndJobStatus)
-  useEffect(() => {
-    let intervalId: NodeJS.Timer | undefined;
-
-    const fetchData = async () => {
-      if (!shouldUpdateJobProgress || !props.versionState.updateJobProgress)
-        return;
-      // Fetch data from API and update state
-      const response = await props.versionState.updateJobProgress();
-      setJobProgressAndJobStatus(response);
-    };
-
-    if (inView) {
-      void fetchData();
-      intervalId = setInterval(fetchData, 5000); // 5000 ms = 5 seconds
-    } else {
-      clearInterval(intervalId);
-    }
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [inView, props.versionState]);
-
   const handleClick = async () => {
     if (props.versionState.state !== VersionProcessedState.Processed) {
       return;
@@ -164,8 +135,8 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const getAvailableDate = () => {
     return (
       <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime}
-        jobStatus={!jobProgressAndJobStatus ? props.versionState.jobStatus : jobProgressAndJobStatus.jobStatus }
-        jobProgress={!jobProgressAndJobStatus ? props.versionState.jobProgress : jobProgressAndJobStatus.jobProgress}>
+        jobStatus={props.versionState.jobStatus}
+        jobProgress={props.versionState.jobProgress}>
         <div className="state-div">
           <div className={getStateDivClassname()}>{getStateDivMessage()}</div>
         </div>
@@ -184,11 +155,10 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
           : "vc-entry unprocessed"
       }
       onClick={handleClick}
-      ref={ref}
     >
       <div className="vcs-checkbox">
         <Radio
-          disabled={!isProcessed}
+          disabled={!isProcessed || props.versionState.jobStatus==="Processing" || props.versionState.jobStatus==="Queued"}
           checked={props.isSelected}
           onChange={() => { /* no-op: avoid complaints for missing onChange */ }}
         />
@@ -198,8 +168,8 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
         props.versionState.state === VersionProcessedState.Verifying
           ? <>
             <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime}
-              jobStatus={!jobProgressAndJobStatus ? props.versionState.jobStatus : jobProgressAndJobStatus.jobStatus}
-              jobProgress={!jobProgressAndJobStatus ? props.versionState.jobProgress : jobProgressAndJobStatus.jobProgress}
+              jobStatus={props.versionState.jobStatus}
+              jobProgress={props.versionState.jobProgress}
             >
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
             </DateCurrentAndJobInfo>
