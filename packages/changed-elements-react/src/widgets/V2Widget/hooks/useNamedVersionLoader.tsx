@@ -122,6 +122,7 @@ export const useNamedVersionLoader = (
   return result;
 };
 
+// create faked named version if current version is not a named version
 const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string, changeSets: Changeset[], currentChangeSetIndex?: number): NamedVersion => {
   const currentFromNamedVersion = getCurrentFromNamedVersions(namedVersions, currentChangeSetId, currentChangeSetIndex);
   if (currentFromNamedVersion)

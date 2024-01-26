@@ -1,8 +1,7 @@
-import { ReactElement, ReactNode, useEffect, useState } from "react";
+import { ReactElement, ReactNode } from "react";
 import { ProgressLinear, Radio, Badge, Text } from "@itwin/itwinui-react";
-import { useInView } from 'react-intersection-observer';
 import { IModelApp } from "@itwin/core-frontend";
-import { JobStatus, JobStatusAndJobProgress, JobProgress } from '../models/JobStatus';
+import { JobStatus, JobProgress } from '../models/JobStatus';
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
@@ -100,7 +99,7 @@ interface VersionListEntryProps {
  */
 export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const handleClick = async () => {
-    if (props.versionState.state !== VersionProcessedState.Processed) {
+    if (props.versionState.state !== VersionProcessedState.Processed || props.versionState.jobStatus === "Processing" ||  props.versionState.jobStatus === "Queued") {
       return;
     }
 
@@ -144,7 +143,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
     );
   };
 
-  const isProcessed = props.versionState.state === VersionProcessedState.Processed;
+  const isProcessed = props.versionState.state === VersionProcessedState.Processed || (props.versionState.jobStatus !== "Processing" && props.versionState.jobStatus !== "Queued");
   return (
     <div
       className={
@@ -158,7 +157,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
     >
       <div className="vcs-checkbox">
         <Radio
-          disabled={!isProcessed || props.versionState.jobStatus==="Processing" || props.versionState.jobStatus==="Queued"}
+          disabled={!isProcessed}
           checked={props.isSelected}
           onChange={() => { /* no-op: avoid complaints for missing onChange */ }}
         />

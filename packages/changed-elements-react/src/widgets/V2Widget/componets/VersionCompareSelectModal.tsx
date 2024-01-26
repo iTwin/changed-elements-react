@@ -1,5 +1,5 @@
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
@@ -23,6 +23,9 @@ export interface VersionCompareSelectDialogProps {
   onClose: (() => void) | undefined;
 }
 
+// variable to know if modal is open or closed. Used for toasts
+let widgetOpen = false;//todo has to be a better way of doing this
+
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
  * Requires context of:
  *<VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}>
@@ -41,6 +44,12 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const result = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient);
+  useEffect(() => {
+    widgetOpen = true;
+    return () => {
+      widgetOpen = false;
+    };
+  }, []);
   const _handleOk = async (): Promise<void> => {
     if (comparisonJobClient && result?.namedVersions && targetVersion) {
       void handleStartComparison({
@@ -147,8 +156,13 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     });
   }
   while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
-    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+    if (widgetOpen) {
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 5000));
+    if (!widgetOpen) {
+      toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+    }
     comparisonJob = (await postOrGetComparisonJob({
       changedElementsClient: args.comparisonJobClient,
       iTwinId: args.iModelConnection?.iTwinId as string,
@@ -156,7 +170,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
       startChangesetId: args.targetVersion.changesetId as string,
       endChangesetId: args.currentVersion.changesetId as string,
     })).comparisonJob;
-    if (comparisonJob.status === "Completed") {
+    if (comparisonJob.status === "Completed" && !widgetOpen) {
       toastComparisonJobComplete({
         comparisonJob: { comparisonJob: comparisonJob },
         comparisonJobClient: args.comparisonJobClient,
