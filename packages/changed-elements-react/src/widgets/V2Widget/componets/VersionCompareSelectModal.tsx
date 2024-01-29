@@ -11,6 +11,7 @@ import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/VersionCompareSelectWidget.scss";
+import React from "react";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -23,8 +24,40 @@ export interface VersionCompareSelectDialogProps {
   onClose: (() => void) | undefined;
 }
 
-// variable to know if modal is open or closed. Used for toasts
-let widgetOpen = false;//todo has to be a better way of doing this
+const V2DialogContext = React.createContext<{ getDialogOpen: () => boolean; openDialog: () => void; closedDialog: () => void; }>({});
+type V2DialogProviderProps = {
+  children: React.ReactNode;
+};
+
+/** V2DialogProvider use comparison jobs for processing.
+ * Used for tracking if the dialog is open or closed.
+ * This is useful for managing toast messages associated with dialog
+ * example:
+ *<V2DialogProvider>
+    <VersionCompareSelectDialogV2
+     isOpen
+     iModelConnection={this.props.iModelConnection}
+      onClose={this._handleVersionSelectDialogClose}
+    />
+</V2DialogProvider>
+*/
+export function V2DialogProvider({ children }: V2DialogProviderProps) {
+  const dialogOpenRef = React.useRef(false);
+  const openDialog = () => {
+    dialogOpenRef.current = true;
+  };
+  const closedDialog = () => {
+    dialogOpenRef.current = false;
+  };
+  const getDialogOpen = () => {
+    return dialogOpenRef.current;
+  };
+  return (
+    <V2DialogContext.Provider value={{ openDialog, getDialogOpen: getDialogOpen, closedDialog }}>
+      {children}
+    </V2DialogContext.Provider>
+  );
+}
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
  * Requires context of:
@@ -41,13 +74,14 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   if (!iModelsClient) {
     throw new Error("V1 Client Is Not Initialized In Given Context.");
   }
+  const { openDialog, closedDialog, getDialogOpen } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const result = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient);
   useEffect(() => {
-    widgetOpen = true;
+    openDialog();
     return () => {
-      widgetOpen = false;
+      closedDialog();
     };
   }, []);
   const _handleOk = async (): Promise<void> => {
@@ -57,6 +91,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
         comparisonJobClient: comparisonJobClient,
         result: result,
         iModelConnection: props.iModelConnection,
+        getDialogOpen,
       });
       props.onClose?.();
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
@@ -112,6 +147,7 @@ type HandleStartComparisonArgs = {
   comparisonJobClient: ComparisonJobClient;
   result: NamedVersionLoaderResult;
   iModelConnection: IModelConnection;
+  getDialogOpen: () => boolean;
 };
 
 const handleStartComparison = async (args: HandleStartComparisonArgs) => {
@@ -125,6 +161,7 @@ const handleStartComparison = async (args: HandleStartComparisonArgs) => {
       comparisonJobClient: args.comparisonJobClient,
       iModelConnection: args.iModelConnection,
       currentVersion: currentVersion,
+      getDialogOpen: args.getDialogOpen,
     }).catch((e) => {
       Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
     });
@@ -136,6 +173,7 @@ type RunStartComparisonV2Args = {
   comparisonJobClient: ComparisonJobClient;
   iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
+  getDialogOpen: () => boolean;
 };
 
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
@@ -156,11 +194,11 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     });
   }
   while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
-    if (widgetOpen) {
+    if (args.getDialogOpen()) {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 5000));
-    if (!widgetOpen) {
+    if (!args.getDialogOpen()) {
       toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
     }
     comparisonJob = (await postOrGetComparisonJob({
@@ -170,7 +208,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
       startChangesetId: args.targetVersion.changesetId as string,
       endChangesetId: args.currentVersion.changesetId as string,
     })).comparisonJob;
-    if (comparisonJob.status === "Completed" && !widgetOpen) {
+    if (comparisonJob.status === "Completed" && !args.getDialogOpen()) {
       toastComparisonJobComplete({
         comparisonJob: { comparisonJob: comparisonJob },
         comparisonJobClient: args.comparisonJobClient,
