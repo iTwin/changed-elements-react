@@ -6,8 +6,8 @@ import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
 } from "@itwin/core-frontend";
-import { SvgAdd, SvgCamera, SvgCompare, SvgDocumentation, SvgExport, SvgInfo, SvgStop, SvgWindowPopout } from "@itwin/itwinui-icons-react";
-import { Anchor, DropdownMenu, Flex, IconButton, InformationPanel, InformationPanelBody, InformationPanelContent, InformationPanelHeader, InformationPanelWrapper, MenuDivider, MenuExtraContent, MenuItem, ProgressRadial, Text } from "@itwin/itwinui-react";
+import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
+import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
 import { Component, ReactElement } from "react";
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
@@ -23,9 +23,10 @@ import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 
 import "./ChangedElementsWidget.scss";
-import InformationDialog from "../dialogs/InformationDialog.js";
 import InfoButton from "../common/InformationButton.js";
-import { V2DialogContext, V2DialogProvider, VersionCompareSelectDialogV2 } from "./V2Widget/componets/VersionCompareSelectModal.js";
+import { V2DialogProvider, VersionCompareSelectDialogV2 } from "./V2Widget/componets/VersionCompareSelectModal.js";
+import { FeedbackButton } from "../common/FeedbackButton.js";
+import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -39,6 +40,10 @@ export interface ChangedElementsWidgetProps {
 
   /** Used to maintain scroll positions in widget controls. */
   rootElementRef?: React.Ref<HTMLDivElement>;
+  /**Optional. If true will use v2 dialog and will run comparison jobs for faster comparisons @beta.*/
+  useV2Widget?: boolean;
+  /**Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
+  feedbackLink?: string;
 }
 
 export interface ChangedElementsWidgetState {
@@ -82,7 +87,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   private _onComparisonStopped = (): void => {
     this.setState({
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: "Click on the \"+\" comparison button to get started or check the progress of active comparison jobs.", //todo flip description based on versionCompareDialog in use
       loading: false,
       loaded: false,
     });
@@ -142,7 +147,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: "Click on the \"+\" comparison button to get started or check the progress of active comparison jobs.", // todo flip based on what version of the dialog we are using
       versionSelectDialogVisible: false,
       informationDialogVisible: false,
       reportDialogVisible: false,
@@ -308,7 +313,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         >
           <SvgAdd />
         </IconButton>
-        <InfoButton title={"Version Comparison"} message={this.WidgetInfo} />
+        {this.props.useV2Widget ? <InfoButton title={"Version Comparison"} message={this.WidgetInfo} /> : <></>}
         {
           this.state.loaded &&
           <IconButton
@@ -384,6 +389,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <WidgetComponent.Body data-testid="comparison-legend-widget-content">
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
+          <WidgetComponent.ToolBar>
+            {this.props.useV2Widget ? <FeedbackButton feedbackLink={this.props.feedbackLink ?? ""}></FeedbackButton> : <></>}
+          </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
           this.state.reportDialogVisible &&
@@ -394,16 +402,21 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             initialProperties={this.state.reportProperties}
           />
         }
-        {
+        {this.props.useV2Widget ?
           <V2DialogProvider>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
-              isOpen
-              iModelConnection={this.props.iModelConnection}
-              onClose={this._handleVersionSelectDialogClose}
-            />}
-          </V2DialogProvider>
-        }
+                isOpen
+                iModelConnection={this.props.iModelConnection}
+                onClose={this._handleVersionSelectDialogClose}
+              />}
+          </V2DialogProvider> :
+          this.state.versionSelectDialogVisible &&
+          <VersionCompareSelectDialog
+            isOpen
+            iModelConnection={this.props.iModelConnection}
+            onClose={this._handleVersionSelectDialogClose}
+          />}
       </>
     );
   }

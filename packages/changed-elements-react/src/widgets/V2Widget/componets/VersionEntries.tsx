@@ -22,6 +22,9 @@ export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactEleme
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
       <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime} jobStatus={"Unknown"}>
         <div className="date">
+          {props.versionState.version.createdDateTime ? new Date(props.versionState.version.createdDateTime).toDateString() : ""}
+        </div>
+        <div className="date">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
       </DateCurrentAndJobInfo>
@@ -40,22 +43,22 @@ function DateCurrentAndJobInfo(props: DateAndCurrentProps): ReactElement {
   let jobBadgeBackground;
   switch (props.jobStatus) {
     case "Available":
-      jobBadgeBackground = "celery";
+      jobBadgeBackground = "#c3e1af";
       break;
     case "Queued":
-      jobBadgeBackground = "sunglow";
+      jobBadgeBackground = "#b7e0f2";
       break;
     case "Processing":
-      jobBadgeBackground = "poloblue";
+      jobBadgeBackground = "#b7e0f2";
       break;
     case "Not Processed":
-      jobBadgeBackground = "ash";
+      jobBadgeBackground = "";
       break;
     case "Error":
-      jobBadgeBackground = "froly";
+      jobBadgeBackground = "#efa9a9";
       break;
     default:
-      jobBadgeBackground = "ash";
+      jobBadgeBackground = "#efa9a9";
       break;
   }
   return (

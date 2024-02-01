@@ -8,6 +8,9 @@ export interface ComparisonJobClient {
   /** Gets comparison job status. Throws on encountering an error or receiving non-success response code. */
   getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob>;
 
+  /** Deletes comparison job status. Throws on encountering an error or receiving non-success response code. */
+  deleteComparisonJob(args: GetComparisonJobParams): Promise<void>;
+
   getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements>;
 
   /** Starts comparison job. Throws on encountering an error or receiving non-success response code. */
@@ -20,6 +23,8 @@ export interface GetComparisonJobParams extends CommonRequestParams {
   iModelId: string;
   jobId: string;
 }
+
+export interface DeleteComparisonJobParams extends GetComparisonJobParams {}
 
 export type ComparisonJob = ComparisonJobCompleted | ComparisonJobStarted | ComparisonJobQueued | ComparisonJobFailed;
 

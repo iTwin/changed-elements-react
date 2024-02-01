@@ -1,5 +1,5 @@
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ReactElement, useEffect, useState } from "react";
+import { IModelApp } from "@itwin/core-frontend";
+import { ReactElement } from "react";
 import { VersionListEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
@@ -28,14 +28,13 @@ export function VersionList(props: VersionListProps): ReactElement {
           </div>
         </div>
         <div className="version-container">
-          {props.entries.map((versionState, index) => {
+          {props.entries.map((versionState) => {
             const isSelected = props.selectedVersionChangesetId !== undefined &&
               versionState.version.changesetId === props.selectedVersionChangesetId;
             return (
               <VersionListEntry
                 key={versionState.version.changesetId}
                 versionState={versionState}
-                previousEntry={index === 0 ? props.currentVersion : props.entries[index - 1]}
                 isSelected={isSelected}
                 onClicked={props.onVersionClicked}
               />

@@ -1,5 +1,5 @@
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
@@ -111,7 +111,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   return (
     <Modal
       className="version-compare-dialog"
-      title={"Version Compare Tech Preview"}
+      title={"Version Compare"}
       isOpen={props.isOpen}
       onClose={_handleCancel}
     >
@@ -315,7 +315,7 @@ const toastComparisonVisualizationStarting = () => {
     new NotifyMessageDetails(
       OutputMessagePriority.Info,
       "Version Compare",
-      "Comparison Visualization Starting",
+      "Comparison visualization starting.",
       OutputMessageType.Toast,
     ),
   );

@@ -278,7 +278,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     return [{
       id: "ChangedElementsWidget",
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      content: <ChangedElementsWidget iModelConnection={UiFramework.getIModelConnection()!} />,
+      content: <ChangedElementsWidget useV2Widget feedbackLink="" iModelConnection={UiFramework.getIModelConnection()!} />,
     }];
   }
 }

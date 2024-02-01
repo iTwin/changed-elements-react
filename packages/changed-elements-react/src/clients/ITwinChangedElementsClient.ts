@@ -4,7 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 import type {
   ChangedElements, ComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
-  PostComparisonJobParams
+  PostComparisonJobParams,
+  DeleteComparisonJobParams
 } from "./ChangedElementsClient.js";
 import { callITwinApi } from "./iTwinApi.js";
 export interface ITwinChangedElementsClientParams {
@@ -20,6 +21,20 @@ export class ITwinComparisonJobClient implements ComparisonJobClient {
   constructor(args: ITwinChangedElementsClientParams) {
     this.baseUrl = args.baseUrl;
     this.getAccessToken = args.getAccessToken;
+  }
+
+  deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
+    return callITwinApi({
+      url: `${this.baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
+      method: "DELETE",
+      getAccessToken: this.getAccessToken,
+      signal: args.signal,
+      headers: {
+        Accept: this.acceptHeader,
+        ...args.headers,
+      },
+      body: args.body,
+    }) as unknown as Promise<void>;
   }
 
   public async getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob> {

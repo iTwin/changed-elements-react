@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 export interface CallITwinApiParams {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" |"DELETE";
   url: string;
   getAccessToken?: () => Promise<string>;
   signal?: AbortSignal | undefined;

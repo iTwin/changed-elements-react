@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Logger } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
-  Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio, Text, toaster
+  Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio, Text
 } from "@itwin/itwinui-react";
 import {
   Component, createRef, forwardRef, useEffect, useImperativeHandle, useMemo, useState, type ReactElement, type ReactNode
@@ -18,8 +18,6 @@ import { VersionCompare } from "../api/VersionCompare.js";
 import { Changeset, NamedVersion } from "../clients/iModelsClient.js";
 
 import "./VersionCompareSelectWidget.scss";
-import { ComparisonJobClient, ComparisonJob } from "../clients/ChangedElementsClient.js";
-
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
@@ -56,7 +54,7 @@ export const VersionCompareSelectComponent = forwardRef<
 >(
   function VersionCompareSelectComponent(props, ref): ReactElement {
     // Throw if context is not provided
-    const { comparisonJobClient } = useVersionCompare();
+    useVersionCompare();
 
     const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
@@ -67,7 +65,7 @@ export const VersionCompareSelectComponent = forwardRef<
 
     const versionSelector = (
       namedVersions: NamedVersions | undefined,
-      handleStartComparison: (targetVersion: NamedVersion | undefined, comparisonJobClient?: ComparisonJobClient) => void,
+      handleStartComparison: (targetVersion: NamedVersion | undefined) => void,
     ) => {
       if (!namedVersions) {
         return (
@@ -87,20 +85,18 @@ export const VersionCompareSelectComponent = forwardRef<
       };
 
       return (
-        <>
-          <VersionCompareSelectorInner
-            ref={ref}
-            entries={namedVersions.entries}
-            currentVersion={namedVersions.currentVersion}
-            selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
-            onVersionClicked={handleVersionClicked}
-            onStartComparison={() => handleStartComparison(targetVersion, comparisonJobClient)}
-            wantTitle={props.wantTitle}
-            wantCompareButton={props.wantCompareButton}
-            compareButton={props.compareButton}
-            versionsUrl={versionsUrl}
-          />
-        </>
+        <VersionCompareSelectorInner
+          ref={ref}
+          entries={namedVersions.entries}
+          currentVersion={namedVersions.currentVersion}
+          selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
+          onVersionClicked={handleVersionClicked}
+          onStartComparison={() => handleStartComparison(targetVersion)}
+          wantTitle={props.wantTitle}
+          wantCompareButton={props.wantCompareButton}
+          compareButton={props.compareButton}
+          versionsUrl={versionsUrl}
+        />
       );
     };
 
@@ -122,128 +118,35 @@ interface PagedNamedVersionProviderProps {
 
 function PagedNamedVersionProvider(props: PagedNamedVersionProviderProps): ReactElement {
   const result = usePagedNamedVersionLoader(props.iModelConnection);
-  const handleStartComparison = async (targetVersion: NamedVersion | undefined, comparisonJobClient?: ComparisonJobClient) => {
+  const handleStartComparison = async (targetVersion: NamedVersion | undefined) => {
     if (VersionCompare.manager?.isComparing) {
       await VersionCompare.manager?.stopComparison();
     }
+
     const currentVersion = result?.namedVersions.currentVersion?.version;
-    if (!comparisonJobClient) {
-      if (currentVersion && targetVersion && props.iModelConnection) {
-        const currentIndex = result.changesets.findIndex((changeset) => changeset.id === currentVersion.changesetId);
-        const targetIndex = result.changesets.findIndex((changeset) => changeset.id === targetVersion.changesetId);
-        const relevantChangesets = result.changesets.slice(currentIndex, targetIndex - currentIndex).reverse();
+    if (currentVersion && targetVersion && props.iModelConnection) {
+      const currentIndex = result.changesets.findIndex((changeset) => changeset.id === currentVersion.changesetId);
+      const targetIndex = result.changesets.findIndex((changeset) => changeset.id === targetVersion.changesetId);
+      const relevantChangesets = result.changesets.slice(currentIndex, targetIndex - currentIndex).reverse();
 
-        const chunkSize = 200;
-        const chunks: ChangesetChunk[] = [];
-        for (let i = 0; i < relevantChangesets.length; i += chunkSize) {
-          chunks.push({
-            startChangesetId: relevantChangesets[i].id,
-            endChangesetId: relevantChangesets[Math.min(i + chunkSize, relevantChangesets.length) - 1].id,
-          });
-        }
-
-        VersionCompare.manager
-          ?.startComparison(props.iModelConnection, currentVersion, targetVersion, undefined, chunks)
-          .catch((e) => {
-            Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-          });
-      }
-    } else if (targetVersion && props.iModelConnection && currentVersion) {
-
-      const runStartComparisonV2 = async () => {
-        let { comparisonJob } = await postOrGetComparisonJob({
-          changedElementsClient: comparisonJobClient,
-          iTwinId: props.iModelConnection?.iTwinId as string,
-          iModelId: props.iModelConnection?.iModelId as string,
-          startChangesetId: targetVersion.changesetId as string,
-          endChangesetId: currentVersion.changesetId as string,
+      const chunkSize = 200;
+      const chunks: ChangesetChunk[] = [];
+      for (let i = 0; i < relevantChangesets.length; i += chunkSize) {
+        chunks.push({
+          startChangesetId: relevantChangesets[i].id,
+          endChangesetId: relevantChangesets[Math.min(i + chunkSize, relevantChangesets.length) - 1].id,
         });
-        if (comparisonJob.status === "Completed") {
-          const changedElements = await comparisonJobClient.getComparisonJobResult({ comparisonJob });
-          VersionCompare.manager?.startComparisonV2(props.iModelConnection as IModelConnection, currentVersion, targetVersion, [changedElements.changedElements]).catch((e) => {
-            Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-          });
-        }
-        while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
-          IModelApp.notifications.outputMessage(
-            new NotifyMessageDetails(
-              OutputMessagePriority.Info,
-              "iModel versions ",
-              `iModel versions <${currentVersion?.displayName}> and <${targetVersion.displayName}> are being processed in the background. You will receive a notification upon completion.`,
-              OutputMessageType.Toast,
-            ),
-          );
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          ({ comparisonJob } = await comparisonJobClient.getComparisonJob({
-            iModelId: props.iModelConnection?.iModelId as string,
-            iTwinId: props.iModelConnection?.iTwinId as string,
-            jobId: comparisonJob.jobId,
-            headers: { "Content-Type": "application/json" },
-          }));
-          if (comparisonJob.status === "Completed") {
-            const changedElements = await comparisonJobClient.getComparisonJobResult({ comparisonJob });
-            toaster.setSettings({
-              placement: "bottom",
-            });
-            toaster.positive(`iModel versions <${currentVersion?.displayName}> and <${targetVersion.displayName}> comparisons job is complete.`, {
-              hasCloseButton: true,
-              link: {
-                title: "View The Report",
-                onClick: () => {
-                  VersionCompare.manager?.startComparisonV2(props.iModelConnection as IModelConnection, currentVersion, targetVersion, [changedElements.changedElements]).catch((e) => {
-                    Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-                  });
-                  toaster.closeAll();
-                },
-              },
-              type: "persisting",
-            });
-          }
-        }
-      };
-      runStartComparisonV2().catch((e) => {
-        Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-      });
+      }
+
+      VersionCompare.manager
+        ?.startComparison(props.iModelConnection, currentVersion, targetVersion, undefined, chunks)
+        .catch((e) => {
+          Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+        });
     }
   };
 
   return props.children(result?.namedVersions, handleStartComparison);
-}
-
-interface PostOrGetComparisonJobParams {
-  changedElementsClient: ComparisonJobClient;
-  iTwinId: string;
-  iModelId: string;
-  startChangesetId: string;
-  endChangesetId: string;
-}
-
-async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
-  let result: ComparisonJob;
-  try {
-    result = await args.changedElementsClient.postComparisonJob({
-      iTwinId: args.iTwinId,
-      iModelId: args.iModelId,
-      startChangesetId: args.startChangesetId,
-      endChangesetId: args.endChangesetId,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code !== "ComparisonExists") {
-      throw error;
-    }
-
-    result = await args.changedElementsClient.getComparisonJob({
-      iTwinId: args.iTwinId,
-      iModelId: args.iModelId,
-      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
-  return result;
 }
 
 interface UsePagedNamedVersionLoaderResult {
@@ -263,7 +166,7 @@ function usePagedNamedVersionLoader(
   iModelConnection: IModelConnection | undefined,
 ): UsePagedNamedVersionLoaderResult | undefined {
   const [result, setResult] = useState<UsePagedNamedVersionLoaderResult>();
-  const { iModelsClient, comparisonJobClient } = useVersionCompare();
+  const { iModelsClient } = useVersionCompare();
 
   useEffect(
     () => {
@@ -345,13 +248,11 @@ function usePagedNamedVersionLoader(
           };
         }
 
-        const currentComparisonJobStatus: jobStatus = "Unknown";
         const currentVersionState: VersionState = {
           version: currentVersion,
           state: VersionProcessedState.Processed,
           numberNeededChangesets: 0,
           numberProcessedChangesets: 0,
-          hasComparisonJob: currentComparisonJobStatus,
         };
 
         const client = VersionCompare.clientFactory.createChangedElementsClient() as ChangedElementsApiClient;
@@ -379,7 +280,6 @@ function usePagedNamedVersionLoader(
                 state: VersionProcessedState.Verifying,
                 numberNeededChangesets: 0,
                 numberProcessedChangesets: 0,
-                hasComparisonJob: (currentComparisonJobStatus) as jobStatus,
               })),
               currentVersion: currentVersionState,
             },
@@ -403,42 +303,13 @@ function usePagedNamedVersionLoader(
           const changesets = result.value;
           const numProcessedChangesets = changesets.reduce((acc, curr) => acc + Number(curr.ready), 0);
           const isProcessed = changesets.length === numProcessedChangesets;
-          const newEntries = await Promise.all(currentState.result.namedVersions.entries.map(async (entry, index) => {
-            let hasComparisonJob: jobStatus = entry.hasComparisonJob;
-            if (comparisonJobClient && index === currentNamedVersionIndex) {
-              try {
-                const res = await comparisonJobClient.getComparisonJob({
-                  iTwinId: iModelConnection.iTwinId as string,
-                  iModelId: iModelConnection.iModelId as string,
-                  jobId: `${entry.version.changesetId}-${iModelConnection.changeset.id}`,
-                });
-                if (res) {
-                  switch (res.comparisonJob.status) {
-                    case "Completed":
-                      hasComparisonJob = "Ready";
-                      break;
-                    case "Queued":
-                      hasComparisonJob = "In Progress";
-                      break;
-                    case "Started":
-                      hasComparisonJob = "In Progress";
-                      break;
-                    case "Error":
-                      hasComparisonJob = "Not Started";
-                      break;
-                  }
-                }
-              } catch (_) {
-                hasComparisonJob = "Not Started";
-              }
-            }
+          const newEntries = currentState.result.namedVersions.entries.map((entry, index) => {
             if (index === currentNamedVersionIndex) {
               return {
                 version: sortedNamedVersions[currentNamedVersionIndex].namedVersion,
                 state: isProcessed ? VersionProcessedState.Processed : VersionProcessedState.Processing,
                 numberNeededChangesets: changesets.length,
                 numberProcessedChangesets: numProcessedChangesets,
-                hasComparisonJob: hasComparisonJob,
               };
             }
 
@@ -448,12 +319,11 @@ function usePagedNamedVersionLoader(
                 state: VersionProcessedState.Processing,
                 numberNeededChangesets: 0,
                 numberProcessedChangesets: 0,
-                hasComparisonJob: hasComparisonJob,
               };
             }
 
             return entry;
-          }));
+          });
 
           currentState.result = {
             namedVersions: { currentVersion: currentVersionState, entries: newEntries },
@@ -541,14 +411,11 @@ enum VersionProcessedState {
   Unavailable,
 }
 
-type jobStatus = "Unknown" | "Ready" | "Not Started" | "In Progress";
-
-interface VersionState {
+export interface VersionState {
   version: NamedVersion;
   state: VersionProcessedState;
   numberNeededChangesets: number;
   numberProcessedChangesets: number;
-  hasComparisonJob?: jobStatus;
 }
 
 interface VersionCompareSelectorInnerProps {
@@ -772,12 +639,12 @@ function VersionListEntry(props: VersionListEntryProps): ReactElement {
   };
   const getAvailableDate = () => {
     return (
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
+      <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
         <div className="state-div">
           <div className={getStateDivClassname()}>{getStateDivMessage()}</div>
           {getStateSecondRow()}
         </div>
-      </DateCurrentAndJobStatus>
+      </DateAndCurrent>
     );
   };
 
@@ -807,9 +674,9 @@ function VersionListEntry(props: VersionListEntryProps): ReactElement {
       {
         props.versionState.state === VersionProcessedState.Verifying
           ? <>
-            <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
+            <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
               {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.verifying")}
-            </DateCurrentAndJobStatus>
+            </DateAndCurrent>
             <ProgressLinear indeterminate />
           </>
           : isAvailable
@@ -831,11 +698,11 @@ function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
-      <DateCurrentAndJobStatus createdDate={props.versionState.version.createdDateTime} jobStatus={props.versionState.hasComparisonJob}>
-        <div className="job-status-not-started">
+      <DateAndCurrent createdDate={props.versionState.version.createdDateTime}>
+        <div className="current-show">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
-      </DateCurrentAndJobStatus>
+      </DateAndCurrent>
     </div>
   );
 }
@@ -843,32 +710,15 @@ function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
 interface DateAndCurrentProps {
   createdDate?: string;
   children: ReactNode;
-  jobStatus?: jobStatus;
 }
 
-function DateCurrentAndJobStatus(props: DateAndCurrentProps): ReactElement {
-  let jobStatusClass;
-  switch (props.jobStatus) {
-    case "Ready":
-      jobStatusClass = "job-status-complete";
-      break;
-    case "In Progress":
-      jobStatusClass = "job-status-progress";
-      break;
-    case "Not Started":
-      jobStatusClass = "job-status-not-started";
-      break;
-    default:
-      jobStatusClass = "";
-      break;
-  }
+function DateAndCurrent(props: DateAndCurrentProps): ReactElement {
   return (
     <div className="date-and-current">
       <div className="date">
         {props.createdDate ? new Date(props.createdDate).toDateString() : ""}
       </div>
       {props.children}
-      <Text className={jobStatusClass}>{props.jobStatus == undefined || props.jobStatus === "Unknown" ? "" : `${props.jobStatus}`}</Text>
     </div>
   );
 }
@@ -919,13 +769,11 @@ export class VersionCompareSelectDialog extends Component<
     };
   }
 
-  private _handleOk = async (comparisonJobClient?: ComparisonJobClient): Promise<void> => {
-    if (!comparisonJobClient) {
-      this.versionSelectComponentRef.current?.startComparison();
+  private _handleOk = async (): Promise<void> => {
+    this.versionSelectComponentRef.current?.startComparison();
 
-      this.props.onClose?.();
-      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
-    }
+    this.props.onClose?.();
+    VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   };
 
   private _handleCancel = (): void => {
@@ -966,9 +814,7 @@ export class VersionCompareSelectDialog extends Component<
           <Button
             styleType="high-visibility"
             disabled={this.state.targetVersion === undefined}
-            onClick={() => {
-              this._handleOk();
-            }}
+            onClick={this._handleOk}
           >
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
           </Button>
