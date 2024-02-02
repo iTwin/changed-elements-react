@@ -111,7 +111,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   return (
     <Modal
       className="version-compare-dialog"
-      title={"Version Compare"}
+      title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
       isOpen={props.isOpen}
       onClose={_handleCancel}
     >
@@ -280,21 +280,25 @@ const toastComparisonJobProcessing = (currentVersion: NamedVersion, targetVersio
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
       OutputMessagePriority.Info,
-      "Version Compare",
-      `iModel versions <${currentVersion?.displayName}> and <${targetVersion.displayName}> are being processed in the background. You will receive a notification upon completion.`,
+      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
+      `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}
+      <${currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${targetVersion.displayName}>
+      ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobProcessing")}`,
       OutputMessageType.Toast,
     ),
   );
 };
 
 const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) => {
+  const title = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.viewTheReport");
   toaster.setSettings({
     placement: "bottom",
   });
-  toaster.positive(`iModel versions <${args.currentVersion?.displayName}> and <${args.targetVersion.displayName}> comparisons job is complete.`, {
+  toaster.positive(
+    `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}<${args.currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${args.targetVersion.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobComplete")}`, {
     hasCloseButton: true,
     link: {
-      title: "View The Report",
+      title: title,
       onClick: () => {
         toaster.closeAll();
         void runMangerStartComparisonV2({
@@ -314,8 +318,8 @@ const toastComparisonVisualizationStarting = () => {
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
       OutputMessagePriority.Info,
-      "Version Compare",
-      "Comparison visualization starting.",
+      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
+      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionComparisonStarting"),
       OutputMessageType.Toast,
     ),
   );

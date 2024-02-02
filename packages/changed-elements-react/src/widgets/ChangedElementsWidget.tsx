@@ -69,10 +69,7 @@ export interface ChangedElementsWidgetState {
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
 
-  private readonly WidgetInfo = `
-    Discover what has changed between the two iModel versions. To get started, click
-    + button. Then choose the version to compare with ,
-    and the data processing will begin in the background. Processing time may vary based on the data complexity.A notification will appear when results are available.`;
+  private readonly WidgetInfo = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareInfo");
 
 
   private _onComparisonStarting = (): void => {
@@ -87,7 +84,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   private _onComparisonStopped = (): void => {
     this.setState({
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: "Click on the \"+\" comparison button to get started or check the progress of active comparison jobs.", //todo flip description based on versionCompareDialog in use
+      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2") : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       loading: false,
       loaded: false,
     });
@@ -147,7 +144,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: "Click on the \"+\" comparison button to get started or check the progress of active comparison jobs.", // todo flip based on what version of the dialog we are using
+      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")  : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       versionSelectDialogVisible: false,
       informationDialogVisible: false,
       reportDialogVisible: false,

@@ -17,6 +17,7 @@ interface CurrentVersionEntryProps {
  */
 export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
   const isProcessed = props.versionState.state === VersionProcessedState.Processed;
+  //todo rename class name
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
@@ -40,35 +41,57 @@ interface DateAndCurrentProps {
 }
 
 function DateCurrentAndJobInfo(props: DateAndCurrentProps): ReactElement {
-  let jobBadgeBackground;
-  switch (props.jobStatus) {
-    case "Available":
-      jobBadgeBackground = "#c3e1af";
-      break;
-    case "Queued":
-      jobBadgeBackground = "#b7e0f2";
-      break;
-    case "Processing":
-      jobBadgeBackground = "#b7e0f2";
-      break;
-    case "Not Processed":
-      jobBadgeBackground = "";
-      break;
-    case "Error":
-      jobBadgeBackground = "#efa9a9";
-      break;
-    default:
-      jobBadgeBackground = "#efa9a9";
-      break;
-  }
+  const jobBadgeBackground = getJobBackgroundColor(props.jobStatus ?? "Unknown");
+
   return (
     <div className="date-and-current">
       {props.children}
-      {props.jobStatus === undefined || props.jobStatus === "Unknown" ? <></> : <Badge backgroundColor={jobBadgeBackground}>{`${props.jobStatus}`}</Badge>}
-      {props.jobProgress === undefined || props.jobProgress.totalToComplete === 0 ? <></> : <Text>{`Progress: ${props.jobProgress.numberCompleted}/${props.jobProgress.totalToComplete}`}</Text>}
+      {props.jobStatus === undefined || props.jobStatus === "Unknown" ? <></> :
+        <Badge backgroundColor={jobBadgeBackground}>{`${getLocalizedJobStatusText(props.jobStatus)}`}</Badge>}
+      {props.jobProgress === undefined || props.jobProgress.maxProgress === 0 ? <></>
+        : <Text>
+          {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.progress")}: ${props.jobProgress.currentProgress}/${props.jobProgress.maxProgress}`}
+        </Text>}
     </div>
   );
 }
+
+const getJobBackgroundColor = (jobStatus: JobStatus): string => {
+  const green = "#c3e1af";
+  const teal = "#b7e0f2";
+  const red = "#efa9a9";
+  switch (jobStatus) {
+    case "Available":
+      return green;
+    case "Queued":
+      return teal;
+    case "Processing":
+      return teal;
+    case "Not Processed":
+      return "";
+    case "Error":
+      return red;
+    default:
+      return "";
+  }
+};
+
+const getLocalizedJobStatusText = (jobStatus: JobStatus): string => {
+  switch (jobStatus) {
+    case "Available":
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.available");
+    case "Queued":
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.queued");
+    case "Processing":
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.processing");
+    case "Not Processed":
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.notProcessed");
+    case "Error":
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error");
+    default:
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.notProcessed");
+  }
+};
 
 interface VersionNameAndDescriptionProps {
   version: NamedVersion;
@@ -102,7 +125,7 @@ interface VersionListEntryProps {
  */
 export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const handleClick = async () => {
-    if (props.versionState.state !== VersionProcessedState.Processed || props.versionState.jobStatus === "Processing" ||  props.versionState.jobStatus === "Queued") {
+    if (props.versionState.state !== VersionProcessedState.Processed || props.versionState.jobStatus === "Processing" || props.versionState.jobStatus === "Queued") {
       return;
     }
 

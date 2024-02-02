@@ -25,7 +25,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         props.currentVersion &&
         <div className="version-compare-row">
           <div className="version-compare-label">
-            {"Compare:"}
+              { `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}:` }
           </div>
           <div className="version-container-current">
             <CurrentVersionEntry versionState={props.currentVersion} />
@@ -39,7 +39,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         </div>
       }
       {<div className="version-compare-label">
-        {IModelApp.localization.getLocalizedString("With previous:")}
+        {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.withPrevious")}:`}
       </div>}
       {
         props.entries.length > 0 && props.currentVersion ? (

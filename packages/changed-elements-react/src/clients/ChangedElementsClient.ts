@@ -50,8 +50,8 @@ export interface ComparisonJobStarted {
     iModelId: string;
     startChangesetId: string;
     endChangesetId: string;
-    comparisonProgress: number;
-    comparisonProgressTotal: number;
+    currentProgress: number;
+    maxProgress: number;
   };
 }
 

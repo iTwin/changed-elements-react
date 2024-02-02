@@ -76,8 +76,8 @@ export const useNamedVersionLoader = (
         }
         const initialComparisonJobStatus: JobStatus = "Unknown";
         const initialJobProgress: JobProgress = {
-          numberCompleted: 0,
-          totalToComplete: 0,
+          currentProgress: 0,
+          maxProgress: 0,
         };
         const currentState: NamedVersionLoaderState = {
           result: {
@@ -271,16 +271,16 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: ComparisonJobClie
           return {
             jobStatus: "Available",
             jobProgress: {
-              numberCompleted: 0,
-              totalToComplete: 0,
+              currentProgress: 0,
+              maxProgress: 0,
             },
           };
         case "Queued": {
           return {
             jobStatus: "Queued",
             jobProgress: {
-              numberCompleted: 0,
-              totalToComplete: 0,
+              currentProgress: 0,
+              maxProgress: 0,
             },
           };
         }
@@ -289,8 +289,8 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: ComparisonJobClie
           return {
             jobStatus: "Processing",
             jobProgress: {
-              numberCompleted: progressingJob.comparisonJob.comparisonProgress,
-              totalToComplete: progressingJob.comparisonJob.comparisonProgressTotal,
+              currentProgress: progressingJob.comparisonJob.currentProgress,
+              maxProgress: progressingJob.comparisonJob.maxProgress,
             },
           };
         }
@@ -298,8 +298,8 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: ComparisonJobClie
           return {
             jobStatus: "Error",
             jobProgress: {
-              numberCompleted: 0,
-              totalToComplete: 0,
+              currentProgress: 0,
+              maxProgress: 0,
             },
           };
       }
@@ -307,16 +307,16 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: ComparisonJobClie
     return {
       jobStatus: "Unknown",
       jobProgress: {
-        numberCompleted: 0,
-        totalToComplete: 0,
+        currentProgress: 0,
+        maxProgress: 0,
       },
     };
   } catch (_) {
     return {
       jobStatus: "Not Processed",
       jobProgress: {
-        numberCompleted: 0,
-        totalToComplete: 0,
+        currentProgress: 0,
+        maxProgress: 0,
       },
     };
   }
