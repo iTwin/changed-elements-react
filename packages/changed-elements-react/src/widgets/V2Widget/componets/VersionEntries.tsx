@@ -27,10 +27,10 @@ export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactEleme
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
       <DateCurrentAndJobInfo createdDate={props.versionState.version.createdDateTime} jobStatus={"Unknown"}>
-        <div className="date">
+        <div className="entry-info">
           {props.versionState.version.createdDateTime ? new Date(props.versionState.version.createdDateTime).toDateString() : ""}
         </div>
-        <div className="date">
+        <div className="entry-info">
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
         </div>
       </DateCurrentAndJobInfo>

@@ -14,7 +14,7 @@
   cursor: default;
 }
 
-@mixin date {
+@mixin entry-info {
   color: var(--iui-color-text-muted);
   font-size: var(--iui-font-size-0);
   cursor: default;
@@ -141,7 +141,7 @@
     > .date-and-current {
       display: block;
 
-      > .date {
+      > .entry-info {
         text-align: right;
         color: var(--iui-color-text-muted);
         font-size: var(--iui-font-size-0);
@@ -206,12 +206,12 @@
     display: block;
     text-align: center;
 
-    > .date {
-      @include date;
+    > .entry-info {
+      @include entry-info;
       text-align: right;
 
       &-unprocessed {
-        @include date;
+        @include entry-info;
         color: var(--iui-color-text-muted);
       }
     }
