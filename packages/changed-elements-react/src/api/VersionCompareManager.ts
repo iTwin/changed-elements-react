@@ -19,7 +19,7 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
-import { MinimalNamedVersion } from '@itwin/imodels-client-management';
+import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 
 const LOGGER_CATEGORY = "Version-Compare";
 

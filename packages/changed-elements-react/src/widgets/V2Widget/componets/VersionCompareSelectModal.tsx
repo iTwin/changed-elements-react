@@ -80,6 +80,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   }
   const { openDialog, closedDialog, getDialogOpen } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const result = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient);
   useEffect(() => {
@@ -87,6 +88,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
     return () => {
       closedDialog();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const _handleOk = async (): Promise<void> => {
     if (comparisonJobClient && result?.namedVersions && targetVersion) {

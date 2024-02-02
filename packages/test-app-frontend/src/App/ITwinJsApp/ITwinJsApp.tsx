@@ -27,7 +27,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useMemo, useState } from "react";
 
-import { applyUrlPrefix, urlPrefix } from "../../environment";
+import { applyUrlPrefix } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
 import { UIFramework } from "./AppUi/UiFramework";
@@ -93,11 +93,11 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
   const comparisonJobClient = useMemo(
     () => {
       return new ITwinChangedElementsClient({
-        baseUrl: applyUrlPrefix(`https://api.bentley.com/changedelements`),
+        baseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
         getAccessToken: VersionCompare.getAccessToken,
       });
     },
-    [props.authorizationClient],
+    [],
   );
 
   if (loadingState === "opening-imodel") {

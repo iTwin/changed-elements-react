@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useState, useEffect } from "react";
-import { JobStatus, JobProgress, JobStatusAndJobProgress } from '../models/ComparisonJobModels';
+import { JobStatus, JobProgress, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { ComparisonJobClient, ComparisonJobStarted } from "../../../clients/ChangedElementsClient";
@@ -26,7 +26,7 @@ type NamedVersionLoaderState = {
         version: NamedVersion;
         state: VersionProcessedState;
         jobStatus: JobStatus;
-        jobProgress: JobProgress,
+        jobProgress: JobProgress;
       }[];
       currentVersion: VersionState;
     };
