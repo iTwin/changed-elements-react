@@ -1,6 +1,6 @@
 {
   "name": "@itwin/changed-elements-react",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -88,7 +88,6 @@
   },
   "dependencies": {
     "@itwin/itwinui-icons-react": "^2.2.0",
-    "react-intersection-observer": "^9.5.3",
     "react-table": "^7.8.0",
     "react-window": "^1.8.8",
     "react-window-infinite-loader": "^1.0.8"
