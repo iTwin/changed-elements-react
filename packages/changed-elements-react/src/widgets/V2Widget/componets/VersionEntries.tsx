@@ -6,7 +6,7 @@ import { ReactElement, ReactNode } from "react";
 import { ProgressLinear, Radio, Badge, Text } from "@itwin/itwinui-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { JobStatus, JobProgress } from '../models/ComparisonJobModels';
-import { VersionProcessedState } from "../VersionProcessedState";
+import { VersionProcessedState } from "../models/VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
 import "./styles/VersionCompareSelectWidget.scss";
