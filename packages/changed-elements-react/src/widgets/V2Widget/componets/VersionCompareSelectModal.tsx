@@ -212,7 +212,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   while (comparisonJob.status !== "Error") {
     await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds
     if (args.getDialogOpen()) {
-      continue;
+      return;
     }
     comparisonJob = (await postOrGetComparisonJob({
       changedElementsClient: args.comparisonJobClient,
