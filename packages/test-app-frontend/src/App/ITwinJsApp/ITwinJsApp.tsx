@@ -79,21 +79,21 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
     [iModel],
   );
 
-   const iModelsClient = useMemo(
-     () => {
+  const iModelsClient = useMemo(
+    () => {
       return new ITwinIModelsClient({
-         baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
-         getAccessToken: () => props.authorizationClient.getAccessToken(),
-         showHiddenNamedVersions: true,
-       });
-     },
-     [props.authorizationClient],
-   );
+        baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
+        getAccessToken: () => props.authorizationClient.getAccessToken(),
+        showHiddenNamedVersions: true,
+      });
+    },
+    [props.authorizationClient],
+  );
 
   const comparisonJobClient = useMemo(
     () => {
-     return new ITwinChangedElementsClient({
-       baseUrl: applyUrlPrefix(`https://api.bentley.com/changedelements`),
+      return new ITwinChangedElementsClient({
+        baseUrl: applyUrlPrefix(`https://api.bentley.com/changedelements`),
         getAccessToken: VersionCompare.getAccessToken,
       });
     },
@@ -114,7 +114,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}  savedFilters={savedFilters}>
+      <VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient} savedFilters={savedFilters}>
         <UIFramework>
           <ConfigurableUiContent />
         </UIFramework>
@@ -278,7 +278,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     return [{
       id: "ChangedElementsWidget",
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      content: <ChangedElementsWidget useV2Widget feedbackLink="https://example.com" iModelConnection={UiFramework.getIModelConnection()!} />,
+      content: <ChangedElementsWidget useV2Widget feedbackUrl="https://example.com" iModelConnection={UiFramework.getIModelConnection()!} />,
     }];
   }
 }

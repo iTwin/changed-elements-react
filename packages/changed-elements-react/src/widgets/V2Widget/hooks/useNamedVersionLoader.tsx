@@ -270,14 +270,25 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: ComparisonJobClie
     });
     if (res) {
       switch (res.comparisonJob.status) {
-        case "Completed":
-          return {
-            jobStatus: "Available",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
+        case "Completed": {
+          //todo cleanup code once server side API href bug is fixed
+          if (res.comparisonJob.comparison && res.comparisonJob.comparison.href) {
+            return {
+              jobStatus: "Available",
+              jobProgress: {
+                currentProgress: 0,
+                maxProgress: 0,
+              },
+            };
+          }
+            return {
+              jobStatus: "Processing",
+              jobProgress: {
+                currentProgress: 9,
+                maxProgress: 10,
+              },
+            };
+        }
         case "Queued": {
           return {
             jobStatus: "Queued",

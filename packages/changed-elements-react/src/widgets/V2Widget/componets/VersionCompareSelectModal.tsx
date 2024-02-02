@@ -9,7 +9,7 @@ import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted, ChangedElements } from "../../../clients/ChangedElementsClient";
+import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { NamedVersion } from "../../../clients/iModelsClient";
@@ -41,7 +41,7 @@ type V2DialogProviderProps = {
  *   <VersionCompareSelectDialogV2
  *    isOpen
  *    iModelConnection={this.props.iModelConnection}
- *     onClose={this._handleVersionSelectDialogClose}
+ *    onClose={this._handleVersionSelectDialogClose}
  *   />
  *</V2DialogProvider>
 */
@@ -180,6 +180,9 @@ type RunStartComparisonV2Args = {
   getDialogOpen: () => boolean;
 };
 
+// todo clean this up once API fix is in. API is currently publishing jobs that are complete but mau not have href
+// this commit has cleaner version 29d2fdaa9cc87ce47a627feb3b5224898107d498
+// while loop may need to be looked at again
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   let { comparisonJob } = await postOrGetComparisonJob({
     changedElementsClient: args.comparisonJobClient,
@@ -207,7 +210,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   }
   while (comparisonJob.status !== "Error") {
-    await new Promise((resolve) => setTimeout(resolve, 3000)); // run loop every 3 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds
     if (args.getDialogOpen()) {
       continue;
     }

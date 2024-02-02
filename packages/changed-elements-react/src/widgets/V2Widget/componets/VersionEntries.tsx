@@ -22,7 +22,6 @@ interface CurrentVersionEntryProps {
  */
 export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
   const isProcessed = props.versionState.state === VersionProcessedState.Processed;
-  //todo rename class name date
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
@@ -55,7 +54,7 @@ function DateCurrentAndJobInfo(props: DateAndCurrentProps): ReactElement {
         <Badge backgroundColor={jobBadgeBackground}>{`${getLocalizedJobStatusText(props.jobStatus)}`}</Badge>}
       {props.jobProgress === undefined || props.jobProgress.maxProgress === 0 ? <></>
         : <Text>
-          {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.progress")}: ${props.jobProgress.currentProgress}/${props.jobProgress.maxProgress}`}
+          {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.progress")}: ${(props.jobProgress.currentProgress / props.jobProgress.maxProgress) * 100 }%`}
         </Text>}
     </div>
   );

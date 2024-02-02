@@ -43,7 +43,7 @@ export interface ChangedElementsWidgetProps {
   /**Optional. If true will use v2 dialog and will run comparison jobs for faster comparisons @beta.*/
   useV2Widget?: boolean;
   /**Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
-  feedbackLink?: string;
+  feedbackUrl?: string;
 }
 
 export interface ChangedElementsWidgetState {
@@ -144,7 +144,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")  : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2") : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       versionSelectDialogVisible: false,
       informationDialogVisible: false,
       reportDialogVisible: false,
@@ -387,7 +387,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
           <WidgetComponent.ToolBar>
-            {this.props.useV2Widget && (!!this.props.feedbackLink) ? <FeedbackButton feedbackLink={this.props.feedbackLink ?? ""}></FeedbackButton> : <></>}
+            {this.props.useV2Widget && (!!this.props.feedbackUrl) ? <FeedbackButton feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton> : <></>}
           </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
