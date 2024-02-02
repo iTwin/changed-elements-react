@@ -9,7 +9,7 @@ import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
+import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted, ChangedElements } from "../../../clients/ChangedElementsClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { NamedVersion } from "../../../clients/iModelsClient";
@@ -188,7 +188,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     startChangesetId: args.targetVersion.changesetId as string,
     endChangesetId: args.currentVersion.changesetId as string,
   });
-  if (comparisonJob.status === "Completed") {
+  if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
     void runMangerStartComparisonV2({
       comparisonJob: { comparisonJob: comparisonJob },
       comparisonJobClient: args.comparisonJobClient,
@@ -196,14 +196,20 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
       targetVersion: args.targetVersion,
       currentVersion: args.currentVersion,
     });
+    return;
   }
-  while (comparisonJob.status === "Queued" || comparisonJob.status === "Started") {
-    if (args.getDialogOpen()) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    if (!args.getDialogOpen()) {
+  const toastProgressingInterval = setInterval(() => {
+    if (comparisonJob.status !== "Completed" && !args.getDialogOpen()) {
       toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+    }
+  }, 8000); // toast progress every 8 seconds
+  if (comparisonJob.status !== "Completed" && comparisonJob.status !== "Error") {
+    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+  }
+  while (comparisonJob.status !== "Error") {
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // run loop every 3 seconds
+    if (args.getDialogOpen()) {
+      continue;
     }
     comparisonJob = (await postOrGetComparisonJob({
       changedElementsClient: args.comparisonJobClient,
@@ -212,14 +218,19 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
       startChangesetId: args.targetVersion.changesetId as string,
       endChangesetId: args.currentVersion.changesetId as string,
     })).comparisonJob;
-    if (comparisonJob.status === "Completed" && !args.getDialogOpen()) {
-      toastComparisonJobComplete({
-        comparisonJob: { comparisonJob: comparisonJob },
-        comparisonJobClient: args.comparisonJobClient,
-        iModelConnection: args.iModelConnection,
-        targetVersion: args.targetVersion,
-        currentVersion: args.currentVersion,
-      });
+
+    if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
+      clearInterval(toastProgressingInterval);
+      if (!args.getDialogOpen()) {
+        toastComparisonJobComplete({
+          comparisonJob: { comparisonJob: comparisonJob },
+          comparisonJobClient: args.comparisonJobClient,
+          iModelConnection: args.iModelConnection,
+          targetVersion: args.targetVersion,
+          currentVersion: args.currentVersion,
+        });
+        return;
+      }
     }
   }
 };
