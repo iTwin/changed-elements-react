@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
 import { VersionList } from "./VersionList";
@@ -17,6 +21,7 @@ interface VersionCompareSelectorInnerProps {
 
 /**
  * Component that houses named version list.
+ * Also displays the current versions information.
  */
 export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps) {
   return (

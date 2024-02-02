@@ -1,8 +1,12 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 import { IModelConnection } from "@itwin/core-frontend";
 import { useMemo, useState } from "react";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
-import { NamedVersions } from "../models/NamedVersions";
+import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
 import "./styles/VersionCompareSelectWidget.scss";
@@ -22,7 +26,7 @@ export interface VersionCompareSelectorProps {
   getManageVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 
   /** Named Versions to be displayed */
-  namedVersions: NamedVersions | undefined;
+  namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
 }
 
 

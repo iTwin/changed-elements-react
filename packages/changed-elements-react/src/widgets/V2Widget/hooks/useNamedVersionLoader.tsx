@@ -1,8 +1,12 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useState, useEffect } from "react";
-import { JobStatus, JobProgress, JobStatusAndJobProgress } from '../models/JobStatus';
+import { JobStatus, JobProgress, JobStatusAndJobProgress } from '../models/ComparisonJobModels';
 import { VersionProcessedState } from "../VersionProcessedState";
-import { NamedVersions } from "../models/NamedVersions";
+import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { ComparisonJobClient, ComparisonJobStarted } from "../../../clients/ChangedElementsClient";
 import { VersionState } from "../models/VersionState";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
@@ -12,7 +16,7 @@ import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModels
  */
 export type NamedVersionLoaderResult = {
   /** Named versions to display in the list. */
-  namedVersions: NamedVersions;
+  namedVersions: CurrentNamedVersionAndNamedVersions;
 };
 
 type NamedVersionLoaderState = {
@@ -31,6 +35,7 @@ type NamedVersionLoaderState = {
 
 /**
  * Loads name versions and their job status compared to current version iModel is targeting.
+ * Returns a result object with current version and namedVersion with there job status sorted from newest to oldest.
  */
 export const useNamedVersionLoader = (
   iModelConnection: IModelConnection,
@@ -87,14 +92,12 @@ export const useNamedVersionLoader = (
                 state: VersionProcessedState.Verifying,
                 jobStatus: initialComparisonJobStatus,
                 jobProgress: initialJobProgress,
-                jobId: "",
               })),
               currentVersion: {
                 version: currentNamedVersion,
                 state: VersionProcessedState.Processed,
                 jobStatus: initialComparisonJobStatus,
                 jobProgress: initialJobProgress,
-                jobId: "",
               },
             },
           },

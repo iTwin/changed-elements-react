@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { ReactElement } from "react";
 import { VersionListEntry } from "./VersionEntries";
@@ -13,7 +17,7 @@ interface VersionListProps {
 }
 
 /**
- * Component that named versions.
+ * Component that displays named versions (non current).
  */
 export function VersionList(props: VersionListProps): ReactElement {
   return (

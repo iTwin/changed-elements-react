@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
 import { useEffect, useState } from "react";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
@@ -34,12 +38,12 @@ type V2DialogProviderProps = {
  * This is useful for managing toast messages associated with dialog
  * example:
  *<V2DialogProvider>
-    <VersionCompareSelectDialogV2
-     isOpen
-     iModelConnection={this.props.iModelConnection}
-      onClose={this._handleVersionSelectDialogClose}
-    />
-</V2DialogProvider>
+ *   <VersionCompareSelectDialogV2
+ *    isOpen
+ *    iModelConnection={this.props.iModelConnection}
+ *     onClose={this._handleVersionSelectDialogClose}
+ *   />
+ *</V2DialogProvider>
 */
 export function V2DialogProvider({ children }: V2DialogProviderProps) {
   const dialogOpenRef = React.useRef(false);

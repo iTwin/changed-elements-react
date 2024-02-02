@@ -1,7 +1,11 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 import { ReactElement, ReactNode } from "react";
 import { ProgressLinear, Radio, Badge, Text } from "@itwin/itwinui-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { JobStatus, JobProgress } from '../models/JobStatus';
+import { JobStatus, JobProgress } from '../models/ComparisonJobModels';
 import { VersionProcessedState } from "../VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
@@ -14,10 +18,11 @@ interface CurrentVersionEntryProps {
 
 /**
  * Component for current version.
+ * Displays the current version's name date description.
  */
 export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
   const isProcessed = props.versionState.state === VersionProcessedState.Processed;
-  //todo rename class name
+  //todo rename class name date
   return (
     <div className="vc-entry-current" key={props.versionState.version.changesetId}>
       <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
@@ -122,6 +127,8 @@ interface VersionListEntryProps {
 
 /**
  * Named Version List Entry.
+ * Displays the job information. The job will be between this version and the current version.
+ * Displays the description and name of the version as well.
  */
 export function VersionListEntry(props: VersionListEntryProps): ReactElement {
   const handleClick = async () => {
