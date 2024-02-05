@@ -8,7 +8,7 @@ import {
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ITwinChangedElementsClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
+  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
@@ -92,7 +92,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   const comparisonJobClient = useMemo(
     () => {
-      return new ITwinChangedElementsClient({
+      return new ComparisonJobClient({
         baseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
         getAccessToken: VersionCompare.getAccessToken,
       });

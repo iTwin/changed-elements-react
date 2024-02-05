@@ -3,51 +3,49 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  ChangedElements, ComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
+  ChangedElements, IComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
   PostComparisonJobParams,
   DeleteComparisonJobParams
-} from "./ChangedElementsClient.js";
+} from "./IComparisonJobClient.js";
 import { callITwinApi } from "./iTwinApi.js";
-export interface ITwinChangedElementsClientParams {
+export interface ComparisonJobClientParams {
   baseUrl: string;
   getAccessToken: () => Promise<string>;
 }
 
-export class ITwinComparisonJobClient implements ComparisonJobClient {
-  private acceptHeader = "application/vnd.bentley.itwin-platform.v2+json";
-  private baseUrl: string;
-  private getAccessToken: () => Promise<string>;
+export class ComparisonJobClient implements IComparisonJobClient {
+  private static readonly _acceptHeader = "application/vnd.bentley.itwin-platform.v2+json";
+  private _baseUrl: string;
+  private _getAccessToken: () => Promise<string>;
 
-  constructor(args: ITwinChangedElementsClientParams) {
-    this.baseUrl = args.baseUrl;
-    this.getAccessToken = args.getAccessToken;
+  constructor(args: ComparisonJobClientParams) {
+    this._baseUrl = args.baseUrl;
+    this._getAccessToken = args.getAccessToken;
   }
 
   deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
     return callITwinApi({
-      url: `${this.baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
+      url: `${this._baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
       method: "DELETE",
-      getAccessToken: this.getAccessToken,
+      getAccessToken: this._getAccessToken,
       signal: args.signal,
       headers: {
-        Accept: this.acceptHeader,
+        Accept: ComparisonJobClient._acceptHeader,
         ...args.headers,
       },
-      body: args.body,
     }) as unknown as Promise<void>;
   }
 
   public async getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob> {
     return callITwinApi({
-      url: `${this.baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
+      url: `${this._baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
       method: "GET",
-      getAccessToken: this.getAccessToken,
+      getAccessToken: this._getAccessToken,
       signal: args.signal,
       headers: {
-        Accept: this.acceptHeader,
+        Accept: ComparisonJobClient._acceptHeader,
         ...args.headers,
       },
-      body: args.body,
     }) as unknown as Promise<ComparisonJob>;
   }
 
@@ -57,21 +55,20 @@ export class ITwinComparisonJobClient implements ComparisonJobClient {
       method: "GET",
       signal: args.signal,
       headers: {
-        Accept: this.acceptHeader,
+        Accept: ComparisonJobClient._acceptHeader,
         ...args.headers,
       },
-      body: args.body,
     }) as unknown as Promise<ChangedElements>;
   }
 
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {
     return callITwinApi({
-      url: `${this.baseUrl}/comparisonJob`,
+      url: `${this._baseUrl}/comparisonJob`,
       method: "POST",
-      getAccessToken: this.getAccessToken,
+      getAccessToken: this._getAccessToken,
       signal: args.signal,
       headers: {
-        Accept: this.acceptHeader,
+        Accept: ComparisonJobClient._acceptHeader,
         ...args.headers,
       },
       body: {
@@ -79,7 +76,6 @@ export class ITwinComparisonJobClient implements ComparisonJobClient {
         iModelId: args.iModelId,
         startChangesetId: args.startChangesetId,
         endChangesetId: args.endChangesetId,
-        ...args.body,
       },
     }) as unknown as Promise<ComparisonJob>;
   }

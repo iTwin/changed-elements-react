@@ -2,9 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { DbOpcode } from "@itwin/core-bentley";
+import { ChangedElements as IChangedElements } from "@itwin/core-common";
 
-export interface ComparisonJobClient {
+export interface IComparisonJobClient {
   /** Gets comparison job status. Throws on encountering an error or receiving non-success response code. */
   getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob>;
 
@@ -18,13 +18,13 @@ export interface ComparisonJobClient {
 
 }
 
-export interface GetComparisonJobParams extends CommonRequestParams {
+export interface GetComparisonJobParams extends Omit<CommonRequestParams, "body"> {
   iTwinId: string;
   iModelId: string;
   jobId: string;
 }
 
-export interface DeleteComparisonJobParams extends GetComparisonJobParams {}
+export interface DeleteComparisonJobParams extends GetComparisonJobParams { }
 
 export type ComparisonJob = ComparisonJobCompleted | ComparisonJobStarted | ComparisonJobQueued | ComparisonJobFailed;
 
@@ -78,26 +78,15 @@ export interface ComparisonJobFailed {
   };
 }
 
-export interface GetComparisonJobResultParams extends CommonRequestParams {
+export interface GetComparisonJobResultParams extends Omit<CommonRequestParams, "body"> {
   comparisonJob: ComparisonJobCompleted["comparisonJob"];
 }
 
 export interface ChangedElements {
-  changedElements: {
-    elements: string[];
-    classIds: string[];
-    modelIds: string[];
-    parendIds: string[];
-    parentClassIds: string[];
-    opcodes: DbOpcode[];
-    type: number[];
-    properties: string[][];
-    oldChecksums: number[][];
-    newChecksums: number[][];
-  };
+  changedElements: IChangedElements;
 }
 
-export interface PostComparisonJobParams extends CommonRequestParams {
+export interface PostComparisonJobParams extends Omit<CommonRequestParams, "body"> {
   iTwinId: string;
   iModelId: string;
   startChangesetId: string;

@@ -6,12 +6,12 @@ import { createContext, PropsWithChildren, ReactElement, useContext, useMemo } f
 
 import type { IModelsClient } from "./clients/iModelsClient.js";
 import type { SavedFiltersManager } from "./SavedFiltersManager.js";
-import { ComparisonJobClient } from "./clients/ChangedElementsClient.js";
+import { IComparisonJobClient } from "./clients/ComparisonJobClient.js";
 
 export interface VersionCompareContextProps {
   iModelsClient: IModelsClient;
   savedFilters?: SavedFiltersManager | undefined;
-  comparisonJobClient?: ComparisonJobClient;
+  comparisonJobClient?: IComparisonJobClient;
 }
 
 /**
@@ -47,7 +47,7 @@ Example:
 
 export interface VersionCompareContextValue {
   iModelsClient: IModelsClient;
-  comparisonJobClient?: ComparisonJobClient;
+  comparisonJobClient?: IComparisonJobClient;
   savedFilters: SavedFiltersManager | undefined;
 }
 

@@ -16,11 +16,8 @@ interface Props {
 /** Feedback button that on click takes you to provided link.*/
 export function FeedbackButton(props: Props) {
   return (
-    // eslint-disable-next-line react/jsx-no-target-blank
-    <a href={props.feedbackUrl} target="_blank">
-      <Button styleType='high-visibility' className="button">
-        <SvgSmileyHappy className="svg"></SvgSmileyHappy>
-        <Text className="text">{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLeaveFeedback")}</Text>
-      </Button>
-    </a>);
+    <Button as="a" href={props.feedbackUrl} target="_blank" rel="noreferrer" styleType='high-visibility' className="button">
+      <SvgSmileyHappy className="svg"></SvgSmileyHappy>
+      <Text className="text">{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLeaveFeedback")}</Text>
+    </Button>);
 }

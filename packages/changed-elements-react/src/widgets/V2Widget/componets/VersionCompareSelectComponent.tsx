@@ -29,8 +29,6 @@ export interface VersionCompareSelectorProps {
   namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
 }
 
-
-
 /**
  * Component that let's the user select which named version to compare to.
  */

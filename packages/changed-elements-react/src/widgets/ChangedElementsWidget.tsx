@@ -69,7 +69,7 @@ export interface ChangedElementsWidgetState {
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
 
-  private readonly WidgetInfo = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareInfo");
+  private readonly _widgetInfo = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareInfo");
 
 
   private _onComparisonStarting = (): void => {
@@ -253,14 +253,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ versionSelectDialogVisible: true });
   };
 
-  private _handleInfo = (): void => {
-    this.setState({ informationDialogVisible: true });
-  };
-
-  private _handleInfoDialogClose = (): void => {
-    this.setState({ informationDialogVisible: false });
-  };
-
   private _handleVersionSelectDialogClose = (): void => {
     this.setState({ versionSelectDialogVisible: false });
   };
@@ -310,7 +302,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         >
           <SvgAdd />
         </IconButton>
-        {this.props.useV2Widget ? <InfoButton title={"Version Comparison"} message={this.WidgetInfo} /> : <></>}
+        {
+          this.props.useV2Widget &&
+          <InfoButton title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
+        }
         {
           this.state.loaded &&
           <IconButton
@@ -387,7 +382,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
           <WidgetComponent.ToolBar>
-            {this.props.useV2Widget && (!!this.props.feedbackUrl) ? <FeedbackButton feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton> : <></>}
+            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
           </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
@@ -403,7 +398,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <V2DialogProvider>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
-                isOpen
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
               />}

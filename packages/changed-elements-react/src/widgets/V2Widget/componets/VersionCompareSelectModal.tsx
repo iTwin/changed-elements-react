@@ -9,7 +9,7 @@ import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import { ComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/ChangedElementsClient";
+import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { NamedVersion } from "../../../clients/iModelsClient";
@@ -22,13 +22,17 @@ import React from "react";
 export interface VersionCompareSelectDialogProps {
   /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
-  /** Should modal be opened. */
-  isOpen: boolean;
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
 }
 
-const V2DialogContext = React.createContext<{ getDialogOpen: () => boolean; openDialog: () => void; closedDialog: () => void; }>({});
+type V2Context = {
+  getDialogOpen: () => boolean;
+  openDialog: () => void;
+  closedDialog: () => void;
+};
+
+const V2DialogContext = React.createContext<V2Context>({} as V2Context);
 type V2DialogProviderProps = {
   children: React.ReactNode;
 };
@@ -68,6 +72,15 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
  *<VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}>
  * ...
  *</VersionCompareContext>
+ * Should be used with provider. Example:
+ *<V2DialogProvider>
+ *{(isOpenCondition) &&
+ * <VersionCompareSelectDialogV2
+ *   iModelConnection={this.props.iModelConnection}
+ *   onClose={this._handleVersionSelectDialogClose}
+ * />}
+ *</V2DialogProvider>
+ * provider should be supplied with new dialog based on condition in order to keep track of toast and polling information.
  * @throws Exception if context does not include iModelsClient and comparisonJobClient.
 */
 export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogProps) {
@@ -80,7 +93,6 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   }
   const { openDialog, closedDialog, getDialogOpen } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const result = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient);
   useEffect(() => {
@@ -88,10 +100,10 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
     return () => {
       closedDialog();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const _handleOk = async (): Promise<void> => {
-    if (comparisonJobClient && result?.namedVersions && targetVersion) {
+    if (comparisonJobClient && result?.namedVersions && targetVersion && currentVersion) {
       void handleStartComparison({
         targetVersion: targetVersion,
         comparisonJobClient: comparisonJobClient,
@@ -118,7 +130,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
     <Modal
       className="version-compare-dialog"
       title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
-      isOpen={props.isOpen}
+      isOpen
       onClose={_handleCancel}
     >
       <ModalContent>
@@ -150,7 +162,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
 
 type HandleStartComparisonArgs = {
   targetVersion: NamedVersion;
-  comparisonJobClient: ComparisonJobClient;
+  comparisonJobClient: IComparisonJobClient;
   result: NamedVersionLoaderResult;
   iModelConnection: IModelConnection;
   getDialogOpen: () => boolean;
@@ -176,7 +188,7 @@ const handleStartComparison = async (args: HandleStartComparisonArgs) => {
 
 type RunStartComparisonV2Args = {
   targetVersion: NamedVersion;
-  comparisonJobClient: ComparisonJobClient;
+  comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
   getDialogOpen: () => boolean;
@@ -194,7 +206,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     endChangesetId: args.currentVersion.changesetId as string,
   });
   if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
-    void runMangerStartComparisonV2({
+    void runManagerStartComparisonV2({
       comparisonJob: { comparisonJob: comparisonJob },
       comparisonJobClient: args.comparisonJobClient,
       iModelConnection: args.iModelConnection,
@@ -213,7 +225,8 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   }
   while (comparisonJob.status !== "Error") {
     await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds
-    if (args.getDialogOpen()) {
+    if (VersionCompare.manager?.isComparing) {
+      clearInterval(toastProgressingInterval);
       return;
     }
     comparisonJob = (await postOrGetComparisonJob({
@@ -226,7 +239,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
 
     if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
       clearInterval(toastProgressingInterval);
-      if (!args.getDialogOpen()) {
+      if (!args.getDialogOpen() && !VersionCompare.manager?.isComparing) {
         toastComparisonJobComplete({
           comparisonJob: { comparisonJob: comparisonJob },
           comparisonJobClient: args.comparisonJobClient,
@@ -234,14 +247,14 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
           targetVersion: args.targetVersion,
           currentVersion: args.currentVersion,
         });
-        return;
       }
+      return;
     }
   }
 };
 
 type PostOrGetComparisonJobParams = {
-  changedElementsClient: ComparisonJobClient;
+  changedElementsClient: IComparisonJobClient;
   iTwinId: string;
   iModelId: string;
   startChangesetId: string;
@@ -278,13 +291,13 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
 
 type ManagerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;
-  comparisonJobClient: ComparisonJobClient;
+  comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;
 };
 
-const runMangerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
+const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
   if (VersionCompare.manager?.isComparing) {
     return;
   }
@@ -321,7 +334,7 @@ const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) => {
       title: title,
       onClick: () => {
         toaster.closeAll();
-        void runMangerStartComparisonV2({
+        void runManagerStartComparisonV2({
           comparisonJob: args.comparisonJob,
           comparisonJobClient: args.comparisonJobClient,
           iModelConnection: args.iModelConnection,

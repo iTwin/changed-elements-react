@@ -19,7 +19,6 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
-import { MinimalNamedVersion } from "@itwin/imodels-client-management";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
@@ -384,8 +383,8 @@ export class VersionCompareManager {
    */
   public async startComparisonV2(
     currentIModel: IModelConnection,
-    currentVersion: MinimalNamedVersion,
-    targetVersion: MinimalNamedVersion,
+    currentVersion: NamedVersion,
+    targetVersion: NamedVersion,
     changedElements: ChangedElements[],
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
