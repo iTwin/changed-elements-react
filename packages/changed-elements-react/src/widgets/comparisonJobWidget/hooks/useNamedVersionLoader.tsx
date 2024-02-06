@@ -346,10 +346,10 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobCli
  * Deletes comparison job.
  * @throws if delete is not successful
  */
-const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: Entry, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<void> => {
-    await comparisonJobClient.deleteComparisonJob({
-      iTwinId: iTwinId,
-      iModelId: iModelId,
-      jobId: `${entry.version.changesetId}-${currentChangesetId}`,
-    })
-}
+// const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: Entry, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<void> => {
+//     await comparisonJobClient.deleteComparisonJob({
+//       iTwinId: iTwinId,
+//       iModelId: iModelId,
+//       jobId: `${entry.version.changesetId}-${currentChangesetId}`,
+//     })
+// }

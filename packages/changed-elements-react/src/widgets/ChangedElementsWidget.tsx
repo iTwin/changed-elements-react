@@ -21,10 +21,9 @@ import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
-
 import "./ChangedElementsWidget.scss";
 import InfoButton from "./InformationButton.js";
-import { V2DialogProvider, VersionCompareSelectDialogV2 } from "./V2Widget/componets/VersionCompareSelectModal.js";
+import { V2DialogProvider, VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
 import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 

@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { SvgInfo } from "@itwin/itwinui-icons-react";
-import { DropdownMenu, IconButton, MenuDivider, MenuExtraContent, Text } from "@itwin/itwinui-react";
+import { DropdownMenu, IconButton, MenuExtraContent, Text } from "@itwin/itwinui-react";
 
 interface Props {
   // title of information drop down
