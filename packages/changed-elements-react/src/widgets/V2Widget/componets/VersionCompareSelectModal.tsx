@@ -17,7 +17,6 @@ import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/VersionCompareSelectWidget.scss";
 import React from "react";
 
-
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogProps {
   /** IModel Connection that is being visualized. */
