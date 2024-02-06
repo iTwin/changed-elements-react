@@ -231,6 +231,7 @@ type UpdateProgressingChangesetsArgs = {
   setResult: (result: NamedVersionLoaderResult) => void;
   isDisposed: () => boolean;
 };
+
 const pollForProgressingJobs = async (args: UpdateProgressingChangesetsArgs) => {
   if (args.isDisposed())
     return;
