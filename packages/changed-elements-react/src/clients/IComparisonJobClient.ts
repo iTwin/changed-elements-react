@@ -11,6 +11,7 @@ export interface IComparisonJobClient {
   /** Deletes comparison job status. Throws on encountering an error or receiving non-success response code. */
   deleteComparisonJob(args: GetComparisonJobParams): Promise<void>;
 
+  /** Gets changed elements based on a provided complete comparison job. Throws on encountering an error or receiving non-success response code. */
   getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements>;
 
   /** Starts comparison job. Throws on encountering an error or receiving non-success response code. */
@@ -18,7 +19,9 @@ export interface IComparisonJobClient {
 
 }
 
-export interface GetComparisonJobParams extends Omit<CommonRequestParams, "body"> {
+type BodilessRequest = Omit<CommonRequestParams, "body">
+
+export interface GetComparisonJobParams extends BodilessRequest {
   iTwinId: string;
   iModelId: string;
   jobId: string;
@@ -78,7 +81,7 @@ export interface ComparisonJobFailed {
   };
 }
 
-export interface GetComparisonJobResultParams extends Omit<CommonRequestParams, "body"> {
+export interface GetComparisonJobResultParams extends BodilessRequest {
   comparisonJob: ComparisonJobCompleted["comparisonJob"];
 }
 
@@ -86,7 +89,7 @@ export interface ChangedElements {
   changedElements: IChangedElements;
 }
 
-export interface PostComparisonJobParams extends Omit<CommonRequestParams, "body"> {
+export interface PostComparisonJobParams extends BodilessRequest {
   iTwinId: string;
   iModelId: string;
   startChangesetId: string;

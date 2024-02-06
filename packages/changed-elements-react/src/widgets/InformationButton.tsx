@@ -26,7 +26,6 @@ function InfoButton(props:Props) {
           <Text variant="leading">{props.title}</Text>
           <Text>{props.message}</Text>
         </MenuExtraContent>,
-        <MenuDivider key={1} />,
       ]}
     >
       <IconButton styleType="borderless" aria-label="Information">

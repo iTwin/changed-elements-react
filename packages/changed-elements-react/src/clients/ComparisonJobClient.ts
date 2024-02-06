@@ -7,7 +7,7 @@ import type {
   PostComparisonJobParams,
   DeleteComparisonJobParams
 } from "./IComparisonJobClient.js";
-import { callITwinApi } from "./iTwinApi.js";
+import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
 export interface ComparisonJobClientParams {
   baseUrl: string;
   getAccessToken: () => Promise<string>;
@@ -50,15 +50,20 @@ export class ComparisonJobClient implements IComparisonJobClient {
   }
 
   public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements> {
-    return callITwinApi({
-      url: args.comparisonJob.comparison.href,
-      method: "GET",
-      signal: args.signal,
-      headers: {
-        Accept: ComparisonJobClient._acceptHeader,
-        ...args.headers,
+    const response = await fetch(
+      args.comparisonJob.comparison.href,
+      {
+        method: "GET",
+        headers: {
+          Accept: ComparisonJobClient._acceptHeader,
+        },
       },
-    }) as unknown as Promise<ChangedElements>;
+    );
+
+    if (!response.ok) {
+      await throwBadResponseCodeError(response, "Changed Elements request failed.");
+    }
+    return response.json() as unknown as Promise<ChangedElements>;
   }
 
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {

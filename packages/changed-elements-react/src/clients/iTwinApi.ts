@@ -3,10 +3,12 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import { HalLinks } from "./common";
+
 export interface CallITwinApiParams {
-  method?: "GET" | "POST" |"DELETE";
+  method?: "GET" | "POST" | "DELETE";
   url: string;
-  getAccessToken?: () => Promise<string>;
+  getAccessToken: () => Promise<string>;
   signal?: AbortSignal | undefined;
   headers?: Record<string, string> | undefined;
   body?: Record<string, unknown> | undefined;
@@ -15,7 +17,7 @@ export interface CallITwinApiParams {
 export async function callITwinApi(args: CallITwinApiParams): Promise<Record<string, unknown>> {
   const response = await fetch(
     args.url,
-    args.getAccessToken ? {
+    {
       method: args.method,
       headers: {
         ...args.headers,
@@ -23,15 +25,7 @@ export async function callITwinApi(args: CallITwinApiParams): Promise<Record<str
       },
       body: args.body && JSON.stringify(args.body),
       signal: args.signal,
-    } :
-      {
-        method: args.method,
-        headers: {
-          ...args.headers,
-        },
-        body: args.body && JSON.stringify(args.body),
-        signal: args.signal,
-      },
+    },
   );
 
   if (!response.ok) {
@@ -62,11 +56,7 @@ export async function* callPagedITwinApi(
   }
 }
 
-type HalLinks<T extends Array<string | undefined>> = {
-  [K in keyof T as T[K] & string]: { href: string; };
-};
-
-async function throwBadResponseCodeError(
+export async function throwBadResponseCodeError(
   response: Response,
   errorMessage: string,
 ): Promise<never> {

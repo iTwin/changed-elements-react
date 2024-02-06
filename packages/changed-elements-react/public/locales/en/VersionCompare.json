@@ -10,6 +10,7 @@
     "iModelVersions": "iModel versions",
     "and": "and",
     "jobProcessing": "are being processed in the background. You will receive a notification upon completion.",
+    "jobError":"An error occurred while processing changes between",
     "jobComplete": "comparisons job is complete.",
     "viewTheReport": "View The Report",
     "withPrevious": "With previous",

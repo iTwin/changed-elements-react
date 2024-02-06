@@ -379,7 +379,7 @@ export class VersionCompareManager {
    * @param currentIModel Current IModelConnection to be used to compare against
    * @param currentVersion Current Version of the iModel
    * @param targetVersion Target Version of the iModel, an IModelConnection is opened to it
-   * @param changesetChunks [optional] If present, the provided chunks will be used to load changed element data
+   * @param changedElements Array of elements that have changed and need to be visualized
    */
   public async startComparisonV2(
     currentIModel: IModelConnection,

@@ -16,8 +16,7 @@ interface Props {
 /** Feedback button that on click takes you to provided link.*/
 export function FeedbackButton(props: Props) {
   return (
-    <Button as="a" href={props.feedbackUrl} target="_blank" rel="noreferrer" styleType='high-visibility' className="button">
-      <SvgSmileyHappy className="svg"></SvgSmileyHappy>
-      <Text className="text">{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLeaveFeedback")}</Text>
+    <Button as="a" href={props.feedbackUrl} target="_blank" rel="noreferrer" styleType='high-visibility' className="changed-elems-feedback-btn">
+      <Text><SvgSmileyHappy className="changed-elems-feedback-svg"></SvgSmileyHappy>{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLeaveFeedback")}</Text>
     </Button>);
 }

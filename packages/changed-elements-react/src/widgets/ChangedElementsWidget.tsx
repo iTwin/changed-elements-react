@@ -23,9 +23,9 @@ import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 
 import "./ChangedElementsWidget.scss";
-import InfoButton from "../common/InformationButton.js";
+import InfoButton from "./InformationButton.js";
 import { V2DialogProvider, VersionCompareSelectDialogV2 } from "./V2Widget/componets/VersionCompareSelectModal.js";
-import { FeedbackButton } from "../common/FeedbackButton.js";
+import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();

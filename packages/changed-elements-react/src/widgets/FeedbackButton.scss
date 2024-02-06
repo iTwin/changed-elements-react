@@ -3,22 +3,17 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-.button {
-  margin: 0px auto 50px;
+.changed-elems-feedback-btn {
+  margin: 0 auto 50px;
   overflow: hidden;
-  position: relative;
-  border: 0px solid black;
   border-radius: 50px;
-}
-
-.svg {
-  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ .changed-elems-feedback-svg {
   fill: #ffffff;
-  position: absolute;
-  left: 18px;
-  top: 28%;
-}
-
-.text {
-  padding-left: 30px;
+  margin-right: 5px;
+  position: relative;
+  top:3px
+  }
 }

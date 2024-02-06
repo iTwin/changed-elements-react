@@ -195,7 +195,6 @@ type RunStartComparisonV2Args = {
 };
 
 // todo clean this up once API fix is in. API is currently publishing jobs that are complete but mau not have href
-// this commit has cleaner version 29d2fdaa9cc87ce47a627feb3b5224898107d498
 // while loop may need to be looked at again
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   let { comparisonJob } = await postOrGetComparisonJob({
@@ -215,30 +214,24 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     });
     return;
   }
-  const toastProgressingInterval = setInterval(() => {
-    if (comparisonJob.status !== "Completed" && !args.getDialogOpen()) {
-      toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
-    }
-  }, 8000); // toast progress every 8 seconds
   if (comparisonJob.status !== "Completed" && comparisonJob.status !== "Error") {
     toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   }
   while (comparisonJob.status !== "Error") {
     await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds
     if (VersionCompare.manager?.isComparing) {
-      clearInterval(toastProgressingInterval);
       return;
     }
-    comparisonJob = (await postOrGetComparisonJob({
-      changedElementsClient: args.comparisonJobClient,
+    comparisonJob = (await args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iModelConnection?.iTwinId as string,
       iModelId: args.iModelConnection?.iModelId as string,
-      startChangesetId: args.targetVersion.changesetId as string,
-      endChangesetId: args.currentVersion.changesetId as string,
+      jobId: `${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`,
+      headers: {
+        "Content-Type": "application/json",
+      },
     })).comparisonJob;
 
     if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
-      clearInterval(toastProgressingInterval);
       if (!args.getDialogOpen() && !VersionCompare.manager?.isComparing) {
         toastComparisonJobComplete({
           comparisonJob: { comparisonJob: comparisonJob },
@@ -249,6 +242,9 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
         });
       }
       return;
+    }
+    if (comparisonJob.status === "Error") {
+      toastComparisonJobError(args.currentVersion, args.targetVersion)
     }
   }
 };
@@ -315,8 +311,21 @@ const toastComparisonJobProcessing = (currentVersion: NamedVersion, targetVersio
       OutputMessagePriority.Info,
       IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
       `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}
-      <${currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${targetVersion.displayName}>
-      ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobProcessing")}`,
+ <${currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${targetVersion.displayName}>
+ ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobProcessing")}`,
+      OutputMessageType.Toast,
+    ),
+  );
+};
+
+const toastComparisonJobError = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
+  IModelApp.notifications.outputMessage(
+    new NotifyMessageDetails(
+      OutputMessagePriority.Error,
+      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
+      `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobError")}
+ ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}
+ <${currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${targetVersion.displayName}>`,
       OutputMessageType.Toast,
     ),
   );
