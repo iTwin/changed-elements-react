@@ -303,7 +303,6 @@ const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) =
   });
 };
 
-
 const toastComparisonJobProcessing = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
