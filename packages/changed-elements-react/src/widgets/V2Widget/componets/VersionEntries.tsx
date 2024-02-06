@@ -11,7 +11,6 @@ import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
 import "./styles/VersionCompareSelectWidget.scss";
 
-
 interface CurrentVersionEntryProps {
   versionState: VersionState;
 }
