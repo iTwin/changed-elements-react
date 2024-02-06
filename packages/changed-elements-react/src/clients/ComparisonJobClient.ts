@@ -23,7 +23,7 @@ export class ComparisonJobClient implements IComparisonJobClient {
     this._getAccessToken = args.getAccessToken;
   }
 
-  deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
+  public async deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
     return callITwinApi({
       url: `${this._baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
       method: "DELETE",
