@@ -116,7 +116,6 @@ function VersionNameAndDescription(props: VersionNameAndDescriptionProps): React
   );
 }
 
-
 interface VersionListEntryProps {
   versionState: VersionState;
   isSelected: boolean;
