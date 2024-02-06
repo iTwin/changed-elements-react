@@ -71,7 +71,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 
   private readonly _widgetInfo = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareInfo");
 
-
   private _onComparisonStarting = (): void => {
     this.setState({
       loading: true,
