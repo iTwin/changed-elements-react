@@ -3,10 +3,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { createContext, PropsWithChildren, ReactElement, useContext, useMemo } from "react";
-
 import type { IModelsClient } from "./clients/iModelsClient.js";
 import type { SavedFiltersManager } from "./SavedFiltersManager.js";
-import { IComparisonJobClient } from "./clients/ComparisonJobClient.js";
+import { IComparisonJobClient } from "./clients/IComparisonJobClient.js";
+
 
 export interface VersionCompareContextProps {
   iModelsClient: IModelsClient;

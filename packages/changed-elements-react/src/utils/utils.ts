@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
 export async function* splitBeforeEach<T, U>(
   iterable: AsyncIterable<T>,
   selector: (value: T) => U,
@@ -34,19 +39,19 @@ export async function* map<T, U>(iterable: AsyncIterable<T>, transform: (value: 
 }
 
 export async function* skip<T>(iterable: AsyncIterable<T>, n: number): AsyncGenerator<T> {
-    const iterator = iterable[Symbol.asyncIterator]();
-    for (let i = 0; i < n; ++i) {
-      const result = await iterator.next();
-      if (result.done) {
-        return result.value;
-      }
+  const iterator = iterable[Symbol.asyncIterator]();
+  for (let i = 0; i < n; ++i) {
+    const result = await iterator.next();
+    if (result.done) {
+      return result.value;
     }
-
-    let result = await iterator.next();
-    while (!result.done) {
-      yield result.value;
-      result = await iterator.next();
-    }
-
-    return result.value;
   }
+
+  let result = await iterator.next();
+  while (!result.done) {
+    yield result.value;
+    result = await iterator.next();
+  }
+
+  return result.value;
+}

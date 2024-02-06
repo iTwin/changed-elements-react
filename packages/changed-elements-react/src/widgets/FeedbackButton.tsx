@@ -7,7 +7,6 @@ import { Button, Text } from "@itwin/itwinui-react";
 import { IModelApp } from "@itwin/core-frontend";
 import "./FeedbackButton.scss";
 
-
 interface Props {
   /** Link for button to take you to.*/
   feedbackUrl: string;
@@ -17,6 +16,10 @@ interface Props {
 export function FeedbackButton(props: Props) {
   return (
     <Button as="a" href={props.feedbackUrl} target="_blank" rel="noreferrer" styleType='high-visibility' className="changed-elems-feedback-btn">
-      <Text><SvgSmileyHappy className="changed-elems-feedback-svg"></SvgSmileyHappy>{IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLeaveFeedback")}</Text>
-    </Button>);
+      <Text>
+        <SvgSmileyHappy className="changed-elems-feedback-svg"></SvgSmileyHappy>
+        {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareLeaveFeedback")}
+      </Text>
+    </Button>
+  );
 }

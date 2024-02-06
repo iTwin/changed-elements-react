@@ -3,11 +3,12 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  ChangedElements, IComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
+  ChangedElementsPayload, IComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
   PostComparisonJobParams,
   DeleteComparisonJobParams
 } from "./IComparisonJobClient.js";
 import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
+
 export interface ComparisonJobClientParams {
   baseUrl: string;
   getAccessToken: () => Promise<string>;
@@ -23,6 +24,11 @@ export class ComparisonJobClient implements IComparisonJobClient {
     this._getAccessToken = args.getAccessToken;
   }
 
+  /**
+   * Deletes comparison job.
+   * @returns void
+   * @throws on a non 2XX response
+  */
   public async deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
     return callITwinApi({
       url: `${this._baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
@@ -36,6 +42,11 @@ export class ComparisonJobClient implements IComparisonJobClient {
     }) as unknown as Promise<void>;
   }
 
+  /**
+ * Gets comparison job.
+ * @returns ComparisonJob
+ * @throws on a non 2XX response.
+*/
   public async getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob> {
     return callITwinApi({
       url: `${this._baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
@@ -49,7 +60,12 @@ export class ComparisonJobClient implements IComparisonJobClient {
     }) as unknown as Promise<ComparisonJob>;
   }
 
-  public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements> {
+  /**
+  * Gets changed elements for given comparisonJob.
+ * @returns ChangedElements
+ * @throws on a non 2XX response.
+ */
+  public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElementsPayload> {
     const response = await fetch(
       args.comparisonJob.comparison.href,
       {
@@ -63,9 +79,14 @@ export class ComparisonJobClient implements IComparisonJobClient {
     if (!response.ok) {
       await throwBadResponseCodeError(response, "Changed Elements request failed.");
     }
-    return response.json() as unknown as Promise<ChangedElements>;
+    return response.json() as unknown as Promise<ChangedElementsPayload>;
   }
 
+  /**
+  * Gets comparison job.
+  * @returns ComparisonJob
+  * @throws on a non 2XX response.
+  */
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {
     return callITwinApi({
       url: `${this._baseUrl}/comparisonJob`,

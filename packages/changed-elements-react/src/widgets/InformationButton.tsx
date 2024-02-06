@@ -16,7 +16,7 @@ interface Props {
  * Information button that provides information drop down on click.
  * Click off drop down to close
  */
-function InfoButton(props:Props) {
+function InfoButton(props: Props) {
   return (
     <DropdownMenu
       style={{ width: 500 }}

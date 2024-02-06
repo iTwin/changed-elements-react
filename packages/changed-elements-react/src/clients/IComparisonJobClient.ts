@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ChangedElements as IChangedElements } from "@itwin/core-common";
+import { ChangedElements } from "@itwin/core-common";
 
 export interface IComparisonJobClient {
   /** Gets comparison job status. Throws on encountering an error or receiving non-success response code. */
@@ -12,14 +12,14 @@ export interface IComparisonJobClient {
   deleteComparisonJob(args: GetComparisonJobParams): Promise<void>;
 
   /** Gets changed elements based on a provided complete comparison job. Throws on encountering an error or receiving non-success response code. */
-  getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElements>;
+  getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElementsPayload>;
 
   /** Starts comparison job. Throws on encountering an error or receiving non-success response code. */
   postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob>;
 
 }
 
-type BodilessRequest = Omit<CommonRequestParams, "body">
+type BodilessRequest = Omit<CommonRequestParams, "body">;
 
 export interface GetComparisonJobParams extends BodilessRequest {
   iTwinId: string;
@@ -85,8 +85,8 @@ export interface GetComparisonJobResultParams extends BodilessRequest {
   comparisonJob: ComparisonJobCompleted["comparisonJob"];
 }
 
-export interface ChangedElements {
-  changedElements: IChangedElements;
+export interface ChangedElementsPayload {
+  changedElements: ChangedElements;
 }
 
 export interface PostComparisonJobParams extends BodilessRequest {

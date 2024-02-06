@@ -213,7 +213,7 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
     namedVersions: { currentVersion: args.namedVersionLoaderState.result.namedVersions.currentVersion, entries: newEntries },
   };
   args.setResult(args.namedVersionLoaderState.result);
-  void pollForProgressingJobs({
+  void pollForInProgressJobs({
     iTwinId: args.iTwinId,
     iModelId: args.iModelId,
     namedVersionLoaderState: args.namedVersionLoaderState,
@@ -232,7 +232,7 @@ type UpdateProgressingChangesetsArgs = {
   isDisposed: () => boolean;
 };
 
-const pollForProgressingJobs = async (args: UpdateProgressingChangesetsArgs) => {
+const pollForInProgressJobs = async (args: UpdateProgressingChangesetsArgs) => {
   if (args.isDisposed())
     return;
   const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.id;
@@ -246,7 +246,7 @@ const pollForProgressingJobs = async (args: UpdateProgressingChangesetsArgs) => 
     let updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
     while (updatingEntries.length > 0 && !args.isDisposed()) {
       for (let entry of updatingEntries) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds in to no poll to often
         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
         entry = {
           version: entry.version,

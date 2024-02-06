@@ -256,6 +256,11 @@ type PostOrGetComparisonJobParams = {
   endChangesetId: string;
 };
 
+/**
+* post or gets comparison job.
+* @returns ComparisonJob
+* @throws on a non 2XX response.
+*/
 async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
   let result: ComparisonJob;
   try {
@@ -267,20 +272,19 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
       headers: { "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code !== "ComparisonExists") {
-      throw error;
+    if (error && typeof error === "object" && "code" in error && error.code === "ComparisonExists") {
+      result = await args.changedElementsClient.getComparisonJob({
+        iTwinId: args.iTwinId,
+        iModelId: args.iModelId,
+        jobId: `${args.startChangesetId}-${args.endChangesetId}`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return result
     }
-
-    result = await args.changedElementsClient.getComparisonJob({
-      iTwinId: args.iTwinId,
-      iModelId: args.iModelId,
-      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    throw error;
   }
-
   return result;
 }
 
