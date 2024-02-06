@@ -1,7 +1,7 @@
 {
   "versionCompare": {
     "versionPickerTitle": "Version Compare",
-    "versionCompareInfo": "Discover what has changed between the two iModel versions. To get started, click + button. Then choose the version to compare with ,and the data processing will begin in the background. Processing time may vary based on the data complexity. A notification will appear when results are available.",
+    "versionCompareInfo": "Discover what has changed between two iModel versions. To get started, click the + button, then choose the version to compare with. The data processing will begin in the background. Processing time may vary based on the data complexity. A notification will appear when results are available.",
     "versionCompareLeaveFeedback": "Leave Feedback",
     "versionCompareGettingStartedV2": "Click on the + comparison button to get started or check the progress of active comparison jobs.",
     "versionComparisonStarting": "Comparison visualization starting.",
