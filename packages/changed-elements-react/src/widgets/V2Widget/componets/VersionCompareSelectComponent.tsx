@@ -30,7 +30,7 @@ export interface VersionCompareSelectorProps {
 }
 
 /**
- * Component that let's the user select which named version to compare to.
+ * Component that lets the user select which named version to compare to.
  */
 export function VersionCompareSelectComponent(props: VersionCompareSelectorProps) {
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
