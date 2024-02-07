@@ -86,12 +86,6 @@
   height: 100%;
 }
 
-.version-compare-list {
-  border: solid;
-  border-color: var(--iui-color-border);
-  border-width: 1px;
-}
-
 .version-container-table {
   flex: 1;
   display: flex;
@@ -154,6 +148,7 @@
         padding-bottom: var(--iui-size-2xs);
         cursor: default;
       }
+      
       > .current-show {
         color: white;
         font-size: var(--iui-font-size-0);
