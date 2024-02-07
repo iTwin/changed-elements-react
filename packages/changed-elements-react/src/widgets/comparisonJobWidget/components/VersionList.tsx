@@ -21,9 +21,9 @@ interface VersionListProps {
  */
 export function VersionList(props: VersionListProps): ReactElement {
   return (
-    <div className="version-compare-row version-compare-list">
+    <div className="version-compare-list">
       <div className="version-container-table">
-        <div className="version-container-header" style={{ borderBottom:"solid 2px black"}}>
+        <div className="version-container-header">
           <div className="version-header">
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versions")}
           </div>

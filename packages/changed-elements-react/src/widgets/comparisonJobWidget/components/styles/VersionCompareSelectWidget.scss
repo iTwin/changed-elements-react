@@ -86,6 +86,12 @@
   height: 100%;
 }
 
+.version-compare-list {
+  border: solid;
+  border-color: var(--iui-color-border);
+  border-width: 1px;
+}
+
 .version-container-table {
   flex: 1;
   display: flex;

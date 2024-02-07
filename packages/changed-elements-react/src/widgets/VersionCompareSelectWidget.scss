@@ -86,6 +86,12 @@
   height: 100%;
 }
 
+.version-compare-list {
+  border: solid;
+  border-color: var(--iui-color-border);
+  border-width: 1px;
+}
+
 .version-container-table {
   flex: 1;
   display: flex;
@@ -151,7 +157,6 @@
       > .current-show {
         color: white;
         font-size: var(--iui-font-size-0);
-        padding: 0px 8px;
         background-color: var(--iui-color-background-positive);
         border-radius: 4px;
         text-align: center;
@@ -159,42 +164,6 @@
       }
     }
   }
-}
-
-.job-status-complete{
-  color: white;
-  font-size: var(--iui-font-size-0);
-  padding: 0px 8px;
-  background-color: var(--iui-color-background-positive);
-  border-radius: 4px;
-  text-align: center;
-  cursor: default;
-  box-sizing: border-box;
-  width: 100px;
-}
-
-.job-status-progress{
-  color: black;
-  font-size: var(--iui-font-size-0);
-  padding: 0px 8px;
-  background-color: var(--iui-color-background-seabuckthorn);
-  border-radius: 4px;
-  text-align: center;
-  cursor: default;
-  box-sizing: border-box;
-  width:100px;
-}
-
-.job-status-not-started{
-  color: black;
-  font-size: var(--iui-font-size-0);
-  padding: 0px 8px;
-  background-color: var(--iui-color-background-disabled);
-  border-radius: 4px;
-  text-align: center;
-  cursor: default;
-  box-sizing: border-box;
-  width:100px ;
 }
 
 .vc-entry {
@@ -253,7 +222,6 @@
       background-color: var(--iui-color-background-positive);
       text-align: center;
       border-radius: 4px;
-      padding: 0px 8px;
       cursor: default;
     }
   }

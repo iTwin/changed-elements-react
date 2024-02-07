@@ -6,7 +6,6 @@ import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionProcessedState } from "./VersionProcessedState";
 import { JobProgress, JobStatus } from "./ComparisonJobModels";
 
-
 /**
  * Holds the state of of the version and its subsequent meta data.
 */

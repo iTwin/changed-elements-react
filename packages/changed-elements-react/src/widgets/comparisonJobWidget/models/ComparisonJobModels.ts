@@ -18,6 +18,7 @@ export type JobProgress = {
   currentProgress: number;
   maxProgress: number;
 };
+
 /**
  * Holds both the job progress and job status.
 */

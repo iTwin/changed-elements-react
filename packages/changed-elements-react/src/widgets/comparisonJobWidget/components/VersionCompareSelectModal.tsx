@@ -158,7 +158,6 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   );
 }
 
-
 type HandleStartComparisonArgs = {
   targetVersion: NamedVersion;
   comparisonJobClient: IComparisonJobClient;
@@ -193,8 +192,6 @@ type RunStartComparisonV2Args = {
   getDialogOpen: () => boolean;
 };
 
-// todo clean this up once API fix is in. API is currently publishing jobs that are complete but mau not have href
-// while loop may need to be looked at again
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   let { comparisonJob } = await postOrGetComparisonJob({
     changedElementsClient: args.comparisonJobClient,
@@ -203,7 +200,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     startChangesetId: args.targetVersion.changesetId as string,
     endChangesetId: args.currentVersion.changesetId as string,
   });
-  if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
+  if (comparisonJob.status === "Completed") {
     void runManagerStartComparisonV2({
       comparisonJob: { comparisonJob: comparisonJob },
       comparisonJobClient: args.comparisonJobClient,
@@ -213,9 +210,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     });
     return;
   }
-  if (comparisonJob.status !== "Completed" && comparisonJob.status !== "Error") {
-    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
-  }
+  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   while (comparisonJob.status !== "Error") {
     await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds
     if (VersionCompare.manager?.isComparing) {
@@ -229,8 +224,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
         "Content-Type": "application/json",
       },
     })).comparisonJob;
-
-    if (comparisonJob.status === "Completed" && comparisonJob.comparison && comparisonJob.comparison.href) {
+    if (comparisonJob.status === "Completed") {
       if (!args.getDialogOpen() && !VersionCompare.manager?.isComparing) {
         toastComparisonJobComplete({
           comparisonJob: { comparisonJob: comparisonJob },
@@ -242,9 +236,10 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
       }
       return;
     }
-    if (comparisonJob.status === "Error") {
-      toastComparisonJobError(args.currentVersion, args.targetVersion)
-    }
+  }
+  if (comparisonJob.status === "Error") {
+    toastComparisonJobError(args.currentVersion, args.targetVersion);
+    return;
   }
 };
 
@@ -281,7 +276,7 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
           "Content-Type": "application/json",
         },
       });
-      return result
+      return result;
     }
     throw error;
   }

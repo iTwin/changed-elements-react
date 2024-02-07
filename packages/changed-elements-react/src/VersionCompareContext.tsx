@@ -7,7 +7,6 @@ import type { IModelsClient } from "./clients/iModelsClient.js";
 import type { SavedFiltersManager } from "./SavedFiltersManager.js";
 import { IComparisonJobClient } from "./clients/IComparisonJobClient.js";
 
-
 export interface VersionCompareContextProps {
   iModelsClient: IModelsClient;
   savedFilters?: SavedFiltersManager | undefined;

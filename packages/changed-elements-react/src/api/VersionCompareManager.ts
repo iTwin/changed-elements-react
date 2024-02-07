@@ -9,7 +9,6 @@ import {
   OutputMessagePriority
 } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-
 import type { NamedVersion } from "../clients/iModelsClient.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";

@@ -505,7 +505,7 @@ interface VersionListProps {
 
 function VersionList(props: VersionListProps): ReactElement {
   return (
-    <div className="version-compare-row version-compare-list">
+    <div className="version-compare-list">
       <div className="version-compare-label">
         {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.with")}
       </div>

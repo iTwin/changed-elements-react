@@ -10,10 +10,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
- .changed-elems-feedback-svg {
-  fill: #ffffff;
-  margin-right: 5px;
-  position: relative;
-  top:3px
+  .changed-elems-feedback-content-wrapper {
+    display: flex;
+    alignitems: center;
+  }
+  .changed-elems-feedback-svg {
+    fill: #ffffff;
+    margin-right: 5px;
   }
 }

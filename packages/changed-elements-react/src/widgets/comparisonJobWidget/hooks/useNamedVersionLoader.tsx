@@ -195,9 +195,8 @@ type Entry = {
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
   const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.id;
-
   // deletes all comparison jobs only for debugging purposes
-  // await Promise.all(args.namedVersionLoaderState.result.namedVersions.entries.map(async (entry) => {
+  //await Promise.all(args.namedVersionLoaderState.result.namedVersions.entries.map(async (entry) => {
   //await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
   // })).catch(() => { return; });
   const newEntries = await Promise.all(args.namedVersionLoaderState.result.namedVersions.entries.map(async (entry) => {
@@ -276,21 +275,11 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobCli
     if (res) {
       switch (res.comparisonJob.status) {
         case "Completed": {
-          //todo cleanup code once server side API href bug is fixed
-          if (res.comparisonJob.comparison && res.comparisonJob.comparison.href) {
-            return {
-              jobStatus: "Available",
-              jobProgress: {
-                currentProgress: 0,
-                maxProgress: 0,
-              },
-            };
-          }
           return {
-            jobStatus: "Processing",
+            jobStatus: "Available",
             jobProgress: {
-              currentProgress: 9,
-              maxProgress: 10,
+              currentProgress: 0,
+              maxProgress: 0,
             },
           };
         }
@@ -346,10 +335,10 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobCli
  * Deletes comparison job.
  * @throws if delete is not successful
  */
-// const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: Entry, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<void> => {
-//     await comparisonJobClient.deleteComparisonJob({
-//       iTwinId: iTwinId,
-//       iModelId: iModelId,
-//       jobId: `${entry.version.changesetId}-${currentChangesetId}`,
-//     })
-// }
+//  const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: Entry, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<void> => {
+//      await comparisonJobClient.deleteComparisonJob({
+//        iTwinId: iTwinId,
+//        iModelId: iModelId,
+//        jobId: `${entry.version.changesetId}-${currentChangesetId}`,
+//      })
+//  }
