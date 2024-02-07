@@ -222,7 +222,7 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   });
 };
 
-type UpdateProgressingChangesetsArgs = {
+type PollForInProgressJobsArgs = {
   iTwinId: string;
   iModelId: string;
   namedVersionLoaderState: NamedVersionLoaderState;
@@ -231,15 +231,15 @@ type UpdateProgressingChangesetsArgs = {
   isDisposed: () => boolean;
 };
 
-const pollForInProgressJobs = async (args: UpdateProgressingChangesetsArgs) => {
+const pollForInProgressJobs = async (args: PollForInProgressJobsArgs) => {
   if (args.isDisposed())
     return;
   const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.id;
   let entries = args.namedVersionLoaderState.result.namedVersions.entries.slice();
-  const areThereProgressingJob = (entries: Entry[]) => {
+  const areJobsInProgress = (entries: Entry[]) => {
     return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined;
   };
-  if (areThereProgressingJob(entries)) {
+  if (areJobsInProgress(entries)) {
     const idEntryMap = new Map<string, Entry>();
     entries.forEach((entry) => idEntryMap.set(entry.version.id, entry));
     let updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
