@@ -245,7 +245,7 @@ const pollForInProgressJobs = async (args: UpdateProgressingChangesetsArgs) => {
     let updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
     while (updatingEntries.length > 0 && !args.isDisposed()) {
       for (let entry of updatingEntries) {
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds in to no poll to often
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds in to not poll too often
         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
         entry = {
           version: entry.version,
