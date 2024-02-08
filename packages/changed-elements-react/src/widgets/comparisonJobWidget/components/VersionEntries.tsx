@@ -9,7 +9,7 @@ import { JobStatus, JobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionState } from "../models/VersionState";
-import "./styles/VersionCompareSelectWidget.scss";
+import "./styles/ComparisonJobWidget.scss";
 
 interface CurrentVersionEntryProps {
   versionState: VersionState;

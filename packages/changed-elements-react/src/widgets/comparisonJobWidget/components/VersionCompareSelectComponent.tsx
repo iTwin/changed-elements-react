@@ -9,7 +9,7 @@ import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
-import "./styles/VersionCompareSelectWidget.scss";
+import "./styles/ComparisonJobWidget.scss";
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {

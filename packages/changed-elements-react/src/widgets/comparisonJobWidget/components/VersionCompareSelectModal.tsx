@@ -14,7 +14,7 @@ import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
-import "./styles/VersionCompareSelectWidget.scss";
+import "./styles/ComparisonJobWidget.scss";
 import React from "react";
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -127,7 +127,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogPr
   };
   return (
     <Modal
-      className="version-compare-dialog"
+      className="comparison-job-dialog"
       title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
       isOpen
       onClose={_handleCancel}

@@ -8,7 +8,7 @@ import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
-import "./styles/VersionCompareSelectWidget.scss";
+import "./styles/ComparisonJobWidget.scss";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
@@ -25,14 +25,14 @@ interface VersionCompareSelectorInnerProps {
  */
 export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps) {
   return (
-    <div className="version-compare-selector">
+    <div className="comparison-job-selector">
       {
         props.currentVersion &&
-        <div className="version-compare-row">
-          <div className="version-compare-label">
+        <div className="comparison-job-row">
+            <div className="current-comparison-title">
             {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}:`}
           </div>
-          <div className="version-container-current">
+          <div className="comparison-job-container-current">
             <CurrentVersionEntry versionState={props.currentVersion} />
           </div>
         </div>
@@ -43,7 +43,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
         </div>
       }
-      {<div className="version-compare-label">
+      {<div className="comparison-job-label">
         {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.withPrevious")}:`}
       </div>}
       {
@@ -62,7 +62,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
       }
       {
         props.versionsUrl &&
-        <div className="version-selector-manage-link">
+        <div className="comparison-job-selector-manage-link">
           <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
           </a>

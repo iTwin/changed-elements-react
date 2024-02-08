@@ -86,18 +86,12 @@
   height: 100%;
 }
 
-.version-compare-list {
-  border: solid;
-  border-color: var(--iui-color-border);
-  border-width: 1px;
-}
-
-.version-container-table {
+.comparison-job-container-table {
   flex: 1;
   display: flex;
   flex-direction: column;
 
-  > .version-container {
+  > .comparison-job-container {
     flex: 1;
     border: solid;
     border-color: var(--iui-color-border);
@@ -114,7 +108,7 @@
   }
 }
 
-.version-container-current {
+.comparison-job-container-current {
   width: 100%;
   margin-bottom: var(--iui-size-m);
   overflow: hidden;
@@ -238,12 +232,16 @@
   }
 }
 
-.version-container-header {
-  display: flex;
-  > .version-header {
+.comparison-job-container-header {
+    display: flex;
+    border-left: solid;
+    border-right: solid;
+    border-top: solid;
+    border-color: var(--iui-color-border);
+    border-width: 1px;
+  > .comparison-job-header {
     flex: 1 0;
     margin: var(--iui-size-xs);
-    margin-left: var(--iui-size-xl);
     font-weight: var(--iui-font-weight-bold);
     font-size: var(--iui-font-size-1);
     text-align: left;
@@ -257,11 +255,18 @@
   }
 }
 
-.version-compare-selector {
+.comparison-job-selector {
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  > .comparison-job-label {
+    padding-right: var(--iui-size-xs);
+    padding-top: var(--iui-size-xs);
+    box-sizing: border-box;
+    margin-bottom: 8px;
+  }
 
   > .title {
     margin: var(--iui-size-xs);
@@ -271,24 +276,15 @@
     text-align: left;
   }
 
-  > .version-compare-row {
+  > .comparison-job-row {
     display: flex;
     flex-direction: row;
-
-    &.version-compare-list {
+    >.current-comparison-title{
+      margin-top: 8px;
+    }
+    &.comparison-job-list {
       flex: 1;
       overflow: hidden;
-      border-color: var(--iui-color-border);
-      border-width: 1px;
-      border: solid;
-    }
-
-    > .version-compare-label {
-      width: 80px;
-      text-align: right;
-      padding-right: var(--iui-size-xs);
-      padding-top: var(--iui-size-xs);
-      box-sizing: border-box;
     }
   }
 }
@@ -308,7 +304,7 @@
   margin: auto;
 }
 
-.version-selector-manage-link {
+.comparison-job-selector-manage-link {
   display: flex;
   padding-top: var(--iui-size-xs);
   padding-left: var(--iui-size-2xs);
@@ -321,11 +317,11 @@
   }
 }
 
-.version-selector-footer {
+.comparison-job-selector-footer {
   display: flex;
 }
 
-.version-compare-dialog {
+.comparison-job-dialog {
   display: flex;
   flex-direction: column;
   width: 750px;

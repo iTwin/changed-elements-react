@@ -7,7 +7,7 @@ import { ReactElement } from "react";
 import { VersionListEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
-import "./styles/VersionCompareSelectWidget.scss";
+import "./styles/ComparisonJobWidget.scss";
 
 interface VersionListProps {
   entries: VersionState[];
@@ -21,17 +21,17 @@ interface VersionListProps {
  */
 export function VersionList(props: VersionListProps): ReactElement {
   return (
-    <div className="version-compare-list">
-      <div className="version-container-table">
-        <div className="version-container-header">
-          <div className="version-header">
+    <div className="comparison-job-row comparison-job-list">
+      <div className="comparison-job-container-table">
+        <div className="comparison-job-container-header">
+          <div className="comparison-job-header">
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versions")}
           </div>
           <div className="status-header">
             {"Comparison Status"}
           </div>
         </div>
-        <div className="version-container">
+        <div className="comparison-job-container">
           {props.entries.map((versionState) => {
             const isSelected = props.selectedVersionChangesetId !== undefined &&
               versionState.version.changesetId === props.selectedVersionChangesetId;
