@@ -104,6 +104,7 @@ export const useNamedVersionLoader = (
         };
         setResult(currentState.result);
         void processChangesetsAndUpdateResultState({
+          iModelConnection: iModelConnection,
           iTwinId: iTwinId,
           iModelId: iModelId,
           namedVersionLoaderState: currentState,
@@ -181,6 +182,7 @@ type ProcessChangesetsArgs = {
   iTwinId: string;
   iModelId: string;
   namedVersionLoaderState: NamedVersionLoaderState;
+  iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
   setResult: (result: NamedVersionLoaderResult) => void;
   isDisposed: () => boolean;
@@ -194,7 +196,8 @@ type Entry = {
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
-  const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.id;
+  const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.changesetId ??
+    args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.result.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     return {
@@ -209,6 +212,7 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   };
   args.setResult(args.namedVersionLoaderState.result);
   void pollForInProgressJobs({
+    iModelConnection: args.iModelConnection,
     iTwinId: args.iTwinId,
     iModelId: args.iModelId,
     namedVersionLoaderState: args.namedVersionLoaderState,
@@ -223,6 +227,7 @@ type PollForInProgressJobsArgs = {
   iModelId: string;
   namedVersionLoaderState: NamedVersionLoaderState;
   comparisonJobClient: IComparisonJobClient;
+  iModelConnection: IModelConnection;
   setResult: (result: NamedVersionLoaderResult) => void;
   isDisposed: () => boolean;
 };
@@ -230,7 +235,8 @@ type PollForInProgressJobsArgs = {
 const pollForInProgressJobs = async (args: PollForInProgressJobsArgs) => {
   if (args.isDisposed())
     return;
-  const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.id;
+  const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.changesetId ??
+    args.iModelConnection?.changeset.id;
   let entries = args.namedVersionLoaderState.result.namedVersions.entries.slice();
   const areJobsInProgress = (entries: Entry[]) => {
     return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined;
