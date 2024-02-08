@@ -5,15 +5,13 @@
 
 /**
  * Job status used for identification of job progress
- * This is used for mapping job status to user facing strings
- * Unknown Job Status is reserved for when a job has not yet been queried.
- * Only use unknown when no job status is available.
+ * This is used for mapping job status to user facing strings.
  * Unknown = "have not queried for job status"
- * Available = "Job status = complete"
+ * Available = "complete"
  * Not Processed = "API returned 404; therefore, no job has been processed."
- * Queued = "Job status = queued" waiting for agents
- * Processing = "Job status = started"
- * Error = "Job status = error"
+ * Queued = "queued" waiting for agents
+ * Processing = "started"
+ * Error = "error"
 */
 export type JobStatus = "Unknown" | "Available" | "Not Processed" | "Processing" | "Error" | "Queued";
 
