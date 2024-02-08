@@ -200,7 +200,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     startChangesetId: args.targetVersion.changesetId as string,
     endChangesetId: args.currentVersion.changesetId as string,
   });
-    if (comparisonJob.status === "Error") {
+  if (comparisonJob.status === "Error") {
     toastComparisonJobError(args.currentVersion, args.targetVersion);
     return;
   }
