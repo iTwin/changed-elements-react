@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 import { Logger } from "@itwin/core-bentley";
 import { toaster } from "@itwin/itwinui-react";
+import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
 import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
@@ -15,7 +16,7 @@ import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
-import React from "react";
+
 
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogProps {
@@ -193,17 +194,26 @@ type RunStartComparisonV2Args = {
 };
 
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
-  let { comparisonJob } = await postOrGetComparisonJob({
+  const { startedComparison } = await createOrRunManagerStartComparisonV2(args);
+  if (startedComparison) {
+    return;
+  }
+  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+  void pollForComparisonJobTillComplete(args);
+};
+
+type PostOrRunComparisonJobResult = {
+  startedComparison: boolean;
+};
+
+const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
+  const { comparisonJob } = await postOrGetComparisonJob({
     changedElementsClient: args.comparisonJobClient,
     iTwinId: args.iModelConnection?.iTwinId as string,
     iModelId: args.iModelConnection?.iModelId as string,
     startChangesetId: args.targetVersion.changesetId as string,
     endChangesetId: args.currentVersion.changesetId as string,
   });
-  if (comparisonJob.status === "Error") {
-    toastComparisonJobError(args.currentVersion, args.targetVersion);
-    return;
-  }
   if (comparisonJob.status === "Completed") {
     void runManagerStartComparisonV2({
       comparisonJob: { comparisonJob: comparisonJob },
@@ -212,15 +222,14 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
       targetVersion: args.targetVersion,
       currentVersion: args.currentVersion,
     });
-    return;
+    return { startedComparison: true };
   }
-  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
-  while (comparisonJob.status !== "Error") {
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds
-    if (VersionCompare.manager?.isComparing) {
-      return;
-    }
-    comparisonJob = (await args.comparisonJobClient.getComparisonJob({
+  return { startedComparison: false };
+};
+
+const pollForComparisonJobTillComplete = async (args: RunStartComparisonV2Args) => {
+  const getComparisonJob = async () => {
+    const job = (await args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iModelConnection?.iTwinId as string,
       iModelId: args.iModelConnection?.iModelId as string,
       jobId: `${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`,
@@ -228,16 +237,22 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
         "Content-Type": "application/json",
       },
     })).comparisonJob;
+    return job;
+  };
+
+  let comparisonJob = await getComparisonJob();
+  let isConnectionClosed = false;
+  args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
+  const loopDelayInMilliseconds = 5000;
+
+  while (comparisonJob.status !== "Error" && !isConnectionClosed) {
+    await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds)); // run loop every 5 seconds
+    if (VersionCompare.manager?.isComparing) {
+      return;
+    }
+    comparisonJob = await getComparisonJob();
     if (comparisonJob.status === "Completed") {
-      if (!args.getDialogOpen() && !VersionCompare.manager?.isComparing) {
-        toastComparisonJobComplete({
-          comparisonJob: { comparisonJob: comparisonJob },
-          comparisonJobClient: args.comparisonJobClient,
-          iModelConnection: args.iModelConnection,
-          targetVersion: args.targetVersion,
-          currentVersion: args.currentVersion,
-        });
-      }
+      conditionallyToastJobCompletion({ ...args, comparisonJob: { comparisonJob: comparisonJob } });
       return;
     }
   }
@@ -246,6 +261,23 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
     return;
   }
 };
+
+interface ConditionallyToastJobCompletionArgs extends RunStartComparisonV2Args {
+  comparisonJob: ComparisonJobCompleted;
+}
+
+const conditionallyToastJobCompletion = (args: ConditionallyToastJobCompletionArgs) => {
+  if (!args.getDialogOpen() && !VersionCompare.manager?.isComparing) {
+    toastComparisonJobComplete({
+      comparisonJob: args.comparisonJob,
+      comparisonJobClient: args.comparisonJobClient,
+      iModelConnection: args.iModelConnection,
+      targetVersion: args.targetVersion,
+      currentVersion: args.currentVersion,
+    });
+  }
+};
+
 
 type PostOrGetComparisonJobParams = {
   changedElementsClient: IComparisonJobClient;

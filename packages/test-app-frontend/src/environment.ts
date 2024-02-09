@@ -11,9 +11,9 @@ export function applyUrlPrefix(base: string, url = ""): string {
 }
 
 /**
- * Prepends URL hostname with urlPrefix.
- * dev will default to qa.
- * no url prefix will default to qa
+ * Prepends base with urlPrefix from env.
+ * dev- will default to qa-.
+ * no url prefix will default to qa.
  */
 export function applyAuthUrlPrefix(base: string): string {
   let deploymentRegion = urlPrefix;

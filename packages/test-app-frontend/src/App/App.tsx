@@ -8,7 +8,7 @@ import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
 import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 
-import { applyAuthUrlPrefix, applyUrlPrefix, clientId } from "../environment";
+import { applyAuthUrlPrefix, clientId } from "../environment";
 import { AppContext, appContext } from "./AppContext";
 import { AppHeader } from "./AppHeader";
 import {

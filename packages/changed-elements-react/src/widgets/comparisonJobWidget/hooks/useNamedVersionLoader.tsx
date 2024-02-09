@@ -245,9 +245,10 @@ const pollForInProgressJobs = async (args: PollForInProgressJobsArgs) => {
     const idEntryMap = new Map<string, Entry>();
     entries.forEach((entry) => idEntryMap.set(entry.version.id, entry));
     let updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
+    const loopDelayInMilliseconds = 5000;
     while (updatingEntries.length > 0 && !args.isDisposed()) {
       for (let entry of updatingEntries) {
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // run loop every 5 seconds in to not poll too often
+        await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
         entry = {
           version: entry.version,
