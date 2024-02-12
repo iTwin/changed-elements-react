@@ -251,7 +251,7 @@ const pollForComparisonJobTillComplete = async (args: RunStartComparisonV2Args) 
       return;
     }
     comparisonJob = await getComparisonJob();
-    if (comparisonJob.status === "Completed") {
+    if (comparisonJob.status === "Completed" && !isConnectionClosed) {
       conditionallyToastJobCompletion({ ...args, comparisonJob: { comparisonJob: comparisonJob } });
       return;
     }

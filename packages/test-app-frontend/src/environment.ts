@@ -12,12 +12,11 @@ export function applyUrlPrefix(base: string, url = ""): string {
 
 /**
  * Prepends base with urlPrefix from env.
- * dev- will default to qa-.
- * no url prefix will default to qa.
+ * dev- will default to qa-{base}
  */
 export function applyAuthUrlPrefix(base: string): string {
   let deploymentRegion = urlPrefix;
-  if ((!!urlPrefix) || urlPrefix === "dev") {
+  if (deploymentRegion === "dev-") {
     deploymentRegion = "qa-";
   }
   const normalizedUrl = new URL(base);
