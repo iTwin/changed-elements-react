@@ -8,7 +8,7 @@ import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
 import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 
-import { applyUrlPrefix, clientId } from "../environment";
+import { applyAuthUrlPrefix, clientId } from "../environment";
 import { AppContext, appContext } from "./AppContext";
 import { AppHeader } from "./AppHeader";
 import {
@@ -84,12 +84,12 @@ const AuthorizationProvider = clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx"
   // eslint-disable-next-line @typescript-eslint/ban-types
   ? (props: PropsWithChildren<{}>) => <>{props.children}</>
   : createAuthorizationProvider({
-    authority: applyUrlPrefix("https://ims.bentley.com"),
+    authority: applyAuthUrlPrefix("https://ims.bentley.com"),
     client_id: clientId,
     redirect_uri: "/auth/callback",
     silent_redirect_uri: "/auth/silent",
     post_logout_redirect_uri: "/",
-    scope: "users:read imodels:read imodelaccess:read changedelements:read itwins:read",
+    scope: "users:read imodels:read imodelaccess:read changedelements:read itwins:read changedelements:modify",
   });
 
 function SetupEnvHint(): ReactElement {

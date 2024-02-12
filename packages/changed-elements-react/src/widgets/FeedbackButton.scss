@@ -1,0 +1,20 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.changed-elems-feedback-btn {
+  margin: 0 auto 50px;
+  overflow: hidden;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .changed-elems-feedback-content-wrapper {
+    display: flex;
+  }
+  .changed-elems-feedback-svg {
+    fill: #ffffff;
+    margin-right: 5px;
+  }
+}

@@ -2,10 +2,10 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { HalLinks } from "./common.js";
+import { HalLinks } from "./common";
 
 export interface CallITwinApiParams {
-  method?: "GET" | "POST" | undefined;
+  method?: "GET" | "POST" | "DELETE";
   url: string;
   getAccessToken: () => Promise<string>;
   signal?: AbortSignal | undefined;
@@ -55,7 +55,7 @@ export async function* callPagedITwinApi(
   }
 }
 
-async function throwBadResponseCodeError(
+export async function throwBadResponseCodeError(
   response: Response,
   errorMessage: string,
 ): Promise<never> {

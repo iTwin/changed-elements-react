@@ -3,13 +3,14 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { createContext, PropsWithChildren, ReactElement, useContext, useMemo } from "react";
-
 import type { IModelsClient } from "./clients/iModelsClient.js";
 import type { SavedFiltersManager } from "./SavedFiltersManager.js";
+import { IComparisonJobClient } from "./clients/IComparisonJobClient.js";
 
 export interface VersionCompareContextProps {
   iModelsClient: IModelsClient;
   savedFilters?: SavedFiltersManager | undefined;
+  comparisonJobClient?: IComparisonJobClient;
 }
 
 /**
@@ -20,9 +21,10 @@ export function VersionCompareContext(props: PropsWithChildren<VersionCompareCon
   const value = useMemo(
     () => ({
       iModelsClient: props.iModelsClient,
+      comparisonJobClient: props.comparisonJobClient,
       savedFilters: props.savedFilters,
     }),
-    [props.iModelsClient, props.savedFilters],
+    [props.comparisonJobClient, props.iModelsClient, props.savedFilters],
   );
   return <versionCompareContext.Provider value={value}>{props.children}</versionCompareContext.Provider>;
 }
@@ -44,6 +46,7 @@ Example:
 
 export interface VersionCompareContextValue {
   iModelsClient: IModelsClient;
+  comparisonJobClient?: IComparisonJobClient;
   savedFilters: SavedFiltersManager | undefined;
 }
 

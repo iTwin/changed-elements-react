@@ -9,7 +9,6 @@ import {
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
 import { Component, ReactElement } from "react";
-
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ReportProperty } from "../api/ReportGenerator.js";
@@ -22,9 +21,11 @@ import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
-import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
-
 import "./ChangedElementsWidget.scss";
+import InfoButton from "./InformationButton.js";
+import { V2DialogProvider, VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
+import { FeedbackButton } from "./FeedbackButton.js";
+import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -38,6 +39,10 @@ export interface ChangedElementsWidgetProps {
 
   /** Used to maintain scroll positions in widget controls. */
   rootElementRef?: React.Ref<HTMLDivElement>;
+  /**Optional. If true will use v2 dialog and will run comparison jobs for faster comparisons @beta.*/
+  useV2Widget?: boolean;
+  /**Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
+  feedbackUrl?: string;
 }
 
 export interface ChangedElementsWidgetState {
@@ -51,6 +56,7 @@ export interface ChangedElementsWidgetState {
   description?: string;
   menuOpened: boolean;
   versionSelectDialogVisible: boolean;
+  informationDialogVisible: boolean;
   reportDialogVisible: boolean;
   reportProperties: ReportProperty[] | undefined;
 }
@@ -61,6 +67,8 @@ export interface ChangedElementsWidgetState {
  */
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
+
+  private readonly _widgetInfo = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareInfo");
 
   private _onComparisonStarting = (): void => {
     this.setState({
@@ -74,7 +82,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   private _onComparisonStopped = (): void => {
     this.setState({
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2") : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       loading: false,
       loaded: false,
     });
@@ -94,6 +102,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       targetIModel,
       elements,
       versionSelectDialogVisible: false,
+      informationDialogVisible: false,
       reportDialogVisible: false,
       reportProperties: undefined,
     });
@@ -133,8 +142,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2") : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       versionSelectDialogVisible: false,
+      informationDialogVisible: false,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
@@ -291,6 +301,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <SvgAdd />
         </IconButton>
         {
+          this.props.useV2Widget &&
+          <InfoButton title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
+        }
+        {
           this.state.loaded &&
           <IconButton
             size="small"
@@ -365,6 +379,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <WidgetComponent.Body data-testid="comparison-legend-widget-content">
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
+          <WidgetComponent.ToolBar>
+            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
+          </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
           this.state.reportDialogVisible &&
@@ -375,14 +392,20 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             initialProperties={this.state.reportProperties}
           />
         }
-        {
+        {this.props.useV2Widget ?
+          <V2DialogProvider>
+            {this.state.versionSelectDialogVisible &&
+              <VersionCompareSelectDialogV2
+                iModelConnection={this.props.iModelConnection}
+                onClose={this._handleVersionSelectDialogClose}
+              />}
+          </V2DialogProvider> :
           this.state.versionSelectDialogVisible &&
           <VersionCompareSelectDialog
             isOpen
             iModelConnection={this.props.iModelConnection}
             onClose={this._handleVersionSelectDialogClose}
-          />
-        }
+          />}
       </>
     );
   }
