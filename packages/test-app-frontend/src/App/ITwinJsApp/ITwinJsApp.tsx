@@ -8,7 +8,7 @@ import {
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ITwinIModelsClient, VersionCompare, VersionCompareContext
+  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
@@ -80,12 +80,24 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
   );
 
   const iModelsClient = useMemo(
-    () => new ITwinIModelsClient({
-      baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
-      getAccessToken: () => props.authorizationClient.getAccessToken(),
-      showHiddenNamedVersions: true,
-    }),
+    () => {
+      return new ITwinIModelsClient({
+        baseUrl: applyUrlPrefix("https://api.bentley.com/imodels"),
+        getAccessToken: () => props.authorizationClient.getAccessToken(),
+        showHiddenNamedVersions: true,
+      });
+    },
     [props.authorizationClient],
+  );
+
+  const comparisonJobClient = useMemo(
+    () => {
+      return new ComparisonJobClient({
+        baseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
+        getAccessToken: VersionCompare.getAccessToken,
+      });
+    },
+    [],
   );
 
   if (loadingState === "opening-imodel") {
@@ -102,7 +114,7 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   return (
     <PageLayout.Content>
-      <VersionCompareContext iModelsClient={iModelsClient} savedFilters={savedFilters}>
+      <VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient} savedFilters={savedFilters}>
         <UIFramework>
           <ConfigurableUiContent />
         </UIFramework>
@@ -265,8 +277,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
 
     return [{
       id: "ChangedElementsWidget",
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      content: <ChangedElementsWidget iModelConnection={UiFramework.getIModelConnection()!} />,
+      content: <ChangedElementsWidget useV2Widget feedbackUrl="https://example.com" iModelConnection={UiFramework.getIModelConnection()!} />,
     }];
   }
 }

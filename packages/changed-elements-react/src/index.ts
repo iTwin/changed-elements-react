@@ -20,6 +20,7 @@ export type {
   Changeset, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion,
 } from "./clients/iModelsClient.js";
 export { ITwinIModelsClient, type ITwinIModelsClientParams } from "./clients/iTwinIModelsClient.js";
+export { ComparisonJobClient, type ComparisonJobClientParams } from "./clients/ComparisonJobClient.js";
 export * from "./contentviews/PropertyComparisonTable.js";
 export * from "./widgets/ChangedElementsWidget.js";
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";

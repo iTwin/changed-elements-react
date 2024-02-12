@@ -3,6 +3,20 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+/**
+ * Prepends base with urlPrefix from env.
+ * dev- will default to qa-{base}
+ */
+export function applyAuthUrlPrefix(base: string): string {
+  let deploymentRegion = urlPrefix;
+  if (deploymentRegion === "dev-") {
+    deploymentRegion = "qa-";
+  }
+  const normalizedUrl = new URL(base);
+  normalizedUrl.hostname = deploymentRegion + normalizedUrl.hostname;
+  return normalizedUrl.toString();
+}
+
 /** Prepends URL hostname with urlPrefix. */
 export function applyUrlPrefix(base: string, url = ""): string {
   const normalizedUrl = new URL(url, base);

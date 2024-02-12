@@ -9,7 +9,6 @@ import {
   OutputMessagePriority
 } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-
 import type { NamedVersion } from "../clients/iModelsClient.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
@@ -294,6 +293,134 @@ export class VersionCompareManager {
         currentVersion,
         targetVersion,
         changesetChunks,
+      );
+
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
+      );
+
+      let wantedModelClasses = [
+        GeometricModel2dState.classFullName,
+        GeometricModel3dState.classFullName,
+      ];
+      if (this.options.wantedModelClasses) {
+        wantedModelClasses = this.options.wantedModelClasses;
+      }
+
+      await this.changedElementsManager.initialize(
+        this._currentIModel,
+        this._targetIModel,
+        changedElements,
+        this.wantAllModels ? undefined : wantedModelClasses,
+        false,
+        this.filterSpatial,
+        this.loadingProgressEvent,
+      );
+
+      const changedElementEntries = this.changedElementsManager.entryCache.getAll();
+
+      // We have parent Ids available if any entries contain undefined parent data
+      this._hasParentIds = changedElementEntries.some(
+        (entry) => entry.parent !== undefined && entry.parentClassId !== undefined,
+      );
+      // We have type of change available if any of the entries has a valid type of change value
+      this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
+      // We have property filtering available if any of the entries has a valid array of changed properties
+      this._hasPropertiesForFiltering = changedElementEntries.some(
+        (entry) => entry.properties !== undefined && entry.properties.size !== 0,
+      );
+
+      // Get the entries
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
+      );
+      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
+
+      // Reset the select tool to allow external iModels to be located
+      await IModelApp.toolAdmin.startDefaultTool();
+
+      // Enable visualization of version comparison
+      await this.enableVisualization(false);
+
+      // Raise event
+      this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
+      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+    } catch (ex) {
+      // Let user know comparison failed - TODO: Give better errors
+      const briefError = IModelApp.localization.getLocalizedString(
+        "VersionCompare:versionCompare.error_versionCompare",
+      );
+      const detailed = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_cantStart");
+      let errorMessage = "Unknown Error";
+      if (ex instanceof Error) {
+        errorMessage = ex.message;
+      } else if (typeof ex === "string") {
+        errorMessage = ex;
+      }
+
+      IModelApp.notifications.outputMessage(
+        new NotifyMessageDetails(OutputMessagePriority.Error, briefError, `${detailed}: ${errorMessage}`),
+      );
+      // Notify failure on starting comparison
+      this.versionCompareStartFailed.raiseEvent();
+      this._currentIModel = undefined;
+      this._targetIModel = undefined;
+
+      success = false;
+      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+    }
+
+    return success;
+  }
+
+  /**
+   * Starts comparison by opening a new iModelConnection and setting up the store.
+   * @param currentIModel Current IModelConnection to be used to compare against
+   * @param currentVersion Current Version of the iModel
+   * @param targetVersion Target Version of the iModel, an IModelConnection is opened to it
+   * @param changedElements Array of elements that have changed and need to be visualized
+   */
+  public async startComparisonV2(
+    currentIModel: IModelConnection,
+    currentVersion: NamedVersion,
+    targetVersion: NamedVersion,
+    changedElements: ChangedElements[],
+  ): Promise<boolean> {
+    this._currentIModel = currentIModel;
+
+    let success = true;
+    try {
+      if (!targetVersion.changesetId) {
+        throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
+      }
+
+      // Setup visualization handler
+      this._initializeVisualizationHandler();
+      // Raise event that comparison is starting
+      this.versionCompareStarting.raiseEvent();
+
+      if (!this._currentIModel.iModelId || !this._currentIModel.iTwinId) {
+        throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
+      }
+
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
+      );
+
+      // Open the target version IModel
+      const changesetId = targetVersion.changesetId;
+      this._targetIModel = await CheckpointConnection.openRemote(
+        this._currentIModel.iTwinId,
+        this._currentIModel.iModelId,
+        IModelVersion.asOfChangeSet(changesetId),
+      );
+
+      // Keep metadata around for UI uses and other queries
+      this.currentVersion = currentVersion;
+      this.targetVersion = targetVersion;
+
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
       );
 
       this.loadingProgressEvent.raiseEvent(
