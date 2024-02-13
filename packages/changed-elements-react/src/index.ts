@@ -25,3 +25,4 @@ export * from "./contentviews/PropertyComparisonTable.js";
 export * from "./widgets/ChangedElementsWidget.js";
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
+export * from "./widgets/comparisonJobWidget/components/VersionCompareSelectModal.js"
