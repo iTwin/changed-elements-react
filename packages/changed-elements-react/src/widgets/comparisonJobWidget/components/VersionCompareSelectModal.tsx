@@ -19,7 +19,7 @@ import "./styles/ComparisonJobWidget.scss";
 
 
 /** Options for VersionCompareSelectDialogV2. */
-export interface VersionCompareSelectDialogProps {
+export interface VersionCompareSelectDialogV2Props {
   /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
   /** onClose triggered when user clicks start comparison or closes dialog.*/
@@ -33,20 +33,20 @@ type V2Context = {
 };
 
 const V2DialogContext = React.createContext<V2Context>({} as V2Context);
-type V2DialogProviderProps = {
+export type V2DialogProviderProps = {
   children: React.ReactNode;
 };
 
 /** V2DialogProvider use comparison jobs for processing.
  * Used for tracking if the dialog is open or closed.
  * This is useful for managing toast messages associated with dialog
- * example:
+ * Example:
  *<V2DialogProvider>
- *   <VersionCompareSelectDialogV2
- *    isOpen
- *    iModelConnection={this.props.iModelConnection}
- *    onClose={this._handleVersionSelectDialogClose}
- *   />
+ *{(isOpenCondition) &&
+ * <VersionCompareSelectDialogV2
+ *   iModelConnection={this.props.iModelConnection}
+ *   onClose={this._handleVersionSelectDialogClose}
+ * />}
  *</V2DialogProvider>
 */
 export function V2DialogProvider({ children }: V2DialogProviderProps) {
@@ -72,6 +72,7 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
  *<VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}>
  * ...
  *</VersionCompareContext>
+ *------------------------------------------------------------------------------------------------
  * Should be used with provider. Example:
  *<V2DialogProvider>
  *{(isOpenCondition) &&
@@ -83,7 +84,7 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
  * provider should be supplied with new dialog based on condition in order to keep track of toast and polling information.
  * @throws Exception if context does not include iModelsClient and comparisonJobClient.
 */
-export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogProps) {
+export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2Props) {
   const { comparisonJobClient, iModelsClient } = useVersionCompare();
   if (!comparisonJobClient) {
     throw new Error("V2 Client Is Not Initialized In Given Context.");
