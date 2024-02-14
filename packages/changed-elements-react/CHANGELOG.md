@@ -20,6 +20,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.3.4](https://github.com/iTwin/changed-elements-react/tree/v0.3.4/packages/changed-elements-react) - 2023-12-15
 
 ### Patch changes
+* Use itwinui-react as direct dependency
+
+## [0.3.6](https://github.com/iTwin/changed-elements-react/tree/v0.3.6/packages/changed-elements-react) - 2024-02-13
+
+### Patch changes
+
+* Export V2 selector dialog.
+
+## [0.3.5](https://github.com/iTwin/changed-elements-react/tree/v0.3.5/packages/changed-elements-react) - 2024-02-13
+
+### Patch changes
+
+* Add functionality for using Changed Elements V2 for visualizing changes.
+* Changed Elements Widget now works with V2 when supplied with the new prop `useV2Widget`.
+
+## [0.3.4](https://github.com/iTwin/changed-elements-react/tree/v0.3.4/packages/changed-elements-react) - 2023-12-15
+
+### Patch changes
 
 * You can now check change tracking status by calling `VersionCompare.isChangeTrackingEnabled`.
 
