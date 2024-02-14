@@ -105,7 +105,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const _handleOk = async (): Promise<void> => {
-    if (comparisonJobClient && result?.result?.namedVersions && targetVersion && currentVersion) {
+    if (comparisonJobClient && result?.namedVersions && targetVersion && currentVersion) {
       void handleStartComparison({
         targetVersion: targetVersion,
         comparisonJobClient: comparisonJobClient,
@@ -196,11 +196,11 @@ type RunStartComparisonV2Args = {
 };
 
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
+  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   const { startedComparison } = await createOrRunManagerStartComparisonV2(args);
   if (startedComparison) {
     return;
   }
-  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   void pollForComparisonJobTillComplete(args);
 };
 
@@ -210,14 +210,19 @@ type PostOrRunComparisonJobResult = {
 
 const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
   const comparisonJob = await tryXTimes(async () => {
-    const job= (await postOrGetComparisonJob({
-      changedElementsClient: args.comparisonJobClient,
-      iTwinId: args.iModelConnection?.iTwinId as string,
-      iModelId: args.iModelConnection?.iModelId as string,
-      startChangesetId: args.targetVersion.changesetId as string,
-      endChangesetId: args.currentVersion.changesetId as string,
-    })).comparisonJob;
-    return job;
+    try {
+      const job = (await postOrGetComparisonJob({
+        changedElementsClient: args.comparisonJobClient,
+        iTwinId: args.iModelConnection?.iTwinId as string,
+        iModelId: args.iModelConnection?.iModelId as string,
+        startChangesetId: args.targetVersion.changesetId as string,
+        endChangesetId: args.currentVersion.changesetId as string,
+      })).comparisonJob;
+      return job;
+    } catch (error) {
+      toastComparisonJobError(args.currentVersion, args.targetVersion);
+      throw error;
+    }
   }, 3);
   if (comparisonJob.status === "Completed") {
     void runManagerStartComparisonV2({
