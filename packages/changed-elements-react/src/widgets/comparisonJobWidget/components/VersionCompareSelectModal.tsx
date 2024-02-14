@@ -16,6 +16,7 @@ import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
+import { tryXTimes } from "../../../utils/utils";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -208,24 +209,32 @@ type PostOrRunComparisonJobResult = {
 };
 
 const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
-  const { comparisonJob } = await postOrGetComparisonJob({
-    changedElementsClient: args.comparisonJobClient,
-    iTwinId: args.iModelConnection?.iTwinId as string,
-    iModelId: args.iModelConnection?.iModelId as string,
-    startChangesetId: args.targetVersion.changesetId as string,
-    endChangesetId: args.currentVersion.changesetId as string,
-  });
-  if (comparisonJob.status === "Completed") {
-    void runManagerStartComparisonV2({
-      comparisonJob: { comparisonJob: comparisonJob },
-      comparisonJobClient: args.comparisonJobClient,
-      iModelConnection: args.iModelConnection,
-      targetVersion: args.targetVersion,
-      currentVersion: args.currentVersion,
-    });
-    return { startedComparison: true };
+  try {
+    const comparisonJob = await tryXTimes(async () => {
+      const job = (await postOrGetComparisonJob({
+        changedElementsClient: args.comparisonJobClient,
+        iTwinId: args.iModelConnection?.iTwinId as string,
+        iModelId: args.iModelConnection?.iModelId as string,
+        startChangesetId: args.targetVersion.changesetId as string,
+        endChangesetId: args.currentVersion.changesetId as string,
+      })).comparisonJob;
+      return job;
+    }, 3);
+    if (comparisonJob.status === "Completed") {
+      void runManagerStartComparisonV2({
+        comparisonJob: { comparisonJob: comparisonJob },
+        comparisonJobClient: args.comparisonJobClient,
+        iModelConnection: args.iModelConnection,
+        targetVersion: args.targetVersion,
+        currentVersion: args.currentVersion,
+      });
+      return { startedComparison: true };
+    }
+    return { startedComparison: false };
+  } catch (error) {
+    toastComparisonJobError(args.currentVersion, args.targetVersion);
+    throw error;
   }
-  return { startedComparison: false };
 };
 
 const pollForComparisonJobTillComplete = async (args: RunStartComparisonV2Args) => {
