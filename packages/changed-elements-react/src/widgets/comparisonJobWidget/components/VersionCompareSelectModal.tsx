@@ -16,6 +16,7 @@ import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
+import { tryXTimes } from "../../../utils/utils";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -104,7 +105,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const _handleOk = async (): Promise<void> => {
-    if (comparisonJobClient && result?.namedVersions && targetVersion && currentVersion) {
+    if (comparisonJobClient && result?.result?.namedVersions && targetVersion && currentVersion) {
       void handleStartComparison({
         targetVersion: targetVersion,
         comparisonJobClient: comparisonJobClient,
@@ -208,13 +209,16 @@ type PostOrRunComparisonJobResult = {
 };
 
 const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
-  const { comparisonJob } = await postOrGetComparisonJob({
-    changedElementsClient: args.comparisonJobClient,
-    iTwinId: args.iModelConnection?.iTwinId as string,
-    iModelId: args.iModelConnection?.iModelId as string,
-    startChangesetId: args.targetVersion.changesetId as string,
-    endChangesetId: args.currentVersion.changesetId as string,
-  });
+  const comparisonJob = await tryXTimes(async () => {
+    const job= (await postOrGetComparisonJob({
+      changedElementsClient: args.comparisonJobClient,
+      iTwinId: args.iModelConnection?.iTwinId as string,
+      iModelId: args.iModelConnection?.iModelId as string,
+      startChangesetId: args.targetVersion.changesetId as string,
+      endChangesetId: args.currentVersion.changesetId as string,
+    })).comparisonJob;
+    return job;
+  }, 3);
   if (comparisonJob.status === "Completed") {
     void runManagerStartComparisonV2({
       comparisonJob: { comparisonJob: comparisonJob },

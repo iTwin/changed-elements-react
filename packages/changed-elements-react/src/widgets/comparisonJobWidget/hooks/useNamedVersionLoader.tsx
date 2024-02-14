@@ -71,8 +71,8 @@ export const useNamedVersionLoader = (
           iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse()),
         ]);
         const currentNamedVersion = getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, changesets, currentChangeSetIndex);
-        const sortedNamedVersions = sortNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions);
-        if (!sortedNamedVersions || sortedNamedVersions.length === 0) {
+        const sortedAndOffsetNamedVersions = sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions,changesets);
+        if (!sortedAndOffsetNamedVersions || sortedAndOffsetNamedVersions.length === 0) {
           setResultNoNamedVersions();
           return;
         }
@@ -87,7 +87,7 @@ export const useNamedVersionLoader = (
         const currentState: NamedVersionLoaderState = {
           result: {
             namedVersions: {
-              entries: sortedNamedVersions.map((namedVersion) => ({
+              entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
                 version: namedVersion,
                 state: VersionProcessedState.Verifying,
                 jobStatus: initialComparisonJobStatus,
@@ -167,7 +167,7 @@ const getCurrentFromChangeSet = (changeSets: Changeset[], currentChangeSetId: st
   return;
 };
 
-const sortNamedVersions = (namedVersions: NamedVersion[], currentNamedVersion: NamedVersion, onError: () => void) => {
+const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNamedVersion: NamedVersion, onError: () => void, changesets: Changeset[]) => {
   //if current index is 0 then no need to filter. All change sets are older than current.
   const namedVersionsOlderThanCurrentVersion = currentNamedVersion.changesetIndex !== 0 ? namedVersions.filter(version => version.changesetIndex <= currentNamedVersion.changesetIndex) :
     namedVersions;
@@ -175,7 +175,23 @@ const sortNamedVersions = (namedVersions: NamedVersion[], currentNamedVersion: N
     onError();
     return;
   }
-  return namedVersionsOlderThanCurrentVersion.reverse();
+  const reversedNamedVersions = namedVersionsOlderThanCurrentVersion.reverse()
+  if (reversedNamedVersions[0].changesetIndex === currentNamedVersion.changesetIndex) {
+    reversedNamedVersions.shift(); //remove current named version
+  }
+  const changeSetMap = new Map<number, Changeset>();
+  changesets.forEach((changeset: Changeset) => {
+    changeSetMap.set(changeset.index, changeset);
+  })
+  // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
+  // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
+  // this assuming latest is current
+  const offSetNameVersions = reversedNamedVersions.map((version) => {
+    version.changesetIndex = version.changesetIndex + 1;
+    version.changesetId = changeSetMap.get(version.changesetIndex)?.id ?? version.changesetId
+    return version;
+  })
+  return offSetNameVersions;
 };
 
 type ProcessChangesetsArgs = {
