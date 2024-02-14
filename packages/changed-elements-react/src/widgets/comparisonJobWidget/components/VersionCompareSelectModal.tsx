@@ -196,7 +196,6 @@ type RunStartComparisonV2Args = {
 };
 
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
-  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   const { startedComparison } = await createOrRunManagerStartComparisonV2(args);
   if (startedComparison) {
     return;
@@ -209,8 +208,8 @@ type PostOrRunComparisonJobResult = {
 };
 
 const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
-  const comparisonJob = await tryXTimes(async () => {
-    try {
+  try {
+    const comparisonJob = await tryXTimes(async () => {
       const job = (await postOrGetComparisonJob({
         changedElementsClient: args.comparisonJobClient,
         iTwinId: args.iModelConnection?.iTwinId as string,
@@ -219,22 +218,23 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
         endChangesetId: args.currentVersion.changesetId as string,
       })).comparisonJob;
       return job;
-    } catch (error) {
-      toastComparisonJobError(args.currentVersion, args.targetVersion);
-      throw error;
+    }, 3);
+    if (comparisonJob.status === "Completed") {
+      void runManagerStartComparisonV2({
+        comparisonJob: { comparisonJob: comparisonJob },
+        comparisonJobClient: args.comparisonJobClient,
+        iModelConnection: args.iModelConnection,
+        targetVersion: args.targetVersion,
+        currentVersion: args.currentVersion,
+      });
+      return { startedComparison: true };
     }
-  }, 3);
-  if (comparisonJob.status === "Completed") {
-    void runManagerStartComparisonV2({
-      comparisonJob: { comparisonJob: comparisonJob },
-      comparisonJobClient: args.comparisonJobClient,
-      iModelConnection: args.iModelConnection,
-      targetVersion: args.targetVersion,
-      currentVersion: args.currentVersion,
-    });
-    return { startedComparison: true };
+    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+    return { startedComparison: false };
+  } catch (error) {
+    toastComparisonJobError(args.currentVersion, args.targetVersion);
+    throw error;
   }
-  return { startedComparison: false };
 };
 
 const pollForComparisonJobTillComplete = async (args: RunStartComparisonV2Args) => {
