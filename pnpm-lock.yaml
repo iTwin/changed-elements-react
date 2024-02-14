@@ -44,6 +44,9 @@ importers:
       '@itwin/itwinui-icons-react':
         specifier: ^2.2.0
         version: 2.2.0(react-dom@17.0.0)(react@17.0.0)
+      '@itwin/itwinui-react':
+        specifier: ^2.11.11
+        version: 2.12.0(react-dom@17.0.0)(react@17.0.0)
       react-table:
         specifier: ^7.8.0
         version: 7.8.0(react@17.0.0)
@@ -75,9 +78,6 @@ importers:
       '@itwin/core-react':
         specifier: ^4.3.0
         version: 4.3.0(@itwin/appui-abstract@4.0.6)(@itwin/core-bentley@4.0.6)(react-dom@17.0.0)(react@17.0.0)
-      '@itwin/itwinui-react':
-        specifier: ^2.11.11
-        version: 2.12.0(react-dom@17.0.0)(react@17.0.0)
       '@itwin/presentation-common':
         specifier: ^4.0.6
         version: 4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6)(@itwin/core-quantity@4.0.6)(@itwin/ecschema-metadata@4.0.6)
