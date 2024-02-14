@@ -200,6 +200,7 @@ const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
   if (startedComparison) {
     return;
   }
+  toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
   void pollForComparisonJobTillComplete(args);
 };
 
@@ -229,7 +230,6 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       });
       return { startedComparison: true };
     }
-    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
     return { startedComparison: false };
   } catch (error) {
     toastComparisonJobError(args.currentVersion, args.targetVersion);

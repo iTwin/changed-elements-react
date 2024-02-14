@@ -56,7 +56,6 @@ export async function* skip<T>(iterable: AsyncIterable<T>, n: number): AsyncGene
   return result.value;
 }
 
-
 export async function tryXTimes<T>(func: () => Promise<T>, attempts: number, delayInMilliseconds: number = 5000): Promise<T> {
   let error: unknown = null;
   while (attempts > 0) {
