@@ -6,8 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## [0.3.8](https://github.com/iTwin/changed-elements-react/tree/v0.3.8/packages/changed-elements-react) - 2024-02-14
+
 ### Patch changes
-* Use itwinui-react as direct dependency
+
+* Fix start changeset inclusion when starting comparison jobs.
+
+## [0.3.7](https://github.com/iTwin/changed-elements-react/tree/v0.3.7/packages/changed-elements-react) - 2024-02-14
+
+### Patch changes
+
+* Use itwinui-react as direct dependency.
 
 ## [0.3.6](https://github.com/iTwin/changed-elements-react/tree/v0.3.6/packages/changed-elements-react) - 2024-02-13
 
