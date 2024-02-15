@@ -17,6 +17,7 @@ import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
 import { tryXTimes } from "../../../utils/utils";
+import { usePollForNamedVersionUpdates } from "../hooks/usePollForNamedVersionUpdates";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -31,6 +32,9 @@ type V2Context = {
   getDialogOpen: () => boolean;
   openDialog: () => void;
   closedDialog: () => void;
+  addRunningJob: (jobId: JobId, comparisonJob: ComparisonJob) => void;
+  removeRunningJob: (jobId: JobId) => void;
+  getRunningJobs: () => ComparisonJob[];
 };
 
 const V2DialogContext = React.createContext<V2Context>({} as V2Context);
@@ -51,6 +55,16 @@ export type V2DialogProviderProps = {
  *</V2DialogProvider>
 */
 export function V2DialogProvider({ children }: V2DialogProviderProps) {
+  const dialogRunningJobs = React.useRef<Map<JobId, ComparisonJob>>(new Map<JobId, ComparisonJob>()); //todo make into set of Job Id
+  const addRunningJob = (jobId: JobId, comparisonJob: ComparisonJob) => {
+    dialogRunningJobs.current.set(jobId, comparisonJob);
+  };
+  const removeRunningJob = (jobId: JobId) => {
+    dialogRunningJobs.current.delete(jobId);
+  };
+  const getRunningJobs = () => {
+    return Array.from(dialogRunningJobs.current.values());
+  };
   const dialogOpenRef = React.useRef(false);
   const openDialog = () => {
     dialogOpenRef.current = true;
@@ -62,12 +76,13 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
     return dialogOpenRef.current;
   };
   return (
-    <V2DialogContext.Provider value={{ openDialog, getDialogOpen: getDialogOpen, closedDialog }}>
+    <V2DialogContext.Provider value={{ openDialog, getDialogOpen: getDialogOpen, closedDialog, addRunningJob, removeRunningJob, getRunningJobs }}>
       {children}
     </V2DialogContext.Provider>
   );
 }
 
+export type JobId = string;
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
  * Requires context of:
  *<VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}>
@@ -93,10 +108,15 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   if (!iModelsClient) {
     throw new Error("V1 Client Is Not Initialized In Given Context.");
   }
-  const { openDialog, closedDialog, getDialogOpen } = React.useContext(V2DialogContext);
+  const { openDialog, closedDialog, getDialogOpen, addRunningJob, removeRunningJob, getRunningJobs } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
-  const result = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient);
+  const [result, setResult] = useState<NamedVersionLoaderResult>();
+  const updateResult = (updatedState: NamedVersionLoaderResult) => {
+    setResult(updatedState);
+  };
+  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult);
+  usePollForNamedVersionUpdates(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult, result, getRunningJobs);
   useEffect(() => {
     openDialog();
     return () => {
@@ -112,6 +132,8 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         result: result,
         iModelConnection: props.iModelConnection,
         getDialogOpen,
+        addRunningJob,
+        removeRunningJob,
       });
       props.onClose?.();
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
@@ -167,6 +189,8 @@ type HandleStartComparisonArgs = {
   result: NamedVersionLoaderResult;
   iModelConnection: IModelConnection;
   getDialogOpen: () => boolean;
+  addRunningJob: (jobId: JobId, comparison: ComparisonJob) => void;
+  removeRunningJob: (jobId: JobId) => void;
 };
 
 const handleStartComparison = async (args: HandleStartComparisonArgs) => {
@@ -181,6 +205,8 @@ const handleStartComparison = async (args: HandleStartComparisonArgs) => {
       iModelConnection: args.iModelConnection,
       currentVersion: currentVersion,
       getDialogOpen: args.getDialogOpen,
+      addRunningJob: args.addRunningJob,
+      removeRunningJob: args.removeRunningJob,
     }).catch((e) => {
       Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
     });
@@ -193,6 +219,8 @@ type RunStartComparisonV2Args = {
   iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
   getDialogOpen: () => boolean;
+  addRunningJob: (jobId: JobId, comparison: ComparisonJob) => void;
+  removeRunningJob: (jobId: JobId) => void;
 };
 
 const runStartComparisonV2 = async (args: RunStartComparisonV2Args) => {
@@ -239,40 +267,41 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
 
 const pollForComparisonJobTillComplete = async (args: RunStartComparisonV2Args) => {
   const getComparisonJob = async () => {
-    const job = (await args.comparisonJobClient.getComparisonJob({
+    return (args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iModelConnection?.iTwinId as string,
       iModelId: args.iModelConnection?.iModelId as string,
       jobId: `${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`,
       headers: {
         "Content-Type": "application/json",
       },
-    })).comparisonJob;
-    return job;
+    }));
   };
 
   let comparisonJob = await getComparisonJob();
+  args.addRunningJob(`${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`, comparisonJob);
   let isConnectionClosed = false;
   args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
   const loopDelayInMilliseconds = 5000;
 
-  while (comparisonJob.status !== "Error" && !isConnectionClosed) {
+  while (comparisonJob.comparisonJob.status !== "Error" && !isConnectionClosed) {
     await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds)); // run loop every 5 seconds
     if (VersionCompare.manager?.isComparing) {
       return;
     }
     comparisonJob = await getComparisonJob();
-    if (comparisonJob.status === "Completed" && !isConnectionClosed) {
-      conditionallyToastJobCompletion({ ...args, comparisonJob: { comparisonJob: comparisonJob } });
+    if (comparisonJob.comparisonJob.status === "Completed" && !isConnectionClosed) {
+      args.removeRunningJob(`${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`);
+      conditionallyToastJobCompletion({ ...args, comparisonJob: { comparisonJob: comparisonJob.comparisonJob } });
       return;
     }
   }
-  if (comparisonJob.status === "Error") {
+  if (comparisonJob.comparisonJob.status === "Error") {
     toastComparisonJobError(args.currentVersion, args.targetVersion);
     return;
   }
 };
 
-interface ConditionallyToastJobCompletionArgs extends RunStartComparisonV2Args {
+export interface ConditionallyToastJobCompletionArgs extends Omit<RunStartComparisonV2Args, "addCurrentlyRunningJobId"> {
   comparisonJob: ComparisonJobCompleted;
 }
 
