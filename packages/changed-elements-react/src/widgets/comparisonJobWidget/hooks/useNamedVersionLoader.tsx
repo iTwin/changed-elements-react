@@ -7,9 +7,10 @@ import { useEffect } from "react";
 import { JobStatus, JobProgress, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
-import { IComparisonJobClient, ComparisonJobStarted } from "../../../clients/IComparisonJobClient";
+import { IComparisonJobClient, ComparisonJobStarted, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
 import { VersionState } from "../models/VersionState";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
+import { JobId, toastComparisonJobComplete } from "../components/VersionCompareSelectModal";
 
 /**
  * Result type for versionLoader.
@@ -27,7 +28,7 @@ export const useNamedVersionLoader = (
   iModelConnection: IModelConnection,
   iModelsClient: IModelsClient,
   comparisonJobClient: IComparisonJobClient,
-  setNamedVersionResult: (state: NamedVersionLoaderResult) => void
+  setNamedVersionResult: (state: NamedVersionLoaderResult) => void,
 ) => {
 
   useEffect(
@@ -42,9 +43,6 @@ export const useNamedVersionLoader = (
       const currentChangeSetId = iModelConnection?.changeset.id;
       const currentChangeSetIndex = iModelConnection?.changeset.index;
       let disposed = false;
-      const isDisposed = () => {
-        return disposed;
-      };
       if (!iTwinId || !iModelId || !currentChangeSetId) {
         setResultNoNamedVersions();
         return;
@@ -57,7 +55,7 @@ export const useNamedVersionLoader = (
           iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse()),
         ]);
         const currentNamedVersion = getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, changesets, currentChangeSetIndex);
-        const sortedAndOffsetNamedVersions = sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions,changesets);
+        const sortedAndOffsetNamedVersions = sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions, changesets);
         if (!sortedAndOffsetNamedVersions || sortedAndOffsetNamedVersions.length === 0) {
           setResultNoNamedVersions();
           return;
@@ -71,20 +69,20 @@ export const useNamedVersionLoader = (
           maxProgress: 0,
         };
         const currentState: NamedVersionLoaderResult = {
-            namedVersions: {
-              entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
-                version: namedVersion,
-                state: VersionProcessedState.Verifying,
-                jobStatus: initialComparisonJobStatus,
-                jobProgress: initialJobProgress,
-              })),
-              currentVersion: {
-                version: currentNamedVersion,
-                state: VersionProcessedState.Processed,
-                jobStatus: initialComparisonJobStatus,
-                jobProgress: initialJobProgress,
-              },
+          namedVersions: {
+            entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
+              version: namedVersion,
+              state: VersionProcessedState.Verifying,
+              jobStatus: initialComparisonJobStatus,
+              jobProgress: initialJobProgress,
+            })),
+            currentVersion: {
+              version: currentNamedVersion,
+              state: VersionProcessedState.Processed,
+              jobStatus: initialComparisonJobStatus,
+              jobProgress: initialJobProgress,
             },
+          },
         };
         setNamedVersionResult(currentState);
         void processChangesetsAndUpdateResultState({
@@ -96,7 +94,6 @@ export const useNamedVersionLoader = (
           setResult: (result: NamedVersionLoaderResult) => {
             setNamedVersionResult(result);
           },
-          isDisposed: isDisposed,
         });
       })();
 
@@ -158,22 +155,22 @@ const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNa
     onError();
     return;
   }
-  const reversedNamedVersions = namedVersionsOlderThanCurrentVersion.reverse()
+  const reversedNamedVersions = namedVersionsOlderThanCurrentVersion.reverse();
   if (reversedNamedVersions[0].changesetIndex === currentNamedVersion.changesetIndex) {
     reversedNamedVersions.shift(); //remove current named version
   }
   const changeSetMap = new Map<number, Changeset>();
   changesets.forEach((changeset: Changeset) => {
     changeSetMap.set(changeset.index, changeset);
-  })
+  });
   // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
   // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
   // this assuming latest is current
   const offSetNameVersions = reversedNamedVersions.map((version) => {
     version.changesetIndex = version.changesetIndex + 1;
-    version.changesetId = changeSetMap.get(version.changesetIndex)?.id ?? version.changesetId
+    version.changesetId = changeSetMap.get(version.changesetIndex)?.id ?? version.changesetId;
     return version;
-  })
+  });
   return offSetNameVersions;
 };
 
@@ -184,12 +181,14 @@ type ProcessChangesetsArgs = {
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
   setResult: (result: NamedVersionLoaderResult) => void;
-  isDisposed: () => boolean;
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
+    //await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
+    //await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+     //})).catch(() => { return; });
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     return {
@@ -203,15 +202,14 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
     namedVersions: { currentVersion: args.namedVersionLoaderState.namedVersions.currentVersion, entries: newEntries },
   };
   args.setResult(args.namedVersionLoaderState);
-  // void pollForInProgressJobs({
-  //   iModelConnection: args.iModelConnection,
-  //   iTwinId: args.iTwinId,
-  //   iModelId: args.iModelId,
-  //   namedVersionLoaderState: args.namedVersionLoaderState,
-  //   comparisonJobClient: args.comparisonJobClient,
-  //   setResult: args.setResult,
-  //   isDisposed: args.isDisposed,
-  // });
+};
+
+const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<void> => {
+  await comparisonJobClient.deleteComparisonJob({
+    iTwinId: iTwinId,
+    iModelId: iModelId,
+    jobId: `${entry.version.changesetId}-${currentChangesetId}`,
+  });
 };
 
 const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<JobStatusAndJobProgress> => {
@@ -278,49 +276,3 @@ const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobCli
     };
   }
 };
-
-// type PollForInProgressJobsArgs = {
-//   iTwinId: string;
-//   iModelId: string;
-//   namedVersionLoaderState: NamedVersionLoaderState;
-//   comparisonJobClient: IComparisonJobClient;
-//   iModelConnection: IModelConnection;
-//   setResult: (result: NamedVersionLoaderResult) => void;
-//   isDisposed: () => boolean;
-// };
-
-// const pollForInProgressJobs = async (args: PollForInProgressJobsArgs) => {
-//   if (args.isDisposed())
-//     return;
-//   const currentVersionId = args.namedVersionLoaderState.result.namedVersions.currentVersion.version.changesetId ??
-//     args.iModelConnection?.changeset.id;
-//   let entries = args.namedVersionLoaderState.result.namedVersions.entries.slice();
-//   const areJobsInProgress = (entries: Entry[]) => {
-//     return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined;
-//   };
-//   if (areJobsInProgress(entries)) {
-//     const idEntryMap = new Map<string, Entry>();
-//     entries.forEach((entry) => idEntryMap.set(entry.version.id, entry));
-//     let updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
-//     const loopDelayInMilliseconds = 5000;
-//     while (updatingEntries.length > 0 && !args.isDisposed()) {
-//       for (let entry of updatingEntries) {
-//         await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
-//         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
-//         entry = {
-//           version: entry.version,
-//           state: VersionProcessedState.Processed,
-//           jobStatus: jobStatusAndJobProgress.jobStatus,
-//           jobProgress: jobStatusAndJobProgress.jobProgress,
-//         };
-//         idEntryMap.set(entry.version.id, entry);
-//       }
-//       entries = [...idEntryMap.values()];
-//       updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
-//       args.namedVersionLoaderState.result = {
-//         namedVersions: { currentVersion: args.namedVersionLoaderState.result.namedVersions.currentVersion, entries: entries },
-//       };
-//       args.setResult(args.namedVersionLoaderState.result);
-//     }
-//   }
-// };
