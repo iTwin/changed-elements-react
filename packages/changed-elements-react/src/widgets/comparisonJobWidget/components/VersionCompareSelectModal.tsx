@@ -80,6 +80,7 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
   const dialogOpenRef = React.useRef(false);
   const openDialog = () => {
     dialogOpenRef.current = true;
+    //maybe move polling here and use a named version cache ?
   };
   const closedDialog = () => {
     dialogOpenRef.current = false;
