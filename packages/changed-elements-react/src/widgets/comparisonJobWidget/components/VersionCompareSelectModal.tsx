@@ -4,13 +4,11 @@
 *--------------------------------------------------------------------------------------------*/
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
 import { useEffect, useState } from "react";
-import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
-import { Logger } from "@itwin/core-bentley";
-import { toaster } from "@itwin/itwinui-react";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted, ComparisonJobStarted } from "../../../clients/IComparisonJobClient";
+import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { NamedVersion } from "../../../clients/iModelsClient";
@@ -20,6 +18,8 @@ import { tryXTimes } from "../../../utils/utils";
 import { VersionState } from "../models/VersionState";
 import { JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
+import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionComapreToasts";
+import { getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -300,14 +300,16 @@ type PollForInProgressJobsArgs = {
 
 export const pollForInProgressJobs: (args: PollForInProgressJobsArgs) => Promise<void> = async (args: PollForInProgressJobsArgs) => {
   void pollUntilCurrentRunningJobsCompleteAndToast(args);
-  if (args.namedVersionLoaderState && !args.getIsDisposed())
+  if (args.namedVersionLoaderState)
     void pollUpdateCurrentEntriesForModal(args);
 };
 
 const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgressJobsArgs) => {
   let isConnectionClosed = false;
   args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
+  const loopDelayInMilliseconds = 5000;
   while (!args.getDialogOpen() && args.getRunningJobs().length > 0 && !isConnectionClosed) {
+    await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
     for (const pendingJob of args.getRunningJobs()) {
       const completedJob = await args.comparisonJobClient.getComparisonJob({
         iTwinId: args.iTwinId,
@@ -317,16 +319,17 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
       if (completedJob.comparisonJob.status === "Error") {
         args.removeRunningJob(pendingJob.comparisonJob.comparisonJob.jobId);
       }
-
-      if (completedJob.comparisonJob.status === "Completed" && !VersionCompare.manager?.isComparing) {
-        toastComparisonJobComplete({
-          comparisonJob: completedJob as ComparisonJobCompleted,
-          comparisonJobClient: args.comparisonJobClient,
-          iModelConnection: args.iModelConnection,
-          targetVersion: pendingJob.targetNamedVersion,
-          currentVersion: pendingJob.currentNamedVersion,
-        });
+      if (completedJob.comparisonJob.status === "Completed") {
         args.removeRunningJob(pendingJob.comparisonJob.comparisonJob.jobId);
+        if (!VersionCompare.manager?.isComparing) {
+          toastComparisonJobComplete({
+            comparisonJob: completedJob as ComparisonJobCompleted,
+            comparisonJobClient: args.comparisonJobClient,
+            iModelConnection: args.iModelConnection,
+            targetVersion: pendingJob.targetNamedVersion,
+            currentVersion: pendingJob.currentNamedVersion,
+          });
+        }
       }
     }
   }
@@ -354,7 +357,8 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
       return currentRunningJobsMap.has(jobId);
     });
     const loopDelayInMilliseconds = 5000;
-    while (!args.getIsDisposed()) {
+    //todo maybe update named version cache with progress instead of state because we loose the components state on each reopen ?
+    while (args.getDialogOpen()) {
       for (let entry of updatingEntries) {
         await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
@@ -376,74 +380,6 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
       };
       args.setResult(args.namedVersionLoaderState);
     }
-  }
-};
-
-const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<JobStatusAndJobProgress> => {
-  try {
-    const res = await comparisonJobClient.getComparisonJob({
-      iTwinId: iTwinId,
-      iModelId: iModelId,
-      jobId: `${entry.version.changesetId}-${currentChangesetId}`,
-    });
-    if (res) {
-      switch (res.comparisonJob.status) {
-        case "Completed": {
-          return {
-            jobStatus: "Available",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-        }
-        case "Queued": {
-          return {
-            jobStatus: "Queued",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-        }
-        case "Started": {
-          const progressingJob = res as ComparisonJobStarted;
-          return {
-            jobStatus: "Processing",
-            jobProgress: {
-              // todo job is still processing but may be max out on progress so should show still progressing for current job progress. This is most likely an API error and will need to
-              // be fix
-              currentProgress: progressingJob.comparisonJob.currentProgress === progressingJob.comparisonJob.maxProgress
-                ? progressingJob.comparisonJob.maxProgress - 1 : progressingJob.comparisonJob.currentProgress,
-              maxProgress: progressingJob.comparisonJob.maxProgress,
-            },
-          };
-        }
-        case "Error":
-          return {
-            jobStatus: "Error",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-      }
-    }
-    return {
-      jobStatus: "Unknown",
-      jobProgress: {
-        currentProgress: 0,
-        maxProgress: 0,
-      },
-    };
-  } catch (_) {
-    return {
-      jobStatus: "Not Processed",
-      jobProgress: {
-        currentProgress: 0,
-        maxProgress: 0,
-      },
-    };
   }
 };
 
@@ -486,84 +422,3 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
   }
   return result;
 }
-
-type ManagerStartComparisonV2Args = {
-  comparisonJob: ComparisonJobCompleted;
-  comparisonJobClient: IComparisonJobClient;
-  iModelConnection: IModelConnection;
-  targetVersion: NamedVersion;
-  currentVersion: NamedVersion;
-};
-
-const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
-  if (VersionCompare.manager?.isComparing) {
-    return;
-  }
-  toastComparisonVisualizationStarting();
-  const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
-  VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {
-    Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-  });
-};
-
-const toastComparisonJobProcessing = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
-  IModelApp.notifications.outputMessage(
-    new NotifyMessageDetails(
-      OutputMessagePriority.Info,
-      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
-      `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}
- <${currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${targetVersion.displayName}>
- ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobProcessing")}`,
-      OutputMessageType.Toast,
-    ),
-  );
-};
-
-const toastComparisonJobError = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
-  IModelApp.notifications.outputMessage(
-    new NotifyMessageDetails(
-      OutputMessagePriority.Error,
-      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
-      `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobError")}
- ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}
- <${currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${targetVersion.displayName}>`,
-      OutputMessageType.Toast,
-    ),
-  );
-};
-
-export const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) => {
-  const title = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.viewTheReport");
-  toaster.setSettings({
-    placement: "bottom",
-  });
-  toaster.positive(
-    `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}<${args.currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${args.targetVersion.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobComplete")}`, {
-    hasCloseButton: true,
-    link: {
-      title: title,
-      onClick: () => {
-        toaster.closeAll();
-        void runManagerStartComparisonV2({
-          comparisonJob: args.comparisonJob,
-          comparisonJobClient: args.comparisonJobClient,
-          iModelConnection: args.iModelConnection,
-          targetVersion: args.targetVersion,
-          currentVersion: args.currentVersion,
-        });
-      },
-    },
-    type: "persisting",
-  });
-};
-
-const toastComparisonVisualizationStarting = () => {
-  IModelApp.notifications.outputMessage(
-    new NotifyMessageDetails(
-      OutputMessagePriority.Info,
-      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle"),
-      IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionComparisonStarting"),
-      OutputMessageType.Toast,
-    ),
-  );
-};

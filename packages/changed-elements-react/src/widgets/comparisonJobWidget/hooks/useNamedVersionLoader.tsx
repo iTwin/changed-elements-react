@@ -7,10 +7,10 @@ import { useEffect } from "react";
 import { JobStatus, JobProgress, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
-import { IComparisonJobClient, ComparisonJobStarted, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
+import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { VersionState } from "../models/VersionState";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { JobId, toastComparisonJobComplete } from "../components/VersionCompareSelectModal";
+import { getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
 
 /**
  * Result type for versionLoader.
@@ -186,9 +186,9 @@ type ProcessChangesetsArgs = {
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
-    //await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
-    //await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
-     //})).catch(() => { return; });
+    //  await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
+     // await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+     // })).catch(() => { return; });
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     return {
@@ -210,69 +210,4 @@ const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: Versi
     iModelId: iModelId,
     jobId: `${entry.version.changesetId}-${currentChangesetId}`,
   });
-};
-
-const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<JobStatusAndJobProgress> => {
-  try {
-    const res = await comparisonJobClient.getComparisonJob({
-      iTwinId: iTwinId,
-      iModelId: iModelId,
-      jobId: `${entry.version.changesetId}-${currentChangesetId}`,
-    });
-    if (res) {
-      switch (res.comparisonJob.status) {
-        case "Completed": {
-          return {
-            jobStatus: "Available",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-        }
-        case "Queued": {
-          return {
-            jobStatus: "Queued",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-        }
-        case "Started": {
-          const progressingJob = res as ComparisonJobStarted;
-          return {
-            jobStatus: "Processing",
-            jobProgress: {
-              currentProgress: progressingJob.comparisonJob.currentProgress,
-              maxProgress: progressingJob.comparisonJob.maxProgress,
-            },
-          };
-        }
-        case "Error":
-          return {
-            jobStatus: "Error",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-      }
-    }
-    return {
-      jobStatus: "Unknown",
-      jobProgress: {
-        currentProgress: 0,
-        maxProgress: 0,
-      },
-    };
-  } catch (_) {
-    return {
-      jobStatus: "Not Processed",
-      jobProgress: {
-        currentProgress: 0,
-        maxProgress: 0,
-      },
-    };
-  }
 };
