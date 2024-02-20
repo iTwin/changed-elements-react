@@ -32,7 +32,7 @@ export interface DeleteComparisonJobParams extends GetComparisonJobParams { }
 export type ComparisonJob = ComparisonJobCompleted | ComparisonJobStarted | ComparisonJobQueued | ComparisonJobFailed;
 
 export interface ComparisonJobCompleted {
-  comparisonJob: { //todo rename this in all of these they are confusing comparisonJob.comparisonJob.id makes no scenes
+  comparisonJob: {
     status: "Completed";
     jobId: string;
     iTwinId: string;
