@@ -8,7 +8,6 @@ import { JobStatus, JobProgress, JobStatusAndJobProgress } from "../models/Compa
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { VersionState } from "../models/VersionState";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
 import { JobAndNamedVersions } from "../components/VersionCompareSelectModal";
@@ -24,6 +23,7 @@ export type NamedVersionLoaderResult = {
 /**
  * Loads name versions and their job status compared to current version iModel is targeting.
  * Returns a result object with current version and namedVersion with there job status sorted from newest to oldest.
+ * This is run during the initial load of the widget.
  */
 export const useNamedVersionLoader = (
   iModelConnection: IModelConnection,
@@ -188,16 +188,13 @@ type ProcessChangesetsArgs = {
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
-  // wait for all pending jobs to be posted before continuing.
+  // wait for all pending jobs to be posted before continuing. Thi will prevent job posting running over each other.
   const loopDelayInMilliseconds = 1000;
   while (args.getPendingJobs().length > 0) { // wait for all jobs to be posted
     await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
   }
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
-      //  await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
-      //  await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
-      //  })).catch(() => { return; });
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     return {
@@ -211,12 +208,4 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
     namedVersions: { currentVersion: args.namedVersionLoaderState.namedVersions.currentVersion, entries: newEntries },
   };
   args.setResult(args.namedVersionLoaderState);
-};
-
-const deleteJob = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<void> => {
-  await comparisonJobClient.deleteComparisonJob({
-    iTwinId: iTwinId,
-    iModelId: iModelId,
-    jobId: `${entry.version.changesetId}-${currentChangesetId}`,
-  });
 };
