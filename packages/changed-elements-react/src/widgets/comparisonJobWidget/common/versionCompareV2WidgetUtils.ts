@@ -63,9 +63,7 @@ export const getJobStatusAndJobProgress = async (comparisonJobClient: ICompariso
           return {
             jobStatus: "Processing",
             jobProgress: {
-              // todo job is still processing but may be max out on progress so should show still progressing for current job progress. This is most likely an API error and will need to be fixed
-              currentProgress: progressingJob.comparisonJob.currentProgress === progressingJob.comparisonJob.maxProgress
-                ? progressingJob.comparisonJob.maxProgress - 1 : progressingJob.comparisonJob.currentProgress,
+              currentProgress: progressingJob.comparisonJob.currentProgress,
               maxProgress: progressingJob.comparisonJob.maxProgress,
             },
           };

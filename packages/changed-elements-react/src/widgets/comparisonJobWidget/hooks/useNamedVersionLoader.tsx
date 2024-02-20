@@ -4,13 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useEffect } from "react";
-import { JobStatus, JobProgress, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
+import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions, JobId } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
-import { JobAndNamedVersions } from "../components/VersionCompareSelectModal";
 
 /**
  * Result type for versionLoader.
@@ -188,15 +187,26 @@ type ProcessChangesetsArgs = {
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
-  // wait for all pending jobs to be posted before continuing. Thi will prevent job posting running over each other.
-  const loopDelayInMilliseconds = 1000;
-  while (args.getPendingJobs().length > 0) { // wait for all jobs to be posted
-    await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
-  }
+  const pendingJobsMap = new Map<JobId, JobAndNamedVersions>();
+  args.getPendingJobs().forEach((job) => {
+    pendingJobsMap.set(`${job.targetNamedVersion.changesetId}-${job.currentNamedVersion.changesetId}`, job);
+  });
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+    if (pendingJobsMap.has(`${entry.version.changesetId}-${currentVersionId}`)) {
+      const jobStatus:JobStatus="Processing"
+      return {
+        version: entry.version,
+        state: VersionProcessedState.Processed,
+        jobStatus: jobStatus,
+        jobProgress: {
+          currentProgress: 0,
+          maxProgress: 1,
+        },
+      };
+    }
     return {
       version: entry.version,
       state: VersionProcessedState.Processed,

@@ -16,7 +16,7 @@ import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
 import { tryXTimes } from "../../../utils/utils";
 import { VersionState } from "../models/VersionState";
-import { JobStatusAndJobProgress } from "../models/ComparisonJobModels";
+import { JobAndNamedVersions, JobId, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionComapreToasts";
 import { getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
@@ -29,12 +29,6 @@ export interface VersionCompareSelectDialogV2Props {
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
 }
-
-export type JobAndNamedVersions = {
-  comparisonJob?: ComparisonJob;
-  targetNamedVersion: NamedVersion;
-  currentNamedVersion: NamedVersion;
-};
 
 type V2Context = {
   getDialogOpen: () => boolean;
@@ -116,7 +110,6 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
   );
 }
 
-export type JobId = string;
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
  * Requires context of:
  *<VersionCompareContext iModelsClient={iModelsClient} comparisonJobClient={comparisonJobClient}>
@@ -150,7 +143,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   const updateResult = (updatedState: NamedVersionLoaderResult) => {
     setResult(updatedState);
   };
-  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult,getPendingJobs);
+  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult, getPendingJobs);
   useEffect(() => {
     let isDisposed = false;
     const getIsDisposed = () => {
@@ -189,6 +182,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         currentVersion: currentVersion,
         addPendingJob,
         removePendingJob,
+        getDialogOpen,
       });
       if (startResult.comparisonJob) {
         addRunningJob(`${targetVersion.changesetId}-${currentVersion.changesetId}`, {
@@ -276,6 +270,7 @@ type RunStartComparisonV2Args = {
   currentVersion: NamedVersion;
   removePendingJob: (jobId: JobId) => void;
   addPendingJob: (jobId: JobId, comparisonJob: JobAndNamedVersions) => void;
+  getDialogOpen: () => boolean;
 };
 
 type PostOrRunComparisonJobResult = {
@@ -324,7 +319,9 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       });
       return { startedComparison: true };
     }
-    toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+    if (!args.getDialogOpen()) {
+      toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
+    }
     return { startedComparison: false, comparisonJob: comparisonJob };
   } catch (error) {
     args.removePendingJob(`${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`);
@@ -349,7 +346,7 @@ type PollForInProgressJobsArgs = {
 
 export const pollForInProgressJobs: (args: PollForInProgressJobsArgs) => Promise<void> = async (args: PollForInProgressJobsArgs) => {
   void pollUntilCurrentRunningJobsCompleteAndToast(args);
-  if (args.namedVersionLoaderState)
+  if (args.namedVersionLoaderState && args.namedVersionLoaderState.namedVersions.entries.length > 0 && args.getDialogOpen() && !args.getIsDisposed())
     void pollUpdateCurrentEntriesForModal(args);
 };
 
@@ -357,29 +354,62 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
   let isConnectionClosed = false;
   args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
   const loopDelayInMilliseconds = 5000;
-  while (!args.getDialogOpen() && args.getRunningJobs().length > 0 && !isConnectionClosed) {
+  while (shouldProcessRunningJobs({ getDialogOpen: args.getDialogOpen, getRunningJobs: args.getRunningJobs, isConnectionClosed })) {
     await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
-    for (const runningJobs of args.getRunningJobs()) {
+    for (const runningJob of args.getRunningJobs()) {
       const completedJob = await args.comparisonJobClient.getComparisonJob({
         iTwinId: args.iTwinId,
         iModelId: args.iModelId,
-        jobId: runningJobs?.comparisonJob?.comparisonJob.jobId as string,
+        jobId: runningJob?.comparisonJob?.comparisonJob.jobId as string,
       });
       if (completedJob.comparisonJob.status === "Error") {
-        args.removeRunningJob(runningJobs?.comparisonJob?.comparisonJob.jobId as string);
+        args.removeRunningJob(runningJob?.comparisonJob?.comparisonJob.jobId as string);
       }
-      if (completedJob.comparisonJob.status === "Completed") {
-        args.removeRunningJob(runningJobs?.comparisonJob?.comparisonJob.jobId as string);
-        if (!VersionCompare.manager?.isComparing) {
-          toastComparisonJobComplete({
-            comparisonJob: completedJob as ComparisonJobCompleted,
-            comparisonJobClient: args.comparisonJobClient,
-            iModelConnection: args.iModelConnection,
-            targetVersion: runningJobs.targetNamedVersion,
-            currentVersion: runningJobs.currentNamedVersion,
-          });
-        }
-      }
+      conditionallyToastCompletion({
+        isConnectionClosed: isConnectionClosed,
+        getRunningJobs: args.getRunningJobs,
+        getDialogOpen: args.getDialogOpen,
+        runningJob: runningJob,
+        currentJobRsp: completedJob,
+        removeRunningJob: args.removeRunningJob,
+        comparisonJobClient: args.comparisonJobClient,
+        iModelConnection: args.iModelConnection,
+      });
+    }
+  }
+};
+
+type ShouldProcessRunningJobArgs = {
+  isConnectionClosed: boolean;
+  getRunningJobs: () => JobAndNamedVersions[];
+  getDialogOpen: () => boolean;
+};
+
+const shouldProcessRunningJobs = (args: ShouldProcessRunningJobArgs) => {
+  return !args.getDialogOpen() && args.getRunningJobs().length > 0 && !args.isConnectionClosed;
+};
+
+type ConditionallyToastCompletionArgs = {
+  isConnectionClosed: boolean;
+  getRunningJobs: () => JobAndNamedVersions[];
+  getDialogOpen: () => boolean;
+  runningJob: JobAndNamedVersions;
+  currentJobRsp: ComparisonJob;
+  removeRunningJob: (jobId: JobId) => void;
+  comparisonJobClient: IComparisonJobClient;
+  iModelConnection: IModelConnection;
+};
+const conditionallyToastCompletion = (args: ConditionallyToastCompletionArgs) => {
+  if (args.currentJobRsp.comparisonJob.status === "Completed") {
+    args.removeRunningJob(args.runningJob?.comparisonJob?.comparisonJob.jobId as string);
+    if (!VersionCompare.manager?.isComparing && !args.getDialogOpen()) {
+      toastComparisonJobComplete({
+        comparisonJob: args.currentJobRsp as ComparisonJobCompleted,
+        comparisonJobClient: args.comparisonJobClient,
+        iModelConnection: args.iModelConnection,
+        targetVersion: args.runningJob.targetNamedVersion,
+        currentVersion: args.runningJob.currentNamedVersion,
+      });
     }
   }
 };
@@ -387,26 +417,16 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
 const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs) => {
   const currentVersionId = args.iModelConnection?.changeset.id;
   let entries = args.namedVersionLoaderState!.namedVersions.entries.slice();
-  if (entries.length === 0)
-    return;
-  const areJobsInProgress = (entries: VersionState[]) => {
-    return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined || args.getRunningJobs.length > 0;
-  };
   const currentRunningJobsMap = new Map<JobId, JobAndNamedVersions>();
   args.getRunningJobs().forEach((job) => {
     currentRunningJobsMap.set(job.comparisonJob?.comparisonJob.jobId as string, job);
   });
-  if (areJobsInProgress(entries)) {
+  if (areJobsInProgress(entries,args.getRunningJobs)) {
     const idEntryMap = new Map<string, VersionState>();
     entries.forEach((entry) => idEntryMap.set(entry.version.id, entry));
-    let updatingEntries = entries.filter((entry) => {
-      if (entry.jobStatus === "Processing" || entry.jobStatus === "Queued")
-        return true;
-      const jobId = `${entry.version.changesetId}-${currentVersionId}`;
-      return currentRunningJobsMap.has(jobId);
-    });
+    let updatingEntries = getUpdatingEntries(entries, currentVersionId, currentRunningJobsMap);
     const loopDelayInMilliseconds = 5000;
-    while (args.getDialogOpen() && !args.getIsDisposed()) {
+    while (isDialogOpenAndNotDisposed(args.getDialogOpen,args.getIsDisposed)) {
       for (let entry of updatingEntries) {
         await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
@@ -422,13 +442,31 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
         }
       }
       entries = [...idEntryMap.values()];
-      updatingEntries = entries.filter((entry) => entry.jobStatus === "Processing" || entry.jobStatus === "Queued");
+      updatingEntries = getUpdatingEntries(entries, currentVersionId, currentRunningJobsMap);
       args.namedVersionLoaderState = {
         namedVersions: { currentVersion: args.namedVersionLoaderState!.namedVersions.currentVersion, entries: entries },
       };
+      if (isDialogOpenAndNotDisposed(args.getDialogOpen, args.getIsDisposed))
       args.setResult(args.namedVersionLoaderState);
     }
   }
+};
+
+const isDialogOpenAndNotDisposed = (getDialogOpen: () => boolean, getIsDisposed: () => boolean) => {
+  return getDialogOpen() && !getIsDisposed();
+}
+
+const areJobsInProgress = (entries: VersionState[], getRunningJobs: () => JobAndNamedVersions[]) => {
+  return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined || getRunningJobs().length > 0;
+};
+
+const getUpdatingEntries = (entries: VersionState[], currentVersionId: string, currentRunningJobsMap: Map<JobId, JobAndNamedVersions>) => {
+  return entries.filter((entry) => {
+    if (entry.jobStatus === "Processing" || entry.jobStatus === "Queued")
+      return true;
+    const jobId = `${entry.version.changesetId}-${currentVersionId}`;
+    return currentRunningJobsMap.has(jobId);
+  });
 };
 
 type PostOrGetComparisonJobParams = {
