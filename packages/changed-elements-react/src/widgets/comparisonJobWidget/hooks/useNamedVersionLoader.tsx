@@ -11,6 +11,7 @@ import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { VersionState } from "../models/VersionState";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
+import { JobAndNamedVersions } from "../components/VersionCompareSelectModal";
 
 /**
  * Result type for versionLoader.
@@ -29,6 +30,7 @@ export const useNamedVersionLoader = (
   iModelsClient: IModelsClient,
   comparisonJobClient: IComparisonJobClient,
   setNamedVersionResult: (state: NamedVersionLoaderResult) => void,
+  getPendingJobs: () => JobAndNamedVersions[],
 ) => {
 
   useEffect(
@@ -94,6 +96,7 @@ export const useNamedVersionLoader = (
           setResult: (result: NamedVersionLoaderResult) => {
             setNamedVersionResult(result);
           },
+          getPendingJobs,
         });
       })();
 
@@ -181,14 +184,20 @@ type ProcessChangesetsArgs = {
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
   setResult: (result: NamedVersionLoaderResult) => void;
+  getPendingJobs: () => JobAndNamedVersions[],
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
+  // wait for all pending jobs to be posted before continuing.
+  const loopDelayInMilliseconds = 1000;
+  while (args.getPendingJobs().length > 0) { // wait for all jobs to be posted
+    await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
+  }
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
-    //  await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
-     // await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
-     // })).catch(() => { return; });
+      //  await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
+      //  await deleteJob(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+      //  })).catch(() => { return; });
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     return {
