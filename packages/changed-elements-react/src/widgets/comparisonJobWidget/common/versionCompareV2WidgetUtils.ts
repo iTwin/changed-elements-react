@@ -30,7 +30,6 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   });
 };
 
-
 export const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<JobStatusAndJobProgress> => {
   try {
     const res = await comparisonJobClient.getComparisonJob({

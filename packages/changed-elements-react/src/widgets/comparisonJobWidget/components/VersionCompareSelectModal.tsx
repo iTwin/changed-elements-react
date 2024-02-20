@@ -50,7 +50,7 @@ export type V2DialogProviderProps = {
 /** V2DialogProvider use comparison jobs for processing.
  * Used for tracking if the dialog is open or closed.
  * This is useful for managing toast messages associated with dialog.
- * Also caches comparison jobs that are pending creation or are currently running. To help populate new model ref.
+ * Also caches comparison jobs that are pending creation or are currently running. To help populate new modal ref.
  * Example:
  *<V2DialogProvider>
  *{(isOpenCondition) &&
@@ -92,7 +92,6 @@ export function V2DialogProvider({ children }: V2DialogProviderProps) {
   const dialogOpenRef = React.useRef(false);
   const openDialog = () => {
     dialogOpenRef.current = true;
-    //maybe move polling here and use a named version cache ?
   };
   const closedDialog = () => {
     dialogOpenRef.current = false;
