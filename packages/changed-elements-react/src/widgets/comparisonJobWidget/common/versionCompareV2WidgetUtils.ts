@@ -30,12 +30,20 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   });
 };
 
-export const getJobStatusAndJobProgress = async (comparisonJobClient: IComparisonJobClient, entry: VersionState, iTwinId: string, iModelId: string, currentChangesetId: string): Promise<JobStatusAndJobProgress> => {
+export type GetJobStatusAndJobProgress = {
+  comparisonJobClient: IComparisonJobClient;
+  entry: VersionState;
+  iTwinId: string;
+  iModelId: string;
+  currentChangesetId: string;
+};
+
+export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgress): Promise<JobStatusAndJobProgress> => {
   try {
-    const res = await comparisonJobClient.getComparisonJob({
-      iTwinId: iTwinId,
-      iModelId: iModelId,
-      jobId: `${entry.version.changesetId}-${currentChangesetId}`,
+    const res = await args.comparisonJobClient.getComparisonJob({
+      iTwinId: args.iTwinId,
+      iModelId: args.iModelId,
+      jobId: `${args.entry.version.changesetId}-${args.currentChangesetId}`,
     });
     if (res) {
       switch (res.comparisonJob.status) {
@@ -95,6 +103,6 @@ export const getJobStatusAndJobProgress = async (comparisonJobClient: ICompariso
   }
 };
 
-export const createJobId = (startNamedVersion:NamedVersion, endNamedVersion:NamedVersion) => {
-  return `${startNamedVersion.changesetId}-${endNamedVersion.changesetId}`
-}
+export const createJobId = (startNamedVersion: NamedVersion, endNamedVersion: NamedVersion) => {
+  return `${startNamedVersion.changesetId}-${endNamedVersion.changesetId}`;
+};

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
-import { NamedVersionLoaderResult, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
+import { NamedVersionLoaderState, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
 import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
@@ -138,8 +138,8 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     , getPendingJobs, removePendingJob, addPendingJob } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
-  const [result, setResult] = useState<NamedVersionLoaderResult>();
-  const updateResult = (updatedState: NamedVersionLoaderResult) => {
+  const [result, setResult] = useState<NamedVersionLoaderState>();
+  const updateResult = (updatedState: NamedVersionLoaderState) => {
     setResult(updatedState);
   };
   useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult, getPendingJobs);
@@ -333,10 +333,10 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
 type PollForInProgressJobsArgs = {
   iTwinId: string;
   iModelId: string;
-  namedVersionLoaderState?: NamedVersionLoaderResult;
+  namedVersionLoaderState?: NamedVersionLoaderState;
   comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
-  setResult: (result: NamedVersionLoaderResult) => void;
+  setResult: (result: NamedVersionLoaderState) => void;
   removeRunningJob: (jobId: string) => void;
   getRunningJobs: () => JobAndNamedVersions[];
   getDialogOpen: () => boolean;
@@ -430,7 +430,13 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
     while (isDialogOpenAndNotDisposed(args.getDialogOpen, args.getIsDisposed)) {
       for (let entry of updatingEntries) {
         await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
-        const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+        const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress({
+          comparisonJobClient: args.comparisonJobClient,
+          entry: entry,
+          iTwinId: args.iTwinId,
+          iModelId: args.iModelId,
+          currentChangesetId: currentVersionId,
+        });
         entry = {
           version: entry.version,
           state: VersionProcessedState.Processed,

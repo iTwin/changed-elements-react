@@ -15,7 +15,7 @@ import { arrayToMap } from "../../../utils/utils";
 /**
  * Result type for versionLoader.
  */
-export type NamedVersionLoaderResult = {
+export type NamedVersionLoaderState = {
   /** Named versions to display in the list. */
   namedVersions: CurrentNamedVersionAndNamedVersions;
 };
@@ -29,7 +29,7 @@ export const useNamedVersionLoader = (
   iModelConnection: IModelConnection,
   iModelsClient: IModelsClient,
   comparisonJobClient: IComparisonJobClient,
-  setNamedVersionResult: (state: NamedVersionLoaderResult) => void,
+  setNamedVersionResult: (state: NamedVersionLoaderState) => void,
   getPendingJobs: () => JobAndNamedVersions[],
 ) => {
 
@@ -70,7 +70,7 @@ export const useNamedVersionLoader = (
           currentProgress: 0,
           maxProgress: 0,
         };
-        const currentState: NamedVersionLoaderResult = {
+        const currentState: NamedVersionLoaderState = {
           namedVersions: {
             entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
               version: namedVersion,
@@ -93,7 +93,7 @@ export const useNamedVersionLoader = (
           iModelId: iModelId,
           namedVersionLoaderState: currentState,
           comparisonJobClient: comparisonJobClient,
-          setResult: (result: NamedVersionLoaderResult) => {
+          setNamedVersionLoaderState: (result: NamedVersionLoaderState) => {
             setNamedVersionResult(result);
           },
           getPendingJobs,
@@ -162,13 +162,13 @@ const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNa
   if (reversedNamedVersions[0].changesetIndex === currentNamedVersion.changesetIndex) {
     reversedNamedVersions.shift(); //remove current named version
   }
-  const changeSetMap = arrayToMap(changesets, (changeSet: Changeset) => { return changeSet.index; });
+  const changesetMap = arrayToMap(changesets, (changeset: Changeset) => { return changeset.index; });
   // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
   // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
   // this assuming latest is current
   const offSetNameVersions = reversedNamedVersions.map((version) => {
     version.changesetIndex = version.changesetIndex + 1;
-    version.changesetId = changeSetMap.get(version.changesetIndex)?.id ?? version.changesetId;
+    version.changesetId = changesetMap.get(version.changesetIndex)?.id ?? version.changesetId;
     return version;
   });
   return offSetNameVersions;
@@ -177,10 +177,10 @@ const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNa
 type ProcessChangesetsArgs = {
   iTwinId: string;
   iModelId: string;
-  namedVersionLoaderState: NamedVersionLoaderResult;
+  namedVersionLoaderState: NamedVersionLoaderState;
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
-  setResult: (result: NamedVersionLoaderResult) => void;
+  setNamedVersionLoaderState: (result: NamedVersionLoaderState) => void;
   getPendingJobs: () => JobAndNamedVersions[];
 };
 
@@ -189,7 +189,13 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
-    const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
+    const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress({
+      comparisonJobClient: args.comparisonJobClient,
+      entry: entry,
+      iTwinId: args.iTwinId,
+      iModelId: args.iModelId,
+      currentChangesetId: currentVersionId,
+    });
     if (pendingJobsMap.has(`${entry.version.changesetId}-${currentVersionId}`)) {
       const jobStatus: JobStatus = "Processing";
       return {
@@ -212,5 +218,5 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   const updatedState = {
     namedVersions: { currentVersion: args.namedVersionLoaderState.namedVersions.currentVersion, entries: newEntries },
   };
-  args.setResult(updatedState);
+  args.setNamedVersionLoaderState(updatedState);
 };
