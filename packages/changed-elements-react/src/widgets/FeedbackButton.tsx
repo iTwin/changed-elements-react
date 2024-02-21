@@ -10,6 +10,7 @@ import "./FeedbackButton.scss";
 interface Props {
   /** Link for button to take you to.*/
   feedbackUrl: string;
+  dataTestId?: string;
 }
 
 /** Feedback button that on click takes you to provided link.*/
@@ -22,6 +23,7 @@ export function FeedbackButton(props: Props) {
       href={props.feedbackUrl}
       target="_blank"
       rel="noreferrer"
+      data-testid={props.dataTestId}
     >
       <div className="changed-elems-feedback-content-wrapper">
         <SvgSmileyHappy className="changed-elems-feedback-svg" />
