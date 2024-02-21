@@ -376,8 +376,9 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
           comparisonJobClient: args.comparisonJobClient,
           iModelConnection: args.iModelConnection,
         });
-      } catch (_) {
+      } catch (error) {
         args.removeRunningJob(runningJob?.comparisonJob?.comparisonJob.jobId as string);
+        throw error;
       }
     }
   }
