@@ -324,6 +324,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             styleType="borderless"
             onClick={this._handleReportGeneration}
             title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
+            data-testid="comparison-legend-widget-report-generation"
           >
             <SvgExport />
           </IconButton>
@@ -335,7 +336,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             styleType="borderless"
             onClick={this._handleInspect}
             title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.inspectProperties")}
-            data-testid="comparison-legend-widget-inspectBtn"
+            data-testid="comparison-legend-widget-inspect"
           >
             <SvgCompare />
           </IconButton>
@@ -380,7 +381,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
           <WidgetComponent.ToolBar>
-            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton dataTestId="⁠comparison-widget-v2-feedback-btn" feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
+            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton data-testId="⁠comparison-widget-v2-feedback-btn" feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
           </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
@@ -396,7 +397,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <V2DialogProvider>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
-                dataTestId="⁠comparison-widget-v2-modal"
+                data-testId="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
               />}

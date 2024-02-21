@@ -25,7 +25,7 @@ export interface VersionCompareSelectDialogV2Props {
   iModelConnection: IModelConnection;
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
-  dataTestId?: string;
+  "data-testId"?: string;
 }
 
 type V2Context = {
@@ -131,7 +131,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   };
   return (
     <Modal
-      data-testid={props.dataTestId}
+      data-testid={props["data-testId"]}
       className="comparison-job-dialog"
       title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
       isOpen
