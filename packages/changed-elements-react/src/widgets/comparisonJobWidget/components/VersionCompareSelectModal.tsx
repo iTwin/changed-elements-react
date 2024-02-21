@@ -420,12 +420,12 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
   args.getRunningJobs().forEach((job) => {
     currentRunningJobsMap.set(job.comparisonJob?.comparisonJob.jobId as string, job);
   });
-  if (areJobsInProgress(entries,args.getRunningJobs)) {
+  if (areJobsInProgress(entries, args.getRunningJobs)) {
     const idEntryMap = new Map<string, VersionState>();
     entries.forEach((entry) => idEntryMap.set(entry.version.id, entry));
     let updatingEntries = getUpdatingEntries(entries, currentVersionId, currentRunningJobsMap);
     const loopDelayInMilliseconds = 5000;
-    while (isDialogOpenAndNotDisposed(args.getDialogOpen,args.getIsDisposed)) {
+    while (isDialogOpenAndNotDisposed(args.getDialogOpen, args.getIsDisposed)) {
       for (let entry of updatingEntries) {
         await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
         const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
@@ -446,14 +446,14 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
         namedVersions: { currentVersion: args.namedVersionLoaderState!.namedVersions.currentVersion, entries: entries },
       };
       if (isDialogOpenAndNotDisposed(args.getDialogOpen, args.getIsDisposed))
-      args.setResult(args.namedVersionLoaderState);
+        args.setResult(args.namedVersionLoaderState);
     }
   }
 };
 
 const isDialogOpenAndNotDisposed = (getDialogOpen: () => boolean, getIsDisposed: () => boolean) => {
   return getDialogOpen() && !getIsDisposed();
-}
+};
 
 const areJobsInProgress = (entries: VersionState[], getRunningJobs: () => JobAndNamedVersions[]) => {
   return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined || getRunningJobs().length > 0;
