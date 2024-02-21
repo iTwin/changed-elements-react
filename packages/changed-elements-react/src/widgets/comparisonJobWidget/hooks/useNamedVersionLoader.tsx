@@ -10,6 +10,7 @@ import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
+import { arrayToMap } from "../../../utils/utils";
 
 /**
  * Result type for versionLoader.
@@ -161,10 +162,7 @@ const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNa
   if (reversedNamedVersions[0].changesetIndex === currentNamedVersion.changesetIndex) {
     reversedNamedVersions.shift(); //remove current named version
   }
-  const changeSetMap = new Map<number, Changeset>();
-  changesets.forEach((changeset: Changeset) => {
-    changeSetMap.set(changeset.index, changeset);
-  });
+  const changeSetMap = arrayToMap(changesets, (changeSet: Changeset) => { return changeSet.index; });
   // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
   // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
   // this assuming latest is current
@@ -187,10 +185,7 @@ type ProcessChangesetsArgs = {
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
-  const pendingJobsMap = new Map<string, JobAndNamedVersions>();
-  args.getPendingJobs().forEach((job) => {
-    pendingJobsMap.set(createJobId(job.targetNamedVersion, job.currentNamedVersion), job);
-  });
+  const pendingJobsMap = arrayToMap(args.getPendingJobs(), (job: JobAndNamedVersions) => { return createJobId(job.targetNamedVersion, job.currentNamedVersion); });
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
