@@ -196,7 +196,7 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress(args.comparisonJobClient, entry, args.iTwinId, args.iModelId, currentVersionId);
     if (pendingJobsMap.has(`${entry.version.changesetId}-${currentVersionId}`)) {
-      const jobStatus:JobStatus="Processing"
+      const jobStatus: JobStatus = "Processing";
       return {
         version: entry.version,
         state: VersionProcessedState.Processed,
