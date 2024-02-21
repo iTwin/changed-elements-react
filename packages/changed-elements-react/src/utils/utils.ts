@@ -70,9 +70,10 @@ export async function tryXTimes<T>(func: () => Promise<T>, attempts: number, del
   throw error;
 }
 
-/** Creates map from an array of values.
+/**
+   Creates a map from an array of values.
  * Expects createKey to supply a unique key per entry; otherwise will cause other entries with same key to be overwritten.
-*/
+ */
 export const arrayToMap = <T, U>(array: T[], createKey: (entry: T) => U) => {
   const newMap = new Map<U, T>();
   array.forEach((entry) => {
