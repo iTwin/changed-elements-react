@@ -181,7 +181,7 @@ type ProcessChangesetsArgs = {
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
   setResult: (result: NamedVersionLoaderResult) => void;
-  getPendingJobs: () => JobAndNamedVersions[],
+  getPendingJobs: () => JobAndNamedVersions[];
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
