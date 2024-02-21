@@ -16,10 +16,10 @@ import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
 import { tryXTimes } from "../../../utils/utils";
 import { VersionState } from "../models/VersionState";
-import { JobAndNamedVersions, JobId, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
+import { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionComapreToasts";
-import { getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
+import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -34,12 +34,12 @@ type V2Context = {
   getDialogOpen: () => boolean;
   openDialog: () => void;
   closedDialog: () => void;
-  addRunningJob: (jobId: JobId, comparisonJob: JobAndNamedVersions) => void;
-  removeRunningJob: (jobId: JobId) => void;
+  addRunningJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
+  removeRunningJob: (jobId: string) => void;
   getRunningJobs: () => JobAndNamedVersions[];
   getPendingJobs: () => JobAndNamedVersions[];
-  addPendingJob: (jobId: JobId, comparisonJob: JobAndNamedVersions) => void;
-  removePendingJob: (jobId: JobId) => void;
+  addPendingJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
+  removePendingJob: (jobId: string) => void;
 };
 
 const V2DialogContext = React.createContext<V2Context>({} as V2Context);
@@ -61,29 +61,29 @@ export type V2DialogProviderProps = {
  *</V2DialogProvider>
 */
 export function V2DialogProvider({ children }: V2DialogProviderProps) {
-  const dialogRunningJobs = React.useRef<Map<JobId, JobAndNamedVersions>>(new Map<JobId, JobAndNamedVersions>());
-  const dialogPendingJobs = React.useRef<Map<JobId, JobAndNamedVersions>>(new Map<JobId, JobAndNamedVersions>());
-  const addRunningJob = (jobId: JobId, jobAndNamedVersions: JobAndNamedVersions) => {
+  const dialogRunningJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
+  const dialogPendingJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
+  const addRunningJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
     dialogRunningJobs.current.set(jobId, {
       comparisonJob: jobAndNamedVersions.comparisonJob,
       targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
       currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
     });
   };
-  const removeRunningJob = (jobId: JobId) => {
+  const removeRunningJob = (jobId: string) => {
     dialogRunningJobs.current.delete(jobId);
   };
   const getRunningJobs = () => {
     return Array.from(dialogRunningJobs.current.values());
   };
-  const addPendingJob = (jobId: JobId, jobAndNamedVersions: JobAndNamedVersions) => {
+  const addPendingJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
     dialogPendingJobs.current.set(jobId, {
       comparisonJob: jobAndNamedVersions.comparisonJob,
       targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
       currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
     });
   };
-  const removePendingJob = (jobId: JobId) => {
+  const removePendingJob = (jobId: string) => {
     dialogPendingJobs.current.delete(jobId);
   };
   const getPendingJobs = () => {
@@ -184,7 +184,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         getDialogOpen,
       });
       if (startResult.comparisonJob) {
-        addRunningJob(`${targetVersion.changesetId}-${currentVersion.changesetId}`, {
+        addRunningJob(createJobId(targetVersion, currentVersion), {
           comparisonJob: startResult.comparisonJob,
           targetNamedVersion: {
             id: targetVersion.id,
@@ -267,8 +267,8 @@ type RunStartComparisonV2Args = {
   comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
-  removePendingJob: (jobId: JobId) => void;
-  addPendingJob: (jobId: JobId, comparisonJob: JobAndNamedVersions) => void;
+  removePendingJob: (jobId: string) => void;
+  addPendingJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
   getDialogOpen: () => boolean;
 };
 
@@ -278,8 +278,9 @@ type PostOrRunComparisonJobResult = {
 };
 
 const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
+  const jobId = createJobId(args.targetVersion, args.currentVersion);
   try {
-    args.addPendingJob(`${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`, {
+    args.addPendingJob(jobId, {
       targetNamedVersion: {
         id: args.targetVersion.id,
         displayName: args.targetVersion.displayName,
@@ -305,7 +306,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
         startChangesetId: args.targetVersion.changesetId as string,
         endChangesetId: args.currentVersion.changesetId as string,
       }));
-      args.removePendingJob(`${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`);
+      args.removePendingJob(jobId);
       return job;
     }, 3);
     if (comparisonJob.comparisonJob.status === "Completed") {
@@ -323,7 +324,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
     }
     return { startedComparison: false, comparisonJob: comparisonJob };
   } catch (error) {
-    args.removePendingJob(`${args.targetVersion.changesetId}-${args.currentVersion.changesetId}`);
+    args.removePendingJob(jobId);
     toastComparisonJobError(args.currentVersion, args.targetVersion);
     throw error;
   }
@@ -336,7 +337,7 @@ type PollForInProgressJobsArgs = {
   comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
   setResult: (result: NamedVersionLoaderResult) => void;
-  removeRunningJob: (jobId: JobId) => void;
+  removeRunningJob: (jobId: string) => void;
   getRunningJobs: () => JobAndNamedVersions[];
   getDialogOpen: () => boolean;
   getIsDisposed: () => boolean;
@@ -394,7 +395,7 @@ type ConditionallyToastCompletionArgs = {
   getDialogOpen: () => boolean;
   runningJob: JobAndNamedVersions;
   currentJobRsp: ComparisonJob;
-  removeRunningJob: (jobId: JobId) => void;
+  removeRunningJob: (jobId: string) => void;
   comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
 };
@@ -416,7 +417,7 @@ const conditionallyToastCompletion = (args: ConditionallyToastCompletionArgs) =>
 const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs) => {
   const currentVersionId = args.iModelConnection?.changeset.id;
   let entries = args.namedVersionLoaderState!.namedVersions.entries.slice();
-  const currentRunningJobsMap = new Map<JobId, JobAndNamedVersions>();
+  const currentRunningJobsMap = new Map<string, JobAndNamedVersions>();
   args.getRunningJobs().forEach((job) => {
     currentRunningJobsMap.set(job.comparisonJob?.comparisonJob.jobId as string, job);
   });
@@ -442,11 +443,13 @@ const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs)
       }
       entries = [...idEntryMap.values()];
       updatingEntries = getUpdatingEntries(entries, currentVersionId, currentRunningJobsMap);
-      args.namedVersionLoaderState = {
-        namedVersions: { currentVersion: args.namedVersionLoaderState!.namedVersions.currentVersion, entries: entries },
-      };
-      if (isDialogOpenAndNotDisposed(args.getDialogOpen, args.getIsDisposed))
-        args.setResult(args.namedVersionLoaderState);
+
+      if (isDialogOpenAndNotDisposed(args.getDialogOpen, args.getIsDisposed)) {
+        const updatedState = {
+          namedVersions: { currentVersion: args.namedVersionLoaderState!.namedVersions.currentVersion, entries: entries },
+        };
+        args.setResult(updatedState);
+      }
     }
   }
 };
@@ -459,7 +462,7 @@ const areJobsInProgress = (entries: VersionState[], getRunningJobs: () => JobAnd
   return entries.find(entry => entry.jobStatus === "Processing" || entry.jobStatus === "Queued") !== undefined || getRunningJobs().length > 0;
 };
 
-const getUpdatingEntries = (entries: VersionState[], currentVersionId: string, currentRunningJobsMap: Map<JobId, JobAndNamedVersions>) => {
+const getUpdatingEntries = (entries: VersionState[], currentVersionId: string, currentRunningJobsMap: Map<string, JobAndNamedVersions>) => {
   return entries.filter((entry) => {
     if (entry.jobStatus === "Processing" || entry.jobStatus === "Queued")
       return true;

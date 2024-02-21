@@ -94,3 +94,7 @@ export const getJobStatusAndJobProgress = async (comparisonJobClient: ICompariso
     };
   }
 };
+
+export const createJobId = (startNamedVersion:NamedVersion, endNamedVersion:NamedVersion) => {
+  return `${startNamedVersion.changesetId}-${endNamedVersion.changesetId}`
+}

@@ -4,12 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useEffect } from "react";
-import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions, JobId } from "../models/ComparisonJobModels";
+import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
+import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
 
 /**
  * Result type for versionLoader.
@@ -187,9 +187,9 @@ type ProcessChangesetsArgs = {
 };
 
 const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
-  const pendingJobsMap = new Map<JobId, JobAndNamedVersions>();
+  const pendingJobsMap = new Map<string, JobAndNamedVersions>();
   args.getPendingJobs().forEach((job) => {
-    pendingJobsMap.set(`${job.targetNamedVersion.changesetId}-${job.currentNamedVersion.changesetId}`, job);
+    pendingJobsMap.set(createJobId(job.targetNamedVersion, job.currentNamedVersion), job);
   });
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
@@ -214,8 +214,8 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
       jobProgress: jobStatusAndJobProgress.jobProgress,
     };
   }));
-  args.namedVersionLoaderState = {
+  const updatedState = {
     namedVersions: { currentVersion: args.namedVersionLoaderState.namedVersions.currentVersion, entries: newEntries },
   };
-  args.setResult(args.namedVersionLoaderState);
+  args.setResult(updatedState);
 };

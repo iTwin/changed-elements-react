@@ -34,8 +34,6 @@ export type JobStatusAndJobProgress = {
   jobProgress: JobProgress;
 };
 
-export type JobId = string;
-
 /**
  * Holds comparison job and its named versions.
 */
