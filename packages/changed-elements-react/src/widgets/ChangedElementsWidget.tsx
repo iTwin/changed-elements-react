@@ -336,7 +336,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             styleType="borderless"
             onClick={this._handleInspect}
             title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.inspectProperties")}
-            data-testid="comparison-legend-widget-inspect"
+            data-testid="comparison-legend-widget-inspectBtn"
           >
             <SvgCompare />
           </IconButton>
