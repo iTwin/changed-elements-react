@@ -302,7 +302,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         </IconButton>
         {
           this.props.useV2Widget &&
-          <InfoButton title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
+          <InfoButton dataTestId="⁠comparison-legend-widget-info" title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
         }
         {
           this.state.loaded &&
@@ -396,6 +396,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <V2DialogProvider>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
+                dataTestId="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
               />}
