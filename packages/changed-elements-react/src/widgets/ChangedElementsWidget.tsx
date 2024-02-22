@@ -302,7 +302,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         </IconButton>
         {
           this.props.useV2Widget &&
-          <InfoButton dataTestId="⁠comparison-legend-widget-info" title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
+          <InfoButton data-testid="⁠comparison-legend-widget-info" title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
         }
         {
           this.state.loaded &&
