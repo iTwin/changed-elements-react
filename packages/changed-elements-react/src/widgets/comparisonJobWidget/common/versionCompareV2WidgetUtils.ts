@@ -92,7 +92,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
         maxProgress: 0,
       },
     };
-  } catch (_) {
+  } catch {
     return {
       jobStatus: "Not Processed",
       jobProgress: {
