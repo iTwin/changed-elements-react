@@ -131,7 +131,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   };
   return (
     <Modal
-      data-testid={props["data-testId"]}
+      data-testid={props["data-testid"]}
       className="comparison-job-dialog"
       title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionPickerTitle")}
       isOpen
