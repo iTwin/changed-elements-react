@@ -397,7 +397,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <V2DialogProvider>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
-                data-testId="⁠comparison-widget-v2-modal"
+                data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
               />}
