@@ -2,6 +2,8 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { ComparisonJob } from "../../../clients/IComparisonJobClient";
+import { NamedVersion } from "../../../clients/iModelsClient";
 
 /**
  * Job status used for identification of job progress
@@ -30,4 +32,13 @@ export type JobProgress = {
 export type JobStatusAndJobProgress = {
   jobStatus: JobStatus;
   jobProgress: JobProgress;
+};
+
+/**
+ * Holds comparison job and its named versions.
+*/
+export type JobAndNamedVersions = {
+  comparisonJob?: ComparisonJob;
+  targetNamedVersion: NamedVersion;
+  currentNamedVersion: NamedVersion;
 };
