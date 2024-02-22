@@ -302,7 +302,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         </IconButton>
         {
           this.props.useV2Widget &&
-          <InfoButton title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
+          <InfoButton data-testid="⁠comparison-legend-widget-info" title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
         }
         {
           this.state.loaded &&
@@ -324,6 +324,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             styleType="borderless"
             onClick={this._handleReportGeneration}
             title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
+            data-testid="comparison-legend-widget-report-generation"
           >
             <SvgExport />
           </IconButton>
@@ -380,7 +381,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
           <WidgetComponent.ToolBar>
-            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
+            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton data-testid="⁠comparison-widget-v2-feedback-btn" feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
           </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
@@ -396,6 +397,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <V2DialogProvider>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
+                data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
               />}
