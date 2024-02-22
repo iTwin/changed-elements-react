@@ -53,7 +53,7 @@ function DateCurrentAndJobInfo(props: DateAndCurrentProps): ReactElement {
         <Badge backgroundColor={jobBadgeBackground}>{`${getLocalizedJobStatusText(props.jobStatus)}`}</Badge>}
       {props.jobProgress === undefined || props.jobProgress.maxProgress === 0 ? <></>
         : <Text>
-          {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.progress")}: ${Math.ceil((props.jobProgress.currentProgress / props.jobProgress.maxProgress) * 100)}%`}
+          {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.progress")}: ${Math.floor((props.jobProgress.currentProgress / props.jobProgress.maxProgress) * 100)}%`}
         </Text>}
     </div>
   );
