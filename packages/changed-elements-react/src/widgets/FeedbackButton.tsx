@@ -10,7 +10,7 @@ import "./FeedbackButton.scss";
 interface Props {
   /** Link for button to take you to.*/
   feedbackUrl: string;
-  "data-testId" ?: string;
+  "data-testid" ?: string;
 }
 
 /** Feedback button that on click takes you to provided link.*/
