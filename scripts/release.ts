@@ -6,7 +6,7 @@ import { execFileSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-const usage = `Usage: npm release -- <version>
+const usage = `Usage: npm run release -- <version>
 Where <version> is one of:
     major | minor | patch | premajor [preid] | preminor [preid] | prepatch [preid] | prerelease [preid]`;
 
