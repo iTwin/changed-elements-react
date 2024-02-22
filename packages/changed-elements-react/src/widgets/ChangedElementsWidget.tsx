@@ -381,7 +381,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
           </WidgetComponent.Body>
           <WidgetComponent.ToolBar>
-            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton data-testId="⁠comparison-widget-v2-feedback-btn" feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
+            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton data-testid="⁠comparison-widget-v2-feedback-btn" feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
           </WidgetComponent.ToolBar>
         </WidgetComponent>
         {
