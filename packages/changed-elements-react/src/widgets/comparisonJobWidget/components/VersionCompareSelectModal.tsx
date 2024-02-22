@@ -25,7 +25,7 @@ export interface VersionCompareSelectDialogV2Props {
   iModelConnection: IModelConnection;
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
-  "data-testId"?: string;
+  "data-testid"?: string;
 }
 
 type V2Context = {
