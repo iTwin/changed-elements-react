@@ -4,12 +4,11 @@ All notable changes to this package will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.8] - 2024-02-14
+## [0.3.9] - 2024-02-26
 
 ### Patch changes
-* Fix start changeset inclusion when starting comparison jobs
-
-## [0.3.7](https://github.com/iTwin/changed-elements-react/tree/v0.3.7/packages/changed-elements-react) - 2024-02-14
+* Callbacks for comparison job progress
+* Allow disabling toast messages
 
 ## [0.3.8](https://github.com/iTwin/changed-elements-react/tree/v0.3.8/packages/changed-elements-react) - 2024-02-14
 
