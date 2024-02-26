@@ -29,7 +29,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
       {
         props.currentVersion &&
         <div className="comparison-job-row">
-            <div className="current-comparison-title">
+          <div className="current-comparison-title">
             {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}:`}
           </div>
           <div className="comparison-job-container-current">

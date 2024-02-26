@@ -10,6 +10,7 @@ interface Props {
   title: string;
   // contents of information drop down
   message: string;
+  "data-testid"?: string;
 }
 
 /**
@@ -21,6 +22,7 @@ function InfoButton(props: Props) {
     <DropdownMenu
       style={{ width: 500 }}
       placement="bottom-end"
+      data-testid={props["data-testid"]}
       menuItems={() => [
         <MenuExtraContent key={0}>
           <Text variant="leading">{props.title}</Text>
