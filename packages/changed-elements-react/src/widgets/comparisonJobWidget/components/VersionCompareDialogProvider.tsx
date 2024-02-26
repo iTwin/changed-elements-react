@@ -8,7 +8,7 @@ import { JobAndNamedVersions } from "../models/ComparisonJobModels";
 /** Comparison Job Update Type
 *  - "JobComplete" = job is completed
 *  - "JobError" = job error
-*  - "JobProgressing" = job is started
+*  - "JobProcessing" = job is started
 *  - "ComparisonVisualizationStarting" = version compare visualization is starting
 */
 export type ComparisonJobUpdateType = "JobComplete" | "JobError" | "JobProcessing" | "ComparisonVisualizationStarting";
