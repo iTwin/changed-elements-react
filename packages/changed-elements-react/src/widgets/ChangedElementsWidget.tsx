@@ -23,9 +23,11 @@ import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import "./ChangedElementsWidget.scss";
 import InfoButton from "./InformationButton.js";
-import { V2DialogProvider, VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
+import { VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
 import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
+import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
+import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -41,8 +43,20 @@ export interface ChangedElementsWidgetProps {
   rootElementRef?: React.Ref<HTMLDivElement>;
   /**Optional. If true will use v2 dialog and will run comparison jobs for faster comparisons @beta.*/
   useV2Widget?: boolean;
-  /**Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
+  /** Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
   feedbackUrl?: string;
+  /** Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts (Only for V2). */
+  enableComparisonJobUpdateToasts?: boolean;
+  /** On Job Update (Only for V2)
+ * Optional. a call back function for handling job updates.
+ * @param comparisonJobUpdateType param for the type of update:
+ *  - "JobComplete" = invoked when job is completed
+ *  - "JobError" = invoked on job error
+ *  - "JobProgressing" = invoked on job is started
+ *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
+ * @param jobAndNamedVersion param contain job and named version info to be passed to call back
+*/
+  onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
 }
 
 export interface ChangedElementsWidgetState {
@@ -394,14 +408,14 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           />
         }
         {this.props.useV2Widget ?
-          <V2DialogProvider>
+          <VersionCompareSelectProviderV2 onJobUpdate={this.props.onJobUpdate} enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
                 data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
               />}
-          </V2DialogProvider> :
+          </VersionCompareSelectProviderV2> :
           this.state.versionSelectDialogVisible &&
           <VersionCompareSelectDialog
             isOpen

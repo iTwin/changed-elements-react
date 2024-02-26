@@ -7,6 +7,11 @@ import { NamedVersion } from "../../../clients/iModelsClient";
 import { toaster } from "@itwin/itwinui-react";
 import { ManagerStartComparisonV2Args, runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
 
+/** Toast Comparison Job Processing.
+ * Outputs toast message following the pattern:
+ * Version Compare
+ * iModel versions <currentVersion> and <targetVersion> are being processed in the background. You will receive a notification upon completion.
+*/
 export const toastComparisonJobProcessing = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
@@ -20,6 +25,11 @@ export const toastComparisonJobProcessing = (currentVersion: NamedVersion, targe
   );
 };
 
+/** Toast Comparison Job Error.
+ * Outputs toast message following the pattern:
+ * Version Compare
+ * An error occurred while processing changes between iModel versions <currentVersion> and <targetVersion>.
+*/
 export const toastComparisonJobError = (currentVersion: NamedVersion, targetVersion: NamedVersion) => {
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
@@ -33,6 +43,13 @@ export const toastComparisonJobError = (currentVersion: NamedVersion, targetVers
   );
 };
 
+/** Toast Comparison Job Complete.
+ * Outputs toast message following the pattern:
+ * Version Compare
+ * iModel versions <currentVersion> and <targetVersion> comparison job is complete.
+ *
+ * Also has a link with the text "View The Report" and when clicked will start visualization on the comparison.
+*/
 export const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) => {
   const title = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.viewTheReport");
   toaster.closeAll();
@@ -52,6 +69,8 @@ export const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) =
           iModelConnection: args.iModelConnection,
           targetVersion: args.targetVersion,
           currentVersion: args.currentVersion,
+          getToastsEnabled: args.getToastsEnabled,
+          runOnJobUpdate: args.runOnJobUpdate,
         });
       },
     },
@@ -59,6 +78,11 @@ export const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) =
   });
 };
 
+/** Toast Comparison Visualization Starting.
+ * Outputs toast message following the pattern:
+ * Version Compare
+ * Comparison Visualization Starting.
+*/
 export const toastComparisonVisualizationStarting = () => {
   IModelApp.notifications.outputMessage(
     new NotifyMessageDetails(
