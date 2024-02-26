@@ -45,7 +45,7 @@ export interface ChangedElementsWidgetProps {
   useV2Widget?: boolean;
   /** Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
   feedbackUrl?: string;
-  // Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts.
+  // Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts (Only for V2).
   enableComparisonJobUpdateToasts?: boolean;
   /** On Job Update (Only for V2)
  * Optional. a call back function for handling job updates.
