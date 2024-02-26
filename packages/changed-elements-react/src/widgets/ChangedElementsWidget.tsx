@@ -49,14 +49,14 @@ export interface ChangedElementsWidgetProps {
   enableComparisonJobUpdateToasts?: boolean;
   /** On Job Update (Only for V2)
  * Optional. a call back function for handling job updates.
- * @param comparisonEventType param for the type of update:
+ * @param comparisonJobUpdateType param for the type of update:
  *  - "JobComplete" = invoked when job is completed
  *  - "JobError" = invoked on job error
  *  - "JobProgressing" = invoked on job is started
  *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
  * @param jobAndNamedVersion param contain job and named version info to be passed to call back
 */
-  onJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
 }
 
 export interface ChangedElementsWidgetState {
