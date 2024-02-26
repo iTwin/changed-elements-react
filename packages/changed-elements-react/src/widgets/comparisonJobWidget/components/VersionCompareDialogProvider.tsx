@@ -38,7 +38,7 @@ export type V2DialogProviderProps = {
  * @param comparisonJobUpdateType param for the type of update:
  *  - "JobComplete" = invoked when job is completed
  *  - "JobError" = invoked on job error
- *  - "JobProgressing" = invoked on job is started
+ *  - "JobProcessing" = invoked on job is started
  *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
  * @param jobAndNamedVersion param contain job and named version info to be passed to call back
 */
