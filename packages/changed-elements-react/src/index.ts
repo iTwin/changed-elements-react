@@ -26,3 +26,5 @@ export * from "./widgets/ChangedElementsWidget.js";
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
 export * from "./widgets/comparisonJobWidget/components/VersionCompareSelectModal.js"
+export * from "./widgets/comparisonJobWidget/components/VersionCompareDialogProvider.js"
+export * from "./widgets/comparisonJobWidget/common/versionCompareToasts.js"

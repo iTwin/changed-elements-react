@@ -6,10 +6,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
-import { toastComparisonVisualizationStarting } from "./versionComapreToasts";
+import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 import { Logger } from "@itwin/core-bentley";
-import { JobStatusAndJobProgress } from "../models/ComparisonJobModels";
+import { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionState } from "../models/VersionState";
+import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
 
 export type ManagerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;
@@ -17,13 +18,25 @@ export type ManagerStartComparisonV2Args = {
   iModelConnection: IModelConnection;
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;
+  getToastsEnabled: () => boolean;
+  runOnJobUpdate: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
 };
 
 export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
   if (VersionCompare.manager?.isComparing) {
     return;
   }
-  toastComparisonVisualizationStarting();
+  if (args.getToastsEnabled()) {
+    toastComparisonVisualizationStarting();
+  }
+
+  const jobAndNamedVersion: JobAndNamedVersions = {
+    comparisonJob: args.comparisonJob,
+    targetNamedVersion: args.targetVersion,
+    currentNamedVersion: args.currentVersion,
+  };
+  void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
+
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {
     Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
