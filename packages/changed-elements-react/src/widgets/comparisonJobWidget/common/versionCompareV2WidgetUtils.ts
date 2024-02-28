@@ -26,7 +26,7 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   if (VersionCompare.manager?.isComparing) {
     return;
   }
-  if (args.getToastsEnabled && args.getToastsEnabled()) {
+  if (args.getToastsEnabled?.()) {
     toastComparisonVisualizationStarting();
   }
 
