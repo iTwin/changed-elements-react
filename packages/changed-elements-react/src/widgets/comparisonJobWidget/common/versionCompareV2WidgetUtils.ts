@@ -18,15 +18,15 @@ export type ManagerStartComparisonV2Args = {
   iModelConnection: IModelConnection;
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;
-  getToastsEnabled: () => boolean;
-  runOnJobUpdate: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  getToastsEnabled?: () => boolean;
+  runOnJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
 };
 
 export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
   if (VersionCompare.manager?.isComparing) {
     return;
   }
-  if (args.getToastsEnabled()) {
+  if (args.getToastsEnabled && args.getToastsEnabled()) {
     toastComparisonVisualizationStarting();
   }
 
@@ -35,8 +35,9 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
     targetNamedVersion: args.targetVersion,
     currentNamedVersion: args.currentVersion,
   };
-  void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
-
+  if (args.runOnJobUpdate) {
+    void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
+  }
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(args.iModelConnection, args.currentVersion, args.targetVersion, [changedElements.changedElements]).catch((e) => {
     Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
