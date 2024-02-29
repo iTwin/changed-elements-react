@@ -277,7 +277,15 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
 
     return [{
       id: "ChangedElementsWidget",
-      content: <ChangedElementsWidget useV2Widget feedbackUrl="https://example.com" iModelConnection={UiFramework.getIModelConnection()!} />,
+      content: <ChangedElementsWidget useV2Widget
+        feedbackUrl="https://example.com"
+        iModelConnection={UiFramework.getIModelConnection()!}
+        manageNamedVersionProps={
+          {
+            manageNamedVersionHref: "https://example.com",
+          }
+        }
+      />,
     }];
   }
 }

@@ -28,6 +28,7 @@ import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
+import { ManageNamedVersionsProps } from "./comparisonJobWidget/components/VersionCompareManageNamedVersions.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -57,6 +58,15 @@ export interface ChangedElementsWidgetProps {
  * @param jobAndNamedVersion param contain job and named version info to be passed to call back
 */
   onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+
+  /**
+ * Props for a href that will, on a click, navigate to the provided link or invoke the provided onClick method.
+ *
+ * Please note if href and both on click are provided; the component will not use on click but will use href instead.
+ *
+ * ManageNamedVersionLabel will default to `Manage named versions` if not provided.
+ */
+  manageNamedVersionProps?: ManageNamedVersionsProps;
 }
 
 export interface ChangedElementsWidgetState {
@@ -414,6 +424,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                 data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
+                manageNamedVersionProps={this.props.manageNamedVersionProps}
               />}
           </VersionCompareSelectProviderV2> :
           this.state.versionSelectDialogVisible &&

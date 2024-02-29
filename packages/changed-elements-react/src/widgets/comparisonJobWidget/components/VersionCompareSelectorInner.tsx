@@ -9,6 +9,7 @@ import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
+import { ManageNamedVersions, ManageNamedVersionsProps } from "./VersionCompareManageNamedVersions";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
@@ -16,7 +17,14 @@ interface VersionCompareSelectorInnerProps {
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
-  versionsUrl?: string | undefined;
+  /**
+ * Props for a href that will, on a click, navigate to the provided link or invoke the provided onClick method.
+ *
+ * Please note if href and both on click are provided; the component will not use on click but will use href instead.
+ *
+ * ManageNamedVersionLabel will default to `Manage named versions` if not provided.
+ */
+  manageNamedVersionProps?: ManageNamedVersionsProps;
 }
 
 /**
@@ -61,12 +69,12 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         )
       }
       {
-        props.versionsUrl &&
-        <div className="comparison-job-selector-manage-link">
-          <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
-          </a>
-        </div>
+        props.manageNamedVersionProps && (props.manageNamedVersionProps.manageNamedVersionHref || props.manageNamedVersionProps.onclickManageNamedVersion) &&
+        <ManageNamedVersions
+          manageNamedVersionHref={props.manageNamedVersionProps.manageNamedVersionHref}
+          onclickManageNamedVersion={props.manageNamedVersionProps.onclickManageNamedVersion}
+          manageNamedVersionLabel={props.manageNamedVersionProps.manageNamedVersionLabel}
+        />
       }
     </div>
   );

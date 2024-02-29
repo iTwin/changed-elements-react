@@ -21,15 +21,27 @@ import { VersionProcessedState } from "../models/VersionProcessedState";
 import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionCompareToasts";
 import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialogProvider";
+import { ManageNamedVersionsProps } from "./VersionCompareManageNamedVersions";
 
 
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogV2Props {
   /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
+
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
+
   "data-testid"?: string;
+
+  /**
+ * Props for a href that will, on a click, navigate to the provided link or invoke the provided onClick method.
+ *
+ * Please note if href and both onClick are provided; the component will not use on click but will use href instead.
+ *
+ * ManageNamedVersionLabel will default to `Manage named versions` if not provided.
+ */
+  manageNamedVersionProps?: ManageNamedVersionsProps;
 }
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
@@ -172,6 +184,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
           namedVersions={result?.namedVersions}
+          manageNamedVersionProps={props.manageNamedVersionProps}
         />
       </ModalContent>
       <ModalButtonBar>
