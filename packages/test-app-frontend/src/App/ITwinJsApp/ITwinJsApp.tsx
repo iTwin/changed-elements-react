@@ -282,10 +282,23 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
         iModelConnection={UiFramework.getIModelConnection()!}
         manageNamedVersionProps={
           {
-            manageNamedVersionHref: "https://example.com",
+            children:ManageNamedVersionsChild(),
           }
         }
       />,
     }];
   }
+}
+
+function ManageNamedVersionsChild() {
+  return (
+    <a
+      href={"https://example.com"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={"manage-named-versions-message"}
+    >
+      {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
+    </a>
+  );
 }

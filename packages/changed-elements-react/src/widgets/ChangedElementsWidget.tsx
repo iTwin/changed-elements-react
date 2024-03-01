@@ -60,11 +60,7 @@ export interface ChangedElementsWidgetProps {
   onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
 
   /**
- * Props for a href that will, on a click, navigate to the provided link or invoke the provided onClick method.
- *
- * Please note if href and both on click are provided; the component will not use on click but will use href instead.
- *
- * ManageNamedVersionLabel will default to `Manage named versions` if not provided.
+ * props contain a child component to be populated for managing named versions
  */
   manageNamedVersionProps?: ManageNamedVersionsProps;
 }

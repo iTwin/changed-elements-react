@@ -18,11 +18,7 @@ interface VersionCompareSelectorInnerProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
   /**
- * Props for a href that will, on a click, navigate to the provided link or invoke the provided onClick method.
- *
- * Please note if href and both on click are provided; the component will not use on click but will use href instead.
- *
- * ManageNamedVersionLabel will default to `Manage named versions` if not provided.
+ * props contain a child component to be populated for managing named versions
  */
   manageNamedVersionProps?: ManageNamedVersionsProps;
 }
@@ -69,12 +65,10 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         )
       }
       {
-        props.manageNamedVersionProps && (props.manageNamedVersionProps.manageNamedVersionHref || props.manageNamedVersionProps.onclickManageNamedVersion) &&
-        <ManageNamedVersions
-          manageNamedVersionHref={props.manageNamedVersionProps.manageNamedVersionHref}
-          onclickManageNamedVersion={props.manageNamedVersionProps.onclickManageNamedVersion}
-          manageNamedVersionLabel={props.manageNamedVersionProps.manageNamedVersionLabel}
-        />
+        props.manageNamedVersionProps &&
+        <ManageNamedVersions>
+          {props.manageNamedVersionProps.children}
+        </ManageNamedVersions>
       }
     </div>
   );
