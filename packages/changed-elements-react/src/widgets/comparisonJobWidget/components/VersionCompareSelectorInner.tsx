@@ -19,7 +19,7 @@ interface VersionCompareSelectorInnerProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot: ReactNode | undefined;
+  manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
 /**

@@ -27,14 +27,11 @@ import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialog
 export interface VersionCompareSelectDialogV2Props {
   /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
-
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
-
   "data-testid"?: string;
-
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot: ReactNode | undefined;
+  manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
