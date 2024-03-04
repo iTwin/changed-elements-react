@@ -3,14 +3,14 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelConnection } from "@itwin/core-frontend";
-import { useState } from "react";
+import { ComponentProps, useState } from "react";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
+import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
 import "./styles/ComparisonJobWidget.scss";
-import { ManageNamedVersionsProps } from "./VersionCompareManageNamedVersions";
 
 /** Options for VersionCompareSelectComponent. */
 export interface VersionCompareSelectorProps {
@@ -29,14 +29,8 @@ export interface VersionCompareSelectorProps {
   /** Named Versions to be displayed */
   namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
 
-  /**
-  * Props for a href that will, on a click, navigate to the provided link or invoke the provided onClick method.
-  *
-  * Please note if href and both on click are provided; the component will not use on click but will use href instead.
-  *
-  * ManageNamedVersionLabel will default to `Manage named versions` if not provided.
-  */
-  manageNamedVersionProps?: ManageNamedVersionsProps;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
 }
 
 /**

@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { useEffect, useState } from "react";
+import { ComponentProps, useEffect, useState } from "react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
@@ -21,7 +21,7 @@ import { VersionProcessedState } from "../models/VersionProcessedState";
 import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionCompareToasts";
 import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialogProvider";
-import { ManageNamedVersionsProps } from "./VersionCompareManageNamedVersions";
+import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -34,10 +34,8 @@ export interface VersionCompareSelectDialogV2Props {
 
   "data-testid"?: string;
 
-  /**
- * props contain a child component to be populated for managing named versions
- */
-  manageNamedVersionProps?: ManageNamedVersionsProps;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
 }
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.

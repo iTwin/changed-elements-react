@@ -4,12 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
+import { ComponentProps } from "react";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
-import { ManageNamedVersions, ManageNamedVersionsProps } from "./VersionCompareManageNamedVersions";
+import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
@@ -17,10 +18,8 @@ interface VersionCompareSelectorInnerProps {
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
-  /**
- * props contain a child component to be populated for managing named versions
- */
-  manageNamedVersionProps?: ManageNamedVersionsProps;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
 }
 
 /**

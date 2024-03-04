@@ -4,8 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import "./styles/ComparisonJobWidget.scss";
 
-
-export interface ManageNamedVersionsProps {
+interface ManageNamedVersionsProps {
   children: React.ReactNode;
 }
 

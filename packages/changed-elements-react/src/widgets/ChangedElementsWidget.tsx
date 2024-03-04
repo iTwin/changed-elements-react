@@ -8,7 +8,7 @@ import {
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement } from "react";
+import { Component, ComponentProps, ReactElement } from "react";
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ReportProperty } from "../api/ReportGenerator.js";
@@ -28,7 +28,7 @@ import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
-import { ManageNamedVersionsProps } from "./comparisonJobWidget/components/VersionCompareManageNamedVersions.js";
+import { ManageNamedVersions } from "./comparisonJobWidget/components/VersionCompareManageNamedVersions.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -58,11 +58,8 @@ export interface ChangedElementsWidgetProps {
  * @param jobAndNamedVersion param contain job and named version info to be passed to call back
 */
   onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
-
-  /**
- * props contain a child component to be populated for managing named versions
- */
-  manageNamedVersionProps?: ManageNamedVersionsProps;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
 }
 
 export interface ChangedElementsWidgetState {
