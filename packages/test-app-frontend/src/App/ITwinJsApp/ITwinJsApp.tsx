@@ -277,7 +277,24 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
 
     return [{
       id: "ChangedElementsWidget",
-      content: <ChangedElementsWidget useV2Widget feedbackUrl="https://example.com" iModelConnection={UiFramework.getIModelConnection()!} />,
+      content: <ChangedElementsWidget useV2Widget
+        feedbackUrl="https://example.com"
+        iModelConnection={UiFramework.getIModelConnection()!}
+        manageNamedVersionsSlot={<ManageNamedVersions />}
+      />,
     }];
   }
+}
+
+function ManageNamedVersions() {
+  return (
+    <a
+      href={"https://example.com"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={"manage-named-versions-message"}
+    >
+      {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
+    </a>
+  );
 }

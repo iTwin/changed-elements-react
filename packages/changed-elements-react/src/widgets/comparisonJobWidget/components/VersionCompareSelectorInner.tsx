@@ -4,11 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
+import { ReactNode } from "react";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
+import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
@@ -16,7 +18,8 @@ interface VersionCompareSelectorInnerProps {
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
-  versionsUrl?: string | undefined;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
 /**
@@ -61,12 +64,10 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         )
       }
       {
-        props.versionsUrl &&
-        <div className="comparison-job-selector-manage-link">
-          <a href={props.versionsUrl} target="_blank" rel="noopener noreferrer" className="message">
-            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.manageNamedVersions")}
-          </a>
-        </div>
+        props.manageNamedVersionsSlot &&
+        <ManageNamedVersions>
+          {props.manageNamedVersionsSlot}
+        </ManageNamedVersions>
       }
     </div>
   );

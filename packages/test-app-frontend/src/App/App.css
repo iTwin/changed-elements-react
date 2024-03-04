@@ -4,10 +4,10 @@
 *--------------------------------------------------------------------------------------------*/
 
 @font-face {
-  font-family: 'Noto Sans';
+  font-family: "Noto Sans";
   font-style: normal;
   font-weight: 1 1000;
-  src: local("Noto Sans"), url('/NotoSans.ttf') format("opentype");
+  src: local("Noto Sans"), url("/NotoSans.ttf") format("opentype");
 }
 
 .signin-prompt {
@@ -29,4 +29,13 @@
   height: var(--iui-size-3xl);
   width: var(--iui-size-3xl);
   fill: var(--iui-color-icon);
+}
+
+.manage-named-versions-message {
+  color: var(--iui-color-text-accent);
+  padding-left: var(--iui-size-2xs);
+  width: 100%;
+  text-align: right;
+  text-decoration: underline;
+  cursor: pointer;
 }
