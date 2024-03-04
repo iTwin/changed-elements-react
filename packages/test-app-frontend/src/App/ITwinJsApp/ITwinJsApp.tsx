@@ -280,13 +280,13 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       content: <ChangedElementsWidget useV2Widget
         feedbackUrl="https://example.com"
         iModelConnection={UiFramework.getIModelConnection()!}
-        manageNamedVersionsSlot={ManageNamedVersionsChild()}
+        manageNamedVersionsSlot={<ManageNamedVersions />}
       />,
     }];
   }
 }
 
-function ManageNamedVersionsChild() {
+function ManageNamedVersions() {
   return (
     <a
       href={"https://example.com"}
