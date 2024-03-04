@@ -2,10 +2,11 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+import { ReactNode } from "react";
 import "./styles/ComparisonJobWidget.scss";
 
 interface ManageNamedVersionsProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**

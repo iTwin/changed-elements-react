@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
-import { ComponentProps } from "react";
+import { ReactNode } from "react";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
@@ -19,7 +19,7 @@ interface VersionCompareSelectorInnerProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
+  manageNamedVersionsSlot: ReactNode | undefined;
 }
 
 /**
@@ -64,9 +64,9 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         )
       }
       {
-        props.manageNamedVersionProps &&
+        props.manageNamedVersionsSlot &&
         <ManageNamedVersions>
-          {props.manageNamedVersionProps.children}
+          {props.manageNamedVersionsSlot}
         </ManageNamedVersions>
       }
     </div>

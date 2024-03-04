@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { ComponentProps, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
@@ -21,7 +21,6 @@ import { VersionProcessedState } from "../models/VersionProcessedState";
 import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionCompareToasts";
 import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialogProvider";
-import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
 
 
 /** Options for VersionCompareSelectDialogV2. */
@@ -35,7 +34,7 @@ export interface VersionCompareSelectDialogV2Props {
   "data-testid"?: string;
 
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
+  manageNamedVersionsSlot: ReactNode | undefined;
 }
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
@@ -178,7 +177,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
           namedVersions={result?.namedVersions}
-          manageNamedVersionProps={props.manageNamedVersionProps}
+          manageNamedVersionsSlot={props.manageNamedVersionsSlot}
         />
       </ModalContent>
       <ModalButtonBar>

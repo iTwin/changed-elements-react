@@ -8,7 +8,7 @@ import {
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ComponentProps, ReactElement } from "react";
+import { Component, ReactElement, ReactNode } from "react";
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ReportProperty } from "../api/ReportGenerator.js";
@@ -28,7 +28,6 @@ import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
-import { ManageNamedVersions } from "./comparisonJobWidget/components/VersionCompareManageNamedVersions.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -59,7 +58,7 @@ export interface ChangedElementsWidgetProps {
 */
   onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionProps?: ComponentProps<typeof ManageNamedVersions>;
+  manageNamedVersionsSlot: ReactNode | undefined;
 }
 
 export interface ChangedElementsWidgetState {
@@ -417,7 +416,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                 data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
-                manageNamedVersionProps={this.props.manageNamedVersionProps}
+                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
               />}
           </VersionCompareSelectProviderV2> :
           this.state.versionSelectDialogVisible &&
