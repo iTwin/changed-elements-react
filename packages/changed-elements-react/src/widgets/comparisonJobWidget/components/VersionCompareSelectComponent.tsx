@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelConnection } from "@itwin/core-frontend";
-import { useMemo, useState } from "react";
+import { ReactNode, useState } from "react";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
@@ -27,6 +27,8 @@ export interface VersionCompareSelectorProps {
 
   /** Named Versions to be displayed */
   namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
 /**
@@ -35,10 +37,6 @@ export interface VersionCompareSelectorProps {
 export function VersionCompareSelectComponent(props: VersionCompareSelectorProps) {
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
 
-  const versionsUrl = useMemo(
-    () => (0, props.getManageVersionsUrl)?.(props.iModelConnection),
-    [props.getManageVersionsUrl, props.iModelConnection],
-  );
   const handleVersionClicked = (targetVersion: NamedVersion) => {
     setTargetVersion(targetVersion);
     if (props.namedVersions && props.namedVersions.currentVersion) {
@@ -55,7 +53,7 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
     selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
     onVersionClicked={handleVersionClicked}
     wantTitle={props.wantTitle}
-    versionsUrl={versionsUrl}
+    manageNamedVersionsSlot={props.manageNamedVersionsSlot}
   /> : <div className="vc-spinner">
     <ProgressRadial size="large" indeterminate />
   </div>;

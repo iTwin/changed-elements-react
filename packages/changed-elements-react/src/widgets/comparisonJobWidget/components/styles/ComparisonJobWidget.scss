@@ -233,12 +233,12 @@
 }
 
 .comparison-job-container-header {
-    display: flex;
-    border-left: solid;
-    border-right: solid;
-    border-top: solid;
-    border-color: var(--iui-color-border);
-    border-width: 1px;
+  display: flex;
+  border-left: solid;
+  border-right: solid;
+  border-top: solid;
+  border-color: var(--iui-color-border);
+  border-width: 1px;
   > .comparison-job-header {
     flex: 1 0;
     margin: var(--iui-size-xs);
@@ -279,7 +279,7 @@
   > .comparison-job-row {
     display: flex;
     flex-direction: row;
-    >.current-comparison-title{
+    > .current-comparison-title {
       margin-top: 8px;
     }
     &.comparison-job-list {
@@ -308,13 +308,6 @@
   display: flex;
   padding-top: var(--iui-size-xs);
   padding-left: var(--iui-size-2xs);
-
-  > .message {
-    color: var(--iui-color-text-accent);
-    padding-left: var(--iui-size-2xs);
-    width: 100%;
-    text-align: right;
-  }
 }
 
 .comparison-job-selector-footer {
