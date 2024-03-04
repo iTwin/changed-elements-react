@@ -10,6 +10,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Callbacks for comparison job progress
 * Allow disabling toast messages
 
+### Patch changes
+
+* Added new component to modal for handling named versions
+
+## [0.3.10](https://github.com/iTwin/changed-elements-react/tree/v0.3.10/packages/changed-elements-react) - 2024-02-26
+
+### Patch changes
+
+* Callbacks for comparison job progress
+* Allow disabling toast messages
+
 ## [0.3.8](https://github.com/iTwin/changed-elements-react/tree/v0.3.8/packages/changed-elements-react) - 2024-02-14
 
 ### Patch changes

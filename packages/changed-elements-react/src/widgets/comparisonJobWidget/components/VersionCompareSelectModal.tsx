@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
@@ -30,6 +30,8 @@ export interface VersionCompareSelectDialogV2Props {
   /** onClose triggered when user clicks start comparison or closes dialog.*/
   onClose: (() => void) | undefined;
   "data-testid"?: string;
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.
@@ -172,6 +174,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
           namedVersions={result?.namedVersions}
+          manageNamedVersionsSlot={props.manageNamedVersionsSlot}
         />
       </ModalContent>
       <ModalButtonBar>
