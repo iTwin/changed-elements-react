@@ -2,10 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { IModelApp, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import { toaster } from "@itwin/itwinui-react";
-import { ManagerStartComparisonV2Args, runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
+import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
+import { ComparisonJobCompleted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
+import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
+import { JobAndNamedVersions } from "../models/ComparisonJobModels";
 
 /** Toast Comparison Job Processing.
  * Outputs toast message following the pattern:
@@ -43,6 +46,16 @@ export const toastComparisonJobError = (currentVersion: NamedVersion, targetVers
   );
 };
 
+export type ToastComparisonJobCompleteArgs = {
+  comparisonJob: ComparisonJobCompleted;
+  comparisonJobClient: IComparisonJobClient;
+  iModelConnection: IModelConnection;
+  targetVersion: NamedVersion;
+  currentVersion: NamedVersion;
+  getToastsEnabled?: () => boolean;
+  runOnJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+};
+
 /** Toast Comparison Job Complete.
  * Outputs toast message following the pattern:
  * Version Compare
@@ -50,7 +63,7 @@ export const toastComparisonJobError = (currentVersion: NamedVersion, targetVers
  *
  * Also has a link with the text "View The Report" and when clicked will start visualization on the comparison.
 */
-export const toastComparisonJobComplete = (args: ManagerStartComparisonV2Args) => {
+export const toastComparisonJobComplete = (args: ToastComparisonJobCompleteArgs) => {
   const title = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.viewTheReport");
   toaster.closeAll();
   toaster.setSettings({
