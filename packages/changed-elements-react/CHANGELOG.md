@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## [0.3.11](https://github.com/iTwin/changed-elements-react/tree/v0.3.11/packages/changed-elements-react) - 2024-03-04
+
 ### Patch changes
 
 * Added new component to modal for handling named versions
+* Added ability to make toasts optional and added optional call back for onJobUpdate
 
 ## [0.3.10](https://github.com/iTwin/changed-elements-react/tree/v0.3.10/packages/changed-elements-react) - 2024-02-26
 
