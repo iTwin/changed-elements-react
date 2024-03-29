@@ -32,7 +32,7 @@ export interface VersionCompareOptions {
    * @default "https://api.bentley.com/changedelements"
    */
   changedElementsApiBaseUrl?: string | undefined;
-
+  
   /** Enable or disable display of side by side toggle in property comparison table */
   displaySideBySideToggle?: boolean;
 
@@ -127,7 +127,7 @@ export class VersionCompare {
   public static initialize(options: VersionCompareOptions): void {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
-    
+
     // get the access token
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 
