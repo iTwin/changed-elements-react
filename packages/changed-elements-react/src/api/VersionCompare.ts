@@ -33,6 +33,9 @@ export interface VersionCompareOptions {
    */
   changedElementsApiBaseUrl?: string | undefined;
 
+  /** Enable or disable display of side by side toggle in property comparison table */
+  displaySideBySideToggle?: boolean;
+
   /** Feature tracking calls for applications to listen to. */
   featureTracking?: VersionCompareFeatureTracking;
 
@@ -124,7 +127,6 @@ export class VersionCompare {
   public static initialize(options: VersionCompareOptions): void {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
-
     // get the access token
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 
