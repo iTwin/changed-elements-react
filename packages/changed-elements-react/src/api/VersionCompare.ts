@@ -12,6 +12,7 @@ import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
+import { ReactNode } from "react";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;
@@ -32,9 +33,12 @@ export interface VersionCompareOptions {
    * @default "https://api.bentley.com/changedelements"
    */
   changedElementsApiBaseUrl?: string | undefined;
-  
+
   /** Enable or disable display of side by side toggle in property comparison table */
-  displaySideBySideToggle?: boolean;
+  displaySideBySideToggle?: boolean | undefined;
+
+  /** Optional prop for a user supplied component to handle managing named versions.*/
+  manageNamedVersionsSlot?: ReactNode | undefined;
 
   /** Feature tracking calls for applications to listen to. */
   featureTracking?: VersionCompareFeatureTracking;
