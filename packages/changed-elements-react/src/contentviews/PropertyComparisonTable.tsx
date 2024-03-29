@@ -31,7 +31,7 @@ export interface PropertyComparisonTableProps {
 
   onSideBySideToggle?: (() => void) | undefined;
 
-  displaySideBySideToggle: boolean | undefined;
+  displaySideBySideToggle?: boolean | undefined;
 }
 
 export function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
