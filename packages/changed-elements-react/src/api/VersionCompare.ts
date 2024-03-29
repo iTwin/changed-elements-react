@@ -127,6 +127,7 @@ export class VersionCompare {
   public static initialize(options: VersionCompareOptions): void {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
+    
     // get the access token
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 
