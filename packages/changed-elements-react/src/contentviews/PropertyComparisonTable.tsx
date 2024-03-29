@@ -31,7 +31,7 @@ export interface PropertyComparisonTableProps {
 
   onSideBySideToggle?: (() => void) | undefined;
 
-  displaySideBySideToggle?: boolean;
+  displaySideBySideToggle: boolean | undefined;
 }
 
 export function PropertyComparisonTable(props: PropertyComparisonTableProps): ReactElement {
@@ -91,13 +91,15 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
           />
         }
         <div className="settings">
-          {(props.displaySideBySideToggle ?? true) && <>
+          {
+            (props.displaySideBySideToggle ?? true) &&
             <SideBySideToggle
-            manager={manager}
-            selection={selection}
-            isSideBySide={props.isSideBySide}
-            onSideBySideToggle={props.onSideBySideToggle}
-          /></>}
+              manager={manager}
+              selection={selection}
+              isSideBySide={props.isSideBySide}
+              onSideBySideToggle={props.onSideBySideToggle}
+            />
+          }
           <ToggleSwitch
             label={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.onlyChangedProps")}
             checked={showChangedOnly}
