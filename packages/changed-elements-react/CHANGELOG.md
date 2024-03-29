@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+### Minor changes
+
+* `PropertyComparisonTable`: Add ability to hide side-by-side comparison toggle by setting `displaySideBySideToggle` property to `false`
+
 ## [0.3.11](https://github.com/iTwin/changed-elements-react/tree/v0.3.11/packages/changed-elements-react) - 2024-03-04
 
 ### Patch changes
