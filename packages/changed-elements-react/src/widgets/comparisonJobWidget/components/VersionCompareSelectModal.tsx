@@ -22,7 +22,6 @@ import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJob
 import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialogProvider";
 
-
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogV2Props {
   /** IModel Connection that is being visualized. */
@@ -174,7 +173,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
           namedVersions={result?.namedVersions}
-          manageNamedVersionsSlot={props.manageNamedVersionsSlot}
+          manageNamedVersionsSlot={props.manageNamedVersionsSlot ?? VersionCompare.manager?.options?.manageNamedVersionsSlot}
         />
       </ModalContent>
       <ModalButtonBar>
