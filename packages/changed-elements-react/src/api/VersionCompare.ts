@@ -34,7 +34,7 @@ export interface VersionCompareOptions {
    */
   changedElementsApiBaseUrl?: string | undefined;
 
-  /** Enable or disable display of side by side toggle in property comparison table */
+  /** Enable or disable display of side by side toggle in property comparison table. */
   displaySideBySideToggle?: boolean | undefined;
 
   /** Optional prop for a user supplied component to handle managing named versions.*/
