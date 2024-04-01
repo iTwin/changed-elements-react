@@ -37,7 +37,7 @@ export interface VersionCompareOptions {
   /** Enable or disable display of side by side toggle in property comparison table. */
   displaySideBySideToggle?: boolean | undefined;
 
-  /** Optional prop for a user supplied component to handle managing named versions.*/
+  /** Optional prop for a user supplied component to handle managing named versions. */
   manageNamedVersionsSlot?: ReactNode | undefined;
 
   /** Feature tracking calls for applications to listen to. */
