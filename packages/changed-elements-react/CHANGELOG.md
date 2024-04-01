@@ -4,10 +4,12 @@ All notable changes to this package will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
+## [0.5.0](https://github.com/iTwin/changed-elements-react/tree/v0.5.0/packages/changed-elements-react) - 2024-04-01
 
 * `VersionCompareManager`: Add ability to hide side-by-side comparison toggle by setting `displaySideBySideToggle` property to `false`
 * `VersionCompareManager`: Add ability to pass a component to v2 widget VC dialog by using the `manageNamedVersionsSlot` setting.
+
+## [0.4.0](https://github.com/iTwin/changed-elements-react/tree/v0.3.11/packages/changed-elements-react) - 2024-03-05
 
 ### Minor changes
 
