@@ -39,6 +39,7 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
   useVersionCompare();
 
   const { manager, selection } = props;
+  const displaySideBySideToggle = props.displaySideBySideToggle || manager.options.displaySideBySideToggle;
 
   const columns = useColumnsDefinition(manager.currentVersion?.displayName, manager.targetVersion?.displayName);
   const changedElement = useChangedElement(manager.changedElementsManager, selection);
@@ -92,7 +93,7 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
         }
         <div className="settings">
           {
-            (props.displaySideBySideToggle ?? true) &&
+            (displaySideBySideToggle ?? true) &&
             <SideBySideToggle
               manager={manager}
               selection={selection}
