@@ -6,12 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
-## [0.4.0](https://github.com/iTwin/changed-elements-react/tree/v0.4.0/packages/changed-elements-react) - 2024-03-29
+## [0.5.0](https://github.com/iTwin/changed-elements-react/tree/v0.5.0/packages/changed-elements-react) - 2024-04-01
 
 ### Minor changes
 
 * `VersionCompareManager`: Add ability to hide side-by-side comparison toggle by setting `displaySideBySideToggle` property to `false`
 * `VersionCompareManager`: Add ability to pass a component to v2 widget VC dialog by using the `manageNamedVersionsSlot` setting
+
+## [0.4.0](https://github.com/iTwin/changed-elements-react/tree/v0.4.0/packages/changed-elements-react) - 2024-03-29
+
+### Minor changes
+
+* `PropertyComparisonTable`: Add ability to hide side-by-side comparison toggle by setting `displaySideBySideToggle` property to `false`
 
 ## [0.3.11](https://github.com/iTwin/changed-elements-react/tree/v0.3.11/packages/changed-elements-react) - 2024-03-04
 
