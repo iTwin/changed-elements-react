@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import React from "react";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";

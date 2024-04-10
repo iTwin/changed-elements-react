@@ -8,7 +8,7 @@ import {
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement, ReactNode } from "react";
+import { Component, ReactElement } from "react";
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ReportProperty } from "../api/ReportGenerator.js";
