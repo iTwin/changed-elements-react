@@ -2,9 +2,8 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { IModelApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
-import { ReactNode } from "react";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
@@ -19,14 +18,14 @@ interface VersionCompareSelectorInnerProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: ReactNode | undefined;
+  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
 }
 
 /**
  * Component that houses named version list.
  * Also displays the current versions information.
  */
-export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps) {
+export function VersionCompareSelectorInner(props: Readonly<VersionCompareSelectorInnerProps>) {
   return (
     <div className="comparison-job-selector">
       {

@@ -12,7 +12,6 @@ import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
-import { ReactNode } from "react";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;
@@ -37,8 +36,8 @@ export interface VersionCompareOptions {
   /** Enable or disable display of side by side toggle in property comparison table. */
   displaySideBySideToggle?: boolean | undefined;
 
-  /** Optional prop for a user supplied component to handle managing named versions. */
-  manageNamedVersionsSlot?: ReactNode | undefined;
+  /** Optional prop for a user supplied component to handle managing named versions. V2 Widget use only. */
+  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
 
   /** Feature tracking calls for applications to listen to. */
   featureTracking?: VersionCompareFeatureTracking;
@@ -79,7 +78,7 @@ export interface VersionCompareOptions {
 
   /**
    * Use this to return a URL to open in a new tab when the user clicks on the 'Manage Named Versions' href in the
-   * version compare select dialog.
+   * version compare select dialog. V1 Widget use only.
    */
   getManageNamedVersionsUrl?: (iModelConnection?: IModelConnection) => string;
 

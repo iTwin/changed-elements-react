@@ -8,7 +8,9 @@ import {
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
+  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
+  VersionCompareManager,
+  VisualizationHandler
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
@@ -280,13 +282,11 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       content: <ChangedElementsWidget useV2Widget
         feedbackUrl="https://example.com"
         iModelConnection={UiFramework.getIModelConnection()!}
-        manageNamedVersionsSlot={<ManageNamedVersions />}
       />,
     }];
   }
 }
-
-function ManageNamedVersions() {
+function ManageNamedVersions(imodelConnection:IModelConnection) {
   return (
     <a
       href={"https://example.com"}
