@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelConnection } from "@itwin/core-frontend";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
@@ -50,6 +50,7 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
     onVersionClicked={handleVersionClicked}
     wantTitle={props.wantTitle}
     manageNamedVersionsSlot={props.manageNamedVersionsSlot}
+    iModelConnection={props.iModelConnection}
   /> : <div className="vc-spinner">
     <ProgressRadial size="large" indeterminate />
   </div>;

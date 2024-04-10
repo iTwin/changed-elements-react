@@ -434,11 +434,14 @@ export class VersionCompareManager {
       if (this.options.wantedModelClasses) {
         wantedModelClasses = this.options.wantedModelClasses;
       }
-
+      let filteredChangeElements = changedElements.slice()
+      if (this.ignoredElementIds !== undefined) {
+        filteredChangeElements = this._filterIgnoredElementsFromChangesets(changedElements);
+      }
       await this.changedElementsManager.initialize(
         this._currentIModel,
         this._targetIModel,
-        changedElements,
+        filteredChangeElements,
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
