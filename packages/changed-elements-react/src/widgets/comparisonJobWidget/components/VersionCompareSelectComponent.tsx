@@ -50,7 +50,6 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
     onVersionClicked={handleVersionClicked}
     wantTitle={props.wantTitle}
     manageNamedVersionsSlot={props.manageNamedVersionsSlot}
-    iModelConnection={props.iModelConnection}
   /> : <div className="vc-spinner">
     <ProgressRadial size="large" indeterminate />
   </div>;
