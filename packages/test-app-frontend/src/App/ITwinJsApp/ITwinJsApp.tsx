@@ -284,7 +284,8 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     }];
   }
 }
-function ManageNamedVersions(_imodelConnection:Readonly<IModelConnection>) {
+
+function ManageNamedVersions(_imodelConnection: Readonly<IModelConnection>) {
   return (
     <a
       href={"https://example.com"}
