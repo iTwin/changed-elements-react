@@ -12,6 +12,7 @@ import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
+import { ReactNode } from "react";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;
@@ -35,9 +36,6 @@ export interface VersionCompareOptions {
 
   /** Enable or disable display of side by side toggle in property comparison table. */
   displaySideBySideToggle?: boolean | undefined;
-
-  /** Optional prop for a user supplied component to handle managing named versions. V2 Widget use only. */
-  manageNamedVersionsSlot?: () => React.ReactNode;
 
   /** Feature tracking calls for applications to listen to. */
   featureTracking?: VersionCompareFeatureTracking;

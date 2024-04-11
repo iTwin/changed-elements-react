@@ -8,7 +8,7 @@ import {
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement } from "react";
+import { Component, ReactElement, ReactNode } from "react";
 import { FilterOptions } from "../SavedFiltersManager.js";
 import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ReportProperty } from "../api/ReportGenerator.js";
@@ -58,7 +58,7 @@ export interface ChangedElementsWidgetProps {
 */
   onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: () => React.ReactNode;
+  manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
 export interface ChangedElementsWidgetState {
@@ -416,7 +416,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                 data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
-                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot ?? this.state.manager.options.manageNamedVersionsSlot}
+                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
               />}
           </VersionCompareSelectProviderV2> :
           this.state.versionSelectDialogVisible &&

@@ -10,6 +10,7 @@ import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
 import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
+import { ReactNode } from "react";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
@@ -18,7 +19,7 @@ interface VersionCompareSelectorInnerProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: () => React.ReactNode;
+  manageNamedVersionsSlot?: ReactNode | undefined;
   /** IModel Connection that is being visualized. */
   iModelConnection?: IModelConnection;
 }
@@ -65,9 +66,9 @@ export function VersionCompareSelectorInner(props: Readonly<VersionCompareSelect
         )
       }
       {
-        (props.manageNamedVersionsSlot && props.iModelConnection) &&
+        props.manageNamedVersionsSlot &&
         <ManageNamedVersions>
-          {props.manageNamedVersionsSlot()}
+          {props.manageNamedVersionsSlot}
         </ManageNamedVersions>
       }
     </div>
