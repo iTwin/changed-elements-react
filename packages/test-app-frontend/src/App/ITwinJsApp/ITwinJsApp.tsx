@@ -8,7 +8,8 @@ import {
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext} from "@itwin/changed-elements-react";
+  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
+} from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
