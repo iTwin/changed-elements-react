@@ -37,7 +37,7 @@ export interface VersionCompareOptions {
   displaySideBySideToggle?: boolean | undefined;
 
   /** Optional prop for a user supplied component to handle managing named versions. V2 Widget use only. */
-  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
+  manageNamedVersionsSlot?: () => React.ReactNode;
 
   /** Feature tracking calls for applications to listen to. */
   featureTracking?: VersionCompareFeatureTracking;

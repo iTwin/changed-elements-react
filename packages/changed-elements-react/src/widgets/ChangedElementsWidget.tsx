@@ -58,7 +58,7 @@ export interface ChangedElementsWidgetProps {
 */
   onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
+  manageNamedVersionsSlot?: () => React.ReactNode;
 }
 
 export interface ChangedElementsWidgetState {

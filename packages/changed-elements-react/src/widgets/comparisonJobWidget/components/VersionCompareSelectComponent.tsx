@@ -24,7 +24,7 @@ export interface VersionCompareSelectorProps {
   /** Named Versions to be displayed */
   namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
+  manageNamedVersionsSlot?: () => React.ReactNode;
 }
 
 /**

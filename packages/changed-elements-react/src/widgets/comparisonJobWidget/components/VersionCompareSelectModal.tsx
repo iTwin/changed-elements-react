@@ -30,7 +30,7 @@ export interface VersionCompareSelectDialogV2Props {
   onClose: (() => void) | undefined;
   "data-testid"?: string;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
+  manageNamedVersionsSlot?: () => React.ReactNode;
 }
 
 /** VersionCompareSelectDialogV2 use comparison jobs for processing.

@@ -18,7 +18,7 @@ interface VersionCompareSelectorInnerProps {
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
-  manageNamedVersionsSlot?: (iModel: IModelConnection) => React.ReactNode;
+  manageNamedVersionsSlot?: () => React.ReactNode;
   /** IModel Connection that is being visualized. */
   iModelConnection?: IModelConnection;
 }
@@ -67,7 +67,7 @@ export function VersionCompareSelectorInner(props: Readonly<VersionCompareSelect
       {
         (props.manageNamedVersionsSlot && props.iModelConnection) &&
         <ManageNamedVersions>
-          {props.manageNamedVersionsSlot(props.iModelConnection)}
+          {props.manageNamedVersionsSlot()}
         </ManageNamedVersions>
       }
     </div>
