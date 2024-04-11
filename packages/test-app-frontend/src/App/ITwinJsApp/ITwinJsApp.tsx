@@ -279,7 +279,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       content: <ChangedElementsWidget useV2Widget
         feedbackUrl="https://example.com"
         iModelConnection={UiFramework.getIModelConnection()!}
-        manageNamedVersionsSlot={<ManageNamedVersions/>}
+        manageNamedVersionsSlot={<ManageNamedVersions />}
       />,
     }];
   }
