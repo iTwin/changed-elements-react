@@ -4,13 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
+import { ReactNode } from "react";
 import { VersionList } from "./VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
 import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
-import { ReactNode } from "react";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];
