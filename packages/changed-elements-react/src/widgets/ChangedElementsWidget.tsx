@@ -416,7 +416,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                 data-testid="⁠comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
-                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot ?? this.state.manager.options.manageNamedVersionsSlot}
+                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
               />}
           </VersionCompareSelectProviderV2> :
           this.state.versionSelectDialogVisible &&

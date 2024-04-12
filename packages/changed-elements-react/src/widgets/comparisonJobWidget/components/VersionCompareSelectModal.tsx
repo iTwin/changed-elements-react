@@ -171,9 +171,8 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         <VersionCompareSelectComponent
           iModelConnection={props.iModelConnection}
           onVersionSelected={_onVersionSelected}
-          getManageVersionsUrl={VersionCompare.manager?.options.getManageNamedVersionsUrl}
           namedVersions={result?.namedVersions}
-          manageNamedVersionsSlot={props.manageNamedVersionsSlot ?? VersionCompare.manager?.options?.manageNamedVersionsSlot}
+          manageNamedVersionsSlot={props.manageNamedVersionsSlot}
         />
       </ModalContent>
       <ModalButtonBar>

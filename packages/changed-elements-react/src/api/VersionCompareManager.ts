@@ -434,17 +434,19 @@ export class VersionCompareManager {
       if (this.options.wantedModelClasses) {
         wantedModelClasses = this.options.wantedModelClasses;
       }
-
+      let filteredChangedElements = changedElements;
+      if (this.ignoredElementIds !== undefined) {
+        filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
+      }
       await this.changedElementsManager.initialize(
         this._currentIModel,
         this._targetIModel,
-        changedElements,
+        filteredChangedElements,
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
         this.loadingProgressEvent,
       );
-
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
       // We have parent Ids available if any entries contain undefined parent data

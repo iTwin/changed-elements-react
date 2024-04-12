@@ -21,10 +21,6 @@ export interface VersionCompareSelectorProps {
 
   /** Whether to show a title for the component or not. */
   wantTitle?: boolean;
-
-  /** Configure the 'Manage Named Versions' URL. */
-  getManageVersionsUrl?: (iModelConnection?: IModelConnection) => string;
-
   /** Named Versions to be displayed */
   namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
   /** Optional prop for a user supplied component to handle managing named versions.*/
