@@ -12,7 +12,6 @@ import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
-import { ReactNode } from "react";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;
