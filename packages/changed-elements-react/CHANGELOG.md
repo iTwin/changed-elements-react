@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## [0.6.0](https://github.com/iTwin/changed-elements-react/tree/v0.6.0/packages/changed-elements-react) - 2024-04-12
+
 ### Minor changes
 
 * `VersionCompareManager`: removed the ability to pass a component to v2 widget VC dialog by using the `manageNamedVersionsSlot` setting
