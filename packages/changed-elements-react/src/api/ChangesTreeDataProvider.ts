@@ -12,6 +12,7 @@ import {
   GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, ScreenViewport
 } from "@itwin/core-frontend";
 import { PresentationLabelsProvider } from "@itwin/presentation-components";
+import * as _ from "lodash";
 
 import { ChangeElementType, type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { VersionCompare } from "../api/VersionCompare.js";
@@ -474,7 +475,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       updateFunc,
     );
 
-    let targetNodes = await this._getChangedModelOrSubjectNodes(
+    const targetNodes = await this._getChangedModelOrSubjectNodes(
       targetIModel,
       onlyDeleted,
       true,
@@ -482,14 +483,34 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     );
 
     const currentModelIds = new Set(currentNodes.map((node: TreeNodeItem) => node.id));
-    targetNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
-
-    this._models = [...currentNodes, ...targetNodes];
+    const uniqueNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
+    const mergedNodes = this._findAndMergeModelChanges(currentNodes, targetNodes);
+    this._models = [...mergedNodes, ...uniqueNodes];
 
     // Release, as it will be unused after the creation of models
     this._rootEntries = undefined;
 
     return this._models;
+  }
+
+  private _findAndMergeModelChanges = (currentNodes: ReadonlyArray<TreeNodeItem>, targetNodes: ReadonlyArray<TreeNodeItem>) => {
+    const currentNodeMap = new Map<string, TreeNodeItem>();
+    currentNodes.forEach((node: TreeNodeItem) => {
+      const nodeCopy = _.cloneDeep(node);
+      // deep copy the node, so we don't modify the original.
+      currentNodeMap.set(node.id, nodeCopy)
+    });
+    const overlappingNodes: ReadonlyArray<TreeNodeItem> = targetNodes.filter((entry: TreeNodeItem) => currentNodeMap.has(entry.id));
+    overlappingNodes.forEach((entry: TreeNodeItem) => {
+      const currentEntry = currentNodeMap.get(entry.id);
+      if (currentEntry && currentEntry.extendedData?.modelChanges && entry.extendedData?.modelChanges) {
+        const keys = Object.keys(currentEntry?.extendedData?.modelChanges ?? "");
+        for (const key of keys) {
+          currentEntry.extendedData.modelChanges[key] = currentEntry.extendedData?.modelChanges[key] || entry.extendedData?.modelChanges[key];
+        }
+      }
+    });
+    return [...currentNodeMap.values()]
   }
 
   /**

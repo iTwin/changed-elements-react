@@ -52,6 +52,7 @@
     "@itwin/presentation-components": "^4.0.1",
     "@itwin/presentation-frontend": "^4.0.6",
     "@testing-library/react": "^12.1.5",
+    "@types/lodash": "^4.17.0",
     "@types/react": "^17.0.0",
     "@types/react-redux": "^7.1.25",
     "@types/react-table": "^7.7.14",
@@ -87,6 +88,7 @@
   "dependencies": {
     "@itwin/itwinui-icons-react": "^2.2.0",
     "@itwin/itwinui-react": "^2.11.11",
+    "lodash": "^4.17.21",
     "react-table": "^7.8.0",
     "react-window": "^1.8.8",
     "react-window-infinite-loader": "^1.0.8"
