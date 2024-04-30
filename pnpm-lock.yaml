@@ -47,9 +47,6 @@ importers:
       '@itwin/itwinui-react':
         specifier: ^2.11.11
         version: 2.12.0(react-dom@17.0.0)(react@17.0.0)
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
       react-table:
         specifier: ^7.8.0
         version: 7.8.0(react@17.0.0)
@@ -93,9 +90,6 @@ importers:
       '@testing-library/react':
         specifier: ^12.1.5
         version: 12.1.5(react-dom@17.0.0)(react@17.0.0)
-      '@types/lodash':
-        specifier: ^4.17.0
-        version: 4.17.0
       '@types/react':
         specifier: ^17.0.0
         version: 17.0.0
@@ -1735,10 +1729,6 @@ packages:
   /@types/json-schema@7.0.12:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
     dev: false
-
-  /@types/lodash@4.17.0:
-    resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
-    dev: true
 
   /@types/node-fetch@2.6.4:
     resolution: {integrity: sha512-1ZX9fcN4Rvkvgv4E6PAY5WXUFWFcRWxZa3EW83UjycOB9ljJCedb2CupIP4RZMEwF/M3eTcCihbBRgwtGbg5Rg==}

@@ -12,7 +12,6 @@ import {
   GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, ScreenViewport
 } from "@itwin/core-frontend";
 import { PresentationLabelsProvider } from "@itwin/presentation-components";
-import * as _ from "lodash";
 
 import { ChangeElementType, type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { VersionCompare } from "../api/VersionCompare.js";
@@ -496,7 +495,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   private _findAndMergeModelChanges = (currentNodes: ReadonlyArray<TreeNodeItem>, targetNodes: ReadonlyArray<TreeNodeItem>) => {
     const currentNodeMap = new Map<string, TreeNodeItem>();
     currentNodes.forEach((node: TreeNodeItem) => {
-      const nodeCopy = _.cloneDeep(node);
+      const nodeCopy = structuredClone(node);
       // deep copy the node, so we don't modify the original.
       currentNodeMap.set(node.id, nodeCopy)
     });
