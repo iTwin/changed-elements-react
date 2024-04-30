@@ -492,6 +492,14 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     return this._models;
   }
 
+  /**
+ * Merges changes present in target and current nodes.
+ * A use case would be if an element was deleted in target and re-added in current
+ * This method would make current merge both those operations on the current node
+ * @param currentNodes props of models
+ * @param targetNodes whether to load from current iModel or target
+ * @returns array of merged nodes
+ */
   private _findAndMergeModelChanges = (currentNodes: ReadonlyArray<TreeNodeItem>, targetNodes: ReadonlyArray<TreeNodeItem>) => {
     const currentNodeMap = new Map<string, TreeNodeItem>();
     currentNodes.forEach((node: TreeNodeItem) => {
