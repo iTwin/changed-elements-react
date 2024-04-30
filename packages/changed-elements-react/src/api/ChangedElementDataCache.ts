@@ -107,6 +107,8 @@ export abstract class ChangedElementDataCache {
    * @param elements ChangedElementEntry array to update with the caches' data
    */
   public async populateEntries(elements: ChangedElementEntry[]): Promise<ChangedElementEntry[]> {
+    if (elements.length <= 0)
+      return [];
     // If everything has been cached already, populate the data and return
     if (this._containedInCache(elements)) {
       return this._populateEntries(elements);

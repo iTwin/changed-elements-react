@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { DbOpcode } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import type { InstanceKey } from "@itwin/presentation-common";
 import { PresentationLabelsProvider as LabelsProvider } from "@itwin/presentation-components";
 
@@ -51,10 +51,17 @@ export class ChangedElementsLabelsCache extends ChangedElementDataCache {
         };
       },
     );
-    // Try to obtain the labels from the LabelsProvider
-    try {
-      const currentLabels = await this._currentLabelsProvider.getLabels(currentInstanceKeys);
-      const targetLabels = await this._targetLabelsProvider.getLabels(targetInstanceKeys);
+    const noLabel = IModelApp.localization.getLocalizedString(
+      "VersionCompare:versionCompare.noLabel")
+    const tryGetLabels = async (keys: InstanceKey[], labelsProvider: LabelsProvider) => {
+      try {
+        return await labelsProvider.getLabels(keys);
+      } catch (error) {
+        return keys.map(() => noLabel);
+      }
+    }
+    const currentLabels = await tryGetLabels(currentInstanceKeys,this._currentLabelsProvider);
+    const targetLabels = await tryGetLabels(targetInstanceKeys,this._targetLabelsProvider);
       currentLabels.forEach((label: string, index: number) => {
         currentElements[index].label = label;
       });
@@ -68,9 +75,6 @@ export class ChangedElementsLabelsCache extends ChangedElementDataCache {
         }
       });
       return updatedElements;
-    } catch (e) {
-      return elements;
-    }
   }
 
   protected _has(id: string): boolean {

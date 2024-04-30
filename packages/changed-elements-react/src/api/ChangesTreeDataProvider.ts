@@ -503,7 +503,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     const overlappingNodes: ReadonlyArray<TreeNodeItem> = targetNodes.filter((entry: TreeNodeItem) => currentNodeMap.has(entry.id));
     overlappingNodes.forEach((entry: TreeNodeItem) => {
       const currentEntry = currentNodeMap.get(entry.id);
-      if (currentEntry && currentEntry.extendedData?.modelChanges && entry.extendedData?.modelChanges) {
+      if (currentEntry?.extendedData?.modelChanges && entry.extendedData?.modelChanges) {
         const keys = Object.keys(currentEntry?.extendedData?.modelChanges ?? "");
         for (const key of keys) {
           currentEntry.extendedData.modelChanges[key] = currentEntry.extendedData?.modelChanges[key] || entry.extendedData?.modelChanges[key];

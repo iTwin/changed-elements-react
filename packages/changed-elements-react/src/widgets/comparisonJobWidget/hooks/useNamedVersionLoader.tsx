@@ -132,7 +132,7 @@ const getCurrentFromNamedVersions = (namedVersions: NamedVersion[], currentChang
   if (currentNamedVersion) {
     return currentNamedVersion;
   }
-  return;
+  return undefined
 };
 
 const getCurrentFromChangeSet = (changeSets: Changeset[], currentChangeSetId: string, currentChangeSetIndex?: number): NamedVersion | undefined => {
@@ -147,7 +147,7 @@ const getCurrentFromChangeSet = (changeSets: Changeset[], currentChangeSetId: st
       createdDateTime: currentChangeSet.pushDateTime,
     };
   }
-  return;
+  return undefined;
 };
 
 const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNamedVersion: NamedVersion, onError: () => void, changesets: Changeset[]) => {
