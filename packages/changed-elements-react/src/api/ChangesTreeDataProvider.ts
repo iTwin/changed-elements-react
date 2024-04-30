@@ -515,7 +515,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
         }
       }
     });
-    return [...currentNodeMap.values()]
+    return Array.from(currentNodeMap.values());
   }
 
   /**
