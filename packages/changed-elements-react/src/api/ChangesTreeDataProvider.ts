@@ -495,9 +495,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   private _findAndMergeModelChanges = (currentNodes: ReadonlyArray<TreeNodeItem>, targetNodes: ReadonlyArray<TreeNodeItem>) => {
     const currentNodeMap = new Map<string, TreeNodeItem>();
     currentNodes.forEach((node: TreeNodeItem) => {
-      const nodeCopy = structuredClone(node);
-      // deep copy the node, so we don't modify the original.
-      currentNodeMap.set(node.id, nodeCopy)
+      currentNodeMap.set(node.id, node)
     });
     const overlappingNodes: ReadonlyArray<TreeNodeItem> = targetNodes.filter((entry: TreeNodeItem) => currentNodeMap.has(entry.id));
     overlappingNodes.forEach((entry: TreeNodeItem) => {
