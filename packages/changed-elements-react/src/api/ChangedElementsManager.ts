@@ -450,7 +450,6 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
   ): Promise<void> {
-    // const elementIds = [...this._changedElements.values()].map((elem: ChangedElement) => elem.id);
     this._entryCache.initialize(
       currentIModel,
       targetIModel,

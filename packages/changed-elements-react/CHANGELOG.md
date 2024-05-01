@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [0.6.0](https://github.com/iTwin/changed-elements-react/tree/v0.6.0/packages/changed-elements-react) - 2024-04-12
 
+### Patch changes
+
+* Fixed filtering for deleted elements not showing in models
+* Fixed display and missing label for deleted elements
+
+## [0.6.0](https://github.com/iTwin/changed-elements-react/tree/v0.6.0/packages/changed-elements-react) - 2024-04-12
+
 ### Minor changes
 
 * `VersionCompareManager`: removed the ability to pass a component to v2 widget VC dialog by using the `manageNamedVersionsSlot` setting
