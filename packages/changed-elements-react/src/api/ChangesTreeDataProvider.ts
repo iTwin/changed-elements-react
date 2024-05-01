@@ -484,7 +484,9 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     const currentModelIds = new Set(currentNodes.map((node: TreeNodeItem) => node.id));
     const uniqueNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
     const mergedNodes = this._findAndMergeModelChanges(currentNodes, targetNodes);
-    this._models = [...mergedNodes, ...uniqueNodes];
+    const models = Array.from(mergedNodes);
+    models.concat(uniqueNodes);
+    this._models = models;
 
     // Release, as it will be unused after the creation of models
     this._rootEntries = undefined;
@@ -503,7 +505,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   private _findAndMergeModelChanges = (currentNodes: ReadonlyArray<TreeNodeItem>, targetNodes: ReadonlyArray<TreeNodeItem>) => {
     const currentNodeMap = new Map<string, TreeNodeItem>();
     currentNodes.forEach((node: TreeNodeItem) => {
-      currentNodeMap.set(node.id, node)
+      currentNodeMap.set(node.id, node);
     });
     const overlappingNodes: ReadonlyArray<TreeNodeItem> = targetNodes.filter((entry: TreeNodeItem) => currentNodeMap.has(entry.id));
     overlappingNodes.forEach((entry: TreeNodeItem) => {
@@ -516,7 +518,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       }
     });
     return Array.from(currentNodeMap.values());
-  }
+  };
 
   /**
    * Load model labels into a map
