@@ -11,7 +11,7 @@ import { NamedVersionLoaderState, useNamedVersionLoader } from "../hooks/useName
 import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
-import { NamedVersion } from "../../../clients/iModelsClient";
+import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import "./styles/ComparisonJobWidget.scss";
 import { arrayToMap, tryXTimes } from "../../../utils/utils";
@@ -87,6 +87,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         getIsDisposed,
         getToastsEnabled,
         runOnJobUpdate,
+        iModelsClient,
       });
     }
     return () => {
@@ -110,6 +111,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         getDialogOpen,
         getToastsEnabled,
         runOnJobUpdate,
+        iModelsClient,
       });
       if (startResult.comparisonJob) {
         addRunningJob(createJobId(targetVersion, currentVersion), {
@@ -144,6 +146,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           getIsDisposed,
           getToastsEnabled,
           runOnJobUpdate,
+          iModelsClient,
         });
       }
     }
@@ -193,6 +196,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   );
 }
 
+//todo refactor all types in this file they are not dry. We want "type" space to be as clean as "value" space.
 type RunStartComparisonV2Args = {
   targetVersion: NamedVersion;
   comparisonJobClient: IComparisonJobClient;
@@ -203,6 +207,7 @@ type RunStartComparisonV2Args = {
   getDialogOpen: () => boolean;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  iModelsClient: IModelsClient;
 };
 
 type PostOrRunComparisonJobResult = {
@@ -251,6 +256,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
         currentVersion: args.currentVersion,
         getToastsEnabled: args.getToastsEnabled,
         runOnJobUpdate: args.runOnJobUpdate,
+        iModelsClient: args.iModelsClient,
       });
       return { startedComparison: true };
     }
@@ -294,6 +300,7 @@ type PollForInProgressJobsArgs = {
   targetVersion?: NamedVersion;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  iModelsClient: IModelsClient;
 };
 
 export const pollForInProgressJobs: (args: PollForInProgressJobsArgs) => Promise<void> = async (args: PollForInProgressJobsArgs) => {
@@ -329,6 +336,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
           iModelConnection: args.iModelConnection,
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
+          iModelsClient: args.iModelsClient,
         });
       } catch (error) {
         args.removeRunningJob(runningJob?.comparisonJob?.comparisonJob.jobId as string);
@@ -359,6 +367,7 @@ type ConditionallyToastCompletionArgs = {
   iModelConnection: IModelConnection;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  iModelsClient: IModelsClient;
 };
 const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
   if (args.currentJobRsp.comparisonJob.status === "Completed") {
@@ -373,6 +382,7 @@ const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
           currentVersion: args.runningJob.currentNamedVersion,
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
+          iModelsClient: args.iModelsClient,
         });
       }
       const jobAndNamedVersion: JobAndNamedVersions = {

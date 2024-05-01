@@ -474,7 +474,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
       updateFunc,
     );
 
-    let targetNodes = await this._getChangedModelOrSubjectNodes(
+    const targetNodes = await this._getChangedModelOrSubjectNodes(
       targetIModel,
       onlyDeleted,
       true,
@@ -482,15 +482,42 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     );
 
     const currentModelIds = new Set(currentNodes.map((node: TreeNodeItem) => node.id));
-    targetNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
-
-    this._models = [...currentNodes, ...targetNodes];
+    const uniqueNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
+    const mergedNodes = this._findAndMergeModelChanges(currentNodes, targetNodes);
+    mergedNodes.concat(uniqueNodes);
+    this._models = mergedNodes;
 
     // Release, as it will be unused after the creation of models
     this._rootEntries = undefined;
 
     return this._models;
   }
+
+  /**
+ * Merges changes present in target and current nodes.
+ * A use case would be if an element was deleted in target and re-added in current
+ * This method would make current merge both those operations on the current node
+ * @param currentNodes props of models
+ * @param targetNodes whether to load from current iModel or target
+ * @returns array of merged nodes
+ */
+  private _findAndMergeModelChanges = (currentNodes: ReadonlyArray<TreeNodeItem>, targetNodes: ReadonlyArray<TreeNodeItem>) => {
+    const currentNodeMap = new Map<string, TreeNodeItem>();
+    currentNodes.forEach((node: TreeNodeItem) => {
+      currentNodeMap.set(node.id, node);
+    });
+    const overlappingNodes: ReadonlyArray<TreeNodeItem> = targetNodes.filter((entry: TreeNodeItem) => currentNodeMap.has(entry.id));
+    overlappingNodes.forEach((entry: TreeNodeItem) => {
+      const currentEntry = currentNodeMap.get(entry.id);
+      if (currentEntry?.extendedData?.modelChanges && entry.extendedData?.modelChanges) {
+        const keys = Object.keys(currentEntry?.extendedData?.modelChanges ?? "");
+        for (const key of keys) {
+          currentEntry.extendedData.modelChanges[key] = currentEntry.extendedData?.modelChanges[key] || entry.extendedData?.modelChanges[key];
+        }
+      }
+    });
+    return Array.from(currentNodeMap.values());
+  };
 
   /**
    * Load model labels into a map

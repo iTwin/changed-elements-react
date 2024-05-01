@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
-import { NamedVersion } from "../../../clients/iModelsClient";
+import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { toaster } from "@itwin/itwinui-react";
 import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
 import { ComparisonJobCompleted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
@@ -54,6 +54,7 @@ export type ToastComparisonJobCompleteArgs = {
   currentVersion: NamedVersion;
   getToastsEnabled?: () => boolean;
   runOnJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  iModelsClient: IModelsClient;
 };
 
 /** Toast Comparison Job Complete.
@@ -84,6 +85,7 @@ export const toastComparisonJobComplete = (args: ToastComparisonJobCompleteArgs)
           currentVersion: args.currentVersion,
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
+          iModelsClient: args.iModelsClient,
         });
       },
     },
