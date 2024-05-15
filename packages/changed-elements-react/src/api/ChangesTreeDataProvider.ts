@@ -484,8 +484,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     const currentModelIds = new Set(currentNodes.map((node: TreeNodeItem) => node.id));
     const uniqueNodes = targetNodes.filter((entry: TreeNodeItem) => !currentModelIds.has(entry.id));
     const mergedNodes = this._findAndMergeModelChanges(currentNodes, targetNodes);
-    mergedNodes.concat(uniqueNodes);
-    this._models = mergedNodes;
+    this._models = mergedNodes.concat(uniqueNodes);
 
     // Release, as it will be unused after the creation of models
     this._rootEntries = undefined;
