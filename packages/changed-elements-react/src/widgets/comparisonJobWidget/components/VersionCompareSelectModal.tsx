@@ -282,7 +282,6 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       currentNamedVersion: args.currentVersion,
     };
     void args.runOnJobUpdate("JobError", jobAndNamedVersion);
-    throw error;
   }
 };
 
@@ -470,22 +469,22 @@ type PostOrGetComparisonJobParams = {
 async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
   let result: ComparisonJob;
   try {
-    result = await args.changedElementsClient.postComparisonJob({
+    result = await args.changedElementsClient.getComparisonJob({
       iTwinId: args.iTwinId,
       iModelId: args.iModelId,
-      startChangesetId: args.startChangesetId,
-      endChangesetId: args.endChangesetId,
-      headers: { "Content-Type": "application/json" },
+      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ComparisonExists") {
-      result = await args.changedElementsClient.getComparisonJob({
+    if (error && typeof error === "object" && "code" in error && error.code === "ComparisonNotFound") {
+      result = await args.changedElementsClient.postComparisonJob({
         iTwinId: args.iTwinId,
         iModelId: args.iModelId,
-        jobId: `${args.startChangesetId}-${args.endChangesetId}`,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        startChangesetId: args.startChangesetId,
+        endChangesetId: args.endChangesetId,
+        headers: { "Content-Type": "application/json" },
       });
       return result;
     }
