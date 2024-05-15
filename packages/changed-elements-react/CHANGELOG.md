@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## Fixes
+
+* Fix deleted elements not appearing in `ChangedElementsWidget`
+
 ## [0.6.1](https://github.com/iTwin/changed-elements-react/tree/v0.6.1/packages/changed-elements-react) - 2024-05-01
 
 ### Patch changes
