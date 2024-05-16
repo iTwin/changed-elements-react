@@ -113,7 +113,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         runOnJobUpdate,
         iModelsClient,
       });
-      if (startResult.comparisonJob) {
+      if (startResult?.comparisonJob) {
         addRunningJob(createJobId(targetVersion, currentVersion), {
           comparisonJob: startResult.comparisonJob,
           targetNamedVersion: {
@@ -215,7 +215,7 @@ type PostOrRunComparisonJobResult = {
   comparisonJob?: ComparisonJob;
 };
 
-const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult> => {
+const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult | undefined> => {
   const jobId = createJobId(args.targetVersion, args.currentVersion);
   try {
     args.addPendingJob(jobId, {
@@ -282,7 +282,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       currentNamedVersion: args.currentVersion,
     };
     void args.runOnJobUpdate("JobError", jobAndNamedVersion);
-    throw error;
+    return undefined;
   }
 };
 
@@ -470,22 +470,22 @@ type PostOrGetComparisonJobParams = {
 async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
   let result: ComparisonJob;
   try {
-    result = await args.changedElementsClient.postComparisonJob({
+    result = await args.changedElementsClient.getComparisonJob({
       iTwinId: args.iTwinId,
       iModelId: args.iModelId,
-      startChangesetId: args.startChangesetId,
-      endChangesetId: args.endChangesetId,
-      headers: { "Content-Type": "application/json" },
+      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ComparisonExists") {
-      result = await args.changedElementsClient.getComparisonJob({
+    if (error && typeof error === "object" && "code" in error && error.code === "ComparisonNotFound") {
+      result = await args.changedElementsClient.postComparisonJob({
         iTwinId: args.iTwinId,
         iModelId: args.iModelId,
-        jobId: `${args.startChangesetId}-${args.endChangesetId}`,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        startChangesetId: args.startChangesetId,
+        endChangesetId: args.endChangesetId,
+        headers: { "Content-Type": "application/json" },
       });
       return result;
     }
