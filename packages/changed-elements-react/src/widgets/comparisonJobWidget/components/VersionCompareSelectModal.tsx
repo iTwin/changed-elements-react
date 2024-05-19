@@ -22,6 +22,36 @@ import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJob
 import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
 import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialogProvider";
 
+type ComparisonControlFunctions = {
+  getDialogOpen: () => boolean;
+  addRunningJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
+  removeRunningJob: (jobId: string) => void;
+  getRunningJobs: () => JobAndNamedVersions[];
+  addPendingJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
+  removePendingJob: (jobId: string) => void;
+  getToastsEnabled: () => boolean;
+  runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  getIsDisposed: () => boolean;
+  setResult: (result: NamedVersionLoaderState) => void;
+};
+
+type RunStartComparisonV2ControlFunctions = Omit<ComparisonControlFunctions,
+  "getIsDisposed" |
+  "setResult" |
+  "getRunningJobs" |
+  "removeRunningJob " |
+  "addRunningJob" |
+  "removeRunningJob">;
+
+type PollComparisonV2ControlFunctions = Omit<ComparisonControlFunctions,
+  "addRunningJob" | "removePendingJob" | "addPendingJob"> & Pick<ComparisonControlFunctions, "setResult">;
+
+type BaseConnectionClientsAndControls = RunStartComparisonV2ControlFunctions & {
+  comparisonJobClient: IComparisonJobClient;
+  iModelConnection: IModelConnection;
+  iModelsClient: IModelsClient;
+};
+
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogV2Props {
   /** IModel Connection that is being visualized. */
@@ -196,18 +226,9 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   );
 }
 
-//todo refactor all types in this file they are not dry. We want "type" space to be as clean as "value" space.
-type RunStartComparisonV2Args = {
+type RunStartComparisonV2Args = BaseConnectionClientsAndControls & {
   targetVersion: NamedVersion;
-  comparisonJobClient: IComparisonJobClient;
-  iModelConnection: IModelConnection;
   currentVersion: NamedVersion;
-  removePendingJob: (jobId: string) => void;
-  addPendingJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
-  getDialogOpen: () => boolean;
-  getToastsEnabled: () => boolean;
-  runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
-  iModelsClient: IModelsClient;
 };
 
 type PostOrRunComparisonJobResult = {
@@ -215,7 +236,7 @@ type PostOrRunComparisonJobResult = {
   comparisonJob?: ComparisonJob;
 };
 
-const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Args): Promise<PostOrRunComparisonJobResult | undefined> => {
+const createOrRunManagerStartComparisonV2: (args: RunStartComparisonV2Args) => Promise<PostOrRunComparisonJobResult | undefined> = async (args) => {
   const jobId = createJobId(args.targetVersion, args.currentVersion);
   try {
     args.addPendingJob(jobId, {
@@ -286,30 +307,20 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
   }
 };
 
-type PollForInProgressJobsArgs = {
+type PollForInProgressJobsArgs = PollComparisonV2ControlFunctions & Omit<BaseConnectionClientsAndControls, "removePendingJob" | "addPendingJob"> & {
   iTwinId: string;
   iModelId: string;
   namedVersionLoaderState?: NamedVersionLoaderState;
-  comparisonJobClient: IComparisonJobClient;
-  iModelConnection: IModelConnection;
-  setResult: (result: NamedVersionLoaderState) => void;
-  removeRunningJob: (jobId: string) => void;
-  getRunningJobs: () => JobAndNamedVersions[];
-  getDialogOpen: () => boolean;
-  getIsDisposed: () => boolean;
   targetVersion?: NamedVersion;
-  getToastsEnabled: () => boolean;
-  runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
-  iModelsClient: IModelsClient;
 };
 
-export const pollForInProgressJobs: (args: PollForInProgressJobsArgs) => Promise<void> = async (args: PollForInProgressJobsArgs) => {
+export const pollForInProgressJobs: (args: PollForInProgressJobsArgs) => Promise<void> = async (args) => {
   void pollUntilCurrentRunningJobsCompleteAndToast(args);
   if (args.namedVersionLoaderState && args.namedVersionLoaderState.namedVersions.entries.length > 0 && args.getDialogOpen() && !args.getIsDisposed())
     void pollUpdateCurrentEntriesForModal(args);
 };
 
-const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgressJobsArgs) => {
+const pollUntilCurrentRunningJobsCompleteAndToast: (args: PollForInProgressJobsArgs) => Promise<void> = async (args) => {
   let isConnectionClosed = false;
   args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
   const loopDelayInMilliseconds = 5000;
@@ -356,20 +367,13 @@ const shouldProcessRunningJobs = (args: ShouldProcessRunningJobArgs) => {
   return !args.getDialogOpen() && args.getRunningJobs().length > 0 && !args.isConnectionClosed;
 };
 
-type ConditionallyToastCompletionArgs = {
+type ConditionallyToastCompletionArgs = Omit<BaseConnectionClientsAndControls, "addPendingJob" | "removePendingJob"> & Pick<ComparisonControlFunctions, "removeRunningJob" | "getRunningJobs"> & {
   isConnectionClosed: boolean;
-  getRunningJobs: () => JobAndNamedVersions[];
-  getDialogOpen: () => boolean;
   runningJob: JobAndNamedVersions;
   currentJobRsp: ComparisonJob;
-  removeRunningJob: (jobId: string) => void;
-  comparisonJobClient: IComparisonJobClient;
-  iModelConnection: IModelConnection;
-  getToastsEnabled: () => boolean;
-  runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
-  iModelsClient: IModelsClient;
 };
-const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
+
+const notifyComparisonCompletion: (args: ConditionallyToastCompletionArgs) => void = (args) => {
   if (args.currentJobRsp.comparisonJob.status === "Completed") {
     args.removeRunningJob(args.runningJob?.comparisonJob?.comparisonJob.jobId as string);
     if (!VersionCompare.manager?.isComparing && !args.getDialogOpen()) {
@@ -395,7 +399,7 @@ const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
   }
 };
 
-const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs) => {
+const pollUpdateCurrentEntriesForModal: (args: PollForInProgressJobsArgs) => Promise<void> = async (args) => {
   const currentVersionId = args.iModelConnection?.changeset.id;
   let entries = args.namedVersionLoaderState!.namedVersions.entries.slice();
   const currentRunningJobsMap = arrayToMap(args.getRunningJobs(), (job: JobAndNamedVersions) => { return job.comparisonJob?.comparisonJob.jobId as string; });
