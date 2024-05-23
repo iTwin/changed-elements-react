@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Fixes
 
-* Fixes spurious 409 error in onClick work flow in `ChangedElementsWidget`
+* Fixes comparison job error workflow in `VersionCompareSelectModal`. Error jobs when re-ran will deleted existing broken job and re-run new job for given jobId.
 
 ## [0.6.2](https://github.com/iTwin/changed-elements-react/tree/v0.6.2/packages/changed-elements-react) - 2024-05-15
 
