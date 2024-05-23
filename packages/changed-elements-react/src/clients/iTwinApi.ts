@@ -13,7 +13,7 @@ export interface CallITwinApiParams {
   body?: Record<string, unknown> | undefined;
 }
 
-export async function callITwinApi(args: CallITwinApiParams): Promise<Record<string, unknown>> {
+export async function callITwinApi(args: CallITwinApiParams): Promise<Record<string, unknown> | undefined> {
   const response = await fetch(
     args.url,
     {
@@ -30,8 +30,10 @@ export async function callITwinApi(args: CallITwinApiParams): Promise<Record<str
   if (!response.ok) {
     await throwBadResponseCodeError(response, "iTwin API request failed.");
   }
-
-  return response.json();
+  if (response.status !== 204) {
+    return response.json();
+  }
+  return undefined;
 }
 
 export async function* callPagedITwinApi(
@@ -41,6 +43,10 @@ export async function* callPagedITwinApi(
   let nextArgs: CallITwinApiParams | undefined = args;
   while (nextArgs) {
     const response = await callITwinApi(nextArgs);
+    if (!response) {
+      nextArgs = undefined;
+      continue;
+    }
     yield response;
     const links = response._links as HalLinks<["prev"?, "next"?]>;
     const nextPageUrl = backwards ? links.prev?.href : links.next?.href;
