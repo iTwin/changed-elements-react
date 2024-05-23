@@ -219,24 +219,10 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
   const jobId = createJobId(args.targetVersion, args.currentVersion);
   try {
     args.addPendingJob(jobId, {
-      targetNamedVersion: {
-        id: args.targetVersion.id,
-        displayName: args.targetVersion.displayName,
-        changesetId: args.targetVersion.changesetId,
-        changesetIndex: args.targetVersion.changesetIndex,
-        description: args.targetVersion.description,
-        createdDateTime: args.targetVersion.createdDateTime,
-      },
-      currentNamedVersion: {
-        id: args.currentVersion.id,
-        displayName: args.currentVersion.displayName,
-        changesetId: args.currentVersion.changesetId,
-        changesetIndex: args.currentVersion.changesetIndex,
-        description: args.currentVersion.description,
-        createdDateTime: args.currentVersion.createdDateTime,
-      },
+      targetNamedVersion: args.targetVersion,
+      currentNamedVersion: args.currentVersion,
     });
-    const comparisonJob = await tryXTimes(async () => {
+    let comparisonJob = await tryXTimes(async () => {
       const job = (await postOrGetComparisonJob({
         changedElementsClient: args.comparisonJobClient,
         iTwinId: args.iModelConnection?.iTwinId as string,
@@ -247,6 +233,9 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       args.removePendingJob(jobId);
       return job;
     }, 3);
+    if (comparisonJob.comparisonJob.status === "Error") {
+      comparisonJob = await handleJobError({ ...args, comparisonJob: comparisonJob });
+    }
     if (comparisonJob.comparisonJob.status === "Completed") {
       void runManagerStartComparisonV2({
         comparisonJob: comparisonJob as ComparisonJobCompleted,
@@ -284,6 +273,33 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
     void args.runOnJobUpdate("JobError", jobAndNamedVersion);
     return undefined;
   }
+};
+
+type handleJobErrorArgs = Omit<RunStartComparisonV2Args, "getDialogOpen" | "getToastsEnabled" | "runOnJobUpdate" | "iModelsClient"> & {
+  comparisonJob: ComparisonJob;
+};
+
+const handleJobError: (args: handleJobErrorArgs) => Promise<ComparisonJob> = async (args) => {
+  args.addPendingJob(args.comparisonJob.comparisonJob.jobId, {
+    targetNamedVersion: args.targetVersion,
+    currentNamedVersion: args.currentVersion,
+  });
+  await args.comparisonJobClient.deleteComparisonJob({
+    iTwinId: args.comparisonJob.comparisonJob.iTwinId,
+    iModelId: args.comparisonJob.comparisonJob.iModelId,
+    jobId: args.comparisonJob.comparisonJob.jobId,
+  });
+  return tryXTimes(async () => {
+    const job = (await postOrGetComparisonJob({
+      changedElementsClient: args.comparisonJobClient,
+      iTwinId: args.iModelConnection?.iTwinId as string,
+      iModelId: args.iModelConnection?.iModelId as string,
+      startChangesetId: args.targetVersion.changesetId as string,
+      endChangesetId: args.currentVersion.changesetId as string,
+    }));
+    args.removePendingJob(job.comparisonJob.jobId);
+    return job;
+  }, 3);
 };
 
 type PollForInProgressJobsArgs = {
@@ -324,6 +340,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
         });
         if (completedJob.comparisonJob.status === "Error") {
           args.removeRunningJob(runningJob?.comparisonJob?.comparisonJob.jobId as string);
+          continue;
         }
         notifyComparisonCompletion({
           isConnectionClosed: isConnectionClosed,
