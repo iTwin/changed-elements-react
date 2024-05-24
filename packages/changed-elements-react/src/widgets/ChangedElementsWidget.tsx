@@ -47,6 +47,8 @@ export interface ChangedElementsWidgetProps {
   feedbackUrl?: string;
   /** Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts (Only for V2). */
   enableComparisonJobUpdateToasts?: boolean;
+  /** Optional. When enabled will models tree for inspecting elements instead of previous element inspector component*/
+  useModelsTree?: boolean;
   /** On Job Update (Only for V2)
  * Optional. a call back function for handling job updates.
  * @param comparisonJobUpdateType param for the type of update:
@@ -410,7 +412,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           />
         }
         {this.props.useV2Widget ?
-          <VersionCompareSelectProviderV2 onJobUpdate={this.props.onJobUpdate} enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}>
+          <VersionCompareSelectProviderV2 onJobUpdate={this.props.onJobUpdate} enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts} useModelsTree={this.props.useModelsTree}>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
                 data-testid="⁠comparison-widget-v2-modal"

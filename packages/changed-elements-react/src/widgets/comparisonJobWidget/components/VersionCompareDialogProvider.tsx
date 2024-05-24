@@ -25,6 +25,7 @@ export type V2Context = {
   removePendingJob: (jobId: string) => void;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  getUseModelsTree: () => boolean;
 };
 
 export const V2DialogContext = React.createContext<V2Context>({} as V2Context);
@@ -33,6 +34,7 @@ export type V2DialogProviderProps = {
   children: React.ReactNode;
   // Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts.
   enableComparisonJobUpdateToasts?: boolean;
+  useModelsTree?: boolean;
   /** On Job Update
  * Optional. a call back function for handling job updates.
  * @param comparisonJobUpdateType param for the type of update:
@@ -58,59 +60,60 @@ export type V2DialogProviderProps = {
  * />}
  *</V2DialogProvider>
 */
-export function VersionCompareSelectProviderV2({ children, enableComparisonJobUpdateToasts, onJobUpdate }: V2DialogProviderProps) {
+export function VersionCompareSelectProviderV2({ children, enableComparisonJobUpdateToasts, onJobUpdate, useModelsTree }: Readonly<V2DialogProviderProps>) {
   const dialogRunningJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
   const dialogPendingJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
-  const addRunningJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
-    dialogRunningJobs.current.set(jobId, {
-      comparisonJob: jobAndNamedVersions.comparisonJob,
-      targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
-      currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
-    });
-  };
-  const removeRunningJob = (jobId: string) => {
-    dialogRunningJobs.current.delete(jobId);
-  };
-  const getRunningJobs = () => {
-    return Array.from(dialogRunningJobs.current.values());
-  };
-  const addPendingJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
-    dialogPendingJobs.current.set(jobId, {
-      comparisonJob: jobAndNamedVersions.comparisonJob,
-      targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
-      currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
-    });
-  };
-  const removePendingJob = (jobId: string) => {
-    dialogPendingJobs.current.delete(jobId);
-  };
-  const getPendingJobs = () => {
-    return Array.from(dialogPendingJobs.current.values());
-  };
   const dialogOpenRef = React.useRef(false);
-  const openDialog = () => {
-    dialogOpenRef.current = true;
-  };
-  const closedDialog = () => {
-    dialogOpenRef.current = false;
-  };
-  const getDialogOpen = () => {
-    return dialogOpenRef.current;
-  };
-  const getToastsEnabled = () => {
-    return enableComparisonJobUpdateToasts ?? false;
-  };
-  const runOnJobUpdate = async (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => {
-    if (onJobUpdate) {
-      void onJobUpdate(comparisonEventType, jobAndNamedVersions);
-    }
-  };
+  const providerValue = React.useMemo(() => ({
+    openDialog : () => {
+      dialogOpenRef.current = true;
+    },
+    getDialogOpen: () => {
+      return dialogOpenRef.current;
+    },
+    closedDialog: () => {
+      dialogOpenRef.current = false;
+    },
+    addRunningJob: (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
+      dialogRunningJobs.current.set(jobId, {
+        comparisonJob: jobAndNamedVersions.comparisonJob,
+        targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
+        currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
+      });
+    },
+    removeRunningJob: (jobId: string) => {
+      dialogRunningJobs.current.delete(jobId);
+    },
+    getRunningJobs: () => {
+      return Array.from(dialogRunningJobs.current.values());
+    },
+    getPendingJobs: () => {
+      return Array.from(dialogPendingJobs.current.values());
+    },
+    addPendingJob: (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
+      dialogPendingJobs.current.set(jobId, {
+        comparisonJob: jobAndNamedVersions.comparisonJob,
+        targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
+        currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
+      });
+    },
+    removePendingJob: (jobId: string) => {
+      dialogPendingJobs.current.delete(jobId);
+    },
+    getToastsEnabled: () => {
+      return enableComparisonJobUpdateToasts ?? false;
+    },
+    runOnJobUpdate: async (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => {
+      if (onJobUpdate) {
+        void onJobUpdate(comparisonEventType, jobAndNamedVersions);
+      }
+    },
+    getUseModelsTree: () => {
+      return useModelsTree ?? false;
+    },
+  }), [enableComparisonJobUpdateToasts, onJobUpdate, useModelsTree]);
   return (
-    <V2DialogContext.Provider value={{
-      openDialog, getDialogOpen: getDialogOpen, closedDialog, addRunningJob,
-      removeRunningJob, getRunningJobs, getPendingJobs, addPendingJob, removePendingJob,
-      getToastsEnabled, runOnJobUpdate,
-    }}>
+    <V2DialogContext.Provider value={providerValue}>
       {children}
     </V2DialogContext.Provider>
   );

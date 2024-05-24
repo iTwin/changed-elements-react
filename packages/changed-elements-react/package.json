@@ -87,6 +87,7 @@
   "dependencies": {
     "@itwin/itwinui-icons-react": "^2.2.0",
     "@itwin/itwinui-react": "^2.11.11",
+    "@itwin/tree-widget-react": "^2.3.1",
     "react-table": "^7.8.0",
     "react-window": "^1.8.8",
     "react-window-infinite-loader": "^1.0.8"
