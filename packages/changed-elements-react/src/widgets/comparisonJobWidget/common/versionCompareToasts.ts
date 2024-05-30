@@ -4,11 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
 import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { toaster } from "@itwin/itwinui-react";
 import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
 import { ComparisonJobCompleted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
 import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
 import { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import { useToaster } from "@itwin/itwinui-react";
+
+export type Toaster = ReturnType<typeof useToaster>;
 
 /** Toast Comparison Job Processing.
  * Outputs toast message following the pattern:
@@ -55,6 +57,7 @@ export type ToastComparisonJobCompleteArgs = {
   getToastsEnabled?: () => boolean;
   runOnJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
+  toaster: Toaster;
 };
 
 /** Toast Comparison Job Complete.
@@ -66,17 +69,17 @@ export type ToastComparisonJobCompleteArgs = {
 */
 export const toastComparisonJobComplete = (args: ToastComparisonJobCompleteArgs) => {
   const title = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.viewTheReport");
-  toaster.closeAll();
-  toaster.setSettings({
+  args.toaster.closeAll();
+  args.toaster.setSettings({
     placement: "bottom",
   });
-  toaster.positive(
+  args.toaster.positive(
     `${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.iModelVersions")}<${args.currentVersion?.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.and")} <${args.targetVersion.displayName}> ${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.jobComplete")}`, {
     hasCloseButton: true,
     link: {
       title: title,
       onClick: () => {
-        toaster.closeAll();
+        args.toaster.closeAll();
         void runManagerStartComparisonV2({
           comparisonJob: args.comparisonJob,
           comparisonJobClient: args.comparisonJobClient,
