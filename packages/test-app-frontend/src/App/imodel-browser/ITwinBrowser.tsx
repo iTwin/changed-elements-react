@@ -56,7 +56,7 @@ export function ITwinBrowser(): ReactElement {
                   <Tile
                     key={iTwin.id}
                     name={iTwin.displayName}
-                    variant="folder"
+                    variant="default"
                     isActionable
                     thumbnail={<SvgProject />}
                     description={iTwin.number}
