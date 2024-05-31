@@ -22,7 +22,7 @@ import { UiCore } from "@itwin/core-react";
 import { FrontendIModelsAccess } from "@itwin/imodels-access-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
-import { toaster } from "@itwin/itwinui-react";
+import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useMemo, useState } from "react";
@@ -170,13 +170,14 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
 }
 
+export type Toaster = ReturnType<typeof useToaster>;
 function useIModel(
   iTwinId: string,
   iModelId: string,
   authorizationClient: AuthorizationClient,
 ): IModelConnection | undefined {
   const [iModel, setIModel] = useState<IModelConnection>();
-
+  const toaster = useToaster();
   useEffect(
     () => {
       setIModel(undefined);
@@ -191,7 +192,7 @@ function useIModel(
             setIModel(openedIModel);
           }
         } catch (error) {
-          displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-open-remote"), error);
+          displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-open-remote"), error, toaster);
         }
       })();
 
@@ -202,7 +203,7 @@ function useIModel(
           try {
             await openedIModel.close();
           } catch (error) {
-            displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-close-remote"), error);
+            displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-close-remote"), error, toaster);
           }
         })();
       };
@@ -213,7 +214,7 @@ function useIModel(
   return iModel;
 }
 
-function displayIModelError(message: string, error: unknown): void {
+function displayIModelError(message: string, error: unknown, toaster: Toaster): void {
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
   toaster.negative(<>{message}<br /> {errorMessage}</>);
 }
