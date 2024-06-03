@@ -28,6 +28,7 @@ import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
+import Hello from "./comparisonJobWidget/components/test.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -188,7 +189,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       );
       throw new Error("Current and target IModelConnection not set in the ChangedElementsWidget's state");
     }
-
+    const blah = true;
+    if (blah) {
+      return (<Hello/>)
+    }
     return (
       <ChangedElementsInspector
         listRef={this.props.rootElementRef}

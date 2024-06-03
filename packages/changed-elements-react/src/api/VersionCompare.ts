@@ -12,6 +12,7 @@ import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
 import { ChangedElementsClientBase } from "./ChangedElementsClientBase.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
+import { TreeWidget } from "@itwin/tree-widget-react";
 
 export interface VersionCompareFeatureTracking {
   trackInspectElementTool: () => void;
@@ -124,7 +125,14 @@ export class VersionCompare {
    * Initializes the version compare package.
    * @param options Options for comparison
    */
-  public static initialize(options: VersionCompareOptions): void {
+  public static async initialize(options: VersionCompareOptions): Promise<void> {
+
+    //todo may need to move should this know about the tree widget? Maybe use a use effect in tree widget to call this?
+     try {
+       await TreeWidget.initialize(IModelApp.localization);
+     } catch (error) {
+       console.error("Failed to initialize TreeWidget", error);
+     }
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
 

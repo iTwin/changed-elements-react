@@ -156,7 +156,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     UiFramework.initialize(undefined),
   ]);
 
-  VersionCompare.initialize({
+ await VersionCompare.initialize({
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
     getAccessToken: () => authorizationClient.getAccessToken(),
     wantReportGeneration: true,
