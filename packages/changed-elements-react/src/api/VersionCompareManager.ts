@@ -379,12 +379,14 @@ export class VersionCompareManager {
    * @param currentVersion Current Version of the iModel
    * @param targetVersion Target Version of the iModel, an IModelConnection is opened to it
    * @param changedElements Array of elements that have changed and need to be visualized
+   * @param useModelsTree If true, the models tree will be used creating a new work flow for loading changed elements
    */
   public async startComparisonV2(
     currentIModel: IModelConnection,
     currentVersion: NamedVersion,
     targetVersion: NamedVersion,
     changedElements: ChangedElements[],
+    useModelsTree: boolean,
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
 
@@ -438,15 +440,17 @@ export class VersionCompareManager {
       if (this.ignoredElementIds !== undefined) {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
-      await this.changedElementsManager.initialize(
-        this._currentIModel,
-        this._targetIModel,
-        filteredChangedElements,
-        this.wantAllModels ? undefined : wantedModelClasses,
-        false,
-        this.filterSpatial,
-        this.loadingProgressEvent,
-      );
+      if (!useModelsTree) {
+        await this.changedElementsManager.initialize(
+          this._currentIModel,
+          this._targetIModel,
+          filteredChangedElements,
+          this.wantAllModels ? undefined : wantedModelClasses,
+          false,
+          this.filterSpatial,
+          this.loadingProgressEvent,
+        );
+      }
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
       // We have parent Ids available if any entries contain undefined parent data

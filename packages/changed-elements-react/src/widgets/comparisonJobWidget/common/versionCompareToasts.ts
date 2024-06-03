@@ -57,6 +57,7 @@ export type ToastComparisonJobCompleteArgs = {
   getToastsEnabled?: () => boolean;
   runOnJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
+  useModelsTree: boolean;
   toaster: Toaster;
 };
 
@@ -89,6 +90,7 @@ export const toastComparisonJobComplete = (args: ToastComparisonJobCompleteArgs)
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
           iModelsClient: args.iModelsClient,
+          useModelsTree: args.useModelsTree,
         });
       },
     },

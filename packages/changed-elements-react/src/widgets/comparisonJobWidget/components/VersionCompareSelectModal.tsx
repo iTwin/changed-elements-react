@@ -50,7 +50,7 @@ export interface VersionCompareSelectDialogV2Props {
  * provider should be supplied with new dialog based on condition in order to keep track of toast and polling information.
  * @throws Exception if context does not include iModelsClient and comparisonJobClient.
 */
-export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2Props) {
+export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelectDialogV2Props>) {
   const { comparisonJobClient, iModelsClient } = useVersionCompare();
   const toaster = useToaster();
   if (!comparisonJobClient) {
@@ -60,7 +60,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     throw new Error("V1 Client Is Not Initialized In Given Context.");
   }
   const { openDialog, closedDialog, getDialogOpen, addRunningJob, removeRunningJob, getRunningJobs
-    , getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate } = React.useContext(V2DialogContext);
+    , getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate,getUseModelsTree } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
@@ -74,7 +74,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
       return isDisposed;
     };
     openDialog();
-    if (result && result?.namedVersions.entries) {
+    if (result?.namedVersions?.entries) {
       void pollForInProgressJobs({
         iTwinId: props.iModelConnection.iTwinId as string,
         iModelId: props.iModelConnection.iModelId as string,
@@ -89,6 +89,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         getToastsEnabled,
         runOnJobUpdate,
         iModelsClient,
+        useModelsTree: getUseModelsTree(),
         toaster,
       });
     }
@@ -115,6 +116,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         toaster,
         runOnJobUpdate,
         iModelsClient,
+        useModelsTree: getUseModelsTree(),
       });
       if (startResult?.comparisonJob) {
         addRunningJob(createJobId(targetVersion, currentVersion), {
@@ -151,6 +153,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           runOnJobUpdate,
           iModelsClient,
           toaster,
+          useModelsTree: getUseModelsTree(),
         });
       }
     }
@@ -212,6 +215,7 @@ type RunStartComparisonV2Args = {
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
+  useModelsTree: boolean;
   toaster: Toaster;
 };
 
@@ -251,6 +255,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
         getToastsEnabled: args.getToastsEnabled,
         runOnJobUpdate: args.runOnJobUpdate,
         iModelsClient: args.iModelsClient,
+        useModelsTree: args.useModelsTree,
       });
       return { startedComparison: true };
     }
@@ -322,6 +327,7 @@ type PollForInProgressJobsArgs = {
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
+  useModelsTree: boolean;
   toaster: Toaster;
 };
 
@@ -360,6 +366,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
           iModelsClient: args.iModelsClient,
+          useModelsTree: args.useModelsTree,
           toaster: args.toaster,
         });
       } catch (error) {
@@ -393,6 +400,7 @@ type ConditionallyToastCompletionArgs = {
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
   toaster: Toaster;
+  useModelsTree: boolean;
 };
 const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
   if (args.currentJobRsp.comparisonJob.status === "Completed") {
@@ -409,6 +417,7 @@ const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
           runOnJobUpdate: args.runOnJobUpdate,
           iModelsClient: args.iModelsClient,
           toaster:args.toaster,
+          useModelsTree: args.useModelsTree,
         });
       }
       const jobAndNamedVersion: JobAndNamedVersions = {
