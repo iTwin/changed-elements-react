@@ -463,12 +463,13 @@ export class VersionCompareManager {
         (entry) => entry.properties !== undefined && entry.properties.size !== 0,
       );
 
-      // Get the entries
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
-      );
-      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
-
+      if (!useChangedElementsInspectorV2) {
+        this.loadingProgressEvent.raiseEvent(
+          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
+        );
+        // can skip no need to load parents of elements
+        await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
+      }
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
 
