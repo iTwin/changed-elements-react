@@ -449,12 +449,14 @@ export class ChangedElementsManager {
   public async generateEntries(
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
+    useChangedElementsInspectorV2?: boolean,
   ): Promise<void> {
     this._entryCache.initialize(
       currentIModel,
       targetIModel,
       this._changedElements,
       this._progressLoadingEvent,
+      useChangedElementsInspectorV2,
     );
   }
 
@@ -1152,6 +1154,7 @@ export class ChangedElementsManager {
     forward?: boolean,
     filterSpatial?: boolean,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
+    useChangedElementsInspectorV2?: boolean,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;
 
@@ -1163,34 +1166,34 @@ export class ChangedElementsManager {
       forward,
       filterSpatial,
     );
-
-    if (progressLoadingEvent) {
-      progressLoadingEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
-      );
-    }
-
+    if (!useChangedElementsInspectorV2) {
+      if (progressLoadingEvent) {
+        progressLoadingEvent.raiseEvent(
+          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
+        );
+      }
     // Find changed models
-    this._changedModels = await this.findChangedModels(
-      currentIModel,
-      targetIModel,
-      forward ?? false,
-      progressLoadingEvent,
-    );
+      this._changedModels = await this.findChangedModels(
+        currentIModel,
+        targetIModel,
+        forward ?? false,
+        progressLoadingEvent,
+      );
 
-    if (progressLoadingEvent) {
-      progressLoadingEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
+      if (progressLoadingEvent) {
+        progressLoadingEvent.raiseEvent(
+          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
+        );
+      }
+
+      // Find unchanged models
+      this._unchangedModels = await this.findUnchangedModels(
+        currentIModel,
+        this._changedModels,
       );
     }
 
-    // Find unchanged models
-    this._unchangedModels = await this.findUnchangedModels(
-      currentIModel,
-      this._changedModels,
-    );
-
-    await this.generateEntries(currentIModel, targetIModel);
+    await this.generateEntries(currentIModel, targetIModel,useChangedElementsInspectorV2);
   }
 }
 

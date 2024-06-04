@@ -133,6 +133,7 @@ export class ChangedElementEntryCache {
     targetIModel: IModelConnection,
     elements: Map<string, ChangedElement>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
+    useChangedElementsInspectorV2?: boolean,
   ) {
     this._progressLoadingEvent = progressLoadingEvent;
     elements.forEach((element: ChangedElement, elementId: string) => {
@@ -152,12 +153,14 @@ export class ChangedElementEntryCache {
 
     this._currentIModel = currentIModel;
     this._targetIModel = targetIModel;
+    if (!useChangedElementsInspectorV2) {
     this._labels = new ChangedElementsLabelsCache(currentIModel, targetIModel);
     this._childrenCache = new ChangedElementsChildrenCache(
       currentIModel,
       targetIModel,
       elements,
     );
+    }
   }
 
   /**

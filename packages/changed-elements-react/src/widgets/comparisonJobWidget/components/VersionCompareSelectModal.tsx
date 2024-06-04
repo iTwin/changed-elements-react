@@ -60,7 +60,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
     throw new Error("V1 Client Is Not Initialized In Given Context.");
   }
   const { openDialog, closedDialog, getDialogOpen, addRunningJob, removeRunningJob, getRunningJobs
-    , getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate,getUseModelsTree } = React.useContext(V2DialogContext);
+    , getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate, getUseChangedElementsInspectorV2 } = React.useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
@@ -89,7 +89,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
         getToastsEnabled,
         runOnJobUpdate,
         iModelsClient,
-        useModelsTree: getUseModelsTree(),
+        useChangedElementsInspectorV2: getUseChangedElementsInspectorV2(),
         toaster,
       });
     }
@@ -116,7 +116,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
         toaster,
         runOnJobUpdate,
         iModelsClient,
-        useModelsTree: getUseModelsTree(),
+        useChangedElementsInspectorV2: getUseChangedElementsInspectorV2(),
       });
       if (startResult?.comparisonJob) {
         addRunningJob(createJobId(targetVersion, currentVersion), {
@@ -153,7 +153,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
           runOnJobUpdate,
           iModelsClient,
           toaster,
-          useModelsTree: getUseModelsTree(),
+          useChangedElementsInspectorV2: getUseChangedElementsInspectorV2(),
         });
       }
     }
@@ -215,7 +215,7 @@ type RunStartComparisonV2Args = {
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
-  useModelsTree: boolean;
+  useChangedElementsInspectorV2: boolean;
   toaster: Toaster;
 };
 
@@ -255,7 +255,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
         getToastsEnabled: args.getToastsEnabled,
         runOnJobUpdate: args.runOnJobUpdate,
         iModelsClient: args.iModelsClient,
-        useModelsTree: args.useModelsTree,
+        useChangedElementsInspectorV2: args.useChangedElementsInspectorV2,
       });
       return { startedComparison: true };
     }
@@ -327,7 +327,7 @@ type PollForInProgressJobsArgs = {
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
-  useModelsTree: boolean;
+  useChangedElementsInspectorV2: boolean;
   toaster: Toaster;
 };
 
@@ -366,7 +366,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
           iModelsClient: args.iModelsClient,
-          useModelsTree: args.useModelsTree,
+          useChangedElementsInspectorV2: args.useChangedElementsInspectorV2,
           toaster: args.toaster,
         });
       } catch (error) {
@@ -400,7 +400,7 @@ type ConditionallyToastCompletionArgs = {
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
   iModelsClient: IModelsClient;
   toaster: Toaster;
-  useModelsTree: boolean;
+  useChangedElementsInspectorV2: boolean;
 };
 const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
   if (args.currentJobRsp.comparisonJob.status === "Completed") {
@@ -416,8 +416,8 @@ const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
           getToastsEnabled: args.getToastsEnabled,
           runOnJobUpdate: args.runOnJobUpdate,
           iModelsClient: args.iModelsClient,
-          toaster:args.toaster,
-          useModelsTree: args.useModelsTree,
+          toaster: args.toaster,
+          useChangedElementsInspectorV2: args.useChangedElementsInspectorV2,
         });
       }
       const jobAndNamedVersion: JobAndNamedVersions = {

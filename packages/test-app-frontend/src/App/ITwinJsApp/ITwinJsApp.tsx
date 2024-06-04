@@ -279,6 +279,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     return [{
       id: "ChangedElementsWidget",
       content: <ChangedElementsWidget useV2Widget
+        useChangedElementsInspectorV2
         feedbackUrl="https://example.com"
         iModelConnection={UiFramework.getIModelConnection()!}
         manageNamedVersionsSlot={<ManageNamedVersions />}

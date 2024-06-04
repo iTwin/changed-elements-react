@@ -25,7 +25,7 @@ export type V2Context = {
   removePendingJob: (jobId: string) => void;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
-  getUseModelsTree: () => boolean;
+  getUseChangedElementsInspectorV2: () => boolean;
 };
 
 export const V2DialogContext = React.createContext<V2Context>({} as V2Context);
@@ -34,7 +34,7 @@ export type V2DialogProviderProps = {
   children: React.ReactNode;
   // Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts.
   enableComparisonJobUpdateToasts?: boolean;
-  useModelsTree?: boolean;
+  useChangedElementsInspectorV2?: boolean;
   /** On Job Update
  * Optional. a call back function for handling job updates.
  * @param comparisonJobUpdateType param for the type of update:
@@ -60,12 +60,12 @@ export type V2DialogProviderProps = {
  * />}
  *</V2DialogProvider>
 */
-export function VersionCompareSelectProviderV2({ children, enableComparisonJobUpdateToasts, onJobUpdate, useModelsTree }: Readonly<V2DialogProviderProps>) {
+export function VersionCompareSelectProviderV2({ children, enableComparisonJobUpdateToasts, onJobUpdate, useChangedElementsInspectorV2 }: Readonly<V2DialogProviderProps>) {
   const dialogRunningJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
   const dialogPendingJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
   const dialogOpenRef = React.useRef(false);
   const providerValue = React.useMemo(() => ({
-    openDialog : () => {
+    openDialog: () => {
       dialogOpenRef.current = true;
     },
     getDialogOpen: () => {
@@ -108,10 +108,10 @@ export function VersionCompareSelectProviderV2({ children, enableComparisonJobUp
         void onJobUpdate(comparisonEventType, jobAndNamedVersions);
       }
     },
-    getUseModelsTree: () => {
-      return useModelsTree ?? false;
+    getUseChangedElementsInspectorV2: () => {
+      return useChangedElementsInspectorV2 ?? false;
     },
-  }), [enableComparisonJobUpdateToasts, onJobUpdate, useModelsTree]);
+  }), [enableComparisonJobUpdateToasts, onJobUpdate, useChangedElementsInspectorV2]);
   return (
     <V2DialogContext.Provider value={providerValue}>
       {children}
