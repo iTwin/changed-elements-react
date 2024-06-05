@@ -71,6 +71,11 @@ export class ChangedElementEntryCache {
   public get labels(): ChangedElementsLabelsCache | undefined {
     return this._labels;
   }
+  private _classIds: Set<string> = new Set<string>();
+  public get classIds(): Set<string> {
+    return this._classIds;
+  }
+
   private _childrenCache: ChangedElementsChildrenCache | undefined;
   public get childrenCache(): ChangedElementsChildrenCache | undefined {
     return this._childrenCache;
@@ -133,7 +138,7 @@ export class ChangedElementEntryCache {
     targetIModel: IModelConnection,
     elements: Map<string, ChangedElement>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
-    useChangedElementsInspectorV2?: boolean,
+    cacheLabelsAndChildrenOfEntries = true,
   ) {
     this._progressLoadingEvent = progressLoadingEvent;
     elements.forEach((element: ChangedElement, elementId: string) => {
@@ -149,17 +154,19 @@ export class ChangedElementEntryCache {
         loaded: false,
       };
       this._changedElementEntries.set(elementId, entry);
+      this._classIds.add(element.classId);
     });
 
-    this._currentIModel = currentIModel;
-    this._targetIModel = targetIModel;
-    if (!useChangedElementsInspectorV2) {
-    this._labels = new ChangedElementsLabelsCache(currentIModel, targetIModel);
-    this._childrenCache = new ChangedElementsChildrenCache(
-      currentIModel,
-      targetIModel,
-      elements,
-    );
+
+    if (cacheLabelsAndChildrenOfEntries) {
+      this._currentIModel = currentIModel;
+      this._targetIModel = targetIModel;
+      this._labels = new ChangedElementsLabelsCache(currentIModel, targetIModel);
+      this._childrenCache = new ChangedElementsChildrenCache(
+        currentIModel,
+        targetIModel,
+        elements,
+      );
     }
   }
 

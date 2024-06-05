@@ -445,18 +445,19 @@ export class ChangedElementsManager {
    * Generates entries for the accumulated changed elements by initializing the entry cache
    * @param currentIModel Current IModelConnection
    * @param targetIModel Target IModelConnection being compared against
+   * @param cacheLabelsAndChildrenOfEntries if false will skip label and children caching
    */
   public async generateEntries(
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
-    useChangedElementsInspectorV2?: boolean,
+    cacheLabelsAndChildrenOfEntries = true,
   ): Promise<void> {
     this._entryCache.initialize(
       currentIModel,
       targetIModel,
       this._changedElements,
       this._progressLoadingEvent,
-      useChangedElementsInspectorV2,
+      cacheLabelsAndChildrenOfEntries,
     );
   }
 
@@ -830,6 +831,7 @@ export class ChangedElementsManager {
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,
+    findParentsModels = true,
   ): Promise<void> {
     this._changedElements.clear();
 
@@ -881,9 +883,10 @@ export class ChangedElementsManager {
         this._changedElements.set(element.id, element);
       }
     }
-
-    // Find proper models to display elements under
-    await this._findParentModels(currentIModel, targetIModel);
+    if (findParentsModels) {
+      // Find proper models to display elements under
+        await this._findParentModels(currentIModel, targetIModel);
+    }
   }
 
   /**
@@ -1154,7 +1157,6 @@ export class ChangedElementsManager {
     forward?: boolean,
     filterSpatial?: boolean,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
-    useChangedElementsInspectorV2?: boolean,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;
 
@@ -1166,34 +1168,31 @@ export class ChangedElementsManager {
       forward,
       filterSpatial,
     );
-    if (!useChangedElementsInspectorV2) {
-      if (progressLoadingEvent) {
-        progressLoadingEvent.raiseEvent(
-          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
-        );
-      }
-    // Find changed models
-      this._changedModels = await this.findChangedModels(
-        currentIModel,
-        targetIModel,
-        forward ?? false,
-        progressLoadingEvent,
+    if (progressLoadingEvent) {
+      progressLoadingEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
       );
+    }
+    // Find changed models
+    this._changedModels = await this.findChangedModels(
+      currentIModel,
+      targetIModel,
+      forward ?? false,
+      progressLoadingEvent,
+    );
 
-      if (progressLoadingEvent) {
-        progressLoadingEvent.raiseEvent(
-          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
-        );
-      }
-
-      // Find unchanged models
-      this._unchangedModels = await this.findUnchangedModels(
-        currentIModel,
-        this._changedModels,
+    if (progressLoadingEvent) {
+      progressLoadingEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
       );
     }
 
-    await this.generateEntries(currentIModel, targetIModel,useChangedElementsInspectorV2);
+    // Find unchanged models
+    this._unchangedModels = await this.findUnchangedModels(
+      currentIModel,
+      this._changedModels,
+    );
+    await this.generateEntries(currentIModel, targetIModel);
   }
 }
 

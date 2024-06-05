@@ -379,14 +379,14 @@ export class VersionCompareManager {
    * @param currentVersion Current Version of the iModel
    * @param targetVersion Target Version of the iModel, an IModelConnection is opened to it
    * @param changedElements Array of elements that have changed and need to be visualized
-   * @param useChangedElementsInspectorV2 If true, the models tree will be used creating a new work flow for loading changed elements. Reducing pre-processing time.
+   * @param skipPreloading If true models and parent nodes will not be queried for only changesetEntries.
    */
   public async startComparisonV2(
     currentIModel: IModelConnection,
     currentVersion: NamedVersion,
     targetVersion: NamedVersion,
     changedElements: ChangedElements[],
-    useChangedElementsInspectorV2: boolean,
+    skipPreloading?: boolean,
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
 
@@ -440,6 +440,14 @@ export class VersionCompareManager {
       if (this.ignoredElementIds !== undefined) {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
+      if (skipPreloading) {
+        await this.initializeChangeSetEntriesAndChangeSets(this._currentIModel,
+          this._targetIModel,
+          filteredChangedElements,
+          this.wantAllModels ? undefined : wantedModelClasses,
+          false,
+          this.filterSpatial);
+      } else {
         await this.changedElementsManager.initialize(
           this._currentIModel,
           this._targetIModel,
@@ -448,36 +456,32 @@ export class VersionCompareManager {
           false,
           this.filterSpatial,
           this.loadingProgressEvent,
-          useChangedElementsInspectorV2,
         );
-      const changedElementEntries = this.changedElementsManager.entryCache.getAll();
+        const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
-      // We have parent Ids available if any entries contain undefined parent data
-      this._hasParentIds = changedElementEntries.some(
-        (entry) => entry.parent !== undefined && entry.parentClassId !== undefined,
-      );
-      // We have type of change available if any of the entries has a valid type of change value
-      this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
-      // We have property filtering available if any of the entries has a valid array of changed properties
-      this._hasPropertiesForFiltering = changedElementEntries.some(
-        (entry) => entry.properties !== undefined && entry.properties.size !== 0,
-      );
+        // We have parent Ids available if any entries contain undefined parent data
+        this._hasParentIds = changedElementEntries.some(
+          (entry) => entry.parent !== undefined && entry.parentClassId !== undefined,
+        );
+        // We have type of change available if any of the entries has a valid type of change value
+        this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
+        // We have property filtering available if any of the entries has a valid array of changed properties
+        this._hasPropertiesForFiltering = changedElementEntries.some(
+          (entry) => entry.properties !== undefined && entry.properties.size !== 0,
+        );
 
-      if (!useChangedElementsInspectorV2) {
         this.loadingProgressEvent.raiseEvent(
           IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
         );
-        // can skip no need to load parents of elements
         await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
       }
+
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
-
       // Enable visualization of version comparison
       await this.enableVisualization(false);
-
       // Raise event
-      this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
+      this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, this.changedElementsManager.entryCache.getAll());
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
@@ -506,6 +510,18 @@ export class VersionCompareManager {
 
     return success;
   }
+
+  private async initializeChangeSetEntriesAndChangeSets(
+    currentIModel: IModelConnection,
+    targetIModel: IModelConnection,
+    changedElements: ChangedElements[],
+    wantedModelClasses?: string[],
+    forward?: boolean,
+    filterSpatial?: boolean) {
+    await this.changedElementsManager.setChangeSets(currentIModel, targetIModel, changedElements, wantedModelClasses, forward, filterSpatial,false);
+    await this.changedElementsManager.generateEntries(currentIModel, targetIModel, false);
+  }
+
 
   /**
    * Enable visualization of version comparison.
