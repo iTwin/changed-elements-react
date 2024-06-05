@@ -380,8 +380,7 @@ export class VersionCompareFrontstageManager {
       this._mainViewportState = undefined;
     }
 
-    const changedElementsWidget = frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId);
-    changedElementsWidget?.setWidgetState(this._manager.isComparing ? WidgetState.Open : WidgetState.Hidden);
+    frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId)?.setWidgetState(WidgetState.Open);
   }
 
   /** Stops property comparison */

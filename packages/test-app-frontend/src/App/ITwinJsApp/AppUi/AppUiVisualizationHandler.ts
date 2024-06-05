@@ -124,14 +124,12 @@ export class AppUiVisualizationHandler implements VisualizationHandler {
 function bindChangedElementsWidgetEvents(manager: VersionCompareManager): void {
   manager.versionCompareStarting.addListener(onComparisonStarting);
   manager.versionCompareStopped.addListener(onComparisonStopped);
-  manager.versionCompareStartFailed.addListener(onStartFailed);
 }
 
 /** Clean-up events that make the widget automatically react to frontstage activated and version compare events. */
 function unbindChangedElementsWidgetEvents(manager: VersionCompareManager): void {
   manager.versionCompareStarting.removeListener(onComparisonStarting);
   manager.versionCompareStopped.removeListener(onComparisonStopped);
-  manager.versionCompareStartFailed.removeListener(onStartFailed);
 
   // Ensure widget gets closed
   onComparisonStopped();
@@ -146,11 +144,4 @@ function onComparisonStarting(): void {
 
 function onComparisonStopped(): void {
   ChangedElementsListComponent.cleanMaintainedState();
-}
-
-function onStartFailed(): void {
-  // Open/Close comparison legend
-  UiFramework.frontstages.activeFrontstageDef
-    ?.findWidgetDef(ChangedElementsWidget.widgetId)
-    ?.setWidgetState(WidgetState.Hidden);
 }

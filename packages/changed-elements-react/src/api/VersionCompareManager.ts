@@ -491,13 +491,17 @@ export class VersionCompareManager {
       IModelApp.notifications.outputMessage(
         new NotifyMessageDetails(OutputMessagePriority.Error, briefError, `${detailed}: ${errorMessage}`),
       );
-      // Notify failure on starting comparison
-      this.versionCompareStartFailed.raiseEvent();
-      this._currentIModel = undefined;
-      this._targetIModel = undefined;
+      try {
+        this.versionCompareStartFailed.raiseEvent();
+      } finally {
+        this._currentIModel = undefined;
+        this._targetIModel = undefined;
 
-      success = false;
-      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+        success = false;
+        VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+
+        await this.stopComparison();
+      }
     }
 
     return success;
