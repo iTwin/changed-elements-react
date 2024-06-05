@@ -1,9 +1,10 @@
 import { ModelsTreeComponent, ClassGroupingOption, DefaultLabelRenderer, TreeNodeLabelRendererProps } from "@itwin/tree-widget-react";
-import { SelectionMode } from "@itwin/components-react";
+import { SelectionMode, TreeModelNode } from "@itwin/components-react";
 import { Flex } from "@itwin/itwinui-react/esm";
 import { VersionCompareManager } from "../../../api/VersionCompareManager";
 import { DbOpcode } from "@itwin/core-bentley";
-import { c } from "vitest/dist/reporters-5f784f42.js";
+import { isPresentationTreeNodeItem } from "@itwin/presentation-components";
+import { NodeKey } from "@itwin/presentation-common";
 
 type ChangedElementsInspectorV2Props = {
   manager: VersionCompareManager;
@@ -11,16 +12,15 @@ type ChangedElementsInspectorV2Props = {
 
 function ChangedElementsInspectorV2(changedElementsInspectorV2Props: ChangedElementsInspectorV2Props) {
   function CustomModelsTreeLabelRenderer(props: TreeNodeLabelRendererProps) {
-    const changeElementsClassIds = changedElementsInspectorV2Props.manager.changedElementsManager.entryCache.classIds;
-    // any here must be removed in future currently way to get ecInstanceId from props object because it is not declared on the type interface of props.node.item
-    // todo talk to model tree team about how to corelate nodes with ecInstanceId
-    try {
-      const ecInstanceId = (props.node.item as any).key?.instanceKeysSelectQuery.bindings[1].value;
-      const ecClassId = (props.node.item as any).key?.instanceKeysSelectQuery.bindings[0].value;
-      if (changeElementsClassIds.has(ecClassId)) {
-        console.log("classId", ecClassId);
-        console.log((props.node.label.value as any).displayValue);
-      }
+    const key = extractNodeKeyFromNode(props.node);
+    if (!key)
+       return (
+        <Flex flexDirection="row">
+          <DefaultLabelRenderer label={props.node.label} context={props.context} />
+        </Flex>
+      );
+  //    const changeElementsClassIds = changedElementsInspectorV2Props.manager.changedElementsManager.entryCache.classIds;
+      const ecInstanceId = key.instanceKeys[0].id;
       if (changedElementsInspectorV2Props.manager.changedElementsManager.changedElements.has(ecInstanceId)) {
         return (
           <Flex flexDirection="row">
@@ -35,28 +35,7 @@ function ChangedElementsInspectorV2(changedElementsInspectorV2Props: ChangedElem
             <DefaultLabelRenderer label={props.node.label} context={props.context} />
           </Flex>
         );
-      } else if (changeElementsClassIds.has(ecClassId)) {
-        return (
-          <Flex flexDirection="row">
-            <div
-              style={{
-                height: 16,
-                width: 16,
-                backgroundColor: "blue",
-                borderRadius: "50%",
-              }}
-            ></div>
-            <DefaultLabelRenderer label={props.node.label} context={props.context} />
-          </Flex>
-        );
       }
-    } catch (e) {
-      return (
-        <Flex flexDirection="row">
-          <DefaultLabelRenderer label={props.node.label} context={props.context} />
-        </Flex>
-      );
-    }
     return (
       <Flex flexDirection="row">
         <DefaultLabelRenderer label={props.node.label} context={props.context} />
@@ -76,6 +55,15 @@ function ChangedElementsInspectorV2(changedElementsInspectorV2Props: ChangedElem
       }}
     />
   );
+}
+
+const extractNodeKeyFromNode = (node: TreeModelNode) => {
+  const treeNodeItem = node.item;
+  if (!isPresentationTreeNodeItem(treeNodeItem))
+    return undefined;
+  if(NodeKey.isInstancesNodeKey(treeNodeItem.key))
+    return treeNodeItem.key;
+  return undefined;
 }
 
 const getColorBasedOffDbCode = (opcode: DbOpcode) => {
