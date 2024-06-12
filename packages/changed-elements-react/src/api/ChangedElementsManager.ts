@@ -452,7 +452,7 @@ export class ChangedElementsManager {
     targetIModel: IModelConnection,
     cacheLabelsAndChildrenOfEntries = true,
   ): Promise<void> {
-    this._entryCache.initialize(
+   await this._entryCache.initialize(
       currentIModel,
       targetIModel,
       this._changedElements,

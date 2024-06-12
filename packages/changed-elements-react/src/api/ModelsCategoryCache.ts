@@ -54,6 +54,49 @@ const getElementModelsByIds = async (
 /**
  * Queries for the model Ids of the deleted elements passed
  * @param targetConnection Target IModel where deleted elements exist
+ * @param elementIds Element Ids
+ */
+const getCategoriesByIds = async (
+  targetConnection: IModelConnection,
+  elementIds: string[],
+): Promise<Set<string>> => {
+  // Don't try to query if we have an empty array
+  if (elementIds.length === 0) {
+    return new Set();
+  }
+
+  const categoryId = new Set<string>();
+  const chunkSize = 800;
+  // TODO: Check if distinct works properly here
+  let ecsql =
+    "SELECT DISTINCT Category.Id as catId FROM BisCore.GeometricElement3d WHERE ECInstanceId IN (";
+  for (let i = 0; i < chunkSize; i++) {
+    ecsql += "?,";
+  }
+  ecsql = ecsql.substr(0, ecsql.length - 1);
+  ecsql += ")";
+  for (let i = 0; i < elementIds.length; i += chunkSize) {
+    let max = i + chunkSize;
+    if (max > elementIds.length) {
+      max = elementIds.length;
+    }
+    const current = elementIds.slice(i, max);
+    for await (const row of targetConnection.query(
+      ecsql,
+      QueryBinder.from(current),
+      {
+        rowFormat: QueryRowFormat.UseJsPropertyNames,
+      },
+    )) {
+      categoryId.add(row.catId);
+    }
+  }
+  return categoryId;
+};
+
+/**
+ * Queries for the model Ids of the deleted elements passed
+ * @param targetConnection Target IModel where deleted elements exist
  * @param deletedElementIds Deleted Element Ids
  */
 const getElementCategories = async (targetConnection: IModelConnection): Promise<Set<string>> => {
@@ -108,6 +151,10 @@ export interface ModelsCategoryData {
   categories: Set<string>;
   deletedCategories: Set<string>;
   updatedElementsModels: Set<string>;
+  // todo make nullable for v2 only
+  addedElementsModels: Set<string>;
+  updatedCategories: Set<string>;
+  addedCategories: Set<string>;
 }
 
 /**
@@ -150,6 +197,8 @@ export class ModelsCategoryCache {
       const deletedElementIds: string[] = [];
       const deletedElementModelIds: string[] = [];
       const updatedElementIds: string[] = [];
+      const addedModels = new Set<string>()
+      const addElementIds: string[] = [];
       for (const changedElement of changedElements) {
         if (changedElement.opcode === DbOpcode.Delete) {
           // Only load the ones that we don't have model Ids for, as these model Ids will be the appropriate old version
@@ -161,6 +210,9 @@ export class ModelsCategoryCache {
           }
         } else if (changedElement.opcode === DbOpcode.Update) {
           updatedElementIds.push(changedElement.id);
+        } else {
+          addElementIds.push(changedElement.id)
+          addedModels.add(changedElement.modelId!)
         }
       }
       // Get model ids for deleted elements
@@ -172,7 +224,9 @@ export class ModelsCategoryCache {
       for (const modelId of deletedElementModelIds) {
         deletedElementsModels.add(modelId);
       }
-
+      //todo put flag around this for v2 only
+      const updatedCategories = await getCategoriesByIds(currentIModel, updatedElementIds)
+      const addedCategories = await getCategoriesByIds(currentIModel, addElementIds)
       // Ensure categories that no longer exist in the iModel are added to the viewport
       // So that elements that used to exist in those categories are displayed
       const categoryInfo = await getCategorySets(currentIModel, targetIModel);
@@ -195,6 +249,9 @@ export class ModelsCategoryCache {
         updatedElementsModels,
         categories: categoryInfo.allCategories,
         deletedCategories: categoryInfo.deletedCategories,
+        addedElementsModels: addedModels,
+        updatedCategories: updatedCategories,
+        addedCategories: addedCategories,
       };
     }
   }
