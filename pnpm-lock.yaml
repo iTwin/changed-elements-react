@@ -255,6 +255,9 @@ importers:
       '@itwin/presentation-frontend':
         specifier: ^4.6.1
         version: 4.6.1(@itwin/core-bentley@4.6.1)(@itwin/core-common@4.6.1)(@itwin/core-frontend@4.6.1)(@itwin/core-quantity@4.6.1)(@itwin/ecschema-metadata@4.6.1)(@itwin/presentation-common@4.6.1)
+      '@itwin/tree-widget-react':
+        specifier: 3.0.0-dev.0
+        version: 3.0.0-dev.0(@itwin/appui-abstract@4.6.1)(@itwin/appui-react@4.13.4)(@itwin/components-react@4.13.4)(@itwin/core-bentley@4.6.1)(@itwin/core-common@4.6.1)(@itwin/core-frontend@4.6.1)(@itwin/core-geometry@4.6.1)(@itwin/core-quantity@4.6.1)(@itwin/core-react@4.13.4)(@itwin/ecschema-metadata@4.6.1)(@itwin/presentation-components@5.3.2)(@types/react@17.0.0)(react-dom@17.0.0)(react@17.0.0)
       '@types/react':
         specifier: ^17.0.0
         version: 17.0.0
@@ -1545,7 +1548,7 @@ packages:
       '@itwin/presentation-hierarchies-react': 0.2.0(@itwin/itwinui-react@3.11.0)(react-dom@17.0.0)(react@17.0.0)
       '@itwin/presentation-shared': 0.1.1
       '@itwin/unified-selection': 0.4.2
-      classnames: 2.3.2
+      classnames: 2.5.1
       i18next: 10.6.0
       react: 17.0.0
       react-dom: 17.0.0(react@17.0.0)
@@ -2502,10 +2505,6 @@ packages:
 
   /classnames@2.3.1:
     resolution: {integrity: sha512-OlQdbZ7gLfGarSqxesMesDa5uz7KFbID8Kpq/SxIoNGDqY8lSYs0D+hhtBXhcdB3rcbXArFr7vlHheLk1voeNA==}
-
-  /classnames@2.3.2:
-    resolution: {integrity: sha512-CSbhY4cFEJRe6/GQzIk5qXZ4Jeg5pcsP7b5peFSDpffpe1cqjASH/n9UTjBwOp6XpMSTwQ8Za2K5V02ueA7Tmw==}
-    dev: false
 
   /classnames@2.5.1:
     resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
@@ -3496,10 +3495,6 @@ packages:
       cross-fetch: 3.1.5
     transitivePeerDependencies:
       - encoding
-
-  /i18next@10.6.0:
-    resolution: {integrity: sha512-ycRlN145kQf8EsyDAzMfjqv1ZT1Jwp7P2H/07bP8JLWm+7cSLD4XqlJOvq4mKVS2y2mMIy10lX9ZeYUdQ0qSRw==}
-    dev: false
 
   /i18next@10.6.0:
     resolution: {integrity: sha512-ycRlN145kQf8EsyDAzMfjqv1ZT1Jwp7P2H/07bP8JLWm+7cSLD4XqlJOvq4mKVS2y2mMIy10lX9ZeYUdQ0qSRw==}

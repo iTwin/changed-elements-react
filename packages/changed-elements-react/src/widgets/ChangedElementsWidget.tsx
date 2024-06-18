@@ -192,7 +192,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       throw new Error("Current and target IModelConnection not set in the ChangedElementsWidget's state");
     }
     if (this.props.useChangedElementsInspectorV2 && this.props.useV2Widget) {
-      return (<ChangedElementsInspectorV2 manager={this.state.manager} />);
+      return (<ChangedElementsInspectorV2 current={this.props.iModelConnection} manager={this.state.manager} />);
     }
     return (
       <ChangedElementsInspector

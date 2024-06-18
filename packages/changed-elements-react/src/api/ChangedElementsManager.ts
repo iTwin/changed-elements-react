@@ -367,12 +367,20 @@ export const accumulateChanges = (
  */
 export class ChangedElementsManager {
   /** Computed entries of changed elements for given comparison */
-  private _changedElements: Map<string, ChangedElement> = new Map<
+  private _filteredChangedElements: Map<string, ChangedElement> = new Map<
     string,
     ChangedElement
   >();
-  public get changedElements() {
-    return this._changedElements;
+  private _allChangedElements: Map<string, ChangedElement> = new Map<
+    string,
+    ChangedElement
+  >();
+
+  public get allChangeElements() {
+    return this._allChangedElements;
+  }
+  public get filteredChangedElements() {
+    return this._filteredChangedElements;
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;
@@ -431,7 +439,7 @@ export class ChangedElementsManager {
    */
   public getAllChangedPropertyNames(): Set<string> {
     const allProps = new Set<string>();
-    this.changedElements.forEach((element: ChangedElement) => {
+    this.filteredChangedElements.forEach((element: ChangedElement) => {
       if (element.properties !== undefined) {
         for (const prop of element.properties) {
           allProps.add(prop[0]);
@@ -452,10 +460,10 @@ export class ChangedElementsManager {
     targetIModel: IModelConnection,
     cacheLabelsAndChildrenOfEntries = true,
   ): Promise<void> {
-   await this._entryCache.initialize(
+    await this._entryCache.initialize(
       currentIModel,
       targetIModel,
-      this._changedElements,
+      this._filteredChangedElements,
       this._progressLoadingEvent,
       cacheLabelsAndChildrenOfEntries,
     );
@@ -479,7 +487,7 @@ export class ChangedElementsManager {
    * @param forward Whether we are comparing forward or backwards
    */
   private _getElementsInCurrent(forward: boolean): ChangedElement[] {
-    const array = [...this._changedElements]
+    const array = [...this._filteredChangedElements]
       .filter((entry: [string, ChangedElement]) => {
         return forward
           ? entry[1].opcode !== DbOpcode.Update
@@ -494,7 +502,7 @@ export class ChangedElementsManager {
    * @param forward Whether we are comparing forward or backwards
    */
   private _getElementsInTarget(forward: boolean): ChangedElement[] {
-    const array = [...this._changedElements]
+    const array = [...this._filteredChangedElements]
       .filter((entry: [string, ChangedElement]) => {
         return forward
           ? entry[1].opcode === DbOpcode.Update
@@ -512,7 +520,7 @@ export class ChangedElementsManager {
    * Returns true if the change data already has model ids
    */
   private _dataHasModelIds = (): boolean => {
-    for (const pair of this._changedElements) {
+    for (const pair of this._filteredChangedElements) {
       if (pair[1].modelId !== undefined) {
         return true;
       }
@@ -525,7 +533,7 @@ export class ChangedElementsManager {
    */
   private _getModelsFromElements = (): Set<string> => {
     const models = new Set<string>();
-    for (const pair of this._changedElements) {
+    for (const pair of this._filteredChangedElements) {
       const modelId = pair[1].modelId;
       if (modelId !== undefined) {
         models.add(modelId);
@@ -677,7 +685,7 @@ export class ChangedElementsManager {
     );
 
     const toRemove: string[] = [];
-    for (const pair of this._changedElements) {
+    for (const pair of this._filteredChangedElements) {
       const elemModelId = pair[1].modelId;
       if (elemModelId !== undefined) {
         if (!currentModels.has(elemModelId) && !targetModels.has(elemModelId)) {
@@ -686,7 +694,7 @@ export class ChangedElementsManager {
       }
     }
     for (const id of toRemove) {
-      this._changedElements.delete(id);
+      this._filteredChangedElements.delete(id);
     }
   }
 
@@ -708,7 +716,7 @@ export class ChangedElementsManager {
     for await (const row of iModel.query(ecsql, QueryBinder.from(elementIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
-      const entry = this._changedElements.get(row.id);
+      const entry = this._filteredChangedElements.get(row.id);
       if (entry !== undefined) {
         entry.modelId = row.model.id;
       }
@@ -750,7 +758,7 @@ export class ChangedElementsManager {
   ) => {
     const currentElementsWithoutModels = [];
     const targetElementsWithoutModels = [];
-    for (const pair of this._changedElements) {
+    for (const pair of this._filteredChangedElements) {
       const entry = pair[1];
       const id = pair[0];
       if (entry.modelId === undefined || entry.modelId === "0") {
@@ -833,19 +841,19 @@ export class ChangedElementsManager {
     filterSpatial?: boolean,
     findParentsModels = true,
   ): Promise<void> {
-    this._changedElements.clear();
+    this._filteredChangedElements.clear();
 
     const changesets = inputChangesets;
     changesets.forEach((changeset: ChangedElements) => {
-      accumulateChanges(this._changedElements, changeset, forward);
+      accumulateChanges(this._filteredChangedElements, changeset, forward);
     });
 
     // Clean merged elements that resulted in properties having the same checksums
     // Only do this if we have proper type of change data and properties
     if (this._dataAllowsCleanupOfMergedElements(changesets)) {
-      cleanMergedElements(this._changedElements);
+      cleanMergedElements(this._filteredChangedElements);
     }
-
+    this._allChangedElements = new Map(this._filteredChangedElements);
     // Fix missing model Ids before we filter by model class
     await this._fixModelIds(currentIModel, targetIModel);
 
@@ -875,17 +883,17 @@ export class ChangedElementsManager {
         validClassIds.add(row.sourceId);
       }
       // Filter elements that contain any class Id that has GeometricElement3d as base class
-      const filteredElements = [...this._changedElements]
+      const filteredElements = [...this._filteredChangedElements]
         .map((pair: [string, ChangedElement]) => pair[1])
         .filter((entry: ChangedElement) => validClassIds.has(entry.classId));
-      this._changedElements.clear();
+      this._filteredChangedElements.clear();
       for (const element of filteredElements) {
-        this._changedElements.set(element.id, element);
+        this._filteredChangedElements.set(element.id, element);
       }
     }
     if (findParentsModels) {
       // Find proper models to display elements under
-        await this._findParentModels(currentIModel, targetIModel);
+      await this._findParentModels(currentIModel, targetIModel);
     }
   }
 
@@ -1090,7 +1098,7 @@ export class ChangedElementsManager {
   ) => {
     const currentModelIdSet = new Set<string>();
     const targetModelIdSet = new Set<string>();
-    for (const pair of this._changedElements) {
+    for (const pair of this._filteredChangedElements) {
       if (pair[1].modelId !== undefined) {
         if (pair[1].opcode === DbOpcode.Delete) {
           targetModelIdSet.add(pair[1].modelId);
@@ -1129,7 +1137,7 @@ export class ChangedElementsManager {
 
   /** Clean-up changed elements manager */
   public cleanup() {
-    this._changedElements.clear();
+    this._filteredChangedElements.clear();
     this._entryCache.cleanup();
 
     if (this._changedModels) {

@@ -15,8 +15,6 @@ import {
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare } from "./VersionCompare.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
-import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
-import { QueryRowFormat } from "@itwin/core-common";
 
 /** Changed property for a changed element */
 export interface Checksums {
@@ -158,22 +156,6 @@ export class ChangedElementEntryCache {
       };
       this._changedElementEntries.set(elementId, entry);
     });
-
-    //todo move out of here and make into bulk query
-    await ModelsCategoryCache.load(currentIModel, targetIModel, [...this.changedElementEntries.values()]);
-    const { updatedElementsModels = [], deletedElementsModels = [], addedElementsModels = [] } = ModelsCategoryCache.getModelsCategoryData()!;
-    for (const modelId of [...updatedElementsModels, ...deletedElementsModels, ...addedElementsModels]) {
-      const ecsql = `Select SourceECInstanceId from BisCore.SubjectOwnsPartitionElements where TargetECInstanceId = ${modelId}`;
-      for await (const result of currentIModel.query(
-        ecsql,
-        undefined,
-        {
-          rowFormat: QueryRowFormat.UseJsPropertyNames,
-        },
-      )) {
-        this.subjectIds.add(result.sourceId);
-      }
-    }
     if (cacheLabelsAndChildrenOfEntries) {
       this._currentIModel = currentIModel;
       this._targetIModel = targetIModel;

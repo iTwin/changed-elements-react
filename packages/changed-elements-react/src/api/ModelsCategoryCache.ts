@@ -151,10 +151,7 @@ export interface ModelsCategoryData {
   categories: Set<string>;
   deletedCategories: Set<string>;
   updatedElementsModels: Set<string>;
-  // todo make nullable for v2 only
   addedElementsModels: Set<string>;
-  updatedCategories: Set<string>;
-  addedCategories: Set<string>;
 }
 
 /**
@@ -197,8 +194,7 @@ export class ModelsCategoryCache {
       const deletedElementIds: string[] = [];
       const deletedElementModelIds: string[] = [];
       const updatedElementIds: string[] = [];
-      const addedModels = new Set<string>()
-      const addElementIds: string[] = [];
+      const addedModelIds:Set<string>=new Set<string>();
       for (const changedElement of changedElements) {
         if (changedElement.opcode === DbOpcode.Delete) {
           // Only load the ones that we don't have model Ids for, as these model Ids will be the appropriate old version
@@ -211,8 +207,7 @@ export class ModelsCategoryCache {
         } else if (changedElement.opcode === DbOpcode.Update) {
           updatedElementIds.push(changedElement.id);
         } else {
-          addElementIds.push(changedElement.id)
-          addedModels.add(changedElement.modelId!)
+          addedModelIds.add(changedElement.modelId ??"");
         }
       }
       // Get model ids for deleted elements
@@ -224,9 +219,7 @@ export class ModelsCategoryCache {
       for (const modelId of deletedElementModelIds) {
         deletedElementsModels.add(modelId);
       }
-      //todo put flag around this for v2 only
-      const updatedCategories = await getCategoriesByIds(currentIModel, updatedElementIds)
-      const addedCategories = await getCategoriesByIds(currentIModel, addElementIds)
+
       // Ensure categories that no longer exist in the iModel are added to the viewport
       // So that elements that used to exist in those categories are displayed
       const categoryInfo = await getCategorySets(currentIModel, targetIModel);
@@ -238,8 +231,6 @@ export class ModelsCategoryCache {
       // Load the models so that visualization can occur
       await targetIModel.models.load(deletedElementsModels);
       await targetIModel.models.load(updatedElementsModels);
-
-      // Set currently cached data changeset ids
       ModelsCategoryCache._currentChangeSetId =
         currentIModel.changeset.id ?? "";
       ModelsCategoryCache._targetChangeSetId = targetIModel.changeset.id ?? "";
@@ -249,9 +240,7 @@ export class ModelsCategoryCache {
         updatedElementsModels,
         categories: categoryInfo.allCategories,
         deletedCategories: categoryInfo.deletedCategories,
-        addedElementsModels: addedModels,
-        updatedCategories: updatedCategories,
-        addedCategories: addedCategories,
+        addedElementsModels:addedModelIds,
       };
     }
   }

@@ -44,14 +44,15 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   VersionCompare.manager?.startComparisonV2(
     args.iModelConnection,
     args.currentVersion,
-    await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
+    await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient, args.currentVersion),
     [changedElements.changedElements],
     args.useChangedElementsInspectorV2).catch((e) => {
       Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
     });
 };
 
-const updateTargetVersion = async (iModelConnection: IModelConnection, targetVersion: NamedVersion, iModelsClient: IModelsClient) => {
+//todo remove current this if for logging only
+const updateTargetVersion = async (iModelConnection: IModelConnection, targetVersion: NamedVersion, iModelsClient: IModelsClient, currentNamedVersion: NamedVersion) => {
   // we need to update the changesetId and index of the target version.
   // earlier we updated all named versions to have an offset of 1, so we undo this offset to get the proper results from any VersionCompare.manager?.startComparisonV2 calls
   // on this target version
@@ -61,6 +62,8 @@ const updateTargetVersion = async (iModelConnection: IModelConnection, targetVer
   updatedTargetVersion.changesetIndex = targetVersion.changesetIndex - 1;
   const changeSets = await iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse());
   const actualChangeSet = changeSets.find((changeset) => updatedTargetVersion.changesetIndex === changeset.index);
+  const currentChangeSet = changeSets.find((changeset) => currentNamedVersion.changesetIndex === changeset.index);
+  console.log(`ChangesetRange: ${currentChangeSet?.index} - ${actualChangeSet?.index}`)
   if (actualChangeSet) {
     updatedTargetVersion.changesetId = actualChangeSet.id;
   }

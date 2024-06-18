@@ -389,7 +389,7 @@ export class VersionCompareManager {
     skipPreloading?: boolean,
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
-
+    let startTime: number = 0;
     let success = true;
     try {
       if (!targetVersion.changesetId) {
@@ -416,7 +416,7 @@ export class VersionCompareManager {
         this._currentIModel.iModelId,
         IModelVersion.asOfChangeSet(changesetId),
       );
-
+      startTime= Date.now();
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
@@ -441,10 +441,10 @@ export class VersionCompareManager {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
       if (skipPreloading) {
-        await this.initializeChangeSetEntriesAndChangeSets(this._currentIModel,
+        await this.initializeChangeSetEntriesAndChangeSets(
+          this._currentIModel,
           this._targetIModel,
-          filteredChangedElements,
-          this.wantAllModels ? undefined : wantedModelClasses,
+          filteredChangedElements, this.wantAllModels ? undefined : wantedModelClasses,
           false,
           this.filterSpatial);
       } else {
@@ -479,7 +479,7 @@ export class VersionCompareManager {
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
       // Enable visualization of version comparison
-      await this.enableVisualization(false);
+      await this.enableVisualization(false, undefined);
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, this.changedElementsManager.entryCache.getAll());
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
@@ -507,7 +507,9 @@ export class VersionCompareManager {
       success = false;
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
     }
-
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    console.log(`The operation took ${duration} milliseconds. With ${changedElements[0].elements.length} elements.`);
     return success;
   }
 
@@ -517,7 +519,7 @@ export class VersionCompareManager {
     changedElements: ChangedElements[],
     wantedModelClasses?: string[],
     forward?: boolean,
-    filterSpatial?: boolean) {
+    filterSpatial?: boolean,) {
     await this.changedElementsManager.setChangeSets(currentIModel, targetIModel, changedElements, wantedModelClasses, forward, filterSpatial,false);
     await this.changedElementsManager.generateEntries(currentIModel, targetIModel, false);
   }
@@ -529,7 +531,7 @@ export class VersionCompareManager {
    */
   public async enableVisualization(wantTargetModified?: boolean, focusedSelection?: KeySet): Promise<void> {
     // TODO: Handle proper viewports
-    await this._visualizationHandler?.enableVisualization({ wantTargetModified, focusedSelection });
+    await this._visualizationHandler?.enableVisualization({ wantTargetModified, focusedSelection});
   }
 
   /** Enable side by side visualization and viewport syncing. */
