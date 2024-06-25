@@ -107,7 +107,7 @@ export const useNamedVersionLoader = (
                 // look at itwins api page on order props for url
                 const blah = {
                   namedVersions: {
-                    entries: [...processedNamedVersionsState.namedVersions.entries,...currentState.namedVersions.entries],
+                    entries: [...currentState.namedVersions.entries,...processedNamedVersionsState.namedVersions.entries],
                     currentVersion: processedNamedVersionsState?.namedVersions.currentVersion,
                   },
                 }
@@ -115,7 +115,7 @@ export const useNamedVersionLoader = (
               } else {
                 currentState = processedNamedVersionsState;
               }
-              //todo may need check for this or kill trigger for previous page
+              //todo only check new entries not all we are querying too many times
               await processChangesetsAndUpdateResultState({
                 iModelConnection: iModelConnection,
                 iTwinId: iTwinId,
@@ -194,7 +194,7 @@ const sortAndSetIndexOfNamedVersions = async (namedVersions: NamedVersion[], cur
     onError();
     return;
   }
-  const reversedNamedVersions = namedVersionsOlderThanCurrentVersion.reverse();
+  const reversedNamedVersions = namedVersionsOlderThanCurrentVersion;
   if (reversedNamedVersions[0].changesetIndex === currentNamedVersion.changesetIndex) {
     reversedNamedVersions.shift(); //remove current named version
   }
@@ -227,6 +227,9 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
+    if (entry.version.displayName === "V28") {
+      console.log("V28");
+    }
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress({
       comparisonJobClient: args.comparisonJobClient,
       entry: entry,

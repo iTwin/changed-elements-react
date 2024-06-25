@@ -73,7 +73,7 @@ export class ITwinIModelsClient implements IModelsClient {
   public async getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]> {
     //todo fix typing use array like or generic or create new method like callItwinAPI
     const blah = await callITwinApi({
-      url: `${this.baseUrl}/${args.iModelId}/namedversions?$top=${args.top}&$skip=${args.skip}`,
+      url: `${this.baseUrl}/${args.iModelId}/namedversions?$top=${args.top}&$skip=${args.skip}&$orderBy=changesetIndex desc`,
       getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: { Accept: acceptMimeType, Prefer: "return=representation" },

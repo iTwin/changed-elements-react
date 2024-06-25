@@ -121,7 +121,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
       }
     }
     return {
-      jobStatus: "Unknown",
+      jobStatus: "Not Processed",
       jobProgress: {
         currentProgress: 0,
         maxProgress: 0,
