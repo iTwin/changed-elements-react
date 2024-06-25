@@ -51,13 +51,11 @@ export const useNamedVersionLoader = (
       }
 
       void (async () => {
-        const [namedVersions, changesets] = await Promise.all([
+        const [namedVersions] = await Promise.all([
           iModelsClient.getNamedVersions({ iModelId }),
-          // Changesets need to be in descending index order
-          iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse()),
         ]);
-        const currentNamedVersion = getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, changesets, currentChangeSetIndex);
-        const sortedAndOffsetNamedVersions = sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions, changesets);
+        const currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId,iModelsClient,iModelId,currentChangeSetIndex);
+        const sortedAndOffsetNamedVersions = await sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions,iModelsClient,iModelId);
         if (!sortedAndOffsetNamedVersions || sortedAndOffsetNamedVersions.length === 0) {
           setResultNoNamedVersions();
           return;
@@ -110,18 +108,18 @@ export const useNamedVersionLoader = (
 };
 
 // create faked named version if current version is not a named version
-const getOrCreateCurrentNamedVersion = (namedVersions: NamedVersion[], currentChangeSetId: string, changeSets: Changeset[], currentChangeSetIndex?: number): NamedVersion => {
+const getOrCreateCurrentNamedVersion = async (namedVersions: NamedVersion[], currentChangeSetId: string, iModelsClient: IModelsClient, iModelId?:string,currentChangeSetIndex?: number): Promise<NamedVersion> => {
   const currentFromNamedVersion = getCurrentFromNamedVersions(namedVersions, currentChangeSetId, currentChangeSetIndex);
   if (currentFromNamedVersion)
     return currentFromNamedVersion;
-  const currentFromChangeSet = getCurrentFromChangeSet(changeSets, currentChangeSetId);
+  const currentFromChangeSet = await getCurrentFromChangeSet(currentChangeSetId, iModelsClient, iModelId);
   if (currentFromChangeSet)
     return currentFromChangeSet;
   return {
     id: currentChangeSetId,
     displayName: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.currentChangeset"),
     changesetId: currentChangeSetId,
-    changesetIndex: 0,
+    changesetIndex: currentChangeSetIndex ?? 0,
     description: "",
     createdDateTime: "",
   };
@@ -135,22 +133,24 @@ const getCurrentFromNamedVersions = (namedVersions: NamedVersion[], currentChang
   return undefined
 };
 
-const getCurrentFromChangeSet = (changeSets: Changeset[], currentChangeSetId: string, currentChangeSetIndex?: number): NamedVersion | undefined => {
-  const currentChangeSet = changeSets.find(changeSet => (changeSet.id === currentChangeSetId || changeSet.index === currentChangeSetIndex));
-  if (currentChangeSet) {
-    return {
-      id: currentChangeSet.id,
-      displayName: currentChangeSet.displayName,
-      changesetId: currentChangeSet.id,
-      changesetIndex: currentChangeSet.index,
-      description: currentChangeSet.description,
-      createdDateTime: currentChangeSet.pushDateTime,
-    };
-  }
+const getCurrentFromChangeSet = async (currentChangeSetId: string, iModelsClient: IModelsClient, iModelId?: string): Promise<NamedVersion | undefined> => {
+  if (!iModelId)
+    return undefined;
+  const currentChangeSet = await iModelsClient.getChangeset({ iModelId: iModelId,changesetId: currentChangeSetId });
+   if (currentChangeSet) {
+     return {
+       id: currentChangeSet.id,
+       displayName: currentChangeSet.displayName,
+       changesetId: currentChangeSet.id,
+       changesetIndex: currentChangeSet.index,
+       description: currentChangeSet.description,
+       createdDateTime: currentChangeSet.pushDateTime,
+     };
+   }
   return undefined;
 };
 
-const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNamedVersion: NamedVersion, onError: () => void, changesets: Changeset[]) => {
+const sortAndSetIndexOfNamedVersions = async (namedVersions: NamedVersion[], currentNamedVersion: NamedVersion, onError: () => void, iModelsClient:IModelsClient, iModelId:string) => {
   //if current index is 0 then no need to filter. All change sets are older than current.
   const namedVersionsOlderThanCurrentVersion = currentNamedVersion.changesetIndex !== 0 ? namedVersions.filter(version => version.changesetIndex <= currentNamedVersion.changesetIndex) :
     namedVersions;
@@ -162,16 +162,18 @@ const sortAndSetIndexOfNamedVersions = (namedVersions: NamedVersion[], currentNa
   if (reversedNamedVersions[0].changesetIndex === currentNamedVersion.changesetIndex) {
     reversedNamedVersions.shift(); //remove current named version
   }
-  const changesetMap = arrayToMap(changesets, (changeset: Changeset) => { return changeset.index; });
   // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
   // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
   // this assuming latest is current
-  const offSetNameVersions = reversedNamedVersions.map((version) => {
-    version.changesetIndex = version.changesetIndex + 1;
-    version.changesetId = changesetMap.get(version.changesetIndex)?.id ?? version.changesetId;
-    return version;
+  const promises = reversedNamedVersions.map(async (nameVersion) => {
+    nameVersion.changesetIndex = nameVersion.changesetIndex + 1;
+    const changesetId = nameVersion.changesetIndex.toString();
+    const changeSet = await iModelsClient.getChangeset({ iModelId: iModelId, changesetId: changesetId });
+    nameVersion.changesetId = changeSet?.id ?? nameVersion.changesetId;
+    return nameVersion;
   });
-  return offSetNameVersions;
+
+  return Promise.all(promises);
 };
 
 type ProcessChangesetsArgs = {

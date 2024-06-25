@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  Changeset, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
+  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
 } from "./iModelsClient.js";
-import { callPagedITwinApi } from "./iTwinApi.js";
+import { callPagedITwinApi, callITwinApi } from "./iTwinApi.js";
 
 export interface ITwinIModelsClientParams {
   baseUrl?: string | undefined;
@@ -22,6 +22,15 @@ export class ITwinIModelsClient implements IModelsClient {
     this.baseUrl = args.baseUrl ?? "https://api.bentley.com/imodels";
     this.getAccessToken = args.getAccessToken;
     this.showHiddenNamedVersions = !!args.showHiddenNamedVersions;
+  }
+
+  public async getChangeset(args: GetChangesetParams): Promise<Changeset | undefined> {
+    const changeset = await callITwinApi({
+      url: `${this.baseUrl}/${args.iModelId}/changesets/${args.changesetId}`,
+      getAccessToken: this.getAccessToken,
+      headers: { Accept: acceptMimeType },
+    });
+    return changeset?.changeset as Changeset | undefined;
   }
 
   public async getChangesets(args: GetChangesetsParams): Promise<Changeset[]> {

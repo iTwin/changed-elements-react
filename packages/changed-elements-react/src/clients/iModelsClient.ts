@@ -8,8 +8,15 @@ export interface IModelsClient {
   /** Retrieves a list of Changesets, ordered by ascending `index` property.*/
   getChangesets(args: GetChangesetsParams): Promise<Changeset[]>;
 
+  /** Retrieves a changeset*/
+  getChangeset(args: GetChangesetParams): Promise<Changeset | undefined>;
+
   /** Retrieves a list of Named Verions, ordered by ascending `changesetIndex` property. */
   getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]>;
+}
+
+export interface GetChangesetParams extends GetChangesetsParams {
+  changesetId: string;
 }
 
 export interface GetChangesetsParams extends CommonRequestParams {
