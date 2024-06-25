@@ -13,6 +13,9 @@ export interface IModelsClient {
 
   /** Retrieves a list of Named Verions, ordered by ascending `changesetIndex` property. */
   getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]>;
+
+  /** Retrieves a paged list of Named Verions, ordered by ascending `changesetIndex` property. */
+  getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]>;
 }
 
 export interface GetChangesetParams extends GetChangesetsParams {
@@ -49,6 +52,12 @@ export interface Changeset {
 export interface GetNamedVersionsParams extends CommonRequestParams {
   iModelId: string;
 }
+
+export interface GetNamedVersionsPagedParams extends GetNamedVersionsParams {
+  top: number;
+  skip: number;
+}
+
 
 export interface NamedVersion {
   /** Named Version id. */

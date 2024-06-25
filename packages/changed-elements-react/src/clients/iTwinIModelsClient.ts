@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
+  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsPagedParams, GetNamedVersionsParams, IModelsClient, NamedVersion
 } from "./iModelsClient.js";
 import { callPagedITwinApi, callITwinApi } from "./iTwinApi.js";
 
@@ -68,6 +68,17 @@ export class ITwinIModelsClient implements IModelsClient {
     }
 
     return result as NamedVersion[];
+  }
+
+  public async getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]> {
+    //todo fix typing use array like or generic or create new method like callItwinAPI
+    const blah = await callITwinApi({
+      url: `${this.baseUrl}/${args.iModelId}/namedversions?$top=${args.top}&$skip=${args.skip}`,
+      getAccessToken: this.getAccessToken,
+      signal: args.signal,
+      headers: { Accept: acceptMimeType, Prefer: "return=representation" },
+    }) as any;
+    return blah.namedVersions as NamedVersion[]
   }
 }
 
