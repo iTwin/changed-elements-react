@@ -32,7 +32,7 @@ export const useNamedVersionLoader = (
   setNamedVersionResult: (state: NamedVersionLoaderState) => void,
   getPendingJobs: () => JobAndNamedVersions[],
   updatePaging: (isPaging: boolean) => void,
-  pageSize: number = 50,
+  pageSize: number = 20,
 ) => {
 
   useEffect(
@@ -68,26 +68,26 @@ export const useNamedVersionLoader = (
                   orderby: "changesetIndex",
                   ascendingOrDescending: "desc",
                 });
+              if (!currentNamedVersion)
+                currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
 
               if (namedVersions.length === 0) {
                 updatePaging(false);
                 break; // No more named versions to process
               }
-              // Process the named versions and update the state
+              // Process the named versions
               const processedNamedVersionsState = await processNamedVersions({
                 currentNamedVersion: currentNamedVersion,
                 namedVersions: namedVersions,
                 setResultNoNamedVersions: setResultNoNamedVersions,
                 iModelsClient: iModelsClient,
                 iModelId:  iModelId,
-                currentChangeSetId: currentChangeSetId,
                 updatePaging: updatePaging,
                 iTwinId: iTwinId,
                 iModelConnection: iModelConnection,
                 comparisonJobClient: comparisonJobClient,
                 setNamedVersionResult: setNamedVersionResult,
                 getPendingJobs: getPendingJobs,
-                currentChangeSetIndex: currentChangeSetIndex,
               });
               if (processedNamedVersionsState) {
                 if (currentState) {
@@ -124,12 +124,10 @@ export const useNamedVersionLoader = (
 
 type ProcessNamedVersionsArgs = {
   namedVersions: NamedVersion[];
-  currentNamedVersion?: NamedVersion;
+  currentNamedVersion: NamedVersion;
   setResultNoNamedVersions: () => void;
   iModelsClient: IModelsClient;
   iModelId: string;
-  currentChangeSetId: string;
-  currentChangeSetIndex?: number;
   updatePaging: (isPaging: boolean) => void;
   iTwinId: string;
   iModelConnection: IModelConnection;
@@ -140,22 +138,19 @@ type ProcessNamedVersionsArgs = {
 
 
 const processNamedVersions = async (args: ProcessNamedVersionsArgs) => {
-  const { namedVersions,
+  const {
+    namedVersions,
     setResultNoNamedVersions,
     iModelsClient,
     iModelId,
-    currentChangeSetId,
-    currentChangeSetIndex,
     updatePaging,
     comparisonJobClient,
     iTwinId,
     iModelConnection,
     setNamedVersionResult,
     getPendingJobs,
+    currentNamedVersion,
   } = args;
-  let currentNamedVersion = args.currentNamedVersion;
-  if (!currentNamedVersion)
-    currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
   const sortedAndOffsetNamedVersions = await sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions, iModelsClient, iModelId);
   if (!sortedAndOffsetNamedVersions || sortedAndOffsetNamedVersions.length === 0) {
     setResultNoNamedVersions();
