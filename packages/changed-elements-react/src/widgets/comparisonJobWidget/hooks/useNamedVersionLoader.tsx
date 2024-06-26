@@ -8,11 +8,9 @@ import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions } 
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { Changeset, IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
+import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
 import { arrayToMap } from "../../../utils/utils";
-
-const acceptMimeType = "application/vnd.bentley.itwin-platform.v2+json";
 
 /**
  * Result type for versionLoader.
@@ -33,6 +31,8 @@ export const useNamedVersionLoader = (
   comparisonJobClient: IComparisonJobClient,
   setNamedVersionResult: (state: NamedVersionLoaderState) => void,
   getPendingJobs: () => JobAndNamedVersions[],
+  updatePaging: (isPaging: boolean) => void,
+  pageSize: number = 50,
 ) => {
 
   useEffect(
@@ -55,80 +55,59 @@ export const useNamedVersionLoader = (
       void (async () => {
         let currentNamedVersion: NamedVersion | undefined;
         let currentState: NamedVersionLoaderState;
-        const processNamedVersions = async (namedVersions: NamedVersion[]) => {
-          if (!currentNamedVersion)
-            currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
-          const sortedAndOffsetNamedVersions = await sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions, iModelsClient, iModelId);
-          if (!sortedAndOffsetNamedVersions || sortedAndOffsetNamedVersions.length === 0) {
-            setResultNoNamedVersions();
-            return;
-          }
-          const initialComparisonJobStatus: JobStatus = "Unknown";
-          const initialJobProgress: JobProgress = {
-            currentProgress: 0,
-            maxProgress: 0,
-          };
-          const namedVersionState: NamedVersionLoaderState = {
-            namedVersions: {
-              entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
-                version: namedVersion,
-                state: VersionProcessedState.Verifying,
-                jobStatus: initialComparisonJobStatus,
-                jobProgress: initialJobProgress,
-              })),
-              currentVersion: {
-                version: currentNamedVersion,
-                state: VersionProcessedState.Processed,
-                jobStatus: initialComparisonJobStatus,
-                jobProgress: initialJobProgress,
-              },
-            },
-          };
-          return namedVersionState;
-        };
         const loadNamedVersionsInPages = async () => {
-          const pageSize = 10; // Set your page size
           let currentPage = 0;
-
           while (!disposed) {
-            // Get a page of named versions
-            const namedVersions = await iModelsClient.getNamedVersionsPaged({ iModelId, top: pageSize, skip: currentPage * pageSize });
+            try {
+              // Get a page of named versions
+              const namedVersions = await iModelsClient.getNamedVersionsPaged(
+                {
+                  iModelId,
+                  top: pageSize,
+                  skip: currentPage * pageSize,
+                  orderby: "changesetIndex",
+                  ascendingOrDescending: "desc",
+                });
 
-            if (namedVersions.length === 0) {
-              break; // No more named versions to process
-            }
-
-            // Process the named versions and update the state
-            const processedNamedVersionsState = await processNamedVersions(namedVersions);
-
-            if (processedNamedVersionsState) {
-              if (currentState) {
-                //todo api I giving data in reverse order we need to flip it
-                // look at itwins api page on order props for url
-                const blah = {
-                  namedVersions: {
-                    entries: [...currentState.namedVersions.entries,...processedNamedVersionsState.namedVersions.entries],
-                    currentVersion: processedNamedVersionsState?.namedVersions.currentVersion,
-                  },
-                }
-                currentState = blah;
-              } else {
-                currentState = processedNamedVersionsState;
+              if (namedVersions.length === 0) {
+                updatePaging(false);
+                break; // No more named versions to process
               }
-              //todo only check new entries not all we are querying too many times
-              await processChangesetsAndUpdateResultState({
-                iModelConnection: iModelConnection,
+              // Process the named versions and update the state
+              const processedNamedVersionsState = await processNamedVersions({
+                currentNamedVersion: currentNamedVersion,
+                namedVersions: namedVersions,
+                setResultNoNamedVersions: setResultNoNamedVersions,
+                iModelsClient: iModelsClient,
+                iModelId:  iModelId,
+                currentChangeSetId: currentChangeSetId,
+                updatePaging: updatePaging,
                 iTwinId: iTwinId,
-                iModelId: iModelId,
-                namedVersionLoaderState: currentState,
+                iModelConnection: iModelConnection,
                 comparisonJobClient: comparisonJobClient,
-                setNamedVersionLoaderState: (result: NamedVersionLoaderState) => {
-                  setNamedVersionResult(result);
-                },
-                getPendingJobs,
+                setNamedVersionResult: setNamedVersionResult,
+                getPendingJobs: getPendingJobs,
+                currentChangeSetIndex: currentChangeSetIndex,
               });
+              if (processedNamedVersionsState) {
+                if (currentState) {
+                  const updatedState = {
+                    namedVersions: {
+                      entries: currentState.namedVersions.entries.concat(processedNamedVersionsState.namedVersions.entries),
+                      currentVersion: processedNamedVersionsState?.namedVersions.currentVersion,
+                    },
+                  };
+                  currentState = updatedState;
+                } else {
+                  currentState = processedNamedVersionsState;
+                }
+              }
+              setNamedVersionResult(currentState);
+              currentPage++;
+            } catch (error) {
+              updatePaging(false);
+              break;
             }
-            currentPage++;
           }
         };
         void loadNamedVersionsInPages();
@@ -141,6 +120,80 @@ export const useNamedVersionLoader = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [comparisonJobClient, iModelConnection, iModelsClient],
   );
+};
+
+type ProcessNamedVersionsArgs = {
+  namedVersions: NamedVersion[];
+  currentNamedVersion?: NamedVersion;
+  setResultNoNamedVersions: () => void;
+  iModelsClient: IModelsClient;
+  iModelId: string;
+  currentChangeSetId: string;
+  currentChangeSetIndex?: number;
+  updatePaging: (isPaging: boolean) => void;
+  iTwinId: string;
+  iModelConnection: IModelConnection;
+  comparisonJobClient: IComparisonJobClient;
+  setNamedVersionResult: (state: NamedVersionLoaderState) => void;
+  getPendingJobs: () => JobAndNamedVersions[];
+};
+
+
+const processNamedVersions = async (args: ProcessNamedVersionsArgs) => {
+  const { namedVersions,
+    setResultNoNamedVersions,
+    iModelsClient,
+    iModelId,
+    currentChangeSetId,
+    currentChangeSetIndex,
+    updatePaging,
+    comparisonJobClient,
+    iTwinId,
+    iModelConnection,
+    setNamedVersionResult,
+    getPendingJobs,
+  } = args;
+  let currentNamedVersion = args.currentNamedVersion;
+  if (!currentNamedVersion)
+    currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
+  const sortedAndOffsetNamedVersions = await sortAndSetIndexOfNamedVersions(namedVersions, currentNamedVersion, setResultNoNamedVersions, iModelsClient, iModelId);
+  if (!sortedAndOffsetNamedVersions || sortedAndOffsetNamedVersions.length === 0) {
+    setResultNoNamedVersions();
+    updatePaging(false);
+    return;
+  }
+  const initialComparisonJobStatus: JobStatus = "Unknown";
+  const initialJobProgress: JobProgress = {
+    currentProgress: 0,
+    maxProgress: 0,
+  };
+  const namedVersionState: NamedVersionLoaderState = {
+    namedVersions: {
+      entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
+        version: namedVersion,
+        state: VersionProcessedState.Verifying,
+        jobStatus: initialComparisonJobStatus,
+        jobProgress: initialJobProgress,
+      })),
+      currentVersion: {
+        version: currentNamedVersion,
+        state: VersionProcessedState.Processed,
+        jobStatus: initialComparisonJobStatus,
+        jobProgress: initialJobProgress,
+      },
+    },
+  };
+  return getComparisonJobInfoForNamedVersions({
+    iModelConnection: iModelConnection,
+    iTwinId: iTwinId,
+    iModelId: iModelId,
+    namedVersionLoaderState: namedVersionState,
+    comparisonJobClient: comparisonJobClient,
+    setNamedVersionLoaderState: (result: NamedVersionLoaderState) => {
+      setNamedVersionResult(result);
+    },
+    getPendingJobs,
+  });
 };
 
 // create faked named version if current version is not a named version
@@ -222,14 +275,11 @@ type ProcessChangesetsArgs = {
   getPendingJobs: () => JobAndNamedVersions[];
 };
 
-const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs) => {
+const getComparisonJobInfoForNamedVersions = async (args: ProcessChangesetsArgs) => {
   const pendingJobsMap = arrayToMap(args.getPendingJobs(), (job: JobAndNamedVersions) => { return createJobId(job.targetNamedVersion, job.currentNamedVersion); });
   const currentVersionId = args.namedVersionLoaderState.namedVersions.currentVersion?.version.changesetId ??
     args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
-    if (entry.version.displayName === "V28") {
-      console.log("V28");
-    }
     const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress({
       comparisonJobClient: args.comparisonJobClient,
       entry: entry,
@@ -259,5 +309,5 @@ const processChangesetsAndUpdateResultState = async (args: ProcessChangesetsArgs
   const updatedState = {
     namedVersions: { currentVersion: args.namedVersionLoaderState.namedVersions.currentVersion, entries: newEntries },
   };
-  args.setNamedVersionLoaderState(updatedState);
+  return updatedState;
 };

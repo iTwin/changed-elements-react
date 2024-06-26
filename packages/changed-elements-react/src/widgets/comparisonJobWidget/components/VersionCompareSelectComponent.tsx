@@ -21,10 +21,15 @@ export interface VersionCompareSelectorProps {
 
   /** Whether to show a title for the component or not. */
   wantTitle?: boolean;
+  
   /** Named Versions to be displayed */
   namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
+
   /** Optional prop for a user supplied component to handle managing named versions.*/
   manageNamedVersionsSlot?: ReactNode | undefined;
+
+  /** If true display loading spinner to indicate we are receiving more named versions*/
+  isPaging: boolean;
 }
 
 /**
@@ -50,6 +55,7 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
     onVersionClicked={handleVersionClicked}
     wantTitle={props.wantTitle}
     manageNamedVersionsSlot={props.manageNamedVersionsSlot}
+    isPaging={props.isPaging}
   /> : <div className="vc-spinner">
     <ProgressRadial size="large" indeterminate />
   </div>;

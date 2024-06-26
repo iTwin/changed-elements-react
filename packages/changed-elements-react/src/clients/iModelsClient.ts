@@ -54,8 +54,17 @@ export interface GetNamedVersionsParams extends CommonRequestParams {
 }
 
 export interface GetNamedVersionsPagedParams extends GetNamedVersionsParams {
+  /** top of paging range max top = 1000. */
   top: number;
+
+  /** skip for paging **/
   skip: number;
+
+  /** order named versions by changesetIndex or createdDateTime */
+  orderby?: "changesetIndex" | "createdDateTime";
+
+  /** results should be ordered by ascending or descending */
+  ascendingOrDescending?: "asc" | "desc";
 }
 
 

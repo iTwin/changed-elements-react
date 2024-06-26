@@ -71,14 +71,19 @@ export class ITwinIModelsClient implements IModelsClient {
   }
 
   public async getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]> {
-    //todo fix typing use array like or generic or create new method like callItwinAPI
-    const blah = await callITwinApi({
-      url: `${this.baseUrl}/${args.iModelId}/namedversions?$top=${args.top}&$skip=${args.skip}&$orderBy=changesetIndex desc`,
+    let urlParams = "";
+    if (args.top) urlParams=`${urlParams}$top=${args.top}&`;
+    if (args.skip) urlParams = `${urlParams}$skip=${args.skip}&`;
+    if (args.orderby) urlParams = `${urlParams}$orderBy=${args.orderby} `;
+    if (args.ascendingOrDescending && args.orderby) urlParams = `${urlParams}${args.ascendingOrDescending}`;
+    const response = await callITwinApi({
+      url: `${this.baseUrl}/${args.iModelId}/namedversions?${urlParams}`,
       getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: { Accept: acceptMimeType, Prefer: "return=representation" },
-    }) as any;
-    return blah.namedVersions as NamedVersion[]
+    });
+    if (!response || !Array.isArray(response?.namedVersions)) return [];
+    return response.namedVersions as NamedVersion[];
   }
 }
 
