@@ -89,6 +89,7 @@ export const useNamedVersionLoader = (
                 setNamedVersionResult: setNamedVersionResult,
                 getPendingJobs: getPendingJobs,
               });
+              
               if (processedNamedVersionsState) {
                 if (currentState) {
                   const updatedState = {

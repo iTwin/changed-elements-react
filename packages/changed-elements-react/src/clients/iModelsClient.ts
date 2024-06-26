@@ -11,10 +11,10 @@ export interface IModelsClient {
   /** Retrieves a changeset*/
   getChangeset(args: GetChangesetParams): Promise<Changeset | undefined>;
 
-  /** Retrieves a list of Named Verions, ordered by ascending `changesetIndex` property. */
+  /** Retrieves a list of all Named Versions, ordered by ascending `changesetIndex` property. */
   getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]>;
 
-  /** Retrieves a paged list of Named Verions, ordered by ascending `changesetIndex` property. */
+  /** Retrieves a paged list of Named Versions */
   getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]>;
 }
 
