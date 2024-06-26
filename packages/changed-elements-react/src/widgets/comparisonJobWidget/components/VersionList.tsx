@@ -15,7 +15,7 @@ interface VersionListProps {
   currentVersion: VersionState;
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
-  
+
   /** If true display loading spinner to indicate we are receiving more named versions*/
   isPaging: boolean;
 }
@@ -48,7 +48,7 @@ export function VersionList(props: VersionListProps): ReactElement {
               />
             );
           })}
-          {props.isPaging && <LoadingSpinner></LoadingSpinner>}
+          {props.isPaging && <LoadingSpinner className="vc-spinner-entry-list"></LoadingSpinner>}
         </div>
       </div>
     </div>
