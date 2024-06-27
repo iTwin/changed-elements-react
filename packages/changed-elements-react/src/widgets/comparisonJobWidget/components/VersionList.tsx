@@ -48,7 +48,7 @@ export function VersionList(props: VersionListProps): ReactElement {
               />
             );
           })}
-          {props.isPaging && <LoadingSpinner className="vc-spinner-entry-list"></LoadingSpinner>}
+          {props.isPaging && <LoadingSpinner className="vc-spinner-entry-list" />}
         </div>
       </div>
     </div>
