@@ -63,8 +63,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
-  const [loading, setIsLoading] = useState(true);
-  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, setResult, getPendingJobs, setIsLoading);
+  const { isLoading }= useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, setResult, getPendingJobs);
   useEffect(() => {
     let isDisposed = false;
     const getIsDisposed = () => {
@@ -174,7 +173,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           namedVersions={result?.namedVersions}
           manageNamedVersionsSlot={props.manageNamedVersionsSlot}
-          isLoading={loading}
+          isLoading={isLoading}
         />
       </ModalContent>
       <ModalButtonBar>

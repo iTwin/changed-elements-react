@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
@@ -20,6 +20,10 @@ export type NamedVersionLoaderState = {
   namedVersions: CurrentNamedVersionAndNamedVersions;
 };
 
+interface UseNamedVersionLoaderResult {
+  isLoading: boolean;
+}
+
 /**
  * Loads name versions and their job status compared to current version iModel is targeting.
  * Returns a result object with current version and namedVersion with there job status sorted from newest to oldest.
@@ -31,9 +35,9 @@ export const useNamedVersionLoader = (
   comparisonJobClient: IComparisonJobClient,
   setNamedVersionResult: (state: NamedVersionLoaderState) => void,
   getPendingJobs: () => JobAndNamedVersions[],
-  updateLoading: (isLoading: boolean) => void,
   pageSize: number = 20,
-) => {
+): UseNamedVersionLoaderResult => {
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(
     () => {
       const setResultNoNamedVersions = () => {
@@ -70,7 +74,7 @@ export const useNamedVersionLoader = (
               currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
 
             if (namedVersions.length === 0) {
-              updateLoading(false);
+              setIsLoading(false);
               break; // No more named versions to process
             }
             // Process the named versions
@@ -80,7 +84,7 @@ export const useNamedVersionLoader = (
               setResultNoNamedVersions: setResultNoNamedVersions,
               iModelsClient: iModelsClient,
               iModelId: iModelId,
-              updatePaging: updateLoading,
+              updatePaging: setIsLoading,
               iTwinId: iTwinId,
               iModelConnection: iModelConnection,
               comparisonJobClient: comparisonJobClient,
@@ -104,13 +108,11 @@ export const useNamedVersionLoader = (
             }
             currentPage++;
           } catch (error) {
-            updateLoading(false);
+            setIsLoading(false);
             break;
-
           }
         }
       })();
-
       return () => {
         disposed = true;
       };
@@ -118,6 +120,7 @@ export const useNamedVersionLoader = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [comparisonJobClient, iModelConnection, iModelsClient],
   );
+  return { isLoading };
 };
 
 type ProcessNamedVersionsArgs = {
