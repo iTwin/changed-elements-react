@@ -31,10 +31,9 @@ export const useNamedVersionLoader = (
   comparisonJobClient: IComparisonJobClient,
   setNamedVersionResult: (state: NamedVersionLoaderState) => void,
   getPendingJobs: () => JobAndNamedVersions[],
-  updatePaging: (isPaging: boolean) => void,
+  updateLoading: (isLoading: boolean) => void,
   pageSize: number = 20,
 ) => {
-
   useEffect(
     () => {
       const setResultNoNamedVersions = () => {
@@ -54,64 +53,62 @@ export const useNamedVersionLoader = (
 
       void (async () => {
         let currentNamedVersion: NamedVersion | undefined;
-        let currentState: NamedVersionLoaderState;
-        const loadNamedVersionsInPages = async () => {
-          let currentPage = 0;
-          while (!disposed) {
-            try {
-              // Get a page of named versions
-              const namedVersions = await iModelsClient.getNamedVersionsPaged(
-                {
-                  iModelId,
-                  top: pageSize,
-                  skip: currentPage * pageSize,
-                  orderby: "changesetIndex",
-                  ascendingOrDescending: "desc",
-                });
-              if (!currentNamedVersion)
-                currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
-
-              if (namedVersions.length === 0) {
-                updatePaging(false);
-                break; // No more named versions to process
-              }
-              // Process the named versions
-              const processedNamedVersionsState = await processNamedVersions({
-                currentNamedVersion: currentNamedVersion,
-                namedVersions: namedVersions,
-                setResultNoNamedVersions: setResultNoNamedVersions,
-                iModelsClient: iModelsClient,
-                iModelId:  iModelId,
-                updatePaging: updatePaging,
-                iTwinId: iTwinId,
-                iModelConnection: iModelConnection,
-                comparisonJobClient: comparisonJobClient,
-                setNamedVersionResult: setNamedVersionResult,
-                getPendingJobs: getPendingJobs,
+        let currentState: NamedVersionLoaderState | undefined = undefined;
+        let currentPage = 0;
+        while (!disposed) {
+          try {
+            // Get a page of named versions
+            const namedVersions = await iModelsClient.getNamedVersions(
+              {
+                iModelId,
+                top: pageSize,
+                skip: currentPage * pageSize,
+                orderby: "changesetIndex",
+                ascendingOrDescending: "desc",
               });
-              
-              if (processedNamedVersionsState) {
-                if (currentState) {
-                  const updatedState = {
-                    namedVersions: {
-                      entries: currentState.namedVersions.entries.concat(processedNamedVersionsState.namedVersions.entries),
-                      currentVersion: processedNamedVersionsState?.namedVersions.currentVersion,
-                    },
-                  };
-                  currentState = updatedState;
-                } else {
-                  currentState = processedNamedVersionsState;
-                }
+            if (!currentNamedVersion)
+              currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
+
+            if (namedVersions.length === 0) {
+              updateLoading(false);
+              break; // No more named versions to process
+            }
+            // Process the named versions
+            const processedNamedVersionsState = await processNamedVersions({
+              currentNamedVersion: currentNamedVersion,
+              namedVersions: namedVersions,
+              setResultNoNamedVersions: setResultNoNamedVersions,
+              iModelsClient: iModelsClient,
+              iModelId: iModelId,
+              updatePaging: updateLoading,
+              iTwinId: iTwinId,
+              iModelConnection: iModelConnection,
+              comparisonJobClient: comparisonJobClient,
+              setNamedVersionResult: setNamedVersionResult,
+              getPendingJobs: getPendingJobs,
+            });
+
+            if (processedNamedVersionsState) {
+              if (currentState) {
+                const updatedState: NamedVersionLoaderState = {
+                  namedVersions: {
+                    entries: currentState.namedVersions.entries.concat(processedNamedVersionsState.namedVersions.entries),
+                    currentVersion: processedNamedVersionsState?.namedVersions.currentVersion,
+                  },
+                };
+                currentState = updatedState;
+              } else {
+                currentState = processedNamedVersionsState;
               }
               setNamedVersionResult(currentState);
-              currentPage++;
-            } catch (error) {
-              updatePaging(false);
-              break;
             }
+            currentPage++;
+          } catch (error) {
+            updateLoading(false);
+            break;
+
           }
-        };
-        void loadNamedVersionsInPages();
+        }
       })();
 
       return () => {

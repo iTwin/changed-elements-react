@@ -23,7 +23,7 @@ interface VersionCompareSelectorInnerProps {
   manageNamedVersionsSlot?: ReactNode | undefined;
 
   /** If true display loading spinner to indicate we are receiving more named versions*/
-  isPaging: boolean;
+  isLoading: boolean;
 }
 
 /**
@@ -60,7 +60,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
             currentVersion={props.currentVersion}
             selectedVersionChangesetId={props.selectedVersionChangesetId}
             onVersionClicked={props.onVersionClicked}
-            isPaging={props.isPaging}
+            isLoading={props.isLoading}
           />
         ) : (
           <Text className="no-named-versions-message" variant="leading">

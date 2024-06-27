@@ -63,14 +63,8 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
-  const [paging, setIsPaging] = useState(true);
-  const updatePaging = (isPaging: boolean) => {
-    setIsPaging(isPaging);
-  }
-  const updateResult = (updatedState: NamedVersionLoaderState) => {
-    setResult(updatedState);
-  };
-  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult, getPendingJobs,updatePaging);
+  const [loading, setIsLoading] = useState(true);
+  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, setResult, getPendingJobs, setIsLoading);
   useEffect(() => {
     let isDisposed = false;
     const getIsDisposed = () => {
@@ -84,7 +78,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         namedVersionLoaderState: result,
         comparisonJobClient: comparisonJobClient,
         iModelConnection: props.iModelConnection,
-        setResult: updateResult,
+        setResult: setResult,
         removeRunningJob: removeRunningJob,
         getRunningJobs: getRunningJobs,
         getDialogOpen: getDialogOpen,
@@ -143,7 +137,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           namedVersionLoaderState: result,
           comparisonJobClient: comparisonJobClient,
           iModelConnection: props.iModelConnection,
-          setResult: updateResult,
+          setResult: setResult,
           removeRunningJob: removeRunningJob,
           getRunningJobs: getRunningJobs,
           getDialogOpen: getDialogOpen,
@@ -180,7 +174,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           namedVersions={result?.namedVersions}
           manageNamedVersionsSlot={props.manageNamedVersionsSlot}
-          isPaging={paging}
+          isLoading={loading}
         />
       </ModalContent>
       <ModalButtonBar>

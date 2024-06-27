@@ -11,14 +11,13 @@ export interface IModelsClient {
   /** Retrieves a changeset*/
   getChangeset(args: GetChangesetParams): Promise<Changeset | undefined>;
 
-  /** Retrieves a list of all Named Versions, ordered by ascending `changesetIndex` property. */
+  /** Retrieves a list Named Versions */
   getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]>;
 
-  /** Retrieves a paged list of Named Versions */
-  getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]>;
 }
 
-export interface GetChangesetParams extends GetChangesetsParams {
+export interface GetChangesetParams extends CommonRequestParams {
+  iModelId: string;
   changesetId: string;
 }
 
@@ -51,14 +50,12 @@ export interface Changeset {
 
 export interface GetNamedVersionsParams extends CommonRequestParams {
   iModelId: string;
-}
 
-export interface GetNamedVersionsPagedParams extends GetNamedVersionsParams {
   /** top of paging range max top = 1000. */
-  top: number;
+  top?: number;
 
   /** skip for paging **/
-  skip: number;
+  skip?: number;
 
   /** order named versions by changesetIndex or createdDateTime */
   orderby?: "changesetIndex" | "createdDateTime";
@@ -66,7 +63,6 @@ export interface GetNamedVersionsPagedParams extends GetNamedVersionsParams {
   /** results should be ordered by ascending or descending */
   ascendingOrDescending?: "asc" | "desc";
 }
-
 
 export interface NamedVersion {
   /** Named Version id. */

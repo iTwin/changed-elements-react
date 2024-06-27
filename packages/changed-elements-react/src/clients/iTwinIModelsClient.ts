@@ -28,6 +28,7 @@ export class ITwinIModelsClient implements IModelsClient {
     const changeset = await callITwinApi({
       url: `${this.baseUrl}/${args.iModelId}/changesets/${args.changesetId}`,
       getAccessToken: this.getAccessToken,
+      signal: args.signal,
       headers: { Accept: acceptMimeType },
     });
     return changeset?.changeset as Changeset | undefined;
@@ -50,8 +51,28 @@ export class ITwinIModelsClient implements IModelsClient {
   }
 
   public async getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]> {
+
+    let urlParams = "";
+    if (args.top || args.skip) {
+      if (args.top) urlParams = `${urlParams}$top=${args.top}&`;
+      if (args.skip) urlParams = `${urlParams}$skip=${args.skip}&`;
+      if (args.orderby) urlParams = `${urlParams}$orderBy=${args.orderby} `;
+      if (args.ascendingOrDescending && args.orderby) urlParams = `${urlParams}${args.ascendingOrDescending}`;
+      const response = await callITwinApi({
+        url: `${this.baseUrl}/${args.iModelId}/namedversions?${urlParams}`,
+        getAccessToken: this.getAccessToken,
+        signal: args.signal,
+        headers: { Accept: acceptMimeType, Prefer: "return=representation" },
+      });
+      if (!response || !Array.isArray(response?.namedVersions)) return [];
+      return response.namedVersions as NamedVersion[];
+    }
+
+    if (args.orderby) urlParams = `${urlParams}$orderBy=${args.orderby} `;
+    if (args.ascendingOrDescending && args.orderby) urlParams = `${urlParams}${args.ascendingOrDescending}`;
+
     const iterator = callPagedITwinApi({
-      url: `${this.baseUrl}/${args.iModelId}/namedversions`,
+      url: `${this.baseUrl}/${args.iModelId}/namedversions?${urlParams}`,
       getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: { Accept: acceptMimeType, Prefer: "return=representation" },
@@ -70,21 +91,6 @@ export class ITwinIModelsClient implements IModelsClient {
     return result as NamedVersion[];
   }
 
-  public async getNamedVersionsPaged(args: GetNamedVersionsPagedParams): Promise<NamedVersion[]> {
-    let urlParams = "";
-    if (args.top) urlParams=`${urlParams}$top=${args.top}&`;
-    if (args.skip) urlParams = `${urlParams}$skip=${args.skip}&`;
-    if (args.orderby) urlParams = `${urlParams}$orderBy=${args.orderby} `;
-    if (args.ascendingOrDescending && args.orderby) urlParams = `${urlParams}${args.ascendingOrDescending}`;
-    const response = await callITwinApi({
-      url: `${this.baseUrl}/${args.iModelId}/namedversions?${urlParams}`,
-      getAccessToken: this.getAccessToken,
-      signal: args.signal,
-      headers: { Accept: acceptMimeType, Prefer: "return=representation" },
-    });
-    if (!response || !Array.isArray(response?.namedVersions)) return [];
-    return response.namedVersions as NamedVersion[];
-  }
 }
 
 const acceptMimeType = "application/vnd.bentley.itwin-platform.v2+json";
