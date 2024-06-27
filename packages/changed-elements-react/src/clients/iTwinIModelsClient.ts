@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsPagedParams, GetNamedVersionsParams, IModelsClient, NamedVersion
+  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
 } from "./iModelsClient.js";
 import { callPagedITwinApi, callITwinApi } from "./iTwinApi.js";
 
