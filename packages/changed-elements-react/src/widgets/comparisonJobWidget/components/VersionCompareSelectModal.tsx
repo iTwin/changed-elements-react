@@ -63,10 +63,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
-  const updateResult = (updatedState: NamedVersionLoaderState) => {
-    setResult(updatedState);
-  };
-  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult, getPendingJobs);
+  const { isLoading }= useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, setResult, getPendingJobs);
   useEffect(() => {
     let isDisposed = false;
     const getIsDisposed = () => {
@@ -80,7 +77,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         namedVersionLoaderState: result,
         comparisonJobClient: comparisonJobClient,
         iModelConnection: props.iModelConnection,
-        setResult: updateResult,
+        setResult: setResult,
         removeRunningJob: removeRunningJob,
         getRunningJobs: getRunningJobs,
         getDialogOpen: getDialogOpen,
@@ -139,7 +136,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           namedVersionLoaderState: result,
           comparisonJobClient: comparisonJobClient,
           iModelConnection: props.iModelConnection,
-          setResult: updateResult,
+          setResult: setResult,
           removeRunningJob: removeRunningJob,
           getRunningJobs: getRunningJobs,
           getDialogOpen: getDialogOpen,
@@ -176,6 +173,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           onVersionSelected={_onVersionSelected}
           namedVersions={result?.namedVersions}
           manageNamedVersionsSlot={props.manageNamedVersionsSlot}
+          isLoading={isLoading}
         />
       </ModalContent>
       <ModalButtonBar>
@@ -233,7 +231,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       args.removePendingJob(jobId);
       return job;
     }, 3);
-    if (comparisonJob.comparisonJob.status === "Error") {
+    if (comparisonJob.comparisonJob.status === "Failed") {
       comparisonJob = await handleJobError({ ...args, comparisonJob: comparisonJob });
     }
     if (comparisonJob.comparisonJob.status === "Completed") {
@@ -338,7 +336,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
           iModelId: args.iModelId,
           jobId: runningJob?.comparisonJob?.comparisonJob.jobId as string,
         });
-        if (completedJob.comparisonJob.status === "Error") {
+        if (completedJob.comparisonJob.status === "Failed") {
           args.removeRunningJob(runningJob?.comparisonJob?.comparisonJob.jobId as string);
           continue;
         }

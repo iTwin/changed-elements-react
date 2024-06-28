@@ -8,12 +8,16 @@ import { VersionListEntry } from "./VersionEntries";
 import { VersionState } from "../models/VersionState";
 import { NamedVersion } from "../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
+import { LoadingSpinner } from "@itwin/core-react";
 
 interface VersionListProps {
   entries: VersionState[];
   currentVersion: VersionState;
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
+
+  /** If true display loading spinner to indicate we are receiving more named versions*/
+  isLoading: boolean;
 }
 
 /**
@@ -44,6 +48,7 @@ export function VersionList(props: VersionListProps): ReactElement {
               />
             );
           })}
+          {props.isLoading && <LoadingSpinner className="vc-spinner-entry-list" />}
         </div>
       </div>
     </div>

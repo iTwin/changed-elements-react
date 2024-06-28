@@ -110,7 +110,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
             },
           };
         }
-        case "Error":
+        case "Failed":
           return {
             jobStatus: "Error",
             jobProgress: {
@@ -121,7 +121,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
       }
     }
     return {
-      jobStatus: "Unknown",
+      jobStatus: "Not Processed",
       jobProgress: {
         currentProgress: 0,
         maxProgress: 0,
