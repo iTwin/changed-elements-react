@@ -88,7 +88,6 @@ export const useNamedVersionLoader = (
               iTwinId: iTwinId,
               iModelConnection: iModelConnection,
               comparisonJobClient: comparisonJobClient,
-              setNamedVersionResult: setNamedVersionResult,
               getPendingJobs: getPendingJobs,
             });
 
@@ -133,7 +132,6 @@ type ProcessNamedVersionsArgs = {
   iTwinId: string;
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
-  setNamedVersionResult: (state: NamedVersionLoaderState) => void;
   getPendingJobs: () => JobAndNamedVersions[];
 };
 
@@ -148,7 +146,6 @@ const processNamedVersions = async (args: ProcessNamedVersionsArgs) => {
     comparisonJobClient,
     iTwinId,
     iModelConnection,
-    setNamedVersionResult,
     getPendingJobs,
     currentNamedVersion,
   } = args;
@@ -185,9 +182,6 @@ const processNamedVersions = async (args: ProcessNamedVersionsArgs) => {
     iModelId: iModelId,
     namedVersionLoaderState: namedVersionState,
     comparisonJobClient: comparisonJobClient,
-    setNamedVersionLoaderState: (result: NamedVersionLoaderState) => {
-      setNamedVersionResult(result);
-    },
     getPendingJobs,
   });
 };
@@ -267,7 +261,6 @@ type ProcessChangesetsArgs = {
   namedVersionLoaderState: NamedVersionLoaderState;
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
-  setNamedVersionLoaderState: (result: NamedVersionLoaderState) => void;
   getPendingJobs: () => JobAndNamedVersions[];
 };
 
