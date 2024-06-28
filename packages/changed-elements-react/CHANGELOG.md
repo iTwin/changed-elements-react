@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## Minor changes
+
+* `VersionCompareSelectModal` V2 now uses paging to load named version resulting in faster load times.
+
 ## [0.7.0](https://github.com/iTwin/changed-elements-react/tree/v0.7.0/packages/changed-elements-react) - 2024-06-05
 
 ## Minor changes
