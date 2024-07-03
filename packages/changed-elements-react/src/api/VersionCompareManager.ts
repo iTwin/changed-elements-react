@@ -71,10 +71,8 @@ export class VersionCompareManager {
     return this._visualizationHandler;
   }
 
-  public get featureTracking(): VersionCompareFeatureTracking {
-    return this.options.featureTracking !== undefined
-      ? this.options.featureTracking
-      : { trackInspectElementTool: () => ({}) };
+  public get featureTracking(): VersionCompareFeatureTracking | undefined {
+    return this.options.featureTracking;
   }
 
   public get filterSpatial(): boolean {
@@ -345,6 +343,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      VersionCompare.manager?.featureTracking?.trackVersionSelectorUsage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
       const briefError = IModelApp.localization.getLocalizedString(
@@ -475,6 +474,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
       const briefError = IModelApp.localization.getLocalizedString(
@@ -563,6 +563,7 @@ export class VersionCompareManager {
    * Initialize property comparison using the visualization handler
    */
   public async initializePropertyComparison(): Promise<void> {
+    VersionCompare.manager?.featureTracking?.trackPropertyComparisonUsage();
     await this._visualizationHandler?.startPropertyComparison();
   }
 }
