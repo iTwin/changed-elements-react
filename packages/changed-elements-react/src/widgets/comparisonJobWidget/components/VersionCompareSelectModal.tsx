@@ -91,7 +91,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
       isDisposed = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result]);
+  }, [isLoading]);
   const _handleOk = async (): Promise<void> => {
     if (comparisonJobClient && result?.namedVersions && targetVersion && currentVersion) {
       const getIsDisposed = () => true;
@@ -151,6 +151,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
 
   const _handleCancel = (): void => {
     props.onClose?.();
+    closedDialog();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   };
 
@@ -327,7 +328,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
   let isConnectionClosed = false;
   args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
   const loopDelayInMilliseconds = 5000;
-  while (shouldProcessRunningJobs({ getDialogOpen: args.getDialogOpen, getRunningJobs: args.getRunningJobs, isConnectionClosed })) {
+  while (shouldProcessRunningJobs({ getRunningJobs: args.getRunningJobs, isConnectionClosed })) {
     await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
     for (const runningJob of args.getRunningJobs()) {
       try {
@@ -364,11 +365,10 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
 type ShouldProcessRunningJobArgs = {
   isConnectionClosed: boolean;
   getRunningJobs: () => JobAndNamedVersions[];
-  getDialogOpen: () => boolean;
 };
 
 const shouldProcessRunningJobs = (args: ShouldProcessRunningJobArgs) => {
-  return !args.getDialogOpen() && args.getRunningJobs().length > 0 && !args.isConnectionClosed;
+  return args.getRunningJobs().length > 0 && !args.isConnectionClosed;
 };
 
 type ConditionallyToastCompletionArgs = {

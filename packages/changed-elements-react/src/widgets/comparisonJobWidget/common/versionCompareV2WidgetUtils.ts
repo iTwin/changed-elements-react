@@ -80,7 +80,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
       iModelId: args.iModelId,
       jobId: `${args.entry.version.changesetId}-${args.currentChangesetId}`,
     });
-    if (res) {
+        if (res) {
       switch (res.comparisonJob.status) {
         case "Completed": {
           return {
