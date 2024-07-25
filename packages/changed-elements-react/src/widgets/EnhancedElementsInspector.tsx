@@ -222,6 +222,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
 
   /** Handle opening the advanced filter property dialog. */
   const openAdvancedFilterDialog = async () => {
+    VersionCompare.manager?.featureTracking?.trackAdvancedFiltersUsage();
     try {
       if (props.onLoadLabels) {
         props.onLoadLabels(false);
@@ -1251,7 +1252,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
 
   private _onPropertyCompare = async (): Promise<void> => {
     this.saveState();
-    this.props.manager.featureTracking.trackInspectElementTool();
     await this.props.manager.initializePropertyComparison();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.comparisonLegendWidgetInitializeInspect);
   };

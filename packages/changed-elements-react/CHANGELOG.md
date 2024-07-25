@@ -8,6 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Fixes
 
+* `VersionCompareSelectModal` V2 toast now fixed when opening and closing modal.
+
+## [0.8.0](https://github.com/iTwin/changed-elements-react/tree/v0.8.0/packages/changed-elements-react) - 2024-06-28
+
+## Minor changes
+
+* `VersionCompareSelectModal` V2 now uses paging to load named version resulting in faster load times.
+* package updates fixing package vulnerabilities
+
+## [0.7.0](https://github.com/iTwin/changed-elements-react/tree/v0.7.0/packages/changed-elements-react) - 2024-06-05
+
+## Minor changes
+
+* `VersionCompareManager.startComparisonV2`: Invoke `VersionCompareManager.stopComparison` when recovering from error
+
+## [0.6.4](https://github.com/iTwin/changed-elements-react/tree/v0.6.4/packages/changed-elements-react) - 2024-05-23
+
+## Fixes
+
 * Fixes comparison job error workflow in `VersionCompareSelectModal`. When error jobs are re-run, they delete the existing broken job and re-run a new job for the given job ID.
 
 ## [0.6.3](https://github.com/iTwin/changed-elements-react/tree/v0.6.3/packages/changed-elements-react) - 2024-05-21

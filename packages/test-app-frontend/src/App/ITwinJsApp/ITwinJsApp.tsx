@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /*---------------------------------------------------------------------------------------------
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
@@ -8,7 +9,8 @@ import {
   UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext
+  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
+  VersionCompareFeatureTracking
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
@@ -125,6 +127,15 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
 const savedFilters = new MockSavedFiltersManager();
 
+/** Simple console log testing functions for feature tracking implementation */
+const featureTrackingTesterFunctions: VersionCompareFeatureTracking = {
+  trackVersionSelectorV2Usage: () => { console.log("trackVersionSelectorV2Usage"); },
+  trackVersionSelectorUsage: () => { console.log("trackVersionSelectorUsage"); },
+  trackPropertyComparisonUsage: () => { console.log("trackPropertyComparisonUsage"); },
+  trackChangeReportGenerationUsage: () => { console.log("trackChangeReportGenerationUsage"); },
+  trackAdvancedFiltersUsage: () => { console.log("trackAdvancedFiltersUsage"); },
+}
+
 export async function initializeITwinJsApp(authorizationClient: AuthorizationClient): Promise<void> {
   if (IModelApp.initialized) {
     return;
@@ -165,6 +176,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       manager,
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
+    featureTracking: featureTrackingTesterFunctions,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
@@ -282,6 +294,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
         useChangedElementsInspectorV2
         feedbackUrl="https://example.com"
         iModelConnection={UiFramework.getIModelConnection()!}
+        enableComparisonJobUpdateToasts
         manageNamedVersionsSlot={<ManageNamedVersions />}
       />,
     }];

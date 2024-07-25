@@ -71,7 +71,7 @@ export interface ComparisonJobQueued {
 
 export interface ComparisonJobFailed {
   comparisonJob: {
-    status: "Error";
+    status: "Failed";
     jobId: string;
     iTwinId: string;
     iModelId: string;

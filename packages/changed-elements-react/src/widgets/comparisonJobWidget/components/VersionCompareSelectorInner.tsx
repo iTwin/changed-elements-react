@@ -18,8 +18,12 @@ interface VersionCompareSelectorInnerProps {
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
+
   /** Optional prop for a user supplied component to handle managing named versions.*/
   manageNamedVersionsSlot?: ReactNode | undefined;
+
+  /** If true display loading spinner to indicate we are receiving more named versions*/
+  isLoading: boolean;
 }
 
 /**
@@ -56,6 +60,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
             currentVersion={props.currentVersion}
             selectedVersionChangesetId={props.selectedVersionChangesetId}
             onVersionClicked={props.onVersionClicked}
+            isLoading={props.isLoading}
           />
         ) : (
           <Text className="no-named-versions-message" variant="leading">

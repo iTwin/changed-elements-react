@@ -64,10 +64,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
-  const updateResult = (updatedState: NamedVersionLoaderState) => {
-    setResult(updatedState);
-  };
-  useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, updateResult, getPendingJobs);
+  const { isLoading } = useNamedVersionLoader(props.iModelConnection, iModelsClient, comparisonJobClient, setResult, getPendingJobs);
   useEffect(() => {
     let isDisposed = false;
     const getIsDisposed = () => {
@@ -81,7 +78,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
         namedVersionLoaderState: result,
         comparisonJobClient: comparisonJobClient,
         iModelConnection: props.iModelConnection,
-        setResult: updateResult,
+        setResult: setResult,
         removeRunningJob: removeRunningJob,
         getRunningJobs: getRunningJobs,
         getDialogOpen: getDialogOpen,
@@ -97,7 +94,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
       isDisposed = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result]);
+  }, [isLoading]);
   const _handleOk = async (): Promise<void> => {
     if (comparisonJobClient && result?.namedVersions && targetVersion && currentVersion) {
       const getIsDisposed = () => true;
@@ -144,7 +141,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
           namedVersionLoaderState: result,
           comparisonJobClient: comparisonJobClient,
           iModelConnection: props.iModelConnection,
-          setResult: updateResult,
+          setResult: setResult,
           removeRunningJob: removeRunningJob,
           getRunningJobs: getRunningJobs,
           getDialogOpen: getDialogOpen,
@@ -161,6 +158,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
 
   const _handleCancel = (): void => {
     props.onClose?.();
+    closedDialog();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   };
 
@@ -183,6 +181,7 @@ export function VersionCompareSelectDialogV2(props: Readonly<VersionCompareSelec
           onVersionSelected={_onVersionSelected}
           namedVersions={result?.namedVersions}
           manageNamedVersionsSlot={props.manageNamedVersionsSlot}
+          isLoading={isLoading}
         />
       </ModalContent>
       <ModalButtonBar>
@@ -242,7 +241,7 @@ const createOrRunManagerStartComparisonV2 = async (args: RunStartComparisonV2Arg
       args.removePendingJob(jobId);
       return job;
     }, 3);
-    if (comparisonJob.comparisonJob.status === "Error") {
+    if (comparisonJob.comparisonJob.status === "Failed") {
       comparisonJob = await handleJobError({ ...args, comparisonJob: comparisonJob });
     }
     if (comparisonJob.comparisonJob.status === "Completed") {
@@ -341,7 +340,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
   let isConnectionClosed = false;
   args.iModelConnection.onClose.addListener(() => { isConnectionClosed = true; });
   const loopDelayInMilliseconds = 5000;
-  while (shouldProcessRunningJobs({ getDialogOpen: args.getDialogOpen, getRunningJobs: args.getRunningJobs, isConnectionClosed })) {
+  while (shouldProcessRunningJobs({ getRunningJobs: args.getRunningJobs, isConnectionClosed })) {
     await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
     for (const runningJob of args.getRunningJobs()) {
       try {
@@ -350,7 +349,7 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
           iModelId: args.iModelId,
           jobId: runningJob?.comparisonJob?.comparisonJob.jobId as string,
         });
-        if (completedJob.comparisonJob.status === "Error") {
+        if (completedJob.comparisonJob.status === "Failed") {
           args.removeRunningJob(runningJob?.comparisonJob?.comparisonJob.jobId as string);
           continue;
         }
@@ -380,11 +379,10 @@ const pollUntilCurrentRunningJobsCompleteAndToast = async (args: PollForInProgre
 type ShouldProcessRunningJobArgs = {
   isConnectionClosed: boolean;
   getRunningJobs: () => JobAndNamedVersions[];
-  getDialogOpen: () => boolean;
 };
 
 const shouldProcessRunningJobs = (args: ShouldProcessRunningJobArgs) => {
-  return !args.getDialogOpen() && args.getRunningJobs().length > 0 && !args.isConnectionClosed;
+  return args.getRunningJobs().length > 0 && !args.isConnectionClosed;
 };
 
 type ConditionallyToastCompletionArgs = {

@@ -71,10 +71,8 @@ export class VersionCompareManager {
     return this._visualizationHandler;
   }
 
-  public get featureTracking(): VersionCompareFeatureTracking {
-    return this.options.featureTracking !== undefined
-      ? this.options.featureTracking
-      : { trackInspectElementTool: () => ({}) };
+  public get featureTracking(): VersionCompareFeatureTracking | undefined {
+    return this.options.featureTracking;
   }
 
   public get filterSpatial(): boolean {
@@ -345,6 +343,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      VersionCompare.manager?.featureTracking?.trackVersionSelectorUsage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
       const briefError = IModelApp.localization.getLocalizedString(
@@ -483,6 +482,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, this.changedElementsManager.entryCache.getAll());
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
       const briefError = IModelApp.localization.getLocalizedString(
@@ -499,13 +499,17 @@ export class VersionCompareManager {
       IModelApp.notifications.outputMessage(
         new NotifyMessageDetails(OutputMessagePriority.Error, briefError, `${detailed}: ${errorMessage}`),
       );
-      // Notify failure on starting comparison
-      this.versionCompareStartFailed.raiseEvent();
-      this._currentIModel = undefined;
-      this._targetIModel = undefined;
+      try {
+        this.versionCompareStartFailed.raiseEvent();
+      } finally {
+        this._currentIModel = undefined;
+        this._targetIModel = undefined;
 
-      success = false;
-      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+        success = false;
+        VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+
+        await this.stopComparison();
+      }
     }
     const endTime = Date.now();
     const duration = endTime - startTime;
@@ -581,6 +585,7 @@ export class VersionCompareManager {
    * Initialize property comparison using the visualization handler
    */
   public async initializePropertyComparison(): Promise<void> {
+    VersionCompare.manager?.featureTracking?.trackPropertyComparisonUsage();
     await this._visualizationHandler?.startPropertyComparison();
   }
 }

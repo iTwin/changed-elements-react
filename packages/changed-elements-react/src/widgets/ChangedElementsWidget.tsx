@@ -263,7 +263,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 
   /** Go into property comparison. */
   private _handleInspect = async (): Promise<void> => {
-    this.state.manager.featureTracking.trackInspectElementTool();
     await this.state.manager.initializePropertyComparison();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.comparisonLegendWidgetInitializeInspect);
   };
@@ -306,6 +305,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       }));
     }
 
+    VersionCompare.manager?.featureTracking?.trackChangeReportGenerationUsage();
     this.openReportDialog(properties.length > 0 ? properties : undefined);
   };
 

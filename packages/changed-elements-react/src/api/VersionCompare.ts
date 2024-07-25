@@ -14,8 +14,18 @@ import { VersionCompareManager } from "./VersionCompareManager.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
 import { TreeWidget } from "@itwin/tree-widget-react";
 
+/** Feature usage tracking callbacks for changed elements UI operations */
 export interface VersionCompareFeatureTracking {
-  trackInspectElementTool: () => void;
+  /** Track when the user opens the version compare selector dialog to start a comparison using V2 API */
+  trackVersionSelectorV2Usage: () => void;
+  /** Track when the user opens the version compare selector dialog to start a comparison */
+  trackVersionSelectorUsage: () => void;
+  /** Tracks when the user does a property comparison and opens the side-by-side frontstage */
+  trackPropertyComparisonUsage: () => void;
+  /** Tracks when the user opens the change report dialog */
+  trackChangeReportGenerationUsage: () => void;
+  /** Tracks when the user opens the advanced filter dialog */
+  trackAdvancedFiltersUsage: () => void;
 }
 
 /**
