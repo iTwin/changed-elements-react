@@ -23,9 +23,13 @@ export type ManagerStartComparisonV2Args = {
   iModelsClient: IModelsClient;
 };
 
+const handleStopCompare = async (): Promise<void> => {
+  await VersionCompare.manager?.stopComparison();
+};
+
 export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
   if (VersionCompare.manager?.isComparing) {
-    return;
+    await handleStopCompare();
   }
   if (args.getToastsEnabled?.()) {
     toastComparisonVisualizationStarting();
