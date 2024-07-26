@@ -8,7 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Fixes
 
+* `VersionCompareSelectWidget` V2 will now end the active comparison and start a new one once a new one is triggered instead of doing a no-op on starting a new comparison.
+
+## [0.9.1](https://github.com/iTwin/changed-elements-react/tree/v0.9.1/packages/changed-elements-react) - 2024-07-10
+
+## Fixes
+
 * `VersionCompareSelectModal` V2 toast now fixed when opening and closing modal.
+
+## [0.9.0](https://github.com/iTwin/changed-elements-react/tree/v0.9.0/packages/changed-elements-react) - 2024-07-03
+
+## Minor changes
+
+* `VersionCompareFeatureTracking` can now be fed to initialization options
 
 ## [0.8.0](https://github.com/iTwin/changed-elements-react/tree/v0.8.0/packages/changed-elements-react) - 2024-06-28
 
