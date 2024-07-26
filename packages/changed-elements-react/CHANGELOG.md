@@ -4,11 +4,17 @@ All notable changes to this package will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
+
+## Fixes
+
+* `VersionCompareSelectWidget` V2 will now end the active comparison and start a new one once a new one is triggered instead of doing a no-op on starting a new comparison.
+
 ## [0.9.1](https://github.com/iTwin/changed-elements-react/tree/v0.9.1/packages/changed-elements-react) - 2024-07-10
 
 ## Fixes
 
-* `VersionCompareSelectModal` V2 toast now fixed when opening and closing modal.
+* `VersionCompareSelectWidget` V2 will now end the active comparison and start a new one once a new one is triggered instead of doing a no-op on starting a new comparison.
 
 ## [0.9.0](https://github.com/iTwin/changed-elements-react/tree/v0.9.0/packages/changed-elements-react) - 2024-07-03
 
