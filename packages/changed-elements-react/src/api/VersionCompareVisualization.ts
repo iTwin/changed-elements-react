@@ -53,6 +53,10 @@ export class VersionCompareVisualizationManager {
     return ColorDef.create("rgba(228,228,228,10)");
   }
 
+  public get currentViewport() {
+    return this._viewport;
+  }
+
   public displayOptions: VersionDisplayOptions;
 
   private _currentHiliteSetProvider: HiliteSetProvider;

@@ -5,6 +5,8 @@
 import { IModelHost } from "@itwin/core-backend";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager, IModelReadRpcInterface, IModelTileRpcInterface } from "@itwin/core-common";
+import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
+import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { IModelJsExpressServer } from "@itwin/express-server";
 import { BackendIModelsAccess } from "@itwin/imodels-access-backend";
 import { IModelsClient } from "@itwin/imodels-client-authoring";
@@ -24,11 +26,12 @@ void (async () => {
     ),
   });
   Presentation.initialize();
-
+  ECSchemaRpcImpl.register();
   const rpcConfig = BentleyCloudRpcManager.initializeImpl(
     { info: { title: "test-app-backend", version: "v1.0" } },
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
   );
+
   const server = new IModelJsExpressServer(rpcConfig.protocol);
 
   const port = 3001;

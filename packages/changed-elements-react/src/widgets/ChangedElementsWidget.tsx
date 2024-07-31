@@ -184,6 +184,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private getChangedElementsContent(): ReactElement {
+    const visualizationManager = this.state.manager.visualization?.getSingleViewVisualizationManager();
     if (!this.state.currentIModel || !this.state.targetIModel) {
       Logger.logError(
         VersionCompare.logCategory,
@@ -191,8 +192,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       );
       throw new Error("Current and target IModelConnection not set in the ChangedElementsWidget's state");
     }
-    if (this.props.useChangedElementsInspectorV2 && this.props.useV2Widget) {
-      return (<ChangedElementsInspectorV2 current={this.props.iModelConnection} manager={this.state.manager} />);
+    if (this.props.useChangedElementsInspectorV2 && this.props.useV2Widget && visualizationManager?.currentViewport) {
+      return (<ChangedElementsInspectorV2 current={this.props.iModelConnection} manager={this.state.manager} currentVP={visualizationManager?.currentViewport} />);
     }
     return (
       <ChangedElementsInspector

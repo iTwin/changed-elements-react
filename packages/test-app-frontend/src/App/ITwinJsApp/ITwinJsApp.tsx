@@ -35,7 +35,41 @@ import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
 import { UIFramework } from "./AppUi/UiFramework";
 import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
+import { createStorage, SelectionStorage } from "@itwin/unified-selection";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater, ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 
+
+let unifiedSelectionStorage: SelectionStorage | undefined;
+const schemaContextCache = new Map<string, SchemaContext>();
+
+// The Models tree requires a unified selection storage to support selection synchronization with the
+// application. The storage should be created once per application and shared across multiple selection-enabled
+// components.
+function getUnifiedSelectionStorage(): SelectionStorage {
+  if (!unifiedSelectionStorage) {
+    unifiedSelectionStorage = createStorage();
+    IModelConnection.onClose.addListener((imodel) => {
+      unifiedSelectionStorage!.clearStorage({ imodelKey: imodel.key });
+    });
+  }
+  return unifiedSelectionStorage;
+}
+
+// Schema context is used by Models tree to access iModels metadata. Similar to selection storage, it should be
+// created once per application and shared across multiple components.
+function getSchemaContext(imodel: IModelConnection): SchemaContext {
+  const key = imodel.getRpcProps().key;
+  let schemaContext = schemaContextCache.get(key);
+  if (!schemaContext) {
+    const schemaLocater = new ECSchemaRpcLocater(imodel.getRpcProps());
+    schemaContext = new SchemaContext();
+    schemaContext.addLocater(schemaLocater);
+    schemaContextCache.set(key, schemaContext);
+    imodel.onClose.addOnce(() => schemaContextCache.delete(key));
+  }
+  return schemaContext;
+}
 export interface ITwinJsAppProps {
   iTwinId: string;
   iModelId: string;
@@ -158,7 +192,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
   );
 
   await Promise.all([
@@ -287,7 +321,8 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     ) {
       return [];
     }
-
+    getSchemaContext(UiFramework.getIModelConnection()!);
+    getUnifiedSelectionStorage();
     return [{
       id: "ChangedElementsWidget",
       content: <ChangedElementsWidget useV2Widget

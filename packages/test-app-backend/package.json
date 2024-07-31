@@ -12,10 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@itwin/core-backend": "^4.6.1",
-    "@itwin/core-bentley": "^4.6.1",
-    "@itwin/core-common": "^4.6.1",
-    "@itwin/express-server": "^4.6.1",
+    "@itwin/core-backend": "^4.7.8",
+    "@itwin/core-bentley": "^4.7.8",
+    "@itwin/core-common": "^4.7.8",
+    "@itwin/express-server": "^4.7.8",
     "@itwin/imodels-access-backend": "^5.1.1",
     "@itwin/imodels-client-authoring": "^5.5.0",
     "@itwin/presentation-backend": "^4.6.1",
@@ -24,6 +24,9 @@
     "@types/node": "^18.0.0",
     "dotenv-flow": "^3.2.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "@itwin/ecschema-rpcinterface-common":"4.7.8",
+    "@itwin/ecschema-rpcinterface-impl":"4.7.8",
+    "@itwin/core-quantity":"4.7.8"
   }
 }
