@@ -133,22 +133,22 @@ function ChangedElementsInspectorV2({ current, currentVP }: Readonly<ChangedElem
   );
 }
 
-type VisibilityTreeRendererProps = ComponentPropsWithoutRef<typeof VisibilityTreeRenderer>;
 type CustomModelsTreeRendererProps = Parameters<ComponentPropsWithoutRef<typeof VisibilityTree>["treeRenderer"]>[0];
-
+type CreateNodeLabelComponentProps = Required<ComponentPropsWithoutRef<typeof VisibilityTreeRenderer>>["getLabel"];
 function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
-  const getLabel = useCallback<Required<VisibilityTreeRendererProps>["getLabel"]>(
-    (node) => {
-      const originalLabel = props.getLabel(node);
-      return <>Custom node - {originalLabel}</>;
-    },
+  const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props),
     [props.getLabel],
   );
 
-  const getSublabel = useCallback<Required<VisibilityTreeRendererProps>["getSublabel"]>(() => {
-    return <>Custom sub label</>;
-  }, []);
-  return <VisibilityTreeRenderer {...props} getLabel={getLabel} getSublabel={getSublabel} />;
+  return <VisibilityTreeRenderer {...props} getLabel={getLabel}/>;
+}
+
+const NodeLabelCreator = (props: Pick<CustomModelsTreeRendererProps, "getLabel">) => {
+  function CreateNodeLabelComponent(node: Parameters< CreateNodeLabelComponentProps>[0]) {
+    const originalLabel = props.getLabel(node);
+    return <>Custom node - {originalLabel}</>;
+  }
+  return CreateNodeLabelComponent;
 }
 
 const extractNodeKeyFromNode = (node: TreeModelNode) => {
