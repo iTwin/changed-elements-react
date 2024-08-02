@@ -65,6 +65,7 @@ function getSchemaContext(imodel: IModelConnection): SchemaContext {
 }
 
 function ElementLabel(props: ElementLabelProps) {
+  //todo fix spacing around name circle disappears if name is too long
   return (
     <Flex flexDirection="row">
       <div
