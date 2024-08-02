@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
-import { TreeModelNode } from "@itwin/components-react";
+import { isTreeModelNode, TreeModelNode } from "@itwin/components-react";
 import { Flex } from "@itwin/itwinui-react/esm";
 import { VersionCompareManager } from "../../../api/VersionCompareManager";
-import { DbOpcode } from "@itwin/core-bentley";
+import { DbOpcode, Id64String } from "@itwin/core-bentley";
 import { isPresentationTreeNodeItem } from "@itwin/presentation-components";
 import { NodeKey } from "@itwin/presentation-common";
 import { ModelsCategoryCache } from '../../../api/ModelsCategoryCache';
@@ -13,6 +13,11 @@ import { useModelsTreeButtonProps, useModelsTree, TreeWithHeader, ModelsTreeComp
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+// import {
+//   ClassGroupingOption, connectIModelConnection, ModelsTreeSelectionPredicate,
+//   ModelsVisibilityHandler, UiFramework, useVisibilityTreeFiltering, useVisibilityTreeRenderer,
+//   VisibilityTreeEventHandler, VisibilityTreeFilterInfo, VisibilityTreeNoFilteredData,
+// } from "@bentley/ui-framework";
 
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
@@ -117,7 +122,7 @@ const modifiedCategoryIds = new Set<string>();
 
 
 function ChangedElementsInspectorV2({ current, currentVP }: Readonly<ChangedElementsInspectorV2Props>) {
-  const buttonProps = useModelsTreeButtonProps({ imodel: current, viewport:currentVP });
+  const buttonProps = useModelsTreeButtonProps({ imodel: current, viewport: currentVP });
   const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: currentVP });
 
   return (
@@ -135,29 +140,74 @@ function ChangedElementsInspectorV2({ current, currentVP }: Readonly<ChangedElem
 
 type CustomModelsTreeRendererProps = Parameters<ComponentPropsWithoutRef<typeof VisibilityTree>["treeRenderer"]>[0];
 type CreateNodeLabelComponentProps = Required<ComponentPropsWithoutRef<typeof VisibilityTreeRenderer>>["getLabel"];
+type PresentationHierarchyNode = Parameters<CreateNodeLabelComponentProps>[0];
+type HierarchyNode = PresentationHierarchyNode["nodeData"];
+
+//todo should be a way to find these types from the tree widget
+type NodeType = "subject" | "model" | "category" | "element" | "class-grouping";
+
 function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
   const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props),
     [props.getLabel],
   );
 
-  return <VisibilityTreeRenderer {...props} getLabel={getLabel}/>;
+  return <VisibilityTreeRenderer {...props} getLabel={getLabel} />;
 }
 
 const NodeLabelCreator = (props: Pick<CustomModelsTreeRendererProps, "getLabel">) => {
-  function CreateNodeLabelComponent(node: Parameters< CreateNodeLabelComponentProps>[0]) {
+  function CreateNodeLabelComponent(node: Readonly<PresentationHierarchyNode>) {
+    const nodeType = getNodeType(node);
+    const [catColor, setCatColor] = useState<ColorClasses>("");
+    const modelsCategoryData = ModelsCategoryCache.getModelsCategoryData();
+    const ecInstanceId=extractEcInstanceIdFromNode(node,nodeType);
     const originalLabel = props.getLabel(node);
     return <>Custom node - {originalLabel}</>;
   }
   return CreateNodeLabelComponent;
+};
+
+const extractInstanceNodeKeyFromNode = (node: PresentationHierarchyNode) => {
+  const treeNodeItem: HierarchyNode = node.nodeData;
+  const key = treeNodeItem ? treeNodeItem.key : undefined;
+  if (!key || typeof key === "string" || ("type" in key && key.type !== "instances")) {
+    return undefined;
+  }
+  return key;
+};
+
+const extractGroupingNodeKeyFromNode = (node: PresentationHierarchyNode) => {
+  const treeNodeItem: HierarchyNode = node.nodeData;
+  const key = treeNodeItem ? treeNodeItem.key : undefined;
+  if (!key || typeof key === "string" || ("type" in key && key.type !== "class-grouping")) {
+    return undefined;
+  }
+  return key;
+};
+
+const extractModelEcInstanceIdFromClassGroupingNode = (node: PresentationHierarchyNode):string | undefined => {
+  return node.extendedData?.modelId;
 }
 
-const extractNodeKeyFromNode = (node: TreeModelNode) => {
-  const treeNodeItem = node.item;
-  if (!isPresentationTreeNodeItem(treeNodeItem))
-    return undefined;
-  if (NodeKey.isInstancesNodeKey(treeNodeItem.key))
-    return treeNodeItem.key;
-  return undefined;
+
+const extractEcInstanceIdFromNode = (node: PresentationHierarchyNode, nodeType: NodeType) => {
+  if (nodeType !== "class-grouping") {
+    return extractInstanceNodeKeyFromNode(node)?.instanceKeys[0].id;
+  } else {
+    return extractModelEcInstanceIdFromClassGroupingNode(node);
+  }
+}
+
+const getNodeType = (node: PresentationHierarchyNode): NodeType => {
+  if (node.extendedData?.isSubject)
+    return "subject";
+  if (node.extendedData?.isModel)
+    return "model";
+  if (node.extendedData?.isCategory)
+    return "category";
+  if (extractGroupingNodeKeyFromNode(node))
+    return "class-grouping";
+
+  return "element";
 };
 
 const getColorBasedOffDbCode = (opcode?: DbOpcode): ColorClasses => {
