@@ -2,6 +2,8 @@
   height: 16px;
   width: 16px;
   border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
 }
 
 .added {
@@ -10,4 +12,8 @@
 
 .modified {
   background-color: blue;
+}
+
+.node-label{
+    display: inline-block;
 }

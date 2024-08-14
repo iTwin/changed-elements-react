@@ -1,24 +1,25 @@
 /* eslint-disable react/prop-types */
-import { Flex } from "@itwin/itwinui-react/esm";
 import { VersionCompareManager } from "../../../api/VersionCompareManager";
-import { DbOpcode, Id64String } from "@itwin/core-bentley";
+import { DbOpcode } from "@itwin/core-bentley";
 import { ModelsCategoryCache } from '../../../api/ModelsCategoryCache';
-import { ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
+import { ComponentProps, ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
 import { IModelConnection, Viewport } from "@itwin/core-frontend";
 import "./styles/ChangedElementsInspectorV2.scss";
-import { useModelsTreeButtonProps, useModelsTree, TreeWithHeader, ModelsTreeComponent, VisibilityTree, VisibilityTreeRenderer } from "@itwin/tree-widget-react";
+import { useModelsTreeButtonProps, TreeWithHeader, ModelsTreeComponent, VisibilityTree, VisibilityTreeRenderer, useModelsTree } from "@itwin/tree-widget-react";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { ComboBox } from '@itwin/itwinui-react';
+import React from "react";
+
 
 type CustomModelsTreeRendererProps = Parameters<ComponentPropsWithoutRef<typeof VisibilityTree>["treeRenderer"]>[0];
 type CreateNodeLabelComponentProps = Required<ComponentPropsWithoutRef<typeof VisibilityTreeRenderer>>["getLabel"];
 type PresentationHierarchyNode = Parameters<CreateNodeLabelComponentProps>[0];
 type HierarchyNode = PresentationHierarchyNode["nodeData"];
 type ColorClasses = "added" | "modified" | "";
-
-//todo should be a way to find these types from the tree widget
 type NodeType = "subject" | "model" | "category" | "element" | "class-grouping";
+type ModeOptions = "enable" | "disable";
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
@@ -65,21 +66,50 @@ function getSchemaContext(imodel: IModelConnection): SchemaContext {
 }
 
 function ElementLabel(props: ElementLabelProps) {
-  //todo fix spacing around name circle disappears if name is too long
   return (
-    <Flex flexDirection="row">
+    <>
       <div
         className={`circle ${props.color}`}
       ></div>
-      {props.originalLabel}
-    </Flex>
+      <span className="node-label">{props.originalLabel}</span>
+    </>
+  );
+}
+
+type ModeSelectorProps<T extends string> = {
+  onChange: (value: React.SetStateAction<T>) => void;
+  options: { label: string; value: T; }[];
+  inputProps: { placeholder: string; };
+};
+
+function ModeSelector<T extends string>(props: ModeSelectorProps<T>) {
+  const options = React.useMemo(
+    () => props.options,
+    [props.options],
+  );
+  return (
+    <ComboBox
+      options={options}
+      inputProps={props.inputProps}
+      onChange={props.onChange}
+    />
   );
 }
 
 function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsInspectorV2Props>) {
   const buttonProps = useModelsTreeButtonProps({ imodel: v2InspectorProps.current, viewport: v2InspectorProps.currentVP });
-  const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: v2InspectorProps.currentVP });
-
+  const [mode, setMode] = useState<ModeOptions>("enable");
+  const modeSelectorProps = {
+    onChange: (value: React.SetStateAction<ModeOptions>) => {
+      setMode(value);
+    },
+    options: [
+      { label: "Enable Class Grouping", value: "enable" },
+      { label: "Disable Class Grouping", value: "disable" },
+    ] as { label: string; value: ModeOptions; }[],
+    inputProps: { placeholder: "Enable Class Grouping" },
+  };
+  const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: v2InspectorProps.currentVP, hierarchyConfig: { elementClassGrouping: mode } });
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
     const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props, v2InspectorProps),
       [props.getLabel],
@@ -88,7 +118,13 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   }
 
   return (
-    <TreeWithHeader buttons={[<ModelsTreeComponent.ShowAllButton {...buttonProps} key={"abc123"} />, <ModelsTreeComponent.HideAllButton {...buttonProps} key={"123abc"} />]}>
+    <TreeWithHeader
+      buttons={[
+        <ModelsTreeComponent.ShowAllButton {...buttonProps} key={"abc123"} />,
+        <ModelsTreeComponent.HideAllButton {...buttonProps} key={"123abc"} />,
+        <ModeSelector key={"123abcd"} {...modeSelectorProps} />,
+      ]
+      }>
       <VisibilityTree
         {...modelsTreeProps}
         getSchemaContext={getSchemaContext}
@@ -108,45 +144,47 @@ const NodeLabelCreator = (props: Pick<CustomModelsTreeRendererProps, "getLabel">
     const ecInstanceId = extractEcInstanceIdFromNode(node, nodeType);
     const originalLabel = props.getLabel(node);
 
-        useEffect(() => {
-          const findIfCategoryHasChangedElements = async () => {
-            if (ecInstanceId && modifiedCategoryIds.has(ecInstanceId)) {
-              setCatColor("modified");
-              return;
-            }
-            for await (const row of changedElementsInspectorV2Props.current.query(
-              `SELECT ECInstanceId as id FROM BisCore.GeometricElement3d where Category.id = ${ecInstanceId}`,
-            )) {
-              if ( ecInstanceId && changedElementsInspectorV2Props.manager.changedElementsManager.filteredChangedElements.has(row[0])) {
-                modifiedCategoryIds.add(ecInstanceId);
-                setCatColor("modified");
-                break;
-              }
-           }
-          };
-          if (nodeType === "category") {
-            void findIfCategoryHasChangedElements();
+    useEffect(() => {
+      const findIfCategoryHasChangedElements = async () => {
+        if (ecInstanceId && modifiedCategoryIds.has(ecInstanceId)) {
+          setCatColor("modified");
+          return;
+        }
+        for await (const row of changedElementsInspectorV2Props.current.query(
+          `SELECT ECInstanceId as id FROM BisCore.GeometricElement3d where Category.id = ${ecInstanceId}`,
+        )) {
+          if (ecInstanceId && changedElementsInspectorV2Props.manager.changedElementsManager.filteredChangedElements.has(row[0])) {
+            modifiedCategoryIds.add(ecInstanceId);
+            setCatColor("modified");
+            break;
           }
-        });
-
-
+        }
+      };
+      if (nodeType === "category") {
+        void findIfCategoryHasChangedElements();
+      }
+    });
     if (ecInstanceId === undefined) {
-      return <>{originalLabel}</>;
+      return <>{node.label}</>;
     }
     if (changedElementsInspectorV2Props.manager.changedElementsManager.allChangeElements.has(ecInstanceId)) {
 
       const changeElementEntry = changedElementsInspectorV2Props.manager.changedElementsManager.allChangeElements.get(ecInstanceId);
       if (changeElementEntry && (nodeType === "element" || nodeType === "subject")) {
-        return ElementLabel({ originalLabel, color: getColorBasedOffDbCode(changeElementEntry.opcode) });
+        if (nodeType === "element") {
+          return ElementLabel({ originalLabel: originalLabel, color: getColorBasedOffDbCode(changeElementEntry.opcode) });
+        }
+
+        return ElementLabel({ originalLabel: originalLabel, color: "modified" });
       }
     }
     if (modelsCategoryData?.addedElementsModels.has(ecInstanceId)) {
-      return ElementLabel({ originalLabel, color: "modified" });
+      return ElementLabel({ originalLabel: originalLabel, color: "modified" });
     }
     if (nodeType === "category") {
-      return ElementLabel({ originalLabel, color: catColor });
+      return ElementLabel({ originalLabel: originalLabel, color: catColor });
     }
-    return <>{originalLabel}</>;
+    return <>{node.label}</>;
   }
   return CreateNodeLabelComponent;
 };
@@ -172,7 +210,6 @@ const extractGroupingNodeKeyFromNode = (node: PresentationHierarchyNode) => {
 const extractModelEcInstanceIdFromClassGroupingNode = (node: PresentationHierarchyNode): string | undefined => {
   return node.extendedData?.modelId;
 };
-
 
 const extractEcInstanceIdFromNode = (node: PresentationHierarchyNode, nodeType: NodeType) => {
   if (nodeType !== "class-grouping") {
@@ -207,6 +244,5 @@ const getColorBasedOffDbCode = (opcode?: DbOpcode): ColorClasses => {
       return "";
   }
 };
-
 
 export default ChangedElementsInspectorV2;
