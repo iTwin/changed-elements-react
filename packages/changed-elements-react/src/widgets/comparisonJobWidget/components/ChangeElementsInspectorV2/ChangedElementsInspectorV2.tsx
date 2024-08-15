@@ -2,7 +2,7 @@
 import { VersionCompareManager } from "../../../../api/VersionCompareManager";
 import { DbOpcode } from "@itwin/core-bentley";
 import { ModelsCategoryCache } from '../../../../api/ModelsCategoryCache';
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { IModelConnection, Viewport } from "@itwin/core-frontend";
 import "./styles/ChangedElementsInspectorV2.scss";
 import { useModelsTreeButtonProps, TreeWithHeader, ModelsTreeComponent, VisibilityTree, VisibilityTreeRenderer, useModelsTree } from "@itwin/tree-widget-react";
@@ -13,6 +13,10 @@ import React from "react";
 import { ModeOptions, ModeSelector } from "./ModeSelector";
 import { CreateNodeLabelComponentProps, CustomModelsTreeRendererProps, HierarchyNode, NodeType, PresentationHierarchyNode } from "./models/modelsTreeAndNodeTypes";
 import { ColorClasses, ElementLabel } from "./ElementLabel";
+import { FilterOptions } from "../../../../SavedFiltersManager";
+import ChangeTypeFilterHeader from "../../../ChangeTypeFilterHeader";
+import { ChangedElement, ChangedElementEntry } from "../../../../api/ChangedElementEntryCache";
+import { TypeOfChange } from "@itwin/core-common";
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
@@ -52,9 +56,52 @@ type ChangedElementsInspectorV2Props = {
   currentVP: Viewport;
 };
 
+const typeOfChangeAll = (): number => {
+  return (
+    TypeOfChange.Geometry |
+    TypeOfChange.Hidden |
+    TypeOfChange.Indirect |
+    TypeOfChange.Placement |
+    TypeOfChange.Property
+  );
+};
+
+const allPropertiesVisible = (properties: Map<string, boolean>): boolean => {
+  for (const pair of properties) {
+    if (pair[1] === false) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const isDefaultFilterOptions = (options: FilterOptions): boolean => {
+  return (
+    options.wantAdded === true &&
+    options.wantDeleted === true &&
+    options.wantModified === true &&
+    options.wantUnchanged === true &&
+    options.wantedTypeOfChange === typeOfChangeAll() &&
+    allPropertiesVisible(options.wantedProperties)
+  );
+};
+
 function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsInspectorV2Props>) {
   const buttonProps = useModelsTreeButtonProps({ imodel: v2InspectorProps.current, viewport: v2InspectorProps.currentVP });
   const [mode, setMode] = useState<ModeOptions>("enable");
+  const [filterOptions, setFilterOption] = useState<FilterOptions>({
+    wantAdded: true,
+    wantDeleted: true,
+    wantModified: true,
+    wantUnchanged: true,
+    wantedTypeOfChange: typeOfChangeAll(),
+    wantedProperties: new Map<string, boolean>(),
+  });
+
+  const ecInstanceIdsOfChangedElements = useMemo(() => {
+    return Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.keys());
+  }, [v2InspectorProps.manager.changedElementsManager.allChangeElements]);
   const modeSelectorProps = {
     onChange: (value: React.SetStateAction<ModeOptions>) => {
       setMode(value);
@@ -65,12 +112,14 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
     ] as { label: string; value: ModeOptions; }[],
     inputProps: { placeholder: "Enable Class Grouping" },
   };
+
+
   const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: v2InspectorProps.currentVP, hierarchyConfig: { elementClassGrouping: mode } });
 
   modelsTreeProps.getFilteredPaths = async ({ createInstanceKeyPaths }) => {
     return createInstanceKeyPaths({
       // list of instance keys representing nodes that should be displayed in the hierarchy
-      keys: Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.keys()),
+      keys: ecInstanceIdsOfChangedElements,
       // instead of providing instance keys, a label can be provided to display all nodes that contain it
       // label: "MyLabel"
     });
@@ -88,6 +137,21 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
       buttons={[
         <ModelsTreeComponent.ShowAllButton {...buttonProps} key={"abc123"} />,
         <ModelsTreeComponent.HideAllButton {...buttonProps} key={"123abc"} />,
+        <ChangeTypeFilterHeader key={"123abcde"}
+          entries={v2InspectorProps.manager.changedElementsManager.entryCache.getAll()}
+          onFilterChange={async function (options: FilterOptions): Promise<void> {
+            const filteredEcInstanceIds = getFilteredEcInstanceIds(options, ecInstanceIdsOfChangedElements, v2InspectorProps.manager);
+            await setVisualization(filteredEcInstanceIds, v2InspectorProps.manager);
+            const visualizationManager = v2InspectorProps.manager.visualization?.getSingleViewVisualizationManager();
+            if (visualizationManager) {
+              await visualizationManager.toggleUnchangedVisibility(!options.wantUnchanged);
+            }
+            setFilterOption(options);
+          }}
+          options={filterOptions}
+          iModelConnection={v2InspectorProps.current}
+          enableDisplayShowAllHideAllButtons={false}
+        />,
         <ModeSelector key={"123abcd"} {...modeSelectorProps} />,
       ]
       }>
@@ -208,6 +272,51 @@ const getColorBasedOffDbCode = (opcode?: DbOpcode): ColorClasses => {
       return "modified";
     default:
       return "";
+  }
+};
+
+const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: string[], manager: VersionCompareManager) => {
+  if (isDefaultFilterOptions(options))
+    return undefined;
+  return ecInstanceIds.filter((ecInstanceId) => {
+    const changeElementEntry = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
+    if (changeElementEntry) {
+      if (options.wantAdded && changeElementEntry.opcode === DbOpcode.Insert) {
+        return true;
+      }
+      if (options.wantDeleted && changeElementEntry.opcode === DbOpcode.Delete) {
+        return true;
+      }
+      if (options.wantModified && changeElementEntry.opcode === DbOpcode.Update) {
+        return true;
+      }
+    }
+    return false;
+  });
+};
+
+const setVisualization = async (ecInstanceIds: string[] | undefined, manager: VersionCompareManager) => {
+  const visualizationManager = manager.visualization?.getSingleViewVisualizationManager();
+  if (ecInstanceIds === undefined) {
+    // Visualize no focused elements
+    if (visualizationManager) {
+      await visualizationManager.setFocusedElements([]);
+    }
+  }
+  const changedElementsEntries = new Array<ChangedElementEntry>();
+  ecInstanceIds?.forEach((ecInstanceId) => {
+    const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
+    const changeElementEntry: ChangedElementEntry = {
+      loaded: true,
+      id: ecInstanceId,
+      classId: changeElement!.classId,
+      opcode: changeElement!.opcode,
+      type: changeElement!.type,
+    };
+    changedElementsEntries.push(changeElementEntry);
+  });
+  if (visualizationManager) {
+    await visualizationManager.setFocusedElements(changedElementsEntries);
   }
 };
 
