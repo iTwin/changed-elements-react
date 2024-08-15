@@ -2,40 +2,21 @@
 import { VersionCompareManager } from "../../../../api/VersionCompareManager";
 import { DbOpcode } from "@itwin/core-bentley";
 import { ModelsCategoryCache } from '../../../../api/ModelsCategoryCache';
-import { ComponentProps, ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { IModelConnection, Viewport } from "@itwin/core-frontend";
 import "./styles/ChangedElementsInspectorV2.scss";
 import { useModelsTreeButtonProps, TreeWithHeader, ModelsTreeComponent, VisibilityTree, VisibilityTreeRenderer, useModelsTree } from "@itwin/tree-widget-react";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { ComboBox } from '@itwin/itwinui-react';
 import React from "react";
-
-
-type CustomModelsTreeRendererProps = Parameters<ComponentPropsWithoutRef<typeof VisibilityTree>["treeRenderer"]>[0];
-type CreateNodeLabelComponentProps = Required<ComponentPropsWithoutRef<typeof VisibilityTreeRenderer>>["getLabel"];
-type PresentationHierarchyNode = Parameters<CreateNodeLabelComponentProps>[0];
-type HierarchyNode = PresentationHierarchyNode["nodeData"];
-type ColorClasses = "added" | "modified" | "";
-type NodeType = "subject" | "model" | "category" | "element" | "class-grouping";
-type ModeOptions = "enable" | "disable";
+import { ModeOptions, ModeSelector } from "./ModeSelector";
+import { CreateNodeLabelComponentProps, CustomModelsTreeRendererProps, HierarchyNode, NodeType, PresentationHierarchyNode } from "./models/modelsTreeAndNodeTypes";
+import { ColorClasses, ElementLabel } from "./ElementLabel";
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
 const modifiedCategoryIds = new Set<string>();
-
-type ChangedElementsInspectorV2Props = {
-  manager: VersionCompareManager;
-  current: IModelConnection;
-  currentVP: Viewport;
-};
-
-type ElementLabelProps = {
-  color: ColorClasses;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  originalLabel: React.ReactElement<any, string | React.JSXElementConstructor<any>> | undefined;
-};
 
 // The Models tree requires a unified selection storage to support selection synchronization with the
 // application. The storage should be created once per application and shared across multiple selection-enabled
@@ -65,36 +46,11 @@ function getSchemaContext(imodel: IModelConnection): SchemaContext {
   return schemaContext;
 }
 
-function ElementLabel(props: ElementLabelProps) {
-  return (
-    <>
-      <div
-        className={`circle ${props.color}`}
-      ></div>
-      <span className="node-label">{props.originalLabel}</span>
-    </>
-  );
-}
-
-type ModeSelectorProps<T extends string> = {
-  onChange: (value: React.SetStateAction<T>) => void;
-  options: { label: string; value: T; }[];
-  inputProps: { placeholder: string; };
+type ChangedElementsInspectorV2Props = {
+  manager: VersionCompareManager;
+  current: IModelConnection;
+  currentVP: Viewport;
 };
-
-function ModeSelector<T extends string>(props: ModeSelectorProps<T>) {
-  const options = React.useMemo(
-    () => props.options,
-    [props.options],
-  );
-  return (
-    <ComboBox
-      options={options}
-      inputProps={props.inputProps}
-      onChange={props.onChange}
-    />
-  );
-}
 
 function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsInspectorV2Props>) {
   const buttonProps = useModelsTreeButtonProps({ imodel: v2InspectorProps.current, viewport: v2InspectorProps.currentVP });
@@ -111,9 +67,6 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   };
   const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: v2InspectorProps.currentVP, hierarchyConfig: { elementClassGrouping: mode } });
 
-
-
-
   modelsTreeProps.getFilteredPaths = async ({ createInstanceKeyPaths }) => {
     return createInstanceKeyPaths({
       // list of instance keys representing nodes that should be displayed in the hierarchy
@@ -122,9 +75,6 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
       // label: "MyLabel"
     });
   };
-
-
-
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
     const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props, v2InspectorProps),
