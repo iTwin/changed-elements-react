@@ -6,8 +6,8 @@ import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriorit
 import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
 import { ComparisonJobCompleted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
-import { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import { ComparisonJobUpdateType } from "../components/VersionCompareDialogV2/VersionCompareDialogProvider";
+import { JobAndNamedVersions } from "../components/VersionCompareDialogV2/models/ComparisonJobModels";
 import { useToaster } from "@itwin/itwinui-react";
 
 export type Toaster = ReturnType<typeof useToaster>;

@@ -23,12 +23,12 @@ import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import "./ChangedElementsWidget.scss";
 import InfoButton from "./InformationButton.js";
-import { VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
+import { VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareDialogV2/VersionCompareSelectModal.js";
 import { FeedbackButton } from "./FeedbackButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
-import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
-import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
-import ChangedElementsInspectorV2 from "./comparisonJobWidget/components/ChangedElementsInspectorV2.js";
+import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogV2/VersionCompareDialogProvider.js";
+import { JobAndNamedVersions } from "./comparisonJobWidget/components/VersionCompareDialogV2/models/ComparisonJobModels.js";
+import ChangedElementsInspectorV2 from "./comparisonJobWidget/components/ChangeElementsInspectorV2/ChangedElementsInspectorV2.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 

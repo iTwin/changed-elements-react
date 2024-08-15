@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-import { VersionCompareManager } from "../../../api/VersionCompareManager";
+import { VersionCompareManager } from "../../../../api/VersionCompareManager";
 import { DbOpcode } from "@itwin/core-bentley";
-import { ModelsCategoryCache } from '../../../api/ModelsCategoryCache';
+import { ModelsCategoryCache } from '../../../../api/ModelsCategoryCache';
 import { ComponentProps, ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
 import { IModelConnection, Viewport } from "@itwin/core-frontend";
 import "./styles/ChangedElementsInspectorV2.scss";
@@ -110,6 +110,22 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
     inputProps: { placeholder: "Enable Class Grouping" },
   };
   const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: v2InspectorProps.currentVP, hierarchyConfig: { elementClassGrouping: mode } });
+
+
+
+
+  modelsTreeProps.getFilteredPaths = async ({ createInstanceKeyPaths }) => {
+    return createInstanceKeyPaths({
+      // list of instance keys representing nodes that should be displayed in the hierarchy
+      keys: Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.keys()),
+      // instead of providing instance keys, a label can be provided to display all nodes that contain it
+      // label: "MyLabel"
+    });
+  };
+
+
+
+
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
     const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props, v2InspectorProps),
       [props.getLabel],

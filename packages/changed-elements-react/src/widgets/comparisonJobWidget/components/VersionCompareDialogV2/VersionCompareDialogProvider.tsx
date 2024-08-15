@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import React from "react";
-import { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import { JobAndNamedVersions } from "../VersionCompareDialogV2/models/ComparisonJobModels";
 
 /** Comparison Job Update Type
 *  - "JobComplete" = job is completed

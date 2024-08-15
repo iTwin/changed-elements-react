@@ -5,12 +5,12 @@
 import { IModelApp } from "@itwin/core-frontend";
 import { Text } from "@itwin/itwinui-react";
 import { ReactNode } from "react";
-import { VersionList } from "./VersionList";
+import { VersionList } from "../VersionCompareDialogV2/VersionList";
 import { CurrentVersionEntry } from "./VersionEntries";
-import { VersionState } from "../models/VersionState";
-import { NamedVersion } from "../../../clients/iModelsClient";
+import { VersionState } from "../VersionCompareDialogV2/models/VersionState";
+import { NamedVersion } from "../../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
-import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
+import { ManageNamedVersions } from "../VersionCompareDialogV2/VersionCompareManageNamedVersions";
 
 interface VersionCompareSelectorInnerProps {
   entries: VersionState[];

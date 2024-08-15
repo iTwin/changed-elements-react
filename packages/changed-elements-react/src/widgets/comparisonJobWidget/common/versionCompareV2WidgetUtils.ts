@@ -8,9 +8,9 @@ import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
 import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 import { Logger } from "@itwin/core-bentley";
-import { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
-import { VersionState } from "../models/VersionState";
-import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
+import { JobAndNamedVersions, JobStatusAndJobProgress } from "../components/VersionCompareDialogV2/models/ComparisonJobModels";
+import { VersionState } from "../components/VersionCompareDialogV2/models/VersionState";
+import { ComparisonJobUpdateType } from "../components/VersionCompareDialogV2/VersionCompareDialogProvider";
 
 export type ManagerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;
@@ -63,7 +63,7 @@ const updateTargetVersion = async (iModelConnection: IModelConnection, targetVer
   const changeSets = await iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse());
   const actualChangeSet = changeSets.find((changeset) => updatedTargetVersion.changesetIndex === changeset.index);
   const currentChangeSet = changeSets.find((changeset) => currentNamedVersion.changesetIndex === changeset.index);
-  console.log(`ChangesetRange: ${currentChangeSet?.index} - ${actualChangeSet?.index}`)
+  console.log(`ChangesetRange: ${currentChangeSet?.index} - ${actualChangeSet?.index}`);
   if (actualChangeSet) {
     updatedTargetVersion.changesetId = actualChangeSet.id;
   }

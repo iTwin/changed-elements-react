@@ -7,10 +7,10 @@ import { useEffect, useState } from "react";
 import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
-import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
-import { arrayToMap } from "../../../utils/utils";
+import { IComparisonJobClient } from "../../../../../clients/IComparisonJobClient";
+import { IModelsClient, NamedVersion } from "../../../../../clients/iModelsClient";
+import { createJobId, getJobStatusAndJobProgress } from "../../../common/versionCompareV2WidgetUtils";
+import { arrayToMap } from "../../../../../utils/utils";
 
 /**
  * Result type for versionLoader.

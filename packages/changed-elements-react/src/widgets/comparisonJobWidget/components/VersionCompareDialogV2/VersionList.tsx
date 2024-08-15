@@ -4,9 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
 import { ReactElement } from "react";
-import { VersionListEntry } from "./VersionEntries";
-import { VersionState } from "../models/VersionState";
-import { NamedVersion } from "../../../clients/iModelsClient";
+import { VersionListEntry } from "../VersionCompareDialogV2/VersionEntries";
+import { VersionState } from "../VersionCompareDialogV2/models/VersionState";
+import { NamedVersion } from "../../../../clients/iModelsClient";
 import "./styles/ComparisonJobWidget.scss";
 import { LoadingSpinner } from "@itwin/core-react";
 
