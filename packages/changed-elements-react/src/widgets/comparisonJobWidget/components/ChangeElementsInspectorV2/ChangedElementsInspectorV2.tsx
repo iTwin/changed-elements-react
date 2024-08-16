@@ -90,14 +90,9 @@ const isDefaultFilterOptions = (options: FilterOptions): boolean => {
 function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsInspectorV2Props>) {
   const buttonProps = useModelsTreeButtonProps({ imodel: v2InspectorProps.current, viewport: v2InspectorProps.currentVP });
   const [mode, setMode] = useState<ModeOptions>("enable");
-  const [filterOptions, setFilterOption] = useState<FilterOptions>({
-    wantAdded: true,
-    wantDeleted: true,
-    wantModified: true,
-    wantUnchanged: true,
-    wantedTypeOfChange: typeOfChangeAll(),
-    wantedProperties: new Map<string, boolean>(),
-  });
+  const propertyNames = v2InspectorProps.manager.changedElementsManager.getAllChangedPropertyNames();
+  const defaultOptions = makeDefaultFilterOptions(propertyNames);
+  const [filterOptions, setFilterOption] = useState<FilterOptions>(defaultOptions);
 
   const ecInstanceIdsOfChangedElements = useMemo(() => {
     return Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.keys());
@@ -151,6 +146,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
           options={filterOptions}
           iModelConnection={v2InspectorProps.current}
           enableDisplayShowAllHideAllButtons={false}
+          wantPropertyFiltering={v2InspectorProps.manager.wantPropertyFiltering}
         />,
         <ModeSelector key={"123abcd"} {...modeSelectorProps} />,
       ]
@@ -279,20 +275,84 @@ const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: string[
   if (isDefaultFilterOptions(options))
     return undefined;
   return ecInstanceIds.filter((ecInstanceId) => {
-    const changeElementEntry = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
-    if (changeElementEntry) {
-      if (options.wantAdded && changeElementEntry.opcode === DbOpcode.Insert) {
+    const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
+    if (changeElement) {
+      if (options.wantAdded && changeElement.opcode === DbOpcode.Insert) {
         return true;
       }
-      if (options.wantDeleted && changeElementEntry.opcode === DbOpcode.Delete) {
+      if (options.wantDeleted && changeElement.opcode === DbOpcode.Delete) {
         return true;
       }
-      if (options.wantModified && changeElementEntry.opcode === DbOpcode.Update) {
+      //todo move out of filter if needs to be awaited
+      const entry = manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId);
+      //todo get from entry cache without loading method
+      if (options.wantModified && changeElement.opcode === DbOpcode.Update && modifiedEntryMatchesFilters({
+        loaded: true,
+        id: ecInstanceId,
+        classId: changeElement.classId,
+        opcode: changeElement.opcode,
+        type: changeElement.type,
+      }, options, manager)) {
         return true;
       }
     }
     return false;
   });
+};
+
+const makeDefaultFilterOptions = (propertyNames: Set<string>): FilterOptions => {
+  const wantedProperties = new Map<string, boolean>();
+  // Set all properties as visible as default
+  for (const prop of propertyNames) {
+    wantedProperties.set(prop, true);
+  }
+
+  return {
+    wantAdded: true,
+    wantDeleted: true,
+    wantModified: true,
+    wantUnchanged: true,
+    // Turn off TypeOfChange.Hidden by default
+    wantedTypeOfChange: typeOfChangeAll() & ~TypeOfChange.Hidden,
+    wantedProperties,
+  };
+};
+
+const modifiedEntryMatchesFilters = (entry: ChangedElementEntry, options: FilterOptions, manager: VersionCompareManager): boolean => {
+  if (!manager.wantTypeOfChange) {
+    return true;
+  }
+  if (entry.indirect !== undefined && entry.indirect) {
+    return false;
+  }
+  if ((options.wantedTypeOfChange & entry.type) === 0) {
+    return false;
+  }
+
+  if (!manager.wantPropertyFiltering) {
+    return true;
+  }
+  if ((entry.type & (TypeOfChange.Property | TypeOfChange.Indirect)) === 0) {
+    return true;
+  }
+
+  return anyEntryPropertiesVisible(entry, options);
+};
+
+const anyEntryPropertiesVisible = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
+  if (entry.properties === undefined) {
+    // Shouldn't happen
+    return true;
+  }
+
+  for (const prop of entry.properties) {
+    const visible = options.wantedProperties.get(prop[0]);
+    if (visible !== undefined && visible === true) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 const setVisualization = async (ecInstanceIds: string[] | undefined, manager: VersionCompareManager) => {

@@ -446,6 +446,13 @@ export class VersionCompareManager {
           filteredChangedElements, this.wantAllModels ? undefined : wantedModelClasses,
           false,
           this.filterSpatial);
+        const changedElementEntries = this.changedElementsManager.entryCache.getAll();
+        // We have type of change available if any of the entries has a valid type of change value
+        this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
+        // We have property filtering available if any of the entries has a valid array of changed properties
+        this._hasPropertiesForFiltering = changedElementEntries.some(
+          (entry) => entry.properties !== undefined && entry.properties.size !== 0,
+        );
       } else {
         await this.changedElementsManager.initialize(
           this._currentIModel,

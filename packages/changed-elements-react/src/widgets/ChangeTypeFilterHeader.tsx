@@ -112,7 +112,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
   type BooleanFields<T> = keyof { [K in keyof T as T[K] extends boolean ? K : never]: T[K] };
 
   const handleToggle = (optionName: BooleanFields<FilterOptions>) => {
-    // todo make options the same between the internal state and the props
+    // todo should state for options be handled in two places? Figure out before PR is merged
     const options = props.options;
     options[optionName] = !options[optionName];
     const newOptions: FilterOptions={...options};
@@ -173,9 +173,11 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
           label={IModelApp.localization.getLocalizedString(`VersionCompare:typeOfChange.${localeStr}`)}
           checked={isOn}
           onClick={() => {
-            const opts = props.options;
-            opts.wantedTypeOfChange = isOn ? opts.wantedTypeOfChange & ~flag : opts.wantedTypeOfChange | flag;
-            props.onFilterChange(opts);
+            // todo should state for options be handled in two places? Figure out before PR is merged
+            const newOpts:FilterOptions = {...props.options};
+            newOpts.wantedTypeOfChange = isOn ? newOpts.wantedTypeOfChange & ~flag : newOpts.wantedTypeOfChange | flag;
+            setOptions(newOpts);
+            props.onFilterChange(newOpts);
           }}
         />
       );

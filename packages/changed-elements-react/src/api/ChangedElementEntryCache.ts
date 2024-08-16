@@ -71,7 +71,7 @@ export class ChangedElementEntryCache {
   public get labels(): ChangedElementsLabelsCache | undefined {
     return this._labels;
   }
-  
+
   private _subjectIds: Set<string> = new Set<string>();
   public get subjectIds(): Set<string> {
     return this._subjectIds;
@@ -355,6 +355,16 @@ export class ChangedElementEntryCache {
     // Return the entries since they should be cached now
     return this._getCachedEntriesByIds(elementIds);
   }
+
+  /**
+ * Gets changed element entries for the given element Ids.
+ * @param elementId Element Id to obtain entry
+ */
+  public getSynchronous(elementId: string): ChangedElementEntry | undefined {
+    // Return the entries since they should be cached now
+    return this._changedElementEntries.get(elementId)
+  }
+
 
   /**
    * Initially loads the given element ids to be visualized and displayed in UI
