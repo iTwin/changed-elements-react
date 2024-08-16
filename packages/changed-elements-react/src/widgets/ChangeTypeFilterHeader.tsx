@@ -29,6 +29,7 @@ interface FilterHeaderProps {
 function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
   const [advancedFilterDialogShown, setAdvancedFilterDialogShown] = useState(false);
   const [advancedFilterDialogData, setAdvancedFilterDialogData] = useState<PropertyFilter[]>();
+  const [options, setOptions] = useState<FilterOptions>(props.options);
 
   /** Handle saving the advanced filter changes. */
   const handleAdvancedFilteringSave = () => {
@@ -116,7 +117,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
     options[optionName] = !options[optionName];
     const newOptions: FilterOptions={...options};
     props.onFilterChange(options);
-    props.options = newOptions;
+    setOptions(newOptions);
   };
 
   const legendButtonItems = (close: () => void): JSX.Element[] => [
