@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { VersionCompareManager } from "../../../../api/VersionCompareManager";
 import { DbOpcode } from "@itwin/core-bentley";
-import { ModelsCategoryCache } from '../../../../api/ModelsCategoryCache';
+import { ModelsCategoryCache } from "../../../../api/ModelsCategoryCache";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IModelConnection, Viewport } from "@itwin/core-frontend";
 import "./styles/ChangedElementsInspectorV2.scss";
@@ -283,16 +283,17 @@ const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: string[
       if (options.wantDeleted && changeElement.opcode === DbOpcode.Delete) {
         return true;
       }
-      //todo move out of filter if needs to be awaited
-      const entry = manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId);
-      //todo get from entry cache without loading method
-      if (options.wantModified && changeElement.opcode === DbOpcode.Update && modifiedEntryMatchesFilters({
-        loaded: true,
-        id: ecInstanceId,
-        classId: changeElement.classId,
-        opcode: changeElement.opcode,
-        type: changeElement.type,
-      }, options, manager)) {
+      const entry: ChangedElementEntry = {
+       ...( manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId) ?? {
+          loaded: true,
+          id: ecInstanceId,
+          classId: changeElement.classId,
+          opcode: changeElement.opcode,
+          type: changeElement.type,
+        }),
+      };
+      entry.loaded = true;
+      if (options.wantModified && changeElement.opcode === DbOpcode.Update && modifiedEntryMatchesFilters(entry, options, manager)) {
         return true;
       }
     }
@@ -366,14 +367,17 @@ const setVisualization = async (ecInstanceIds: string[] | undefined, manager: Ve
   const changedElementsEntries = new Array<ChangedElementEntry>();
   ecInstanceIds?.forEach((ecInstanceId) => {
     const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
-    const changeElementEntry: ChangedElementEntry = {
-      loaded: true,
-      id: ecInstanceId,
-      classId: changeElement!.classId,
-      opcode: changeElement!.opcode,
-      type: changeElement!.type,
-    };
-    changedElementsEntries.push(changeElementEntry);
+      const entry: ChangedElementEntry = {
+       ...( manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId) ?? {
+          loaded: true,
+          id: ecInstanceId,
+          classId: changeElement!.classId,
+          opcode: changeElement!.opcode,
+          type: changeElement!.type,
+        }),
+      };
+      entry.loaded = true;
+    changedElementsEntries.push(entry);
   });
   if (visualizationManager) {
     await visualizationManager.setFocusedElements(changedElementsEntries);
