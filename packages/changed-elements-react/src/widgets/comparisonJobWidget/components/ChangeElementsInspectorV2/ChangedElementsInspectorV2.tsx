@@ -17,6 +17,7 @@ import { FilterOptions } from "../../../../SavedFiltersManager";
 import ChangeTypeFilterHeader from "../../../ChangeTypeFilterHeader";
 import { ChangedElement, ChangedElementEntry } from "../../../../api/ChangedElementEntryCache";
 import { TypeOfChange } from "@itwin/core-common";
+import { type InstanceKey } from '@itwin/presentation-common';
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
@@ -87,16 +88,19 @@ const isDefaultFilterOptions = (options: FilterOptions): boolean => {
   );
 };
 
+
 function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsInspectorV2Props>) {
   const buttonProps = useModelsTreeButtonProps({ imodel: v2InspectorProps.current, viewport: v2InspectorProps.currentVP });
   const [mode, setMode] = useState<ModeOptions>("enable");
   const propertyNames = v2InspectorProps.manager.changedElementsManager.getAllChangedPropertyNames();
   const defaultOptions = makeDefaultFilterOptions(propertyNames);
-  const [filterOptions, setFilterOption] = useState<FilterOptions>(defaultOptions);
-
-  const ecInstanceIdsOfChangedElements = useMemo(() => {
-    return Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.keys());
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>(defaultOptions);
+  const [instanceKeysOfChangedElements, setInstanceKeysOfChangedElements] = useState<InstanceKey[]>([]);
+  useEffect(() => {
+    const keys = Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.values());
+    setInstanceKeysOfChangedElements( keys.map((key) => ({ id: key.id, className: key.classId })));
   }, [v2InspectorProps.manager.changedElementsManager.allChangeElements]);
+
   const modeSelectorProps = {
     onChange: (value: React.SetStateAction<ModeOptions>) => {
       setMode(value);
@@ -107,26 +111,23 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
     ] as { label: string; value: ModeOptions; }[],
     inputProps: { placeholder: "Enable Class Grouping" },
   };
-
-
-  const { modelsTreeProps, rendererProps } = useModelsTree({ activeView: v2InspectorProps.currentVP, hierarchyConfig: { elementClassGrouping: mode } });
-
-  modelsTreeProps.getFilteredPaths = async ({ createInstanceKeyPaths }) => {
-    return createInstanceKeyPaths({
-      // list of instance keys representing nodes that should be displayed in the hierarchy
-      keys: ecInstanceIdsOfChangedElements,
-      // instead of providing instance keys, a label can be provided to display all nodes that contain it
-      // label: "MyLabel"
-    });
-  };
+  const { modelsTreeProps, rendererProps } = useModelsTree({
+    activeView: v2InspectorProps.currentVP,
+    hierarchyConfig: { elementClassGrouping: mode },
+    //  getFilteredPaths: async ({ createInstanceKeyPaths }) => {
+    //    const instanceKeyPaths = await createInstanceKeyPaths({
+    //      targetItems: [],
+    //    });
+    //    return instanceKeyPaths;
+    //  },
+  });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
-    const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props, v2InspectorProps),
+    const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props,v2InspectorProps),
       [props.getLabel],
     );
     return <VisibilityTreeRenderer {...props} getLabel={getLabel} />;
   }
-
   return (
     <TreeWithHeader
       buttons={[
@@ -135,13 +136,13 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
         <ChangeTypeFilterHeader key={"123abcde"}
           entries={v2InspectorProps.manager.changedElementsManager.entryCache.getAll()}
           onFilterChange={async function (options: FilterOptions): Promise<void> {
-            const filteredEcInstanceIds = getFilteredEcInstanceIds(options, ecInstanceIdsOfChangedElements, v2InspectorProps.manager);
+            const filteredEcInstanceIds = getFilteredEcInstanceIds(options, instanceKeysOfChangedElements, v2InspectorProps.manager);
             await setVisualization(filteredEcInstanceIds, v2InspectorProps.manager);
             const visualizationManager = v2InspectorProps.manager.visualization?.getSingleViewVisualizationManager();
             if (visualizationManager) {
               await visualizationManager.toggleUnchangedVisibility(!options.wantUnchanged);
             }
-            setFilterOption(options);
+            setFilterOptions(options);
           }}
           options={filterOptions}
           iModelConnection={v2InspectorProps.current}
@@ -156,11 +157,13 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
         getSchemaContext={getSchemaContext}
         selectionStorage={getUnifiedSelectionStorage()}
         imodel={v2InspectorProps.current}
-        treeRenderer={(props) => <CustomModelsTreeRenderer {...props} {...rendererProps} />}
+        treeRenderer={(props) => <CustomModelsTreeRenderer {...props} {...rendererProps} {...v2InspectorProps} />}
       />
     </TreeWithHeader>
   );
 }
+
+
 
 const NodeLabelCreator = (props: Pick<CustomModelsTreeRendererProps, "getLabel">, changedElementsInspectorV2Props: ChangedElementsInspectorV2Props) => {
   function CreateNodeLabelComponent(node: Readonly<PresentationHierarchyNode>) {
@@ -271,11 +274,11 @@ const getColorBasedOffDbCode = (opcode?: DbOpcode): ColorClasses => {
   }
 };
 
-const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: string[], manager: VersionCompareManager) => {
+const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: InstanceKey[], manager: VersionCompareManager) => {
   if (isDefaultFilterOptions(options))
     return undefined;
   return ecInstanceIds.filter((ecInstanceId) => {
-    const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
+    const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId.id);
     if (changeElement) {
       if (options.wantAdded && changeElement.opcode === DbOpcode.Insert) {
         return true;
@@ -284,9 +287,9 @@ const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: string[
         return true;
       }
       const entry: ChangedElementEntry = {
-       ...( manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId) ?? {
+        ...(manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId.id) ?? {
           loaded: true,
-          id: ecInstanceId,
+          id: ecInstanceId.id,
           classId: changeElement.classId,
           opcode: changeElement.opcode,
           type: changeElement.type,
@@ -356,27 +359,27 @@ const anyEntryPropertiesVisible = (entry: ChangedElementEntry, options: FilterOp
   return false;
 };
 
-const setVisualization = async (ecInstanceIds: string[] | undefined, manager: VersionCompareManager) => {
+const setVisualization = async (InstanceKeys: InstanceKey[] | undefined, manager: VersionCompareManager) => {
   const visualizationManager = manager.visualization?.getSingleViewVisualizationManager();
-  if (ecInstanceIds === undefined) {
+  if (InstanceKeys === undefined) {
     // Visualize no focused elements
     if (visualizationManager) {
       await visualizationManager.setFocusedElements([]);
     }
   }
   const changedElementsEntries = new Array<ChangedElementEntry>();
-  ecInstanceIds?.forEach((ecInstanceId) => {
-    const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId);
-      const entry: ChangedElementEntry = {
-       ...( manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId) ?? {
-          loaded: true,
-          id: ecInstanceId,
-          classId: changeElement!.classId,
-          opcode: changeElement!.opcode,
-          type: changeElement!.type,
-        }),
-      };
-      entry.loaded = true;
+  InstanceKeys?.forEach((ecInstanceId) => {
+    const changeElement = manager.changedElementsManager.allChangeElements.get(ecInstanceId.id);
+    const entry: ChangedElementEntry = {
+      ...(manager.changedElementsManager.entryCache.getSynchronous(ecInstanceId.id) ?? {
+        loaded: true,
+        id: ecInstanceId.id,
+        classId: changeElement!.classId,
+        opcode: changeElement!.opcode,
+        type: changeElement!.type,
+      }),
+    };
+    entry.loaded = true;
     changedElementsEntries.push(entry);
   });
   if (visualizationManager) {
