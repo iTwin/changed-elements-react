@@ -114,12 +114,12 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const { modelsTreeProps, rendererProps } = useModelsTree({
     activeView: v2InspectorProps.currentVP,
     hierarchyConfig: { elementClassGrouping: mode },
-    //  getFilteredPaths: async ({ createInstanceKeyPaths }) => {
-    //    const instanceKeyPaths = await createInstanceKeyPaths({
-    //      targetItems: [],
-    //    });
-    //    return instanceKeyPaths;
-    //  },
+    getFilteredPaths: useCallback(async ({ createInstanceKeyPaths }) => {
+      const instanceKeyPaths = await createInstanceKeyPaths({
+        targetItems: instanceKeysOfChangedElements, // Adjust this based on your actual target items
+      });
+      return instanceKeyPaths;
+    }, [instanceKeysOfChangedElements]),
   });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {

@@ -375,12 +375,20 @@ export class ChangedElementsManager {
     string,
     ChangedElement
   >();
+  private _classIds: Map<string, string> = new Map<string, string>();
 
+  // contains models subjects and categories
   public get allChangeElements() {
     return this._allChangedElements;
   }
+
+  // contains elements only
   public get filteredChangedElements() {
     return this._filteredChangedElements;
+  }
+
+  public get classIds() {
+    return this._classIds;
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;
@@ -881,6 +889,16 @@ export class ChangedElementsManager {
         rowFormat: QueryRowFormat.UseJsPropertyNames,
       })) {
         validClassIds.add(row.sourceId);
+      }
+      const typeDefClasses = [];
+      for (const classId of validClassIds) {
+        const key = `ec_classname(${classId},'s:c')`;
+        const query = `SELECT ${key} FROM [BisCore].[Element]`;
+        for await (const row of currentIModel.query(query, undefined, {
+          rowFormat: QueryRowFormat.UseJsPropertyNames,
+        })) {
+          this.classIds.set(classId, row[key]);
+        }
       }
       // Filter elements that contain any class Id that has GeometricElement3d as base class
       const filteredElements = [...this._filteredChangedElements]
