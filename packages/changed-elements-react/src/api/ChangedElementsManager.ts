@@ -890,15 +890,14 @@ export class ChangedElementsManager {
       })) {
         validClassIds.add(row.sourceId);
       }
-      const typeDefClasses = [];
-      for (const classId of validClassIds) {
-        const key = `ec_classname(${classId},'s:c')`;
-        const query = `SELECT ${key} FROM [BisCore].[Element]`;
-        for await (const row of currentIModel.query(query, undefined, {
-          rowFormat: QueryRowFormat.UseJsPropertyNames,
-        })) {
-          this.classIds.set(classId, row[key]);
-        }
+      const classIdsArray = Array.from(validClassIds);
+      const classIdsString = classIdsArray.join(",");
+      const query = `SELECT [ECDbMeta].[ECClassDef].ECInstanceId as ClassId , [ECDbMeta].[ECSchemaDef].name as SchemaName ,[ECDbMeta].[ECClassDef].Name as ClassName FROM [ECDbMeta].[ECClassDef]
+ Inner Join [ECDbMeta].[ECSchemaDef] On [ECDbMeta].[ECClassDef].Schema.Id = [ECDbMeta].[ECSchemaDef].ECInstanceId WHERE [ECDbMeta].[ECClassDef].ECInstanceId IN (${classIdsString})`;
+      let rowCount = 0;
+      for await (const row of currentIModel.query(query)) {
+        this.classIds.set(row[0], `${row[1]}.${row[2]}`);
+        rowCount++;
       }
       // Filter elements that contain any class Id that has GeometricElement3d as base class
       const filteredElements = [...this._filteredChangedElements]
