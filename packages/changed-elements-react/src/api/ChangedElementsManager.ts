@@ -375,7 +375,7 @@ export class ChangedElementsManager {
     string,
     ChangedElement
   >();
-  private _classIds: Map<string, string> = new Map<string, string>();
+  private _classIdsAndNameMap: Map<string, string> = new Map<string, string>();
 
   // contains models subjects and categories
   public get allChangeElements() {
@@ -387,8 +387,8 @@ export class ChangedElementsManager {
     return this._filteredChangedElements;
   }
 
-  public get classIds() {
-    return this._classIds;
+  public get classIdsAndNameMap() {
+    return this._classIdsAndNameMap;
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;
@@ -892,12 +892,14 @@ export class ChangedElementsManager {
       }
       const classIdsArray = Array.from(validClassIds);
       const classIdsString = classIdsArray.join(",");
-      const query = `SELECT [ECDbMeta].[ECClassDef].ECInstanceId as ClassId , [ECDbMeta].[ECSchemaDef].name as SchemaName ,[ECDbMeta].[ECClassDef].Name as ClassName FROM [ECDbMeta].[ECClassDef]
- Inner Join [ECDbMeta].[ECSchemaDef] On [ECDbMeta].[ECClassDef].Schema.Id = [ECDbMeta].[ECSchemaDef].ECInstanceId WHERE [ECDbMeta].[ECClassDef].ECInstanceId IN (${classIdsString})`;
-      let rowCount = 0;
+      const query = `
+      SELECT [ECDbMeta].[ECClassDef].ECInstanceId as ClassId , [ECDbMeta].[ECSchemaDef].name as SchemaName , [ECDbMeta].[ECClassDef].Name as ClassName
+      FROM [ECDbMeta].[ECClassDef]
+      Inner Join
+      [ECDbMeta].[ECSchemaDef] On [ECDbMeta].[ECClassDef].Schema.Id = [ECDbMeta].[ECSchemaDef].ECInstanceId
+      WHERE [ECDbMeta].[ECClassDef].ECInstanceId IN (${classIdsString})`;
       for await (const row of currentIModel.query(query)) {
-        this.classIds.set(row[0], `${row[1]}.${row[2]}`);
-        rowCount++;
+        this.classIdsAndNameMap.set(row[0], `${row[1]}.${row[2]}`);
       }
       // Filter elements that contain any class Id that has GeometricElement3d as base class
       const filteredElements = [...this._filteredChangedElements]
