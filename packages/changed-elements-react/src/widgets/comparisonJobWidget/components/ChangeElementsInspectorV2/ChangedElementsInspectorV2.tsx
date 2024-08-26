@@ -95,18 +95,19 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const propertyNames = v2InspectorProps.manager.changedElementsManager.getAllChangedPropertyNames();
   const defaultOptions = makeDefaultFilterOptions(propertyNames);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(defaultOptions);
-  const [instanceKeysOfChangedElements, setInstanceKeysOfChangedElements] = useState<InstanceKey[]>([]);
-  const [filteredInstanceKeysOfChangedElements, setFilteredInstanceKeysOfChangedElements] = useState<InstanceKey[]>([]);
-  useEffect(() => {
+  const instanceKeys = useMemo(() => {
     const entries = Array.from(v2InspectorProps.manager.changedElementsManager.filteredChangedElements.keys());
-    setInstanceKeysOfChangedElements(
-      entries
-        .map((key) => {
-          const instanceKey = v2InspectorProps.manager.changedElementsManager.elementIdAndInstanceKeyMap.get(key)!;
-          return instanceKey;
-        }).filter((instanceKey) => instanceKey.className.includes("IFC")).slice(0, 100),
-    );
-  }, [v2InspectorProps.manager.changedElementsManager.elementIdAndInstanceKeyMap, v2InspectorProps.manager.changedElementsManager.filteredChangedElements]);
+    const instanceKeys = entries
+      .map((key) => {
+        const instanceKey = v2InspectorProps.manager.changedElementsManager.elementIdAndInstanceKeyMap.get(key);
+        return instanceKey ? instanceKey : null;
+      })
+      .filter((instanceKey): instanceKey is { className: string; id: string; } => instanceKey !== null && instanceKey.className.includes("IFC"))
+      .slice(100, 200); //todo remove slice when models tree allows for greater than 1000 instance key filter
+    void setVisualization(instanceKeys, v2InspectorProps.manager); //todo remove when models tree allows for greater than 100 instance key filter
+    return instanceKeys;
+  }, [v2InspectorProps.manager]);
+  const [filteredInstanceKeysOfChangedElements, setFilteredInstanceKeysOfChangedElements] = useState<InstanceKey[]>(instanceKeys);
 
   const modeSelectorProps = {
     onChange: (value: React.SetStateAction<ModeOptions>) => {
@@ -123,10 +124,10 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
     hierarchyConfig: { elementClassGrouping: mode },
      getFilteredPaths: useCallback(async function ({ createInstanceKeyPaths }) {
        const instanceKeyPaths = await createInstanceKeyPaths({
-         targetItems: instanceKeysOfChangedElements, // Adjust this based on your actual target items
+         targetItems: filteredInstanceKeysOfChangedElements // Adjust this based on your actual target items
        });
        return instanceKeyPaths;
-     }, [instanceKeysOfChangedElements]),
+     }, [filteredInstanceKeysOfChangedElements]),
   });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
@@ -143,7 +144,8 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
         <ChangeTypeFilterHeader key={"123abcde"}
           entries={v2InspectorProps.manager.changedElementsManager.entryCache.getAll()}
           onFilterChange={async function (options: FilterOptions): Promise<void> {
-            const filteredEcInstanceIds = getFilteredEcInstanceIds(options, instanceKeysOfChangedElements, v2InspectorProps.manager);
+            const filteredEcInstanceIds = getFilteredEcInstanceIds(options, instanceKeys, v2InspectorProps.manager);
+            setFilteredInstanceKeysOfChangedElements(filteredEcInstanceIds ?? []);
             await setVisualization(filteredEcInstanceIds, v2InspectorProps.manager);
             const visualizationManager = v2InspectorProps.manager.visualization?.getSingleViewVisualizationManager();
             if (visualizationManager) {
