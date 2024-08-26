@@ -10,6 +10,8 @@ import { ChangedElementEntryCache, type ChangedElement, type Checksums } from ".
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
+import { InstanceKey } from "@itwin/presentation-common";
+import { c } from "vitest/dist/reporters-5f784f42.js";
 
 /** Properties that are not shown but still found by the agent */
 const ignoredProperties = ["Checksum", "Version"];
@@ -375,7 +377,7 @@ export class ChangedElementsManager {
     string,
     ChangedElement
   >();
-  private _classIdsAndNameMap: Map<string, string> = new Map<string, string>();
+  private _elementIdAndInstanceKeyMap: Map<string, InstanceKey> = new Map<string, InstanceKey>();
 
   // contains models subjects and categories
   public get allChangeElements() {
@@ -387,8 +389,8 @@ export class ChangedElementsManager {
     return this._filteredChangedElements;
   }
 
-  public get classIdsAndNameMap() {
-    return this._classIdsAndNameMap;
+  public get elementIdAndInstanceKeyMap() {
+    return this._elementIdAndInstanceKeyMap;
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;
@@ -850,7 +852,7 @@ export class ChangedElementsManager {
     findParentsModels = true,
   ): Promise<void> {
     this._filteredChangedElements.clear();
-    this._classIdsAndNameMap.clear();
+    this._elementIdAndInstanceKeyMap.clear();
     const changesets = inputChangesets;
     changesets.forEach((changeset: ChangedElements) => {
       accumulateChanges(this._filteredChangedElements, changeset, forward);
@@ -898,8 +900,9 @@ export class ChangedElementsManager {
       Inner Join
       [ECDbMeta].[ECSchemaDef] On [ECDbMeta].[ECClassDef].Schema.Id = [ECDbMeta].[ECSchemaDef].ECInstanceId
       WHERE [ECDbMeta].[ECClassDef].ECInstanceId IN (${classIdsString})`;
+      const classIdAndNameMap = new Map<string, string>();
       for await (const row of currentIModel.query(query)) {
-        this.classIdsAndNameMap.set(row[0], `${row[1]}.${row[2]}`);
+        classIdAndNameMap.set(row[0], `${row[1]}.${row[2]}`);
       }
       // Filter elements that contain any class Id that has GeometricElement3d as base class
       const filteredElements = [...this._filteredChangedElements]
@@ -907,6 +910,9 @@ export class ChangedElementsManager {
         .filter((entry: ChangedElement) => validClassIds.has(entry.classId));
       this._filteredChangedElements.clear();
       for (const element of filteredElements) {
+        if (classIdAndNameMap.has(element.classId)) {
+          this._elementIdAndInstanceKeyMap.set(element.id, { className: classIdAndNameMap.get(element.classId) as string, id: element.id });
+        }
         this._filteredChangedElements.set(element.id, element);
       }
     }

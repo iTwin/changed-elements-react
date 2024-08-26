@@ -96,17 +96,17 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const defaultOptions = makeDefaultFilterOptions(propertyNames);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(defaultOptions);
   const [instanceKeysOfChangedElements, setInstanceKeysOfChangedElements] = useState<InstanceKey[]>([]);
+  const [filteredInstanceKeysOfChangedElements, setFilteredInstanceKeysOfChangedElements] = useState<InstanceKey[]>([]);
   useEffect(() => {
-    const entries = Array.from(v2InspectorProps.manager.changedElementsManager.entryCache.getAll());
+    const entries = Array.from(v2InspectorProps.manager.changedElementsManager.filteredChangedElements.keys());
     setInstanceKeysOfChangedElements(
       entries
         .map((key) => {
-          const className = v2InspectorProps.manager.changedElementsManager.classIdsAndNameMap.get(key.classId);
-          return className ? { id: key.id, className } : null;
-        })
-        .filter((instanceKeys): instanceKeys is { id: string; className: string; } => instanceKeys !== null),
+          const instanceKey = v2InspectorProps.manager.changedElementsManager.elementIdAndInstanceKeyMap.get(key)!;
+          return instanceKey;
+        }).filter((instanceKey) => instanceKey.className.includes("IFC")).slice(0, 100),
     );
-  }, [v2InspectorProps.manager.changedElementsManager.classIdsAndNameMap]);
+  }, [v2InspectorProps.manager.changedElementsManager.elementIdAndInstanceKeyMap, v2InspectorProps.manager.changedElementsManager.filteredChangedElements]);
 
   const modeSelectorProps = {
     onChange: (value: React.SetStateAction<ModeOptions>) => {
@@ -121,13 +121,12 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const { modelsTreeProps, rendererProps } = useModelsTree({
     activeView: v2InspectorProps.currentVP,
     hierarchyConfig: { elementClassGrouping: mode },
-    getFilteredPaths: useCallback(async function ({ createInstanceKeyPaths }) {
-      const blah = instanceKeysOfChangedElements.filter((instanceKey) => instanceKey.className.includes("Building"));
-      const instanceKeyPaths = await createInstanceKeyPaths({
-        targetItems: blah.slice(0,1), // Adjust this based on your actual target items
-      });
-      return instanceKeyPaths;
-    }, [instanceKeysOfChangedElements]),
+     getFilteredPaths: useCallback(async function ({ createInstanceKeyPaths }) {
+       const instanceKeyPaths = await createInstanceKeyPaths({
+         targetItems: instanceKeysOfChangedElements, // Adjust this based on your actual target items
+       });
+       return instanceKeyPaths;
+     }, [instanceKeysOfChangedElements]),
   });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
