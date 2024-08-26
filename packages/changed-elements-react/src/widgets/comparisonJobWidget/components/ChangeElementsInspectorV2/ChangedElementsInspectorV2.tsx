@@ -95,6 +95,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const propertyNames = v2InspectorProps.manager.changedElementsManager.getAllChangedPropertyNames();
   const defaultOptions = makeDefaultFilterOptions(propertyNames);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(defaultOptions);
+  const [searchedText, setSearchedText] = useState<string>("");
   const instanceKeys = useMemo(() => {
     const entries = Array.from(v2InspectorProps.manager.changedElementsManager.filteredChangedElements.keys());
     const instanceKeys = entries
@@ -128,6 +129,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
        });
        return instanceKeyPaths;
      }, [filteredInstanceKeysOfChangedElements]),
+     filter: useMemo(() => searchedText, [searchedText]),
   });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
@@ -157,6 +159,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
           iModelConnection={v2InspectorProps.current}
           enableDisplayShowAllHideAllButtons={false}
           wantPropertyFiltering={v2InspectorProps.manager.wantPropertyFiltering}
+          onSearchChanged={(searchedText)=>setSearchedText(searchedText)}
         />,
         <ModeSelector key={"123abcd"} {...modeSelectorProps} />,
       ]
