@@ -97,9 +97,16 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(defaultOptions);
   const [instanceKeysOfChangedElements, setInstanceKeysOfChangedElements] = useState<InstanceKey[]>([]);
   useEffect(() => {
-    const keys = Array.from(v2InspectorProps.manager.changedElementsManager.allChangeElements.values());
-    setInstanceKeysOfChangedElements( keys.map((key) => ({ id: key.id, className: key.classId })));
-  }, [v2InspectorProps.manager.changedElementsManager.allChangeElements]);
+    const entries = Array.from(v2InspectorProps.manager.changedElementsManager.entryCache.getAll());
+    setInstanceKeysOfChangedElements(
+      entries
+        .map((key) => {
+          const className = v2InspectorProps.manager.changedElementsManager.classIdsAndNameMap.get(key.classId);
+          return className ? { id: key.id, className } : null;
+        })
+        .filter((instanceKeys): instanceKeys is { id: string; className: string; } => instanceKeys !== null),
+    );
+  }, [v2InspectorProps.manager.changedElementsManager.classIdsAndNameMap]);
 
   const modeSelectorProps = {
     onChange: (value: React.SetStateAction<ModeOptions>) => {
@@ -114,16 +121,17 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const { modelsTreeProps, rendererProps } = useModelsTree({
     activeView: v2InspectorProps.currentVP,
     hierarchyConfig: { elementClassGrouping: mode },
-    getFilteredPaths: useCallback(async ({ createInstanceKeyPaths }) => {
+    getFilteredPaths: useCallback(async function ({ createInstanceKeyPaths }) {
+      const blah = instanceKeysOfChangedElements.filter((instanceKey) => instanceKey.className.includes("Building"));
       const instanceKeyPaths = await createInstanceKeyPaths({
-        targetItems: instanceKeysOfChangedElements, // Adjust this based on your actual target items
+        targetItems: blah.slice(0,1), // Adjust this based on your actual target items
       });
       return instanceKeyPaths;
     }, [instanceKeysOfChangedElements]),
   });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
-    const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props,v2InspectorProps),
+    const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props, v2InspectorProps),
       [props.getLabel],
     );
     return <VisibilityTreeRenderer {...props} getLabel={getLabel} />;

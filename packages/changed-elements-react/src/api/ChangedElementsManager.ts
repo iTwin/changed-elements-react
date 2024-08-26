@@ -850,7 +850,7 @@ export class ChangedElementsManager {
     findParentsModels = true,
   ): Promise<void> {
     this._filteredChangedElements.clear();
-
+    this._classIdsAndNameMap.clear();
     const changesets = inputChangesets;
     changesets.forEach((changeset: ChangedElements) => {
       accumulateChanges(this._filteredChangedElements, changeset, forward);
