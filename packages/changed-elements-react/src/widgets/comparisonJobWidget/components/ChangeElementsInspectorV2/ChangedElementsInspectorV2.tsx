@@ -1,27 +1,24 @@
 /* eslint-disable react/prop-types */
 import { VersionCompareManager } from "../../../../api/VersionCompareManager";
 import { DbOpcode } from "@itwin/core-bentley";
-import { ModelsCategoryCache } from "../../../../api/ModelsCategoryCache";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { IModelConnection, Viewport } from "@itwin/core-frontend";
-import "./styles/ChangedElementsInspectorV2.scss";
 import { useModelsTreeButtonProps, TreeWithHeader, ModelsTreeComponent, VisibilityTree, VisibilityTreeRenderer, useModelsTree } from "@itwin/tree-widget-react";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import React from "react";
 import { ModeOptions, ModeSelector } from "./ModeSelector";
-import { CreateNodeLabelComponentProps, CustomModelsTreeRendererProps, HierarchyNode, NodeType, PresentationHierarchyNode } from "./models/modelsTreeAndNodeTypes";
-import { ColorClasses, ElementLabel } from "./ElementLabel";
+import { CreateNodeLabelComponentProps, CustomModelsTreeRendererProps } from "./models/modelsTreeAndNodeTypes";
 import { FilterOptions } from "../../../../SavedFiltersManager";
 import ChangeTypeFilterHeader from "../../../ChangeTypeFilterHeader";
-import { ChangedElement, ChangedElementEntry } from "../../../../api/ChangedElementEntryCache";
+import { ChangedElementEntry } from "../../../../api/ChangedElementEntryCache";
 import { TypeOfChange } from "@itwin/core-common";
 import { type InstanceKey } from '@itwin/presentation-common';
+import NodeLabelCreator from "./NodeLabelComponents/NodeLabelCreator";
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
-const modifiedCategoryIds = new Set<string>();
 
 // The Models tree requires a unified selection storage to support selection synchronization with the
 // application. The storage should be created once per application and shared across multiple selection-enabled
@@ -51,7 +48,7 @@ function getSchemaContext(imodel: IModelConnection): SchemaContext {
   return schemaContext;
 }
 
-type ChangedElementsInspectorV2Props = {
+export type ChangedElementsInspectorV2Props = {
   manager: VersionCompareManager;
   current: IModelConnection;
   currentVP: Viewport;
@@ -88,7 +85,6 @@ const isDefaultFilterOptions = (options: FilterOptions): boolean => {
   );
 };
 
-
 function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsInspectorV2Props>) {
   const buttonProps = useModelsTreeButtonProps({ imodel: v2InspectorProps.current, viewport: v2InspectorProps.currentVP });
   const [mode, setMode] = useState<ModeOptions>("enable");
@@ -123,17 +119,17 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   const { modelsTreeProps, rendererProps } = useModelsTree({
     activeView: v2InspectorProps.currentVP,
     hierarchyConfig: { elementClassGrouping: mode },
-     getFilteredPaths: useCallback(async function ({ createInstanceKeyPaths }) {
-       const instanceKeyPaths = await createInstanceKeyPaths({
-         targetItems: filteredInstanceKeysOfChangedElements // Adjust this based on your actual target items
-       });
-       return instanceKeyPaths;
-     }, [filteredInstanceKeysOfChangedElements]),
-     filter: useMemo(() => searchedText, [searchedText]),
+    getFilteredPaths: useCallback(async function ({ createInstanceKeyPaths }) {
+      const instanceKeyPaths = await createInstanceKeyPaths({
+        targetItems: filteredInstanceKeysOfChangedElements // Adjust this based on your actual target items
+      });
+      return instanceKeyPaths;
+    }, [filteredInstanceKeysOfChangedElements]),
+    filter: useMemo(() => searchedText, [searchedText]),
   });
 
   function CustomModelsTreeRenderer(props: CustomModelsTreeRendererProps) {
-    const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator(props, v2InspectorProps),
+    const getLabel = useCallback<CreateNodeLabelComponentProps>(NodeLabelCreator({ ...props, ...v2InspectorProps }),
       [props.getLabel],
     );
     return <VisibilityTreeRenderer {...props} getLabel={getLabel} />;
@@ -159,7 +155,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
           iModelConnection={v2InspectorProps.current}
           enableDisplayShowAllHideAllButtons={false}
           wantPropertyFiltering={v2InspectorProps.manager.wantPropertyFiltering}
-          onSearchChanged={(searchedText)=>setSearchedText(searchedText)}
+          onSearchChanged={(searchedText) => setSearchedText(searchedText)}
         />,
         <ModeSelector key={"123abcd"} {...modeSelectorProps} />,
       ]
@@ -174,117 +170,6 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
     </TreeWithHeader>
   );
 }
-
-
-
-const NodeLabelCreator = (props: Pick<CustomModelsTreeRendererProps, "getLabel">, changedElementsInspectorV2Props: ChangedElementsInspectorV2Props) => {
-  function CreateNodeLabelComponent(node: Readonly<PresentationHierarchyNode>) {
-    const nodeType = getNodeType(node);
-    const [catColor, setCatColor] = useState<ColorClasses>("");
-    const modelsCategoryData = ModelsCategoryCache.getModelsCategoryData();
-    const ecInstanceId = extractEcInstanceIdFromNode(node, nodeType);
-    const originalLabel = props.getLabel(node);
-
-    useEffect(() => {
-      const findIfCategoryHasChangedElements = async () => {
-        if (ecInstanceId && modifiedCategoryIds.has(ecInstanceId)) {
-          setCatColor("modified");
-          return;
-        }
-        for await (const row of changedElementsInspectorV2Props.current.query(
-          `SELECT ECInstanceId as id FROM BisCore.GeometricElement3d where Category.id = ${ecInstanceId}`,
-        )) {
-          if (ecInstanceId && changedElementsInspectorV2Props.manager.changedElementsManager.filteredChangedElements.has(row[0])) {
-            modifiedCategoryIds.add(ecInstanceId);
-            setCatColor("modified");
-            break;
-          }
-        }
-      };
-      if (nodeType === "category") {
-        void findIfCategoryHasChangedElements();
-      }
-    });
-    if (ecInstanceId === undefined) {
-      return <>{node.label}</>;
-    }
-    if (changedElementsInspectorV2Props.manager.changedElementsManager.allChangeElements.has(ecInstanceId)) {
-
-      const changeElementEntry = changedElementsInspectorV2Props.manager.changedElementsManager.allChangeElements.get(ecInstanceId);
-      if (changeElementEntry && (nodeType === "element" || nodeType === "subject")) {
-        if (nodeType === "element") {
-          return ElementLabel({ originalLabel: originalLabel, color: getColorBasedOffDbCode(changeElementEntry.opcode) });
-        }
-
-        return ElementLabel({ originalLabel: originalLabel, color: "modified" });
-      }
-    }
-    if (modelsCategoryData?.addedElementsModels.has(ecInstanceId)) {
-      return ElementLabel({ originalLabel: originalLabel, color: "modified" });
-    }
-    if (nodeType === "category") {
-      return ElementLabel({ originalLabel: originalLabel, color: catColor });
-    }
-    return <>{node.label}</>;
-  }
-  return CreateNodeLabelComponent;
-};
-
-const extractInstanceNodeKeyFromNode = (node: PresentationHierarchyNode) => {
-  const treeNodeItem: HierarchyNode = node.nodeData;
-  const key = treeNodeItem ? treeNodeItem.key : undefined;
-  if (!key || typeof key === "string" || ("type" in key && key.type !== "instances")) {
-    return undefined;
-  }
-  return key;
-};
-
-const extractGroupingNodeKeyFromNode = (node: PresentationHierarchyNode) => {
-  const treeNodeItem: HierarchyNode = node.nodeData;
-  const key = treeNodeItem ? treeNodeItem.key : undefined;
-  if (!key || typeof key === "string" || ("type" in key && key.type !== "class-grouping")) {
-    return undefined;
-  }
-  return key;
-};
-
-const extractModelEcInstanceIdFromClassGroupingNode = (node: PresentationHierarchyNode): string | undefined => {
-  return node.extendedData?.modelId;
-};
-
-const extractEcInstanceIdFromNode = (node: PresentationHierarchyNode, nodeType: NodeType) => {
-  if (nodeType !== "class-grouping") {
-    return extractInstanceNodeKeyFromNode(node)?.instanceKeys[0].id;
-  } else {
-    return extractModelEcInstanceIdFromClassGroupingNode(node);
-  }
-};
-
-const getNodeType = (node: PresentationHierarchyNode): NodeType => {
-  if (node.extendedData?.isSubject)
-    return "subject";
-  if (node.extendedData?.isModel)
-    return "model";
-  if (node.extendedData?.isCategory)
-    return "category";
-  if (extractGroupingNodeKeyFromNode(node))
-    return "class-grouping";
-
-  return "element";
-};
-
-const getColorBasedOffDbCode = (opcode?: DbOpcode): ColorClasses => {
-  switch (opcode) {
-    case DbOpcode.Insert:
-      return "added";
-    case DbOpcode.Update:
-      return "modified";
-    case DbOpcode.Delete:
-      return "modified";
-    default:
-      return "";
-  }
-};
 
 const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: InstanceKey[], manager: VersionCompareManager) => {
   if (isDefaultFilterOptions(options))
