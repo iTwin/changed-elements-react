@@ -104,7 +104,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
         return instanceKey ? instanceKey : null;
       })
       .filter((instanceKey): instanceKey is { className: string; id: string; } => instanceKey !== null && instanceKey.className.includes("IFC"))
-      .slice(100, 200); //todo remove slice when models tree allows for greater than 1000 instance key filter
+      .slice(0, 800); //todo remove slice when models tree allows for greater than 1000 instance key filter
     void setVisualization(instanceKeys, v2InspectorProps.manager); //todo remove when models tree allows for greater than 100 instance key filter
     return instanceKeys;
   }, [v2InspectorProps.manager]);
