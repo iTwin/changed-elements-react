@@ -849,6 +849,7 @@ export class ChangedElementsManager {
     forward?: boolean,
     filterSpatial?: boolean,
     findParentsModels = true,
+    wantClassNames?: boolean,
   ): Promise<void> {
     this._filteredChangedElements.clear();
     this._elementIdAndInstanceKeyMap.clear();
@@ -891,25 +892,14 @@ export class ChangedElementsManager {
       })) {
         validClassIds.add(row.sourceId);
       }
-      const classIdsArray = Array.from(validClassIds);
-      const classIdsString = classIdsArray.join(",");
-      const query = `
-      SELECT [ECDbMeta].[ECClassDef].ECInstanceId as ClassId , [ECDbMeta].[ECSchemaDef].name as SchemaName , [ECDbMeta].[ECClassDef].Name as ClassName
-      FROM [ECDbMeta].[ECClassDef]
-      Inner Join
-      [ECDbMeta].[ECSchemaDef] On [ECDbMeta].[ECClassDef].Schema.Id = [ECDbMeta].[ECSchemaDef].ECInstanceId
-      WHERE [ECDbMeta].[ECClassDef].ECInstanceId IN (${classIdsString})`;
-      const classIdAndNameMap = new Map<string, string>();
-      for await (const row of currentIModel.query(query)) {
-        classIdAndNameMap.set(row[0], `${row[1]}.${row[2]}`);
-      }
+      const classIdAndNameMap = wantClassNames ? await this.createClassIdsAndNamesMap(currentIModel, validClassIds) : undefined;
       // Filter elements that contain any class Id that has GeometricElement3d as base class
       const filteredElements = [...this._filteredChangedElements]
         .map((pair: [string, ChangedElement]) => pair[1])
         .filter((entry: ChangedElement) => validClassIds.has(entry.classId));
       this._filteredChangedElements.clear();
       for (const element of filteredElements) {
-        if (classIdAndNameMap.has(element.classId)) {
+        if (classIdAndNameMap?.has(element.classId)) {
           this._elementIdAndInstanceKeyMap.set(element.id, { className: classIdAndNameMap.get(element.classId) as string, id: element.id });
         }
         this._filteredChangedElements.set(element.id, element);
@@ -919,6 +909,22 @@ export class ChangedElementsManager {
       // Find proper models to display elements under
       await this._findParentModels(currentIModel, targetIModel);
     }
+  }
+
+  private async createClassIdsAndNamesMap(iModel: IModelConnection, validClassIds: Set<string>) {
+    const classIdsArray = Array.from(validClassIds);
+    const classIdsString = classIdsArray.join(",");
+    const query = `
+      SELECT [ECDbMeta].[ECClassDef].ECInstanceId as ClassId , [ECDbMeta].[ECSchemaDef].name as SchemaName , [ECDbMeta].[ECClassDef].Name as ClassName
+      FROM [ECDbMeta].[ECClassDef]
+      Inner Join
+      [ECDbMeta].[ECSchemaDef] On [ECDbMeta].[ECClassDef].Schema.Id = [ECDbMeta].[ECSchemaDef].ECInstanceId
+      WHERE [ECDbMeta].[ECClassDef].ECInstanceId IN (${classIdsString})`;
+    const classIdAndNameMap = new Map<string, string>();
+    for await (const row of iModel.query(query)) {
+      classIdAndNameMap.set(row[0], `${row[1]}.${row[2]}`);
+    }
+    return classIdAndNameMap;
   }
 
   /**

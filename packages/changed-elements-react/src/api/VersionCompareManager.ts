@@ -531,7 +531,7 @@ export class VersionCompareManager {
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,) {
-    await this.changedElementsManager.setChangeSets(currentIModel, targetIModel, changedElements, wantedModelClasses, forward, filterSpatial,false);
+    await this.changedElementsManager.setChangeSets(currentIModel, targetIModel, changedElements, wantedModelClasses, forward, filterSpatial,false,true);
     await this.changedElementsManager.generateEntries(currentIModel, targetIModel, false);
   }
 
