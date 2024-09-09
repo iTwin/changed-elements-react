@@ -11,7 +11,6 @@ import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js"
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
 import { InstanceKey } from "@itwin/presentation-common";
-import { c } from "vitest/dist/reporters-5f784f42.js";
 
 /** Properties that are not shown but still found by the agent */
 const ignoredProperties = ["Checksum", "Version"];
