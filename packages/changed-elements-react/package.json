@@ -94,6 +94,7 @@
     "@itwin/unified-selection": "^0.5.0",
     "react-table": "^7.8.0",
     "react-window": "^1.8.10",
-    "react-window-infinite-loader": "^1.0.9"
+    "react-window-infinite-loader": "^1.0.9",
+    "uuid": "^10.0.0"
   }
 }

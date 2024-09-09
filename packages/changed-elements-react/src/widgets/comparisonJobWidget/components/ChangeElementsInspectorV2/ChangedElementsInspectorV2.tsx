@@ -14,6 +14,7 @@ import ChangeTypeFilterHeader from "../../../ChangeTypeFilterHeader";
 import { type InstanceKey } from '@itwin/presentation-common';
 import NodeLabelCreator from "./NodeLabelComponents/NodeLabelCreator";
 import { handleFilterChange, makeDefaultFilterOptions, setVisualization } from "./filterChangeHandler";
+import { v4 } from 'uuid';
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
@@ -69,6 +70,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
       { label: "Disable Class Grouping", value: "disable" },
     ] as { label: string; value: ModeOptions; }[],
     inputProps: { placeholder: "Enable Class Grouping" },
+    value: mode,
   };
   const { modelsTreeProps, rendererProps } = useModelsTree({
     activeView: v2InspectorProps.currentVP,
@@ -91,9 +93,9 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
   return (
     <TreeWithHeader
       buttons={[
-        <ModelsTreeComponent.ShowAllButton {...buttonProps} key={"abc123"} />,
-        <ModelsTreeComponent.HideAllButton {...buttonProps} key={"123abc"} />,
-        <ChangeTypeFilterHeader key={"123abcde"}
+        <ModelsTreeComponent.ShowAllButton {...buttonProps} key={v4()} />,
+        <ModelsTreeComponent.HideAllButton {...buttonProps} key={v4()} />,
+        <ChangeTypeFilterHeader key={v4()}
           entries={v2InspectorProps.manager.changedElementsManager.entryCache.getAll()}
           onFilterChange={handleFilterChange({ instanceKeys, setFilteredInstanceKeysOfChangedElements, setFilterOptions, manager: v2InspectorProps.manager })}
           options={filterOptions}
@@ -102,7 +104,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
           wantPropertyFiltering={v2InspectorProps.manager.wantPropertyFiltering}
           onSearchChanged={(searchedText) => setSearchedText(searchedText)}
         />,
-        <ModeSelector key={"123abcd"} {...modeSelectorProps} />,
+        <ModeSelector key={v4()} {...modeSelectorProps} />,
       ]
       }>
       <VisibilityTree
