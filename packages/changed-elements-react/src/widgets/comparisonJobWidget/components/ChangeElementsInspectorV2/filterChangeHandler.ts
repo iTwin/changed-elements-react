@@ -121,10 +121,10 @@ const getFilteredEcInstanceIds = (options: FilterOptions, ecInstanceIds: Instanc
           type: changeElement.type,
         }),
       };
-      if (options.wantAdded && changeElement.opcode === DbOpcode.Insert && entryMatchesFilters(entry, options, manager)) {
+      if (options.wantAdded && changeElement.opcode === DbOpcode.Insert) {
         return true;
       }
-      if (options.wantDeleted && changeElement.opcode === DbOpcode.Delete && entryMatchesFilters(entry, options, manager)) {
+      if (options.wantDeleted && changeElement.opcode === DbOpcode.Delete) {
         return true;
       }
       entry.loaded = true;

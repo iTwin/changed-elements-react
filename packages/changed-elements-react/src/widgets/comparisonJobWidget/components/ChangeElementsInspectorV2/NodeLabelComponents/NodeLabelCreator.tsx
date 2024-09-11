@@ -60,7 +60,7 @@ export const NodeLabelCreator = (props: NodeLabelCreatorProps) => {
     if (nodeType === "element") {
       return ElementLabel({ originalLabel: originalLabel, color: "", loading: true });
     }
-    return <>{node.label}</>;
+    return ElementLabel({ originalLabel: originalLabel, color: "modified" });
   };
 };
 
