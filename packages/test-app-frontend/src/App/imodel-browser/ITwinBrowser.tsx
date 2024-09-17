@@ -2,29 +2,30 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ReactElement, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { SvgProject } from "@itwin/itwinui-icons-react";
 import { FluidGrid, Grid, PageLayout } from "@itwin/itwinui-layouts-react";
 import { Surface, Text, Tile } from "@itwin/itwinui-react";
-import { useAuthorization } from "../Authorization";
-import { LoadingScreen } from "../common/LoadingScreen";
-import { getRecentITwins, GetRecentITwinsResult } from "../ITwinApi";
+import { type ReactElement, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { useAuthorization } from "../Authorization.js";
+import { LoadingScreen } from "../common/LoadingScreen.js";
+import { getRecentITwins, GetRecentITwinsResult } from "../ITwinApi.js";
 
 export function ITwinBrowser(): ReactElement {
   const navigate = useNavigate();
-  const { userAuthorizationClient } = useAuthorization();
+  const { authorizationClient } = useAuthorization();
   const [iTwins, setITwins] = useState<GetRecentITwinsResult["iTwins"]>();
 
   useEffect(
     () => {
-      if (userAuthorizationClient === undefined) {
+      if (authorizationClient === undefined) {
         return;
       }
 
       let disposed = false;
       void (async () => {
-        const result = await getRecentITwins({ authorizationClient: userAuthorizationClient });
+        const result = await getRecentITwins({ authorizationClient });
         if (!disposed) {
           setITwins(result?.iTwins);
         }
@@ -32,7 +33,7 @@ export function ITwinBrowser(): ReactElement {
 
       return () => { disposed = true; };
     },
-    [userAuthorizationClient],
+    [authorizationClient],
   );
 
   if (iTwins === undefined) {

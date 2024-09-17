@@ -2,29 +2,30 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ReactElement, ReactNode, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { AuthorizationClient } from "@itwin/core-common";
+import { type AuthorizationClient } from "@itwin/core-common";
 import { FluidGrid, PageLayout } from "@itwin/itwinui-layouts-react";
 import { Text, Tile } from "@itwin/itwinui-react";
-import { useAuthorization } from "../Authorization";
-import { LoadingScreen } from "../common/LoadingScreen";
-import { getIModelThumbnail, getITwinIModels, GetITwinIModelsResult } from "../ITwinApi";
+import { type ReactElement, type ReactNode, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+import { useAuthorization } from "../Authorization.js";
+import { LoadingScreen } from "../common/LoadingScreen.js";
+import { getIModelThumbnail, getITwinIModels, type GetITwinIModelsResult } from "../ITwinApi.js";
 
 export function IModelBrowser(): ReactElement {
   const { iTwinId } = useParams<{ iTwinId: string; }>();
-  const { userAuthorizationClient } = useAuthorization();
+  const { authorizationClient } = useAuthorization();
   const [iModels, setiModels] = useState<GetITwinIModelsResult["iModels"]>();
 
   useEffect(
     () => {
-      if (iTwinId === undefined || userAuthorizationClient === undefined) {
+      if (iTwinId === undefined || authorizationClient === undefined) {
         return;
       }
 
       let disposed = false;
       void (async () => {
-        const result = await getITwinIModels({ iTwinId }, { authorizationClient: userAuthorizationClient });
+        const result = await getITwinIModels({ iTwinId }, { authorizationClient });
         if (!disposed) {
           setiModels(result?.iModels);
         }
@@ -32,10 +33,10 @@ export function IModelBrowser(): ReactElement {
 
       return () => { disposed = true; };
     },
-    [iTwinId, userAuthorizationClient],
+    [iTwinId, authorizationClient],
   );
 
-  if (!iModels || !userAuthorizationClient) {
+  if (!iModels || !authorizationClient) {
     return <LoadingScreen>Loading content...</LoadingScreen>;
   }
 
@@ -49,7 +50,7 @@ export function IModelBrowser(): ReactElement {
             iModelId={iModel.id}
             name={iModel.name}
             description={iModel.description ?? undefined}
-            authorizationClient={userAuthorizationClient}
+            authorizationClient={authorizationClient}
           />
         ))}
       </FluidGrid>
