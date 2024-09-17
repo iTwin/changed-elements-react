@@ -2,58 +2,120 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { type AuthorizationClient } from "@itwin/core-common";
+import { AuthorizationClient } from "@itwin/core-common";
 import { FluidGrid, PageLayout } from "@itwin/itwinui-layouts-react";
-import { Text, Tile } from "@itwin/itwinui-react";
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from "react";
+import { Surface, Text, Tile } from "@itwin/itwinui-react";
+import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { applyUrlPrefix } from "../../environment.js";
 import { useAuthorization } from "../Authorization.js";
-import { LoadingScreen } from "../common/LoadingScreen.js";
-import { getIModelThumbnail, getITwinIModels, type GetITwinIModelsResult } from "../ITwinApi.js";
+import { callITwinApi, getIModelThumbnail, GetITwinIModelsResult } from "../ITwinApi.js";
+import { Paginator } from "./Paginator.js";
 
 export function IModelBrowser(): ReactElement {
   const { iTwinId } = useParams<{ iTwinId: string; }>();
-  const { authorizationClient } = useAuthorization();
-  const [iModels, setiModels] = useState<GetITwinIModelsResult["iModels"]>();
+  const navigate = useNavigate();
 
-  useEffect(
-    () => {
-      if (iTwinId === undefined || authorizationClient === undefined) {
-        return;
+  const recentIModelsKey = `recent_imodels_${iTwinId}`;
+  const [recentIModels] = useState<string[]>(
+    (() => {
+      const item = localStorage.getItem(recentIModelsKey);
+      if (item) {
+        return JSON.parse(item);
       }
 
-      let disposed = false;
-      void (async () => {
-        const result = await getITwinIModels({ iTwinId }, { authorizationClient });
-        if (!disposed) {
-          setiModels(result?.iModels);
-        }
-      })();
-
-      return () => { disposed = true; };
-    },
-    [iTwinId, authorizationClient],
+      return [];
+    })(),
   );
 
-  if (!iModels || !authorizationClient) {
-    return <LoadingScreen>Loading content...</LoadingScreen>;
-  }
+  const { authorizationClient } = useAuthorization();
+
+  const fetchIModels = (url: string) => callITwinApi(
+    {
+      url,
+      additionalHeaders: { Prefer: "return=representation" },
+      apiVersion: 2,
+      postProcess: async (response) => response.json(),
+    },
+    { authorizationClient },
+  ) as Promise<GetITwinIModelsResult>;
+
+  const handleTileClick = (iModelId: string) => {
+    const existingIndex = recentIModels.indexOf(iModelId);
+    let updatedRecentIModels: string[];
+    if (existingIndex !== -1) {
+      updatedRecentIModels = recentIModels.toSpliced(existingIndex, 1);
+    } else {
+      updatedRecentIModels = recentIModels.slice(0, 5);
+    }
+
+    updatedRecentIModels.unshift(iModelId);
+    localStorage.setItem(recentIModelsKey, JSON.stringify(updatedRecentIModels));
+
+    navigate(`/itwinjs/open-imodel/${iTwinId}/${iModelId}`);
+  };
 
   return (
     <PageLayout.Content padded>
-      <FluidGrid>
-        {iModels.map((iModel) => (
-          <IModelTile
-            key={iModel.id}
-            iTwinId={iModel.iTwinId}
-            iModelId={iModel.id}
-            name={iModel.name}
-            description={iModel.description ?? undefined}
-            authorizationClient={authorizationClient}
-          />
-        ))}
-      </FluidGrid>
+      <Paginator
+        initialUrl={applyUrlPrefix(`https://api.bentley.com/imodels?iTwinId=${iTwinId}`)}
+        fetch={fetchIModels}
+      >
+        {
+          (result) => (
+            <div style={{ display: "grid", gap: "var(--iui-size-xl)" }}>
+              <Surface style={{ padding: "var(--iui-size-l)", display: "grid", gap: "var(--iui-size-l)" }}>
+                <Text variant="title">Recent</Text>
+                <FluidGrid>
+                  {
+                    recentIModels.length === 0 &&
+                    <Text>No recent iModels</Text>
+                  }
+                  {
+                    recentIModels.length > 0 && recentIModels.map((iModelId) => {
+                      const iModel = result.iModels.find(({ id }) => id === iModelId);
+                      if (iModel) {
+                        return (
+                          <IModelTile
+                            key={iModel.id}
+                            iTwinId={iModel.iTwinId}
+                            iModelId={iModel.id}
+                            name={iModel.name}
+                            description={iModel.description ?? undefined}
+                            authorizationClient={authorizationClient}
+                            onClick={() => handleTileClick(iModel.id)}
+                          />
+                        );
+                      }
+
+                      return undefined;
+                    })
+                  }
+                </FluidGrid>
+              </Surface>
+              <div style={{ display: "grid", gap: "var(--iui-size-l)" }}>
+                <Text variant="title">All iModels</Text>
+                <FluidGrid>
+                  {
+                    result.iModels.map((iModel) => (
+                      <IModelTile
+                        key={iModel.id}
+                        iTwinId={iModel.iTwinId}
+                        iModelId={iModel.id}
+                        name={iModel.name}
+                        description={iModel.description ?? undefined}
+                        authorizationClient={authorizationClient}
+                        onClick={() => handleTileClick(iModel.id)}
+                      />
+                    ))
+                  }
+                </FluidGrid>
+              </div>
+            </div>
+          )
+        }
+      </Paginator>
     </PageLayout.Content>
   );
 }
@@ -64,10 +126,10 @@ export interface IModelTileProps {
   name: ReactNode;
   description: string | undefined;
   authorizationClient: AuthorizationClient;
+  onClick: () => void;
 }
 
 export function IModelTile(props: IModelTileProps): ReactElement {
-  const navigate = useNavigate();
   const [thumbnail, setThumbnail] = useState<string>();
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -75,7 +137,7 @@ export function IModelTile(props: IModelTileProps): ReactElement {
     () => {
       const element = divRef.current;
       const authorizationClient = props.authorizationClient;
-      if (thumbnail !== undefined || !element || !authorizationClient) {
+      if (thumbnail !== undefined || !element) {
         return;
       }
 
@@ -107,7 +169,7 @@ export function IModelTile(props: IModelTileProps): ReactElement {
       description={props.description ?? <Text isSkeleton />}
       thumbnail={thumbnail ?? <div ref={divRef} id="imodel-thumbnail-placeholder" />}
       isActionable
-      onClick={() => navigate(`/open-imodel/${props.iTwinId}/${props.iModelId}`)}
+      onClick={props.onClick}
     />
   );
 }

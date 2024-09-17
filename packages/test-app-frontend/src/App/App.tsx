@@ -77,12 +77,12 @@ function Main(): ReactElement {
 
   return (
     <Routes>
-      <Route index element={<Navigate replace to="/browse/iTwins" />} />
-      <Route path="browse/iTwins">
+      <Route index element={<Navigate replace to="/itwinjs/browse/iTwins" />} />
+      <Route path="itwinjs/browse/iTwins">
         <Route index element={<ITwinBrowser />} />
         <Route path=":iTwinId" element={<IModelBrowser />} />
       </Route>
-      <Route path="open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
+      <Route path="itwinjs/open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
     </Routes>
   );
 }
