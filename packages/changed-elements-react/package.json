@@ -57,8 +57,8 @@
     "@types/react-table": "^7.7.14",
     "@types/react-window": "^1.8.5",
     "@types/react-window-infinite-loader": "^1.0.6",
-    "@vitejs/plugin-react-swc": "^3.3.2",
-    "@vitest/coverage-v8": "^0.34.6",
+    "@vitejs/plugin-react-swc": "^3.7.1",
+    "@vitest/coverage-v8": "^2.1.1",
     "cpx2": "^5.0.0",
     "happy-dom": "^10.5.2",
     "npm-run-all": "^4.1.5",
@@ -67,8 +67,8 @@
     "react-redux": "^7.2.2",
     "redux": "^4.1.0",
     "typescript": "~5.5.4",
-    "vite": "^4.5.3",
-    "vitest": "^0.34.6"
+    "vite": "^5.4.5",
+    "vitest": "^2.1.1"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^4.0.6",

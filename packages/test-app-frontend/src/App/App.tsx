@@ -36,7 +36,7 @@ export function App(): ReactElement {
         redirectUri="/auth/callback"
         silentRedirectUri="/auth/silent"
         postLogoutRedirectUri="/"
-        scope="users:read imodels:read imodelaccess:read changedelements:read itwins:read changedelements:modify"
+        scope="itwin-platform"
       >
         <ThemeProvider theme={appContextValue.theme}>
           <PageLayout>
