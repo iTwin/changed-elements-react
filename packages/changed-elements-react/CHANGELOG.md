@@ -16,10 +16,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * `VersionCompareSelectWidget` V2 will now end the active comparison and start a new one once a new one is triggered instead of doing a no-op on starting a new comparison.
 
-## Fixes
-
-* `VersionCompareSelectWidget` V2 will now end the active comparison and start a new one once a new one is triggered instead of doing a no-op on starting a new comparison.
-
 ## [0.9.1](https://github.com/iTwin/changed-elements-react/tree/v0.9.1/packages/changed-elements-react) - 2024-07-10
 
 ## Fixes
