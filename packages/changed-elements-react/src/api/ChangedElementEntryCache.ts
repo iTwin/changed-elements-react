@@ -177,7 +177,7 @@ export class ChangedElementEntryCache {
    * @returns True if loaded
    */
   public isLoaded = (entry: ChangedElementEntry) => {
-    const cachedNode =this.changedElementEntries.get(entry.id);
+    const cachedNode = this.changedElementEntries.get(entry.id);
     return (
       cachedNode !== undefined &&
       cachedNode.loaded &&
