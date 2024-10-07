@@ -5,20 +5,20 @@
 import { SvgUser } from "@itwin/itwinui-icons-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
-import { PropsWithChildren, ReactElement, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 
-import { applyAuthUrlPrefix, clientId } from "../environment";
-import { AppContext, appContext } from "./AppContext";
-import { AppHeader } from "./AppHeader";
+import { applyAuthUrlPrefix, clientId } from "../environment.js";
+import { AppContext, appContext } from "./AppContext.js";
+import { AppHeader } from "./AppHeader.js";
 import {
-  AuthorizationState, createAuthorizationProvider, SignInCallback, SignInSilent, SignInSilentCallback, useAuthorization
-} from "./Authorization";
-import { LoadingScreen } from "./common/LoadingScreen";
-import { ErrorPage } from "./errors/ErrorPage";
-import { IModelBrowser } from "./imodel-browser/IModelBrowser";
-import { ITwinBrowser } from "./imodel-browser/ITwinBrowser";
-import type { ITwinJsApp } from "./ITwinJsApp/ITwinJsApp";
+  AuthorizationProvider, AuthorizationState, SignInCallback, SignInSilent, SignInSilentCallback, useAuthorization
+} from "./Authorization.js";
+import { LoadingScreen } from "./common/LoadingScreen.js";
+import { ErrorPage } from "./errors/ErrorPage.js";
+import { IModelBrowser } from "./imodel-browser/IModelBrowser.js";
+import { ITwinBrowser } from "./imodel-browser/ITwinBrowser.js";
+import type { ITwinJsApp } from "./ITwinJsApp/ITwinJsApp.js";
 
 import "./App.css";
 
@@ -30,7 +30,14 @@ export function App(): ReactElement {
 
   return (
     <appContext.Provider value={appContextValue}>
-      <AuthorizationProvider>
+      <AuthorizationProvider
+        authority={applyAuthUrlPrefix("https://ims.bentley.com")}
+        clientId={clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx" ? undefined : clientId}
+        redirectUri="/auth/callback"
+        silentRedirectUri="/auth/silent"
+        postLogoutRedirectUri="/"
+        scope="itwin-platform"
+      >
         <ThemeProvider theme={appContextValue.theme}>
           <PageLayout>
             <PageLayout.Header>
@@ -70,27 +77,15 @@ function Main(): ReactElement {
 
   return (
     <Routes>
-      <Route index element={<Navigate replace to="/browse/iTwins" />} />
-      <Route path="browse/iTwins">
+      <Route index element={<Navigate replace to="/itwinjs/browse/iTwins" />} />
+      <Route path="itwinjs/browse/iTwins">
         <Route index element={<ITwinBrowser />} />
         <Route path=":iTwinId" element={<IModelBrowser />} />
       </Route>
-      <Route path="open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
+      <Route path="itwinjs/open-imodel/:iTwinId/:iModelId" element={<OpenIModel iTwinJsApp={iTwinJsApp} />} />
     </Routes>
   );
 }
-
-const AuthorizationProvider = clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx"
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  ? (props: PropsWithChildren<{}>) => <>{props.children}</>
-  : createAuthorizationProvider({
-    authority: applyAuthUrlPrefix("https://ims.bentley.com"),
-    client_id: clientId,
-    redirect_uri: "/auth/callback",
-    silent_redirect_uri: "/auth/silent",
-    post_logout_redirect_uri: "/",
-    scope: "users:read imodels:read imodelaccess:read changedelements:read itwins:read changedelements:modify",
-  });
 
 function SetupEnvHint(): ReactElement {
   return (
@@ -117,17 +112,17 @@ function SignInPrompt(props: SignInPromptProps): ReactElement {
 
 function useBackgroundITwinJsAppLoading(): typeof ITwinJsApp | undefined {
   const [itwinJsApp, setITwinJsApp] = useState<typeof ITwinJsApp>();
-  const { userAuthorizationClient } = useAuthorization();
+  const { authorizationClient } = useAuthorization();
   useEffect(
     () => {
-      if (!userAuthorizationClient) {
+      if (!authorizationClient) {
         return;
       }
 
       let disposed = false;
       void (async () => {
         const { ITwinJsApp, initializeITwinJsApp } = await import("./ITwinJsApp/ITwinJsApp.js");
-        await initializeITwinJsApp(userAuthorizationClient);
+        await initializeITwinJsApp(authorizationClient);
         if (!disposed) {
           setITwinJsApp(() => ITwinJsApp);
         }
@@ -135,7 +130,7 @@ function useBackgroundITwinJsAppLoading(): typeof ITwinJsApp | undefined {
 
       return () => { disposed = true; };
     },
-    [userAuthorizationClient],
+    [authorizationClient],
   );
   return itwinJsApp;
 }
@@ -145,15 +140,15 @@ interface OpenIModelProps {
 }
 
 function OpenIModel(props: OpenIModelProps): ReactElement | null {
-  const { userAuthorizationClient } = useAuthorization();
+  const { authorizationClient } = useAuthorization();
   const { iTwinId, iModelId } = useParams<{ iTwinId: string; iModelId: string; }>();
   if (iTwinId === undefined || iModelId === undefined) {
     return null;
   }
 
-  if (props.iTwinJsApp === undefined || userAuthorizationClient === undefined) {
+  if (props.iTwinJsApp === undefined || authorizationClient === undefined) {
     return <LoadingScreen>Initializing...</LoadingScreen>;
   }
 
-  return <props.iTwinJsApp iTwinId={iTwinId} iModelId={iModelId} authorizationClient={userAuthorizationClient} />;
+  return <props.iTwinJsApp iTwinId={iTwinId} iModelId={iModelId} authorizationClient={authorizationClient} />;
 }
