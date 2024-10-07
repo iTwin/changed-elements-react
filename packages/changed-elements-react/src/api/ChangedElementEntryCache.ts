@@ -177,10 +177,12 @@ export class ChangedElementEntryCache {
    * @returns True if loaded
    */
   public isLoaded = (entry: ChangedElementEntry) => {
+    const cachedNode = this.changedElementEntries.get(entry.id);
     return (
-      entry.loaded &&
-      entry.directChildren !== undefined &&
-      entry.label !== undefined
+      cachedNode !== undefined &&
+      cachedNode.loaded &&
+      cachedNode.directChildren !== undefined &&
+      cachedNode.label !== undefined
     );
   };
 

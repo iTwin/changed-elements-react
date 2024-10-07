@@ -6,15 +6,15 @@ import { SvgDeveloper, SvgMoon, SvgSun } from "@itwin/itwinui-icons-react";
 import {
   Button, DropdownMenu, Header, HeaderLogo, IconButton, MenuItem, UserIcon, getUserColor
 } from "@itwin/itwinui-react";
-import { ReactElement, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAppContext } from "./AppContext";
-import { AuthorizationState, useAuthorization } from "./Authorization";
-import { GetUserProfileResult, getUserProfile } from "./ITwinApi";
+import { useAppContext } from "./AppContext.js";
+import { AuthorizationState, useAuthorization } from "./Authorization.js";
+import { GetUserProfileResult, getUserProfile } from "./ITwinApi.js";
 
 export function AppHeader(): ReactElement {
-  const { state, signIn, signOut, userAuthorizationClient } = useAuthorization();
+  const { state, signIn, signOut, authorizationClient } = useAuthorization();
   const navigate = useNavigate();
 
   const [user, setUser] = useState<UserProfile>();
@@ -26,7 +26,7 @@ export function AppHeader(): ReactElement {
 
       let disposed = false;
       void (async () => {
-        const profile = await getUserProfile({ authorizationClient: userAuthorizationClient });
+        const profile = await getUserProfile({ authorizationClient });
         if (!disposed) {
           setUser(profile?.user);
         }
@@ -34,7 +34,7 @@ export function AppHeader(): ReactElement {
 
       return () => { disposed = true; };
     },
-    [state, userAuthorizationClient],
+    [state, authorizationClient],
   );
 
   const actions = [

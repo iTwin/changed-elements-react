@@ -2,8 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { AuthorizationClient } from "@itwin/core-common";
-import { applyUrlPrefix } from "../environment";
+import type { AuthorizationClient } from "@itwin/core-common";
+
+import { applyUrlPrefix } from "../environment.js";
 
 export interface GetUserProfileResult {
   user: {
@@ -24,34 +25,56 @@ export interface GetUserProfileResult {
 export function getUserProfile(requestArgs: RequestArgs): Promise<GetUserProfileResult | undefined> {
   return callITwinApi(
     {
-      endpoint: "users/me",
+      url: applyUrlPrefix("https://api.bentley.com/users/me"),
       postProcess: async (response) => response.json(),
     },
     requestArgs,
   );
 }
 
+export interface ITwin {
+  id: string;
+  class: string;
+  subClass: string;
+  type: string | null;
+  number: string;
+  displayName: string;
+  geographicLocation: string | null;
+  dataCenterLocation: string;
+  status: "Active" | "Inactive" | "Trial";
+  parentId: string | null;
+  iTwinAccountId: string | null;
+  imageName: string | null;
+  image: string | null;
+  createdDateTime: string;
+  createdBy: string | null;
+}
+
 export interface GetRecentITwinsResult {
-  iTwins: Array<{
-    id: string;
-    class: string;
-    subClass: string;
-    type: string | null;
-    displayName: string;
-    number: string;
-    dataCenterLocation: string;
-    status: "Active" | "Inactive" | "Trial";
-    parentId: string | null;
-    createdDateTime: string;
-    createdBy: string | null;
-  }>;
+  iTwins: ITwin[];
   _links: HalLinks<["self", "next"?, "prev"?]>;
 }
 
 export async function getRecentITwins(requestArgs: RequestArgs): Promise<GetRecentITwinsResult | undefined> {
   return callITwinApi(
     {
-      endpoint: "itwins/recents?subclass=Project",
+      url: applyUrlPrefix("https://api.bentley.com/itwins/recents?subclass=Project"),
+      additionalHeaders: { Prefer: "return=representation" },
+      postProcess: async (response) => response.json(),
+    },
+    requestArgs,
+  );
+}
+
+export interface GetAllITwinsResult {
+  iTwins: ITwin[];
+  _links: HalLinks<["self", "next"?, "prev"?]>;
+}
+
+export async function getAllITwins(requestArgs: RequestArgs): Promise<GetAllITwinsResult | undefined> {
+  return callITwinApi(
+    {
+      url: applyUrlPrefix("https://api.bentley.com/itwins?subclass=Project"),
       additionalHeaders: { Prefer: "return=representation" },
       postProcess: async (response) => response.json(),
     },
@@ -93,7 +116,7 @@ export async function getITwinIModels(
 ): Promise<GetITwinIModelsResult | undefined> {
   return callITwinApi(
     {
-      endpoint: `imodels/?iTwinId=${args.iTwinId}`,
+      url: applyUrlPrefix(`https://api.bentley.com/imodels?iTwinId=${args.iTwinId}`),
       additionalHeaders: { Prefer: "return=representation" },
       apiVersion: 2,
       postProcess: async (response) => response.json(),
@@ -127,7 +150,7 @@ export interface GetIModelChangesetsResult {
 export async function getIModelChangesets(args: GetIModelChangesetsArgs, requestArgs: RequestArgs): Promise<GetIModelChangesetsResult | undefined> {
   return callITwinApi(
     {
-      endpoint: `imodels/${args.iModelId}/changesets`,
+      url: applyUrlPrefix(`https://api.bentley.com/imodels/${args.iModelId}/changesets`),
       additionalHeaders: { Prefer: "return=minimal" },
       apiVersion: 2,
       postProcess: (response) => response.json(),
@@ -158,7 +181,7 @@ export interface GetIModelNamedVersionResult {
 export async function getIModelNamedVersions(args: GetIModelNamedVersionsArgs, requestArgs: RequestArgs): Promise<GetIModelNamedVersionResult | undefined> {
   return callITwinApi(
     {
-      endpoint: `imodels/${args.iModelId}/namedversions`,
+      url: applyUrlPrefix(`https://api.bentley.com/imodels/${args.iModelId}/namedversions`),
       additionalHeaders: { Prefer: "return=representation" },
       apiVersion: 2,
       postProcess: (response) => response.json(),
@@ -170,7 +193,8 @@ export async function getIModelNamedVersions(args: GetIModelNamedVersionsArgs, r
 export async function getIModelThumbnail(iModelId: string, requestArgs: RequestArgs): Promise<Blob | undefined> {
   return callITwinApi(
     {
-      endpoint: `imodels/${iModelId}/thumbnail?size=small`,
+      url: applyUrlPrefix(`https://api.bentley.com/imodels/${iModelId}/thumbnail?size=small`),
+      apiVersion: 2,
       immutable: true,
       postProcess: async (response) => response.blob(),
     },
@@ -183,7 +207,7 @@ export type HalLinks<T extends Array<string | undefined>> = {
 };
 
 interface CallITwinApiArgs<T> {
-  endpoint: string;
+  url: string;
   additionalHeaders?: Record<string, string>;
   apiVersion?: number;
   immutable?: boolean;
@@ -194,17 +218,15 @@ export interface RequestArgs {
   authorizationClient: AuthorizationClient;
 }
 
-async function callITwinApi<T>(args: CallITwinApiArgs<T>, requestArgs: RequestArgs): Promise<T | undefined> {
-  const iTwinApiUrl = "https://api.bentley.com";
-  const url = applyUrlPrefix(iTwinApiUrl, args.endpoint);
+export async function callITwinApi<T>(args: CallITwinApiArgs<T>, requestArgs: RequestArgs): Promise<T | undefined> {
   const headers = {
     ...args.additionalHeaders,
     Authorization: await requestArgs.authorizationClient.getAccessToken(),
     Accept: `application/vnd.bentley.itwin-platform.v${args.apiVersion ?? 1}+json`,
   };
-  const key = JSON.stringify({ url, headers });
+  const key = JSON.stringify({ url: args.url, headers });
   const fetcher = async () => {
-    const response = await fetch(url, { headers });
+    const response = await fetch(args.url, { headers });
     return response.ok ? args.postProcess(response) : undefined;
   };
   return args.immutable ? requestStore.fetchImmutable(key, fetcher) : requestStore.fetch(key, fetcher);

@@ -1037,10 +1037,8 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   public load = async (nodes: TreeNodeItem[]): Promise<void> => {
     const ids = nodes.map((node: TreeNodeItem) => node.id);
     const entries = ids
-      .map((id: string) => this._elements.get(id))
-      .filter(
-        (entry: ChangedElementEntry | undefined) => entry !== undefined,
-      ) as ChangedElementEntry[];
+      .map((id) => this._elements.get(id))
+      .filter((entry) => entry !== undefined);
 
     // Handle loading model children on actual load of the node
     for (const node of nodes) {

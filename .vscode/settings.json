@@ -18,6 +18,7 @@
   "json.format.keepLines": true,
 
   "typescript.format.semicolons": "insert",
+  "typescript.preferences.importModuleSpecifierEnding": "js",
   "typescript.reportStyleChecksAsWarnings": true,
 
   "[javascript][typescript][typescriptreact]": {
