@@ -19,6 +19,10 @@
       "import": {
         "types": "./lib/esm/index.d.ts",
         "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
       }
     }
   },
@@ -29,7 +33,9 @@
   "scripts": {
     "build": "run-p build:**",
     "build:copy-assets:esm": "cpx \"./src/**/*.{scss,css}\" ./lib/esm",
+    "build:copy-assets:cjs": "cpx \"./src/**/*.{scss,css}\" ./lib/cjs",
     "build:transpile:esm": "tsc --project ./tsconfig.build.json",
+    "build:transpile:cjs": "tsc --project ./tsconfig.build.cjs.json",
     "test": "vitest run",
     "test:cover": "vitest run --coverage",
     "test:watch": "vitest watch",
