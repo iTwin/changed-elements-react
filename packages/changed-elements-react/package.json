@@ -12,7 +12,7 @@
     "name": "Bentley Systems, Inc.",
     "url": "https://www.bentley.com"
   },
-  "types": "./lib/cjs/index.d.ts",
+  "types": "./lib/esm/index.d.ts",
   "type": "module",
   "exports": {
     ".": {
