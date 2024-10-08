@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## Minor changes
+
+* `JobAndNamedVersions` now exported through the barrel via `
+* `ComparisonJob` models now exported through the barrel
+
+## [0.10.0](https://github.com/iTwin/changed-elements-react/tree/v0.10.0/packages/changed-elements-react) - 2024-10-08
+
 ## Fixes
 
 * `Changed Elements React` removed pseudo-commonjs modules from build output
