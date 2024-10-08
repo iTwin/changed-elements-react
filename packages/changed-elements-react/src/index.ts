@@ -28,3 +28,5 @@ export * from "./widgets/VersionCompareSelectWidget.js";
 export * from "./widgets/comparisonJobWidget/components/VersionCompareSelectModal.js"
 export * from "./widgets/comparisonJobWidget/components/VersionCompareDialogProvider.js"
 export * from "./widgets/comparisonJobWidget/common/versionCompareToasts.js"
+export type {JobAndNamedVersions} from "./widgets/comparisonJobWidget/models/ComparisonJobModels.js"
+export type {ComparisonJob, ComparisonJobCompleted, ComparisonJobFailed, ComparisonJobQueued, ComparisonJobStarted} from "./clients/IComparisonJobClient.js";
