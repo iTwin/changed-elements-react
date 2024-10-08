@@ -32,7 +32,6 @@
   "scripts": {
     "build": "run-p build:**",
     "build:copy-assets:esm": "cpx \"./src/**/*.{scss,css}\" ./lib/esm",
-    "build:copy-assets:cjs": "cpx \"./src/**/*.{scss,css}\" ./lib/cjs",
     "build:transpile:esm": "tsc --project ./tsconfig.build.json",
     "test": "vitest run",
     "test:cover": "vitest run --coverage",
