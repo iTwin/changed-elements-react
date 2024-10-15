@@ -479,16 +479,18 @@ export class ChangedElementsManager {
   }
 
   /** Query the geometric element 3d classes' id */
-  private async _getGeometricElement3dClassId(iModel: IModelConnection): Promise<string | undefined> {
+  private async _getGeometricElement3dAndPhysicalModelClassId(iModel: IModelConnection): Promise<Set<string> | undefined> {
+    const classIds = new Set<string>();
     const ecsql =
-      "SELECT ECClassDef.ECInstanceId as geomId FROM meta.ECClassDef INNER JOIN meta.ECSchemaDef ON ECSchemaDef.ECInstanceId = ECClassDef.Schema.Id WHERE ECClassDef.Name = 'GeometricElement3d' AND ECSchemaDef.Name ='BisCore'";
+      "SELECT ECClassDef.ECInstanceId as id FROM meta.ECClassDef INNER JOIN meta.ECSchemaDef ON ECSchemaDef.ECInstanceId = ECClassDef.Schema.Id WHERE (ECClassDef.Name = 'GeometricElement3d' Or ECClassDef.Name = 'PhysicalModel') AND ECSchemaDef.Name ='BisCore'";
     for await (const row of iModel.query(ecsql, undefined, {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
-      return row.geomId;
+      classIds.add(row.id);
     }
-
-    return undefined;
+    if(classIds.size ===0)
+      return undefined;
+    return classIds
   }
 
   /**
@@ -878,14 +880,14 @@ export class ChangedElementsManager {
 
     // Filter by spatial elements if we want
     if (filterSpatial) {
-      const geom3dId = await this._getGeometricElement3dClassId(currentIModel);
-      if (!geom3dId) {
+      const geom3dIdAndPhysModId = await this._getGeometricElement3dAndPhysicalModelClassId(currentIModel);
+      if (!geom3dIdAndPhysModId || geom3dIdAndPhysModId.size < 2) {
         return;
       }
 
       const ecsql =
-        "SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId = " +
-        geom3dId;
+        `SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId in
+        (${Array.from(geom3dIdAndPhysModId).join(",")})`;
       const validClassIds = new Set<string>();
       for await (const row of currentIModel.query(ecsql, undefined, {
         rowFormat: QueryRowFormat.UseJsPropertyNames,
@@ -898,12 +900,21 @@ export class ChangedElementsManager {
         .map((pair: [string, ChangedElement]) => pair[1])
         .filter((entry: ChangedElement) => validClassIds.has(entry.classId));
       this._filteredChangedElements.clear();
+      const modelIds = new Set<string>();
       for (const element of filteredElements) {
         if (classIdAndNameMap?.has(element.classId)) {
           this._elementIdAndInstanceKeyMap.set(element.id, { className: classIdAndNameMap.get(element.classId) as string, id: element.id });
         }
         this._filteredChangedElements.set(element.id, element);
+        modelIds.add(element.modelId as string);
       }
+      // todo add query to check if model is physical model
+      // select ECInstanceId from Bis.PhysicalModel where ECInstanceId in (...)
+      // for (const modelId of modelIds) {
+      //   if (classIdAndNameMap) {
+      //     this._elementIdAndInstanceKeyMap.set(modelId, { className: classIdAndNameMap.get(modelId.classId) as string, id: element.id });
+      //   }
+      // }
     }
     if (findParentsModels) {
       // Find proper models to display elements under

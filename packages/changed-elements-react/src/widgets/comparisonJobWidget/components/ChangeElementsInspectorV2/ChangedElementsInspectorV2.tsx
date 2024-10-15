@@ -15,6 +15,7 @@ import { type InstanceKey } from '@itwin/presentation-common';
 import NodeLabelCreator from "./NodeLabelComponents/NodeLabelCreator";
 import { handleFilterChange, makeDefaultFilterOptions, setVisualization } from "./filterChangeHandler";
 import { v4 } from 'uuid';
+import { ModelsCategoryCache } from "../../../../api/ModelsCategoryCache";
 
 let unifiedSelectionStorage: SelectionStorage | undefined;
 const schemaContextCache = new Map<string, SchemaContext>();
@@ -121,15 +122,25 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
 const getInstanceKeys = (manager: VersionCompareManager) => {
   const changedElementsManager= manager.changedElementsManager;
   const entries = Array.from(changedElementsManager.filteredChangedElements.keys());
-  const instanceKeys = entries
+  const topInstanceKeys = [
+    ...ModelsCategoryCache.getModelsCategoryData()?.categories ?? [],
+    ...ModelsCategoryCache.getModelsCategoryData()?.addedElementsModels ?? [],
+    ...ModelsCategoryCache.getModelsCategoryData()?.deletedElementsModels ?? [],
+    ...ModelsCategoryCache.getModelsCategoryData()?.updatedElementsModels ?? [],
+  ].map((key) => {
+    const instanceKey = changedElementsManager.elementIdAndInstanceKeyMap.get(key);
+    return instanceKey ? instanceKey : null;
+  })
+    .filter((instanceKey): instanceKey is { className: string; id: string; } => instanceKey !== null)
+  const ElementInstanceKeys = entries
     .map((key) => {
       const instanceKey = changedElementsManager.elementIdAndInstanceKeyMap.get(key);
       return instanceKey ? instanceKey : null;
     })
     .filter((instanceKey): instanceKey is { className: string; id: string; } => instanceKey !== null)
-    .slice(0, 500)as Array<InstanceKey>; //todo remove slice when models tree allows for greater than 1000 instance key filter
-  void setVisualization(instanceKeys,manager); //todo remove when models tree allows for greater than 100 instance key filter
-  return instanceKeys;
+
+  void setVisualization(ElementInstanceKeys,manager); //todo remove when models tree allows for greater than 100 instance key filter
+  return ElementInstanceKeys;
 }
 
 export default ChangedElementsInspectorV2;
