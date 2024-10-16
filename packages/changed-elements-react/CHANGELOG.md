@@ -6,16 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+## Fixes
+
+* Fix change report generation failures
+
 ## [0.11.0](https://github.com/iTwin/changed-elements-react/tree/v0.11.0/packages/changed-elements-react) - 2024-10-08
 
 ## Minor changes
 
-* `JobAndNamedVersions` now exported through the barrel via `
+* `JobAndNamedVersions` now exported through the barrel
 * `ComparisonJob` models now exported through the barrel
 
 ## [0.10.0](https://github.com/iTwin/changed-elements-react/tree/v0.10.0/packages/changed-elements-react) - 2024-10-08
 
-## Fixes
+## Minor changes
 
 * `Changed Elements React` removed pseudo-commonjs modules from build output
 * `ChangedElementEntryCache` Entries will now be compared and loaded based on cached value not, unchanged current value being check. This prevents an infinite loop.
