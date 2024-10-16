@@ -5,7 +5,7 @@
 import { DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat, TypeOfChange } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { DisplayValue, Field, KeySet, type InstanceKey } from "@itwin/presentation-common";
+import { DisplayValue, type Field, type InstanceKey, KeySet, type Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
@@ -435,11 +435,19 @@ export class ReportGenerator extends ReportGeneratorBase {
     entries: ChangedElementEntry[],
     isNew?: boolean,
   ): Promise<void> => {
-    const rulesetOrId = "Default";
+    // We cannot rely on the "Default" backend ruleset because there is a bug in Presentation library
+    // where invalid ECSQL query is generated during getContent RPC call for rulesets as simple as
+    // <ContentRule OnlyIfNotHandled='true'>
+    //   <SelectedNodeInstances />
+    // </ContentRule>
+    const stubRuleset: Ruleset = {
+      id: "__itwin-changed-elements-react-stub",
+      rules: [],
+    };
     const keys = this._entriesToKeys(entries);
     const descriptor = await Presentation.presentation.getContentDescriptor({
       imodel: iModel,
-      rulesetOrId,
+      rulesetOrId: stubRuleset,
       keys,
       displayType: "PropertyPane",
     });
@@ -457,7 +465,7 @@ export class ReportGenerator extends ReportGeneratorBase {
           fields: fields.map((field: Field) => field.getFieldDescriptor()),
         },
       },
-      rulesetOrId,
+      rulesetOrId: stubRuleset,
     });
 
     if (content !== undefined) {

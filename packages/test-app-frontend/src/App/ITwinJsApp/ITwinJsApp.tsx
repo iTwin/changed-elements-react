@@ -17,7 +17,7 @@ import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, IModelApp, IModelConnection, ViewCreator3d, ViewState
+  CheckpointConnection, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d, ViewState
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
@@ -29,7 +29,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ReactElement, useEffect, useMemo, useState } from "react";
 
-import { applyUrlPrefix } from "../../environment";
+import { applyUrlPrefix, localBackendPort, usingLocalBackend } from "../../environment";
 import { LoadingScreen } from "../common/LoadingScreen";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
 import { UIFramework } from "./AppUi/UiFramework";
@@ -134,7 +134,7 @@ const featureTrackingTesterFunctions: VersionCompareFeatureTracking = {
   trackPropertyComparisonUsage: () => { console.log("trackPropertyComparisonUsage"); },
   trackChangeReportGenerationUsage: () => { console.log("trackChangeReportGenerationUsage"); },
   trackAdvancedFiltersUsage: () => { console.log("trackAdvancedFiltersUsage"); },
-}
+};
 
 export async function initializeITwinJsApp(authorizationClient: AuthorizationClient): Promise<void> {
   if (IModelApp.initialized) {
@@ -150,11 +150,17 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     notifications: new AppNotificationManager(),
     hubAccess: new FrontendIModelsAccess(iModelsClient),
     publicPath: "/",
+    quantityFormatter: new QuantityFormatter("metric"),
   });
-  const rpcParams: BentleyCloudRpcParams = {
-    info: { title: "test-app-backend", version: "v1.0" },
-    uriPrefix: "http://localhost:3001",
-  };
+  const rpcParams: BentleyCloudRpcParams = usingLocalBackend
+    ? {
+      info: { title: "test-app-backend", version: "v1.0" },
+      uriPrefix: `http://localhost:${localBackendPort}`,
+    }
+    : {
+      info: { title: "imodel/rpc", version: "v4" },
+      uriPrefix: applyUrlPrefix("https://api.bentley.com"),
+    };
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
@@ -166,6 +172,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     Presentation.initialize(),
     UiFramework.initialize(undefined),
   ]);
+
 
   VersionCompare.initialize({
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),

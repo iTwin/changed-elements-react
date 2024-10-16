@@ -6,6 +6,9 @@ import react from "@vitejs/plugin-react-swc";
 import * as path from "path";
 import { defineConfig, Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { config } from "dotenv-flow";
+
+config();
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
@@ -62,7 +65,7 @@ export default defineConfig(() => ({
     ],
   },
   server: {
-    port: 2363,
+    port: Number.parseInt(process.env.VITE_FRONTEND_PORT ?? "", 10),
   },
 }));
 
