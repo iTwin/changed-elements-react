@@ -249,6 +249,9 @@ importers:
       '@itwin/presentation-frontend':
         specifier: ^4.0.6
         version: 4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-geometry@4.0.6))(@itwin/core-frontend@4.0.6(@itwin/appui-abstract@4.0.6(@itwin/core-bentley@4.0.6))(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-geometry@4.0.6))(@itwin/core-geometry@4.0.6)(@itwin/core-orbitgt@4.0.6)(@itwin/core-quantity@4.0.6(@itwin/core-bentley@4.0.6)))(@itwin/core-quantity@4.0.6(@itwin/core-bentley@4.0.6))(@itwin/ecschema-metadata@4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-quantity@4.0.6(@itwin/core-bentley@4.0.6)))(@itwin/presentation-common@4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-common@4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-geometry@4.0.6))(@itwin/core-quantity@4.0.6(@itwin/core-bentley@4.0.6))(@itwin/ecschema-metadata@4.0.6(@itwin/core-bentley@4.0.6)(@itwin/core-quantity@4.0.6(@itwin/core-bentley@4.0.6))))
+      '@types/dotenv-flow':
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/react':
         specifier: ^17.0.0
         version: 17.0.0
@@ -261,6 +264,9 @@ importers:
       '@vitejs/plugin-react-swc':
         specifier: ^3.7.1
         version: 3.7.1(@swc/helpers@0.5.13)(vite@5.4.8(@types/node@18.17.1)(sass@1.62.1))
+      dotenv-flow:
+        specifier: ^3.2.0
+        version: 3.2.0
       oidc-client-ts:
         specifier: ^2.2.4
         version: 2.4.0
