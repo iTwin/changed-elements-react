@@ -14,11 +14,13 @@ import { config } from "dotenv-flow";
 
 config({ path: "../test-app-frontend" });
 
+const port = Number.parseInt(process.env.VITE_LOCAL_BACKEND_PORT ?? "", 10);
+
 void (async () => {
   Logger.initializeToConsole();
   Logger.setLevelDefault(LogLevel.Info);
   await IModelHost.startup({
-    cacheDir: "./.cache",
+    cacheDir: `./.cache_${port}`,
     hubAccess: new BackendIModelsAccess(
       new IModelsClient({ api: { baseUrl: `https://${process.env.VITE_URL_PREFIX}api.bentley.com/imodels` } }),
     ),
@@ -31,7 +33,6 @@ void (async () => {
   );
   const server = new IModelJsExpressServer(rpcConfig.protocol);
 
-  const port = 3001;
-  await server.initialize(3001);
+  await server.initialize(port);
   console.log(`Backend (PID ${process.pid}) is listening on port ${port}.`);
 })();

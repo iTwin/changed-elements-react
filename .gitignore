@@ -1,7 +1,11 @@
 coverage
 lib
 node_modules
+
+# Old test-app-backend iModel cache location
 .cache
+# test-app-backend iModel cache location
+.cache_*
 
 npm-debug.log*
 pnpm-debug.log*
