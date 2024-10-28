@@ -22,7 +22,7 @@ function main(): void {
       parameters.push("--preid", args.preid);
     }
 
-    execFileSync("npm", parameters, { cwd: args.packageDirPath });
+    execFileSync("npm", parameters, { cwd: args.packageDirPath, shell: true });
   } catch (error) {
     printErrorAndExit(error instanceof Error ? `${error.name}: ${error.message}` : "Could not bump package version.");
   }
@@ -32,9 +32,9 @@ function main(): void {
 
   try {
     // Make sure only the modified package.json and CHANGELOG.md files get committed
-    execFileSync("git", ["reset"]);
-    execFileSync("git", ["add", args.packageJsonFilePath, args.changelogFilePath]);
-    execFileSync("git", ["commit", "-m", `Release ${packageName}@${packageVersion}`]);
+    execFileSync("git", ["reset"], { shell: true });
+    execFileSync("git", ["add", args.packageJsonFilePath, args.changelogFilePath], { shell: true });
+    execFileSync("git", ["commit", "-m", `Release ${packageName}@${packageVersion}`], { shell: true });
   } catch (error) {
     printErrorAndExit(error instanceof Error ? `${error.name}: ${error.message}` : "Could not commit file changes.");
   }
