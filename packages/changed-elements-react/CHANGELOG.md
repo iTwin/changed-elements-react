@@ -3,8 +3,11 @@
 All notable changes to this package will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
+
+## Fixes
+
+* Fixed color issues for feedback btn text
 
 ## [0.11.1](https://github.com/iTwin/changed-elements-react/tree/v0.11.1/packages/changed-elements-react) - 2024-10-16
 
