@@ -173,8 +173,16 @@ export class Provider
   private _eeEmphasized: Id64Set | undefined;
   private _lastJson: EmphasizeElementsProps | undefined;
 
+  /** returns copy of previous ee*/
+  public get lastJson(): EmphasizeElementsProps | undefined {
+    if (this._lastJson) {
+      // return a copy of the last json
+      return JSON.parse(JSON.stringify(this._lastJson));
+    }
+    return undefined;
+  }
+
   /**
-   * TODO: Fix emphasized issues
    * Handle merging emphasized elements changes and clear them
    * This is necessary because non-version compare tools may want to change
    * visibility using EmphasizeElements class, which will result in clashes of
@@ -204,6 +212,7 @@ export class Provider
       ee.clearIsolatedElements(viewport);
       ee.clearEmphasizedElements(viewport);
       ee.clearHiddenElements(viewport);
+      EmphasizeElements.clear(viewport)
       // Apply the emphasized elements props
       if (
         this._eeIsolated.size === 0 &&

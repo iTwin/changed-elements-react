@@ -16,7 +16,7 @@ import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import {
   cacheVersionComparisonDisplayProvider, disableVersionComparisonDisplay, enableVersionComparisonDisplay,
-  getEmphasizeElementsProps, getVersionComparisonAlwaysDrawn, getVersionComparisonNeverDrawn,
+  getVersionComparisonAlwaysDrawn, getVersionComparisonNeverDrawn,
   isVersionComparisonDisplayEnabled, Provider as VersionCompareProvider, updateVersionCompareDisplayEntries,
   updateVersionComparisonDisplayOptions, type VersionDisplayOptions
 } from "./VersionCompareTiles.js";
@@ -126,33 +126,15 @@ export class VersionCompareVisualizationManager {
    */
   public async attachToViewport(viewport: ScreenViewport) {
     this._viewport = viewport;
-
-    // Get current hidden/isolate elements (don't care about emphasized)
-    const ee = EmphasizeElements.get(viewport);
-    let hiddenElements: Set<string> | undefined;
-    let isolatedElements: Set<string> | undefined;
-    if (ee) {
-      isolatedElements = ee.getIsolatedElements(viewport);
-      hiddenElements = ee.getHiddenElements(viewport);
-      // Get rid of EmphasizeElements
-      EmphasizeElements.clear(viewport);
-    }
-
     // Set version compare provider display
     await this.resetDisplay();
-
     const vpp = VersionCompareProvider.get(viewport);
     if (!vpp) {
       return;
     }
-
-    // Maintain isolated/hidden elements
-    if (isolatedElements !== undefined && isolatedElements.size !== 0) {
-      vpp.isolateElements(isolatedElements);
-    }
-    if (hiddenElements !== undefined && hiddenElements.size !== 0) {
-      vpp.hideElements(hiddenElements);
-    }
+    // store and maintain emphasized elements from other tools, that are not version compare.
+    // clear currently displayed emphasized elements
+    vpp.handleEmphasizedElements(viewport);
   }
 
   /** Cleans up by removing listeners and clearing the comparison visualization */
@@ -167,7 +149,8 @@ export class VersionCompareVisualizationManager {
       hideModified: false,
     };
 
-    const eeProps = getEmphasizeElementsProps(this._viewport);
+    const vpp = VersionCompareProvider.get(this._viewport);
+    const eeProps = vpp?.lastJson
 
     await disableVersionComparisonDisplay(this._viewport);
 
