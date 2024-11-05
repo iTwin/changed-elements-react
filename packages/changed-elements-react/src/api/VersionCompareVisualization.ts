@@ -3,11 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent, DbOpcode, type Id64String } from "@itwin/core-bentley";
-import { ColorDef, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
+import { ColorDef, EmphasizeElementsProps, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
 import {
-  EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState,
-  ViewState3d
-} from "@itwin/core-frontend";
+  EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, Viewport, ViewState3d } from "@itwin/core-frontend";
 import { Range3d, Transform } from "@itwin/core-geometry";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSetProvider } from "@itwin/presentation-frontend";
@@ -58,6 +56,7 @@ export class VersionCompareVisualizationManager {
   private _currentHiliteSetProvider: HiliteSetProvider;
   private _targetHiliteSetProvider: HiliteSetProvider;
   private _focusedElements: ChangedElementEntry[] | undefined;
+  private _lastJson: EmphasizeElementsProps | undefined;
 
   private _modelsAtStart: string[] = [];
 
@@ -134,7 +133,29 @@ export class VersionCompareVisualizationManager {
     }
     // store and maintain emphasized elements from other tools, that are not version compare.
     // clear currently displayed emphasized elements
-    vpp.handleEmphasizedElements(viewport);
+    this.handleEmphasizedElements(viewport);
+  }
+
+  /**
+   * Handle merging emphasized elements changes and clear them
+   * This is necessary because non-version compare tools may want to change
+   * visibility using EmphasizeElements class, which will result in clashes of
+   * behavior between the two providers, so we need to merge the operations properly
+   */
+  public handleEmphasizedElements = (viewport: Viewport) => {
+    const ee = EmphasizeElements.get(viewport);
+
+    // Only act on actual changes to EmphasizeElementsProps
+    const currentJson = ee?.toJSON(viewport);
+    if (JSON.stringify(currentJson) === JSON.stringify(this._lastJson)) {
+      return;
+    }
+
+    // Handle emphasize elements called by other tools
+    if (ee !== undefined) {
+      EmphasizeElements.clear(viewport);
+      this._lastJson = currentJson;
+    }
   }
 
   /** Cleans up by removing listeners and clearing the comparison visualization */
@@ -149,8 +170,7 @@ export class VersionCompareVisualizationManager {
       hideModified: false,
     };
 
-    const vpp = VersionCompareProvider.get(this._viewport);
-    const eeProps = vpp?.lastJson
+    const eeProps = this._lastJson
 
     await disableVersionComparisonDisplay(this._viewport);
 

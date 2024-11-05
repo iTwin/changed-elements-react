@@ -5,7 +5,7 @@
 import { BeEvent, DbOpcode, Id64, type Id64Arg, type Id64Set, type Id64String } from "@itwin/core-bentley";
 import { FeatureAppearance, RgbColor, type EmphasizeElementsProps, type RgbColorProps } from "@itwin/core-common";
 import {
-  ChangeFlags, EmphasizeElements, FeatureSymbology, IModelConnection, PerModelCategoryVisibility, SpatialModelState,
+  ChangeFlags, FeatureSymbology, IModelConnection, PerModelCategoryVisibility, SpatialModelState,
   SpatialViewState, TileTreeReference, Viewport, ViewState2d, type FeatureOverrideProvider,
   type TiledGraphicsProvider
 } from "@itwin/core-frontend";
@@ -165,112 +165,6 @@ export class Provider
     vp.isFadeOutActive = true;
 
     refreshEvent.raiseEvent();
-  }
-
-  /** Variables to keep emphasized elements data */
-  private _eeIsolated: Id64Set | undefined;
-  private _eeHidden: Id64Set | undefined;
-  private _eeEmphasized: Id64Set | undefined;
-  private _lastJson: EmphasizeElementsProps | undefined;
-
-  /** returns copy of previous ee*/
-  public get lastJson(): EmphasizeElementsProps | undefined {
-    if (this._lastJson) {
-      // return a copy of the last json
-      return JSON.parse(JSON.stringify(this._lastJson));
-    }
-    return undefined;
-  }
-
-  /**
-   * Handle merging emphasized elements changes and clear them
-   * This is necessary because non-version compare tools may want to change
-   * visibility using EmphasizeElements class, which will result in clashes of
-   * behavior between the two providers, so we need to merge the operations properly
-   */
-  public handleEmphasizedElements = (viewport: Viewport) => {
-    const ee = EmphasizeElements.get(viewport);
-
-    // Only act on actual changes to EmphasizeElementsProps
-    const currentJson = ee?.toJSON(viewport);
-    if (JSON.stringify(currentJson) === JSON.stringify(this._lastJson)) {
-      return;
-    }
-
-    // Handle emphasize elements called by other tools
-    if (ee !== undefined) {
-      this._eeIsolated = Id64.toIdSet(
-        ee.getIsolatedElements(viewport) ?? [],
-        true,
-      );
-      this._eeHidden = Id64.toIdSet(ee.getHiddenElements(viewport) ?? [], true);
-      this._eeEmphasized = Id64.toIdSet(
-        ee.getEmphasizedElements(viewport) ?? [],
-        true,
-      );
-      // Clear elements from emphasized but don't clear it as it will mess with showing the clear emphasis buttons
-      ee.clearIsolatedElements(viewport);
-      ee.clearEmphasizedElements(viewport);
-      ee.clearHiddenElements(viewport);
-      EmphasizeElements.clear(viewport)
-      // Apply the emphasized elements props
-      if (
-        this._eeIsolated.size === 0 &&
-        this._eeHidden.size === 0 &&
-        this._eeEmphasized.size === 0
-      ) {
-        this.clearEmphasizedElements();
-      } else {
-        this._updateEmphasizedElements();
-      }
-    } else {
-      // Clear any applied emphasized elements operation
-      this.clearEmphasizedElements();
-    }
-
-    this._lastJson = currentJson;
-  };
-
-  /** Merge emphasized elements behavior with this provider to avoid clashes of features */
-  private _updateEmphasizedElements() {
-    if (
-      this._eeIsolated !== undefined &&
-      this._eeHidden !== undefined &&
-      this._eeEmphasized !== undefined
-    ) {
-      // To emphasize, delete everything but the emphasized elements so that everything else becomes "default"
-      if (this._eeEmphasized.size !== 0) {
-        this._internalAlwaysDrawn = this._eeEmphasized;
-      }
-      this._internalAlwaysDrawn = this.updateIdSet(
-        this._eeIsolated,
-        this._internalAlwaysDrawn,
-      );
-      this._internalNeverDrawn = this.updateIdSet(
-        this._eeHidden,
-        this._internalNeverDrawn,
-      );
-      this.updateOptions();
-    }
-  }
-
-  /** Clear emphasized elements */
-  public clearEmphasizedElements() {
-    if (
-      this._eeIsolated !== undefined &&
-      this._eeHidden !== undefined &&
-      this._eeEmphasized !== undefined
-    ) {
-      this._internalAlwaysDrawn = new Set([]);
-      for (const id of this._eeHidden) {
-        this._internalNeverDrawn.delete(id);
-      }
-
-      this._eeIsolated = undefined;
-      this._eeEmphasized = undefined;
-      this._eeHidden = undefined;
-      this.updateOptions();
-    }
   }
 
   /**
@@ -1031,13 +925,6 @@ export function isolateVersionCompare(vp: Viewport, ids: Id64Arg): void {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
     existing.isolateElements(ids, true);
-  }
-}
-
-export function clearEmphasizedVersionCompare(vp: Viewport): void {
-  const existing = vp.findFeatureOverrideProviderOfType(Provider);
-  if (undefined !== existing && existing instanceof Provider) {
-    existing.clearEmphasizedElements();
   }
 }
 
