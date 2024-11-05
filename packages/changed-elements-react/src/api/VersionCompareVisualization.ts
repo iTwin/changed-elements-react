@@ -125,17 +125,19 @@ export class VersionCompareVisualizationManager {
    */
   public async attachToViewport(viewport: ScreenViewport) {
     this._viewport = viewport;
-    // Only act on actual changes to EmphasizeElementsProps
+
     const ee = EmphasizeElements.get(viewport);
     const currentJson = ee?.toJSON(viewport);
+    // store current emphasize elements
+    this._EEBeforeVcRun = currentJson;
+    // clear emphasize elements
+    EmphasizeElements.clear(viewport);
     // Set version compare provider display
     await this.resetDisplay();
     const vpp = VersionCompareProvider.get(viewport);
     if (!vpp) {
       return;
     }
-    this._EEBeforeVcRun = currentJson;
-    EmphasizeElements.clear(viewport);
   }
 
   /** Cleans up by removing listeners and clearing the comparison visualization and reapply previous EE */
