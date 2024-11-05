@@ -171,8 +171,10 @@ export class Provider
   private _eeIsolated: Id64Set | undefined;
   private _eeHidden: Id64Set | undefined;
   private _eeEmphasized: Id64Set | undefined;
+  private _lastJson: EmphasizeElementsProps | undefined;
 
   /**
+   * TODO: Fix emphasized issues
    * Handle merging emphasized elements changes and clear them
    * This is necessary because non-version compare tools may want to change
    * visibility using EmphasizeElements class, which will result in clashes of
@@ -180,6 +182,12 @@ export class Provider
    */
   public handleEmphasizedElements = (viewport: Viewport) => {
     const ee = EmphasizeElements.get(viewport);
+
+    // Only act on actual changes to EmphasizeElementsProps
+    const currentJson = ee?.toJSON(viewport);
+    if (JSON.stringify(currentJson) === JSON.stringify(this._lastJson)) {
+      return;
+    }
 
     // Handle emphasize elements called by other tools
     if (ee !== undefined) {
@@ -210,7 +218,7 @@ export class Provider
       // Clear any applied emphasized elements operation
       this.clearEmphasizedElements();
     }
-
+    this._lastJson = currentJson;
   };
 
   /** Merge emphasized elements behavior with this provider to avoid clashes of features */
@@ -1007,6 +1015,13 @@ export function getVersionComparisonNeverDrawn(vp: Viewport): Set<string> {
     return existing.getNeverDrawn();
   }
   return new Set<string>();
+}
+
+export function clearEmphasizedVersionCompare(vp: Viewport): void {
+  const existing = vp.findFeatureOverrideProviderOfType(Provider);
+  if (undefined !== existing && existing instanceof Provider) {
+    existing.clearEmphasizedElements();
+  }
 }
 
 export function isolateVersionCompare(vp: Viewport, ids: Id64Arg): void {
