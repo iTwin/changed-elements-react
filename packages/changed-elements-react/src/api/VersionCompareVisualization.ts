@@ -140,7 +140,7 @@ export class VersionCompareVisualizationManager {
    * Handle merging emphasized elements changes and clear them
    * This is necessary because non-version compare tools may want to change
    * visibility using EmphasizeElements class, which will result in clashes of
-   * behavior between the two providers, so we need to merge the operations properly
+   * behavior between the two providers, so we need to store previous state
    */
   public handleEmphasizedElements = (viewport: Viewport) => {
     const ee = EmphasizeElements.get(viewport);
@@ -158,7 +158,7 @@ export class VersionCompareVisualizationManager {
     }
   }
 
-  /** Cleans up by removing listeners and clearing the comparison visualization */
+  /** Cleans up by removing listeners and clearing the comparison visualization and reapply previous EE */
   public async cleanUp() {
     if (this._onViewChanged) {
       this._onViewChanged.removeListener(this.onViewChangedHandler);
