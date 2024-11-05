@@ -5,7 +5,7 @@
 import { BeEvent, DbOpcode, type Id64String } from "@itwin/core-bentley";
 import { ColorDef, EmphasizeElementsProps, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
 import {
-  EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, Viewport, ViewState3d } from "@itwin/core-frontend";
+  EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, ViewState3d } from "@itwin/core-frontend";
 import { Range3d, Transform } from "@itwin/core-geometry";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSetProvider } from "@itwin/presentation-frontend";
@@ -56,7 +56,6 @@ export class VersionCompareVisualizationManager {
   private _currentHiliteSetProvider: HiliteSetProvider;
   private _targetHiliteSetProvider: HiliteSetProvider;
   private _focusedElements: ChangedElementEntry[] | undefined;
-  private _lastJson: EmphasizeElementsProps | undefined;
 
   private _modelsAtStart: string[] = [];
   private _EEBeforeVcRun: EmphasizeElementsProps | undefined;
