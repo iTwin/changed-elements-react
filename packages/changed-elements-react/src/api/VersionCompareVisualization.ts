@@ -58,7 +58,7 @@ export class VersionCompareVisualizationManager {
   private _focusedElements: ChangedElementEntry[] | undefined;
 
   private _modelsAtStart: string[] = [];
-  private _EEBeforeVcRun: EmphasizeElementsProps | undefined;
+  private _originalEmphasizeElementsProps: EmphasizeElementsProps | undefined;
 
   /**
    * Constructor for visualization manager
@@ -129,7 +129,7 @@ export class VersionCompareVisualizationManager {
     const ee = EmphasizeElements.get(viewport);
     const currentJson = ee?.toJSON(viewport);
     // store current emphasize elements
-    this._EEBeforeVcRun = currentJson;
+    this._originalEmphasizeElementsProps = currentJson;
     // clear emphasize elements
     EmphasizeElements.clear(viewport);
     // Set version compare provider display
@@ -155,9 +155,9 @@ export class VersionCompareVisualizationManager {
     await disableVersionComparisonDisplay(this._viewport);
 
     // Maintain whatever hide/isolate/emphasize props that we may have done during comparison (or before comparison)
-    if (this._EEBeforeVcRun) {
+    if (this._originalEmphasizeElementsProps) {
       const ee = EmphasizeElements.getOrCreate(this._viewport);
-      ee.fromJSON(this._EEBeforeVcRun, this._viewport);
+      ee.fromJSON(this._originalEmphasizeElementsProps, this._viewport);
       ee.wantEmphasis = true;
     }
 
