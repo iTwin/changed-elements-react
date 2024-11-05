@@ -1016,13 +1016,6 @@ export function isolateVersionCompare(vp: Viewport, ids: Id64Arg): void {
   }
 }
 
-export function clearEmphasizedVersionCompare(vp: Viewport): void {
-  const existing = vp.findFeatureOverrideProviderOfType(Provider);
-  if (undefined !== existing && existing instanceof Provider) {
-    existing.clearEmphasizedElements();
-  }
-}
-
 export function getVersionComparisonAlwaysDrawn(vp: Viewport): Set<string> {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
