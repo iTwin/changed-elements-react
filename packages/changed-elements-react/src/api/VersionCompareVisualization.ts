@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent, DbOpcode, type Id64String } from "@itwin/core-bentley";
-import { ColorDef, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
+import { ColorDef, EmphasizeElementsProps, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
 import {
   EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState,
   ViewState3d
@@ -60,6 +60,7 @@ export class VersionCompareVisualizationManager {
   private _focusedElements: ChangedElementEntry[] | undefined;
 
   private _modelsAtStart: string[] = [];
+  private _EEBeforeVcRun: EmphasizeElementsProps | undefined;
 
   /**
    * Constructor for visualization manager
@@ -126,15 +127,17 @@ export class VersionCompareVisualizationManager {
    */
   public async attachToViewport(viewport: ScreenViewport) {
     this._viewport = viewport;
+    // Only act on actual changes to EmphasizeElementsProps
+    const ee = EmphasizeElements.get(viewport);
+    const currentJson = ee?.toJSON(viewport);
     // Set version compare provider display
     await this.resetDisplay();
     const vpp = VersionCompareProvider.get(viewport);
     if (!vpp) {
       return;
     }
-    // store and maintain emphasized elements from other tools, that are not version compare.
-    // clear currently displayed emphasized elements
-    vpp.handleEmphasizedElements(viewport);
+    this._EEBeforeVcRun = currentJson;
+    EmphasizeElements.clear(viewport);
   }
 
   /** Cleans up by removing listeners and clearing the comparison visualization */
@@ -149,15 +152,12 @@ export class VersionCompareVisualizationManager {
       hideModified: false,
     };
 
-    const vpp = VersionCompareProvider.get(this._viewport);
-    const eeProps = vpp?.lastJson
-
     await disableVersionComparisonDisplay(this._viewport);
 
     // Maintain whatever hide/isolate/emphasize props that we may have done during comparison (or before comparison)
-    if (eeProps) {
+    if (this._EEBeforeVcRun) {
       const ee = EmphasizeElements.getOrCreate(this._viewport);
-      ee.fromJSON(eeProps, this._viewport);
+      ee.fromJSON(this._EEBeforeVcRun, this._viewport);
       ee.wantEmphasis = true;
     }
 

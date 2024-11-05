@@ -171,16 +171,6 @@ export class Provider
   private _eeIsolated: Id64Set | undefined;
   private _eeHidden: Id64Set | undefined;
   private _eeEmphasized: Id64Set | undefined;
-  private _lastJson: EmphasizeElementsProps | undefined;
-
-  /** returns copy of previous ee*/
-  public get lastJson(): EmphasizeElementsProps | undefined {
-    if (this._lastJson) {
-      // return a copy of the last json
-      return JSON.parse(JSON.stringify(this._lastJson));
-    }
-    return undefined;
-  }
 
   /**
    * Handle merging emphasized elements changes and clear them
@@ -190,12 +180,6 @@ export class Provider
    */
   public handleEmphasizedElements = (viewport: Viewport) => {
     const ee = EmphasizeElements.get(viewport);
-
-    // Only act on actual changes to EmphasizeElementsProps
-    const currentJson = ee?.toJSON(viewport);
-    if (JSON.stringify(currentJson) === JSON.stringify(this._lastJson)) {
-      return;
-    }
 
     // Handle emphasize elements called by other tools
     if (ee !== undefined) {
@@ -212,7 +196,6 @@ export class Provider
       ee.clearIsolatedElements(viewport);
       ee.clearEmphasizedElements(viewport);
       ee.clearHiddenElements(viewport);
-      EmphasizeElements.clear(viewport)
       // Apply the emphasized elements props
       if (
         this._eeIsolated.size === 0 &&
@@ -228,7 +211,6 @@ export class Provider
       this.clearEmphasizedElements();
     }
 
-    this._lastJson = currentJson;
   };
 
   /** Merge emphasized elements behavior with this provider to avoid clashes of features */
