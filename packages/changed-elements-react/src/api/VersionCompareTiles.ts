@@ -218,6 +218,7 @@ export class Provider
       // Clear any applied emphasized elements operation
       this.clearEmphasizedElements();
     }
+
     this._lastJson = currentJson;
   };
 
@@ -1017,17 +1018,17 @@ export function getVersionComparisonNeverDrawn(vp: Viewport): Set<string> {
   return new Set<string>();
 }
 
-export function clearEmphasizedVersionCompare(vp: Viewport): void {
-  const existing = vp.findFeatureOverrideProviderOfType(Provider);
-  if (undefined !== existing && existing instanceof Provider) {
-    existing.clearEmphasizedElements();
-  }
-}
-
 export function isolateVersionCompare(vp: Viewport, ids: Id64Arg): void {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
     existing.isolateElements(ids, true);
+  }
+}
+
+export function clearEmphasizedVersionCompare(vp: Viewport): void {
+  const existing = vp.findFeatureOverrideProviderOfType(Provider);
+  if (undefined !== existing && existing instanceof Provider) {
+    existing.clearEmphasizedElements();
   }
 }
 
