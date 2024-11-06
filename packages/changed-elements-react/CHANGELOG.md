@@ -3,7 +3,7 @@
 All notable changes to this package will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
+## [0.11.3](https://github.com/iTwin/changed-elements-react/tree/v0.11.3/packages/changed-elements-react) - 2024-11-6
 ## Fixes
 
 * Fixed emphasized elements(EE) not being respected when version compare is stopped. Now (version compare)VC restores EE that were present before VC is run.
