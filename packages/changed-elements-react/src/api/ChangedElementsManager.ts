@@ -685,6 +685,7 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     modelClasses: string[],
+    changeElementMap: Map<string, ChangedElement>,
   ): Promise<void> {
     const currentModels = await this._getModelsOfClasses(
       currentIModel,
@@ -696,7 +697,7 @@ export class ChangedElementsManager {
     );
 
     const toRemove: string[] = [];
-    for (const pair of this._filteredChangedElements) {
+    for (const pair of changeElementMap) {
       const elemModelId = pair[1].modelId;
       if (elemModelId !== undefined) {
         if (!currentModels.has(elemModelId) && !targetModels.has(elemModelId)) {
@@ -705,7 +706,7 @@ export class ChangedElementsManager {
       }
     }
     for (const id of toRemove) {
-      this._filteredChangedElements.delete(id);
+      changeElementMap.delete(id);
     }
   }
 
@@ -838,10 +839,17 @@ export class ChangedElementsManager {
   };
 
   /**
-   * Takes an array of ChangedElements and computes the changed elements entries
-   * The computation is done by accumulating change
-   * @param changesets Array of Changed Elements
-   * @param forward Pass true if comparison is forward (e.g. current iModel is older than the compared one)
+   * Takes an array of ChangedElements and computes the changed elements entries.
+   * The computation is done by accumulating change.
+   * @param currentIModel The current iModel connection.
+   * @param targetIModel The target iModel connection.
+   * @param inputChangesets Array of Changed Elements.
+   * @param wantedModelClasses Optional array of model classes to filter by.
+   * @param forward Pass true if comparison is forward (e.g., current iModel is older than the compared one).
+   * @param filterSpatial Pass true to filter by spatial elements.
+   * @param findParentsModels Pass true to find parent models.
+   * @param wantClassNames Pass true to include class names in the result.
+   * @returns A promise that resolves when the operation is complete.
    */
   public async setChangeSets(
     currentIModel: IModelConnection,
@@ -853,78 +861,96 @@ export class ChangedElementsManager {
     findParentsModels = true,
     wantClassNames?: boolean,
   ): Promise<void> {
-    this._filteredChangedElements.clear();
-    this._elementIdAndInstanceKeyMap.clear();
     const changesets = inputChangesets;
+    const changedElementsMap = new Map<string, ChangedElement>();
+    // Accumulate changes from each changeset
     changesets.forEach((changeset: ChangedElements) => {
-      accumulateChanges(this._filteredChangedElements, changeset, forward);
+      accumulateChanges(changedElementsMap, changeset, forward);
     });
 
     // Clean merged elements that resulted in properties having the same checksums
-    // Only do this if we have proper type of change data and properties
     if (this._dataAllowsCleanupOfMergedElements(changesets)) {
-      cleanMergedElements(this._filteredChangedElements);
+      cleanMergedElements(changedElementsMap);
     }
-    this._allChangedElements = new Map(this._filteredChangedElements);
-    // Fix missing model Ids before we filter by model class
+    // store all changed elements before filtering
+    this._allChangedElements = new Map(changedElementsMap);
+
+    // Fix missing model Ids before filtering by model class
     await this._fixModelIds(currentIModel, targetIModel);
 
-    // Filter out changed elements that we don't care about given the model classes
+    // Filter out changed elements based on the specified model classes
     if (wantedModelClasses) {
       await this._filterChangedElementsByModelClass(
         currentIModel,
         targetIModel,
         wantedModelClasses,
+        changedElementsMap,
       );
     }
 
-    // Filter by spatial elements if we want
+    // Filter by spatial elements if specified
     if (filterSpatial) {
-      const geom3dIdAndPhysModId = await this._getGeometricElement3dAndPhysicalModelClassId(currentIModel);
-      if (!geom3dIdAndPhysModId || geom3dIdAndPhysModId.size < 2) {
-        return;
-      }
+      const validClassIds = await this._getValidClassIds(currentIModel);
+      if (!validClassIds) return;
 
-      const ecsql =
-        `SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId in
-        (${Array.from(geom3dIdAndPhysModId).join(",")})`;
-      const validClassIds = new Set<string>();
-      for await (const row of currentIModel.query(ecsql, undefined, {
-        rowFormat: QueryRowFormat.UseJsPropertyNames,
-      })) {
-        validClassIds.add(row.sourceId);
-      }
       const classIdAndNameMap = wantClassNames ? await this.createClassIdsAndNamesMap(currentIModel, validClassIds) : undefined;
-      // Filter elements that contain any class Id that has GeometricElement3d as base class
-      const filteredElements = [...this._filteredChangedElements]
-        .map((pair: [string, ChangedElement]) => pair[1])
-        .filter((entry: ChangedElement) => validClassIds.has(entry.classId));
+      const maps = await this._filterAndMapElements(currentIModel, validClassIds, changedElementsMap, classIdAndNameMap);
+
+      // Clear and update maps
       this._filteredChangedElements.clear();
-      const modelIds = new Set<string>();
-      for (const element of filteredElements) {
-        if (classIdAndNameMap?.has(element.classId)) {
-          this._elementIdAndInstanceKeyMap.set(element.id, { className: classIdAndNameMap.get(element.classId) as string, id: element.id });
-        }
-        this._filteredChangedElements.set(element.id, element);
-        modelIds.add(element.modelId as string);
-      }
-      // todo add query to check if model is physical model
-      // select ECInstanceId from Bis.PhysicalModel where ECInstanceId in (...)
-      // for (const modelId of modelIds) {
-      //   if (classIdAndNameMap) {
-      //     this._elementIdAndInstanceKeyMap.set(modelId, { className: classIdAndNameMap.get(modelId.classId) as string, id: element.id });
-      //   }
-      // }
+      this._elementIdAndInstanceKeyMap.clear();
+      this._filteredChangedElements = maps.filteredChangedElements;
+      this._elementIdAndInstanceKeyMap = maps.elementIdAndInstanceKeyMap;
+    } else {
+      // Clear and update maps
+      this._filteredChangedElements.clear();
+      this._elementIdAndInstanceKeyMap.clear();
+      this._filteredChangedElements = changedElementsMap;
     }
+
+    // Find proper models to display elements under if specified
     if (findParentsModels) {
-      // Find proper models to display elements under
       await this._findParentModels(currentIModel, targetIModel);
     }
   }
 
+  /**
+   * Retrieves valid class IDs for geometric elements and physical models.
+   * @param currentIModel The current iModel connection.
+   * @returns A set of valid class IDs or undefined if not found.
+   */
+  private async _getValidClassIds(currentIModel: IModelConnection): Promise<Set<string> | undefined> {
+    // Retrieve class IDs for geometric elements and physical models
+    const geom3dIdAndPhysModId = await this._getGeometricElement3dAndPhysicalModelClassId(currentIModel);
+    if (!geom3dIdAndPhysModId || geom3dIdAndPhysModId.size < 2) {
+      return undefined;
+    }
+
+    // Query to get all base classes for the given class IDs
+    const ecsql = `SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId in (${Array.from(geom3dIdAndPhysModId).join(",")})`;
+    const validClassIds = new Set<string>();
+
+    // Execute the query and add the results to the set of valid class IDs
+    for await (const row of currentIModel.query(ecsql, undefined, {
+      rowFormat: QueryRowFormat.UseJsPropertyNames,
+    })) {
+      validClassIds.add(row.sourceId);
+    }
+
+    return validClassIds;
+  }
+
+
+/**
+ * Creates a map of class IDs and their corresponding names.
+ * @param iModel The iModel connection.
+ * @param validClassIds A set of valid class IDs.
+ * @returns A map of class IDs and names.
+ */
   private async createClassIdsAndNamesMap(iModel: IModelConnection, validClassIds: Set<string>) {
     const classIdsArray = Array.from(validClassIds);
     const classIdsString = classIdsArray.join(",");
+    // grabs class name and schema name based on class id
     const query = `
       SELECT [ECDbMeta].[ECClassDef].ECInstanceId as ClassId , [ECDbMeta].[ECSchemaDef].name as SchemaName , [ECDbMeta].[ECClassDef].Name as ClassName
       FROM [ECDbMeta].[ECClassDef]
@@ -936,6 +962,53 @@ export class ChangedElementsManager {
       classIdAndNameMap.set(row[0], `${row[1]}.${row[2]}`);
     }
     return classIdAndNameMap;
+  }
+
+  /**
+   * Filters elements that contain any class ID that has GeometricElement3d as a base class
+   * and maps them to their instance keys and filtered changed elements.
+   * @param currentIModel The current iModel connection.
+   * @param validClassIds A set of valid class IDs.
+   * @param changeElementsMap A map of changedElements.
+   * @param classIdAndNameMap An optional map of class IDs and their corresponding names.
+   * @returns An object containing maps of element IDs to instance keys and filtered changed elements.
+   */
+  private async _filterAndMapElements(
+    currentIModel: IModelConnection,
+    validClassIds: Set<string>,
+    changeElementsMap: Map<string, ChangedElement>,
+    classIdAndNameMap?: Map<string, string>,
+  ): Promise<{ elementIdAndInstanceKeyMap: Map<string, InstanceKey>; filteredChangedElements: Map<string, ChangedElement>; }> {
+    // Filter elements that contain any class Id that has GeometricElement3d as base class
+    const filteredElements = [...changeElementsMap]
+      .map((pair: [string, ChangedElement]) => pair[1])
+      .filter((entry: ChangedElement) => validClassIds.has(entry.classId));
+
+    const changedElementsMaps = {
+      elementIdAndInstanceKeyMap: new Map<string, InstanceKey>(),
+      filteredChangedElements: new Map<string, ChangedElement>(),
+    };
+    const modelIds = new Set<string>();
+
+    for (const element of filteredElements) {
+      if (classIdAndNameMap?.has(element.classId)) {
+        changedElementsMaps.elementIdAndInstanceKeyMap.set(element.id, { className: classIdAndNameMap.get(element.classId) as string, id: element.id });
+      }
+      changedElementsMaps.filteredChangedElements.set(element.id, element);
+      modelIds.add(element.modelId as string);
+    }
+
+    const ecsql = `SELECT ECInstanceId as ecId, ECClassId as classId FROM Bis.Model WHERE ECInstanceId IN (${Array.from(modelIds).join(",")})`;
+
+    for await (const row of currentIModel.query(ecsql, undefined, {
+      rowFormat: QueryRowFormat.UseJsPropertyNames,
+    })) {
+      if (modelIds.has(row.ecId)) {
+        changedElementsMaps.elementIdAndInstanceKeyMap.set(row.ecId, { className: row.classId as string, id: row.ecId });
+      }
+    }
+
+    return changedElementsMaps;
   }
 
   /**
@@ -1179,6 +1252,8 @@ export class ChangedElementsManager {
   /** Clean-up changed elements manager */
   public cleanup() {
     this._filteredChangedElements.clear();
+    this._elementIdAndInstanceKeyMap.clear();
+    this._allChangedElements.clear();
     this._entryCache.cleanup();
 
     if (this._changedModels) {

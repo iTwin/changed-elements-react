@@ -90,7 +90,7 @@
     "@itwin/ecschema-rpcinterface-common": "^4.9.4",
     "@itwin/itwinui-icons-react": "^2.9.0",
     "@itwin/itwinui-react": "^3.13.4",
-    "@itwin/tree-widget-react": "3.0.0",
+    "@itwin/tree-widget-react": "3.0.2",
     "@itwin/unified-selection": "^0.5.0",
     "react-table": "^7.8.0",
     "react-window": "^1.8.10",

@@ -122,16 +122,7 @@ function ChangedElementsInspectorV2(v2InspectorProps: Readonly<ChangedElementsIn
 const getInstanceKeys = (manager: VersionCompareManager) => {
   const changedElementsManager= manager.changedElementsManager;
   const entries = Array.from(changedElementsManager.filteredChangedElements.keys());
-  const topInstanceKeys = [
-    ...ModelsCategoryCache.getModelsCategoryData()?.categories ?? [],
-    ...ModelsCategoryCache.getModelsCategoryData()?.addedElementsModels ?? [],
-    ...ModelsCategoryCache.getModelsCategoryData()?.deletedElementsModels ?? [],
-    ...ModelsCategoryCache.getModelsCategoryData()?.updatedElementsModels ?? [],
-  ].map((key) => {
-    const instanceKey = changedElementsManager.elementIdAndInstanceKeyMap.get(key);
-    return instanceKey ? instanceKey : null;
-  })
-    .filter((instanceKey): instanceKey is { className: string; id: string; } => instanceKey !== null)
+  // filtering on models level may be too high, may need to filter on cat level( how associate cat with element?)
   const ElementInstanceKeys = entries
     .map((key) => {
       const instanceKey = changedElementsManager.elementIdAndInstanceKeyMap.get(key);
@@ -139,8 +130,9 @@ const getInstanceKeys = (manager: VersionCompareManager) => {
     })
     .filter((instanceKey): instanceKey is { className: string; id: string; } => instanceKey !== null)
 
-  void setVisualization(ElementInstanceKeys,manager); //todo remove when models tree allows for greater than 100 instance key filter
-  return ElementInstanceKeys;
+  void setVisualization(ElementInstanceKeys, manager);
+  // todo this work well for first render but what about when I need to do element level filtering? I.E only added elements ?
+  return ElementInstanceKeys
 }
 
 export default ChangedElementsInspectorV2;
