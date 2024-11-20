@@ -7,7 +7,7 @@ import type { IModelConnection } from "@itwin/core-frontend";
 
 import { VersionCompare } from "../../../api/VersionCompare";
 import type {
-  ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient,
+  ComparisonJob, ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient,
 } from "../../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import type { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
@@ -15,7 +15,7 @@ import type { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/Com
 import type { VersionState } from "../models/VersionState";
 import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 
-export type ManagerStartComparisonV2Args = {
+export interface ManagerStartComparisonV2Args {
   comparisonJob: ComparisonJobCompleted;
   comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
@@ -25,11 +25,13 @@ export type ManagerStartComparisonV2Args = {
   runOnJobUpdate?: (
     comparisonEventType: ComparisonJobUpdateType,
     jobAndNamedVersions?: JobAndNamedVersions,
-  ) => Promise<void>;
+  ) => void;
   iModelsClient: IModelsClient;
-};
+}
 
-export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
+export async function runManagerStartComparisonV2(
+  args: ManagerStartComparisonV2Args,
+): Promise<void> {
   if (VersionCompare.manager?.isComparing) {
     await VersionCompare.manager?.stopComparison();
   }
@@ -43,9 +45,7 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
     targetNamedVersion: args.targetVersion,
     currentNamedVersion: args.currentVersion,
   };
-  if (args.runOnJobUpdate) {
-    void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
-  }
+  args.runOnJobUpdate?.("ComparisonVisualizationStarting", jobAndNamedVersion);
 
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(
@@ -56,13 +56,13 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   ).catch((e) => {
     Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
   });
-};
+}
 
-const updateTargetVersion = async (
+async function updateTargetVersion(
   iModelConnection: IModelConnection,
   targetVersion: NamedVersion,
   iModelsClient: IModelsClient,
-) => {
+): Promise<NamedVersion> {
   // We need to update the changesetId and index of the target version. Earlier
   // we updated all named versions to have an offset of 1, so we undo this offset
   // to get the proper results from any VersionCompare.manager?.startComparisonV2
@@ -71,10 +71,8 @@ const updateTargetVersion = async (
   const iModelId = iModelConnection?.iModelId as string;
   const updatedTargetVersion = { ...targetVersion };
   updatedTargetVersion.changesetIndex = targetVersion.changesetIndex - 1;
-  const changeSets = await iModelsClient
-    .getChangesets({ iModelId })
-    .then((changesets) => changesets.slice().reverse());
-  const actualChangeSet = changeSets.find(
+  const changesets = await iModelsClient.getChangesets({ iModelId });
+  const actualChangeSet = changesets.slice().reverse().find(
     (changeset) => updatedTargetVersion.changesetIndex === changeset.index,
   );
   if (actualChangeSet) {
@@ -82,75 +80,26 @@ const updateTargetVersion = async (
   }
 
   return updatedTargetVersion;
-};
+}
 
-export type GetJobStatusAndJobProgress = {
+export interface GetJobStatusAndJobProgress {
   comparisonJobClient: IComparisonJobClient;
   entry: VersionState;
   iTwinId: string;
   iModelId: string;
   currentChangesetId: string;
-};
+}
 
-export const getJobStatusAndJobProgress = async (
+export async function getJobStatusAndJobProgress(
   args: GetJobStatusAndJobProgress,
-): Promise<JobStatusAndJobProgress> => {
+): Promise<JobStatusAndJobProgress> {
+  let res: ComparisonJob;
   try {
-    const res = await args.comparisonJobClient.getComparisonJob({
+    res = await args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iTwinId,
       iModelId: args.iModelId,
       jobId: `${args.entry.version.changesetId}-${args.currentChangesetId}`,
     });
-    if (res) {
-      switch (res.comparisonJob.status) {
-        case "Completed": {
-          return {
-            jobStatus: "Available",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-        }
-
-        case "Queued": {
-          return {
-            jobStatus: "Queued",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-        }
-
-        case "Started": {
-          const progressingJob = res as ComparisonJobStarted;
-          return {
-            jobStatus: "Processing",
-            jobProgress: {
-              currentProgress: progressingJob.comparisonJob.currentProgress,
-              maxProgress: progressingJob.comparisonJob.maxProgress,
-            },
-          };
-        }
-
-        case "Failed":
-          return {
-            jobStatus: "Error",
-            jobProgress: {
-              currentProgress: 0,
-              maxProgress: 0,
-            },
-          };
-      }
-    }
-    return {
-      jobStatus: "Not Processed",
-      jobProgress: {
-        currentProgress: 0,
-        maxProgress: 0,
-      },
-    };
   } catch {
     return {
       jobStatus: "Not Processed",
@@ -160,8 +109,62 @@ export const getJobStatusAndJobProgress = async (
       },
     };
   }
-};
 
-export const createJobId = (startNamedVersion: NamedVersion, endNamedVersion: NamedVersion) => {
+  switch (res.comparisonJob.status) {
+    case "Completed": {
+      return {
+        jobStatus: "Available",
+        jobProgress: {
+          currentProgress: 0,
+          maxProgress: 0,
+        },
+      };
+    }
+
+    case "Queued": {
+      return {
+        jobStatus: "Queued",
+        jobProgress: {
+          currentProgress: 0,
+          maxProgress: 0,
+        },
+      };
+    }
+
+    case "Started": {
+      const progressingJob = res as ComparisonJobStarted;
+      return {
+        jobStatus: "Processing",
+        jobProgress: {
+          currentProgress: progressingJob.comparisonJob.currentProgress,
+          maxProgress: progressingJob.comparisonJob.maxProgress,
+        },
+      };
+    }
+
+    case "Failed":
+      return {
+        jobStatus: "Error",
+        jobProgress: {
+          currentProgress: 0,
+          maxProgress: 0,
+        },
+      };
+
+    default:
+      return {
+        jobStatus: "Not Processed",
+        jobProgress: {
+          currentProgress: 0,
+          maxProgress: 0,
+        },
+      };
+  }
+}
+
+export function createJobId(
+  startNamedVersion: NamedVersion,
+  endNamedVersion: NamedVersion,
+): string {
   return `${startNamedVersion.changesetId}-${endNamedVersion.changesetId}`;
-};
+}

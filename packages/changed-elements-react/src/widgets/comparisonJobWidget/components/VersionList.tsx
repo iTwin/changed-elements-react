@@ -38,18 +38,17 @@ export function VersionList(props: VersionListProps): ReactElement {
         </div>
         <div className="comparison-job-container">
           {
-            props.entries.map((versionState) => {
-              const isSelected = props.selectedVersionChangesetId !== undefined &&
-                versionState.version.changesetId === props.selectedVersionChangesetId;
-              return (
-                <VersionListEntry
-                  key={versionState.version.changesetId}
-                  versionState={versionState}
-                  isSelected={isSelected}
-                  onClicked={props.onVersionClicked}
-                />
-              );
-            })
+            props.entries.map((versionState) => (
+              <VersionListEntry
+                key={versionState.version.changesetId}
+                versionState={versionState}
+                isSelected={
+                  props.selectedVersionChangesetId !== undefined &&
+                  versionState.version.changesetId === props.selectedVersionChangesetId
+                }
+                onClicked={props.onVersionClicked}
+              />
+            ))
           }
           {props.isLoading && <LoadingSpinner className="vc-spinner-entry-list" />}
         </div>

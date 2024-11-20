@@ -47,20 +47,23 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
     }
   };
 
-  return props.namedVersions
-    ? (
-      <VersionCompareSelectorInner
-        entries={props.namedVersions.entries}
-        currentVersion={props.namedVersions.currentVersion}
-        selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
-        onVersionClicked={handleVersionClicked}
-        wantTitle={props.wantTitle}
-        manageNamedVersionsSlot={props.manageNamedVersionsSlot}
-        isLoading={props.isLoading}
-      />
-    ) : (
+  if (!props.namedVersions) {
+    return (
       <div className="vc-spinner">
         <ProgressRadial size="large" indeterminate />
       </div>
     );
+  }
+
+  return (
+    <VersionCompareSelectorInner
+      entries={props.namedVersions.entries}
+      currentVersion={props.namedVersions.currentVersion}
+      selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
+      onVersionClicked={handleVersionClicked}
+      wantTitle={props.wantTitle}
+      manageNamedVersionsSlot={props.manageNamedVersionsSlot}
+      isLoading={props.isLoading}
+    />
+  );
 }

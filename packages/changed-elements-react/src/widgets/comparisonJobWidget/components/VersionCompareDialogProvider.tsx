@@ -2,8 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import React from "react";
-import { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import { createContext, type ReactElement, type ReactNode, useRef } from "react";
+
+import type { JobAndNamedVersions } from "../models/ComparisonJobModels";
 
 /**
  * Comparison Job Update Type
@@ -12,9 +13,10 @@ import { JobAndNamedVersions } from "../models/ComparisonJobModels";
  *  - "JobProcessing" = job is started
  *  - "ComparisonVisualizationStarting" = version compare visualization is starting
  */
-export type ComparisonJobUpdateType = "JobComplete" | "JobError" | "JobProcessing" | "ComparisonVisualizationStarting";
+export type ComparisonJobUpdateType = "JobComplete" | "JobError" | "JobProcessing"
+  | "ComparisonVisualizationStarting";
 
-export type V2Context = {
+export interface V2Context {
   getDialogOpen: () => boolean;
   openDialog: () => void;
   closedDialog: () => void;
@@ -29,12 +31,12 @@ export type V2Context = {
     comparisonJobUpdateType: ComparisonJobUpdateType,
     jobAndNamedVersions?: JobAndNamedVersions,
   ) => Promise<void>;
-};
+}
 
-export const V2DialogContext = React.createContext<V2Context>({} as V2Context);
+export const V2DialogContext = createContext<V2Context>({} as V2Context);
 
 export type V2DialogProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 
   /**
    * Optional. When enabled will toast messages regarding job status. If not defined,
@@ -76,25 +78,23 @@ export type V2DialogProviderProps = {
  */
 export function VersionCompareSelectProviderV2(
   { children, enableComparisonJobUpdateToasts, onJobUpdate }: V2DialogProviderProps,
-) {
-  const dialogRunningJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
-  const dialogPendingJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
+): ReactElement {
+  const dialogRunningJobs = useRef(new Map<string, JobAndNamedVersions>());
+  const dialogPendingJobs = useRef(new Map<string, JobAndNamedVersions>());
   const addRunningJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
     dialogRunningJobs.current.set(
       jobId,
       {
-      comparisonJob: jobAndNamedVersions.comparisonJob,
-      targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
-      currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
+        comparisonJob: jobAndNamedVersions.comparisonJob,
+        targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
+        currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
       },
     );
   };
   const removeRunningJob = (jobId: string) => {
     dialogRunningJobs.current.delete(jobId);
   };
-  const getRunningJobs = () => {
-    return Array.from(dialogRunningJobs.current.values());
-  };
+  const getRunningJobs = () => Array.from(dialogRunningJobs.current.values());
   const addPendingJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
     dialogPendingJobs.current.set(jobId, {
       comparisonJob: jobAndNamedVersions.comparisonJob,
@@ -105,29 +105,21 @@ export function VersionCompareSelectProviderV2(
   const removePendingJob = (jobId: string) => {
     dialogPendingJobs.current.delete(jobId);
   };
-  const getPendingJobs = () => {
-    return Array.from(dialogPendingJobs.current.values());
-  };
-  const dialogOpenRef = React.useRef(false);
+  const getPendingJobs = () => Array.from(dialogPendingJobs.current.values());
+  const dialogOpenRef = useRef(false);
   const openDialog = () => {
     dialogOpenRef.current = true;
   };
   const closedDialog = () => {
     dialogOpenRef.current = false;
   };
-  const getDialogOpen = () => {
-    return dialogOpenRef.current;
-  };
-  const getToastsEnabled = () => {
-    return enableComparisonJobUpdateToasts ?? false;
-  };
+  const getDialogOpen = () => dialogOpenRef.current;
+  const getToastsEnabled = () => enableComparisonJobUpdateToasts ?? false;
   const runOnJobUpdate = async (
     comparisonEventType: ComparisonJobUpdateType,
     jobAndNamedVersions?: JobAndNamedVersions,
   ) => {
-    if (onJobUpdate) {
-      void onJobUpdate(comparisonEventType, jobAndNamedVersions);
-    }
+    await onJobUpdate?.(comparisonEventType, jobAndNamedVersions);
   };
   return (
     <V2DialogContext.Provider value={{
