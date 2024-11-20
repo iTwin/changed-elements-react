@@ -12,17 +12,18 @@ import { VersionListEntry } from "./VersionEntries";
 
 interface VersionListProps {
   entries: VersionState[];
+
   currentVersion: VersionState;
+
   selectedVersionChangesetId: string | undefined;
+
   onVersionClicked: (targetVersion: NamedVersion) => void;
 
   /** If true display loading spinner to indicate we are receiving more named versions*/
   isLoading: boolean;
 }
 
-/**
- * Component that displays named versions (non current).
- */
+/** Component that displays named versions (non current). */
 export function VersionList(props: VersionListProps): ReactElement {
   return (
     <div className="comparison-job-row comparison-job-list">
@@ -32,22 +33,24 @@ export function VersionList(props: VersionListProps): ReactElement {
             {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versions")}
           </div>
           <div className="status-header">
-            {"Comparison Status"}
+            Comparison Status
           </div>
         </div>
         <div className="comparison-job-container">
-          {props.entries.map((versionState) => {
-            const isSelected = props.selectedVersionChangesetId !== undefined &&
-              versionState.version.changesetId === props.selectedVersionChangesetId;
-            return (
-              <VersionListEntry
-                key={versionState.version.changesetId}
-                versionState={versionState}
-                isSelected={isSelected}
-                onClicked={props.onVersionClicked}
-              />
-            );
-          })}
+          {
+            props.entries.map((versionState) => {
+              const isSelected = props.selectedVersionChangesetId !== undefined &&
+                versionState.version.changesetId === props.selectedVersionChangesetId;
+              return (
+                <VersionListEntry
+                  key={versionState.version.changesetId}
+                  versionState={versionState}
+                  isSelected={isSelected}
+                  onClicked={props.onVersionClicked}
+                />
+              );
+            })
+          }
           {props.isLoading && <LoadingSpinner className="vc-spinner-entry-list" />}
         </div>
       </div>

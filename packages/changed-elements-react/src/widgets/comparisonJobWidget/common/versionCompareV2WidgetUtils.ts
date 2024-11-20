@@ -22,7 +22,10 @@ export type ManagerStartComparisonV2Args = {
   targetVersion: NamedVersion;
   currentVersion: NamedVersion;
   getToastsEnabled?: () => boolean;
-  runOnJobUpdate?: (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  runOnJobUpdate?: (
+    comparisonEventType: ComparisonJobUpdateType,
+    jobAndNamedVersions?: JobAndNamedVersions,
+  ) => Promise<void>;
   iModelsClient: IModelsClient;
 };
 
@@ -30,6 +33,7 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   if (VersionCompare.manager?.isComparing) {
     await VersionCompare.manager?.stopComparison();
   }
+
   if (args.getToastsEnabled?.()) {
     toastComparisonVisualizationStarting();
   }
@@ -42,29 +46,41 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   if (args.runOnJobUpdate) {
     void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
   }
+
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(
     args.iModelConnection,
     args.currentVersion,
     await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
-    [changedElements.changedElements]).catch((e) => {
-      Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-    });
+    [changedElements.changedElements],
+  ).catch((e) => {
+    Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+  });
 };
 
-const updateTargetVersion = async (iModelConnection: IModelConnection, targetVersion: NamedVersion, iModelsClient: IModelsClient) => {
-  // we need to update the changesetId and index of the target version.
-  // earlier we updated all named versions to have an offset of 1, so we undo this offset to get the proper results from any VersionCompare.manager?.startComparisonV2 calls
-  // on this target version
-  // the change elements API requires an offset, but the IModels API does not.
+const updateTargetVersion = async (
+  iModelConnection: IModelConnection,
+  targetVersion: NamedVersion,
+  iModelsClient: IModelsClient,
+) => {
+  // We need to update the changesetId and index of the target version. Earlier
+  // we updated all named versions to have an offset of 1, so we undo this offset
+  // to get the proper results from any VersionCompare.manager?.startComparisonV2
+  // calls on this target version. The change elements API requires an offset, but
+  // the IModels API does not.
   const iModelId = iModelConnection?.iModelId as string;
   const updatedTargetVersion = { ...targetVersion };
   updatedTargetVersion.changesetIndex = targetVersion.changesetIndex - 1;
-  const changeSets = await iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse());
-  const actualChangeSet = changeSets.find((changeset) => updatedTargetVersion.changesetIndex === changeset.index);
+  const changeSets = await iModelsClient
+    .getChangesets({ iModelId })
+    .then((changesets) => changesets.slice().reverse());
+  const actualChangeSet = changeSets.find(
+    (changeset) => updatedTargetVersion.changesetIndex === changeset.index,
+  );
   if (actualChangeSet) {
     updatedTargetVersion.changesetId = actualChangeSet.id;
   }
+
   return updatedTargetVersion;
 };
 
@@ -76,7 +92,9 @@ export type GetJobStatusAndJobProgress = {
   currentChangesetId: string;
 };
 
-export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgress): Promise<JobStatusAndJobProgress> => {
+export const getJobStatusAndJobProgress = async (
+  args: GetJobStatusAndJobProgress,
+): Promise<JobStatusAndJobProgress> => {
   try {
     const res = await args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iTwinId,
@@ -94,6 +112,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
             },
           };
         }
+
         case "Queued": {
           return {
             jobStatus: "Queued",
@@ -103,6 +122,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
             },
           };
         }
+
         case "Started": {
           const progressingJob = res as ComparisonJobStarted;
           return {
@@ -113,6 +133,7 @@ export const getJobStatusAndJobProgress = async (args: GetJobStatusAndJobProgres
             },
           };
         }
+
         case "Failed":
           return {
             jobStatus: "Error",
