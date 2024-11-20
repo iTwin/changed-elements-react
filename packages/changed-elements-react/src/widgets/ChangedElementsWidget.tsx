@@ -420,7 +420,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           <VersionCompareSelectProviderV2 onJobUpdate={this.props.onJobUpdate} enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}>
             {this.state.versionSelectDialogVisible &&
               <VersionCompareSelectDialogV2
-                data-testid="⁠comparison-widget-v2-modal"
+                data-testid="comparison-widget-v2-modal"
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
                 manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
