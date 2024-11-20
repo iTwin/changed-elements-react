@@ -82,25 +82,14 @@ export function VersionCompareSelectProviderV2(
   const dialogRunningJobs = useRef(new Map<string, JobAndNamedVersions>());
   const dialogPendingJobs = useRef(new Map<string, JobAndNamedVersions>());
   const addRunningJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
-    dialogRunningJobs.current.set(
-      jobId,
-      {
-        comparisonJob: jobAndNamedVersions.comparisonJob,
-        targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
-        currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
-      },
-    );
+    dialogRunningJobs.current.set(jobId, jobAndNamedVersions);
   };
   const removeRunningJob = (jobId: string) => {
     dialogRunningJobs.current.delete(jobId);
   };
   const getRunningJobs = () => Array.from(dialogRunningJobs.current.values());
   const addPendingJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
-    dialogPendingJobs.current.set(jobId, {
-      comparisonJob: jobAndNamedVersions.comparisonJob,
-      targetNamedVersion: jobAndNamedVersions.targetNamedVersion,
-      currentNamedVersion: jobAndNamedVersions.currentNamedVersion,
-    });
+    dialogPendingJobs.current.set(jobId, jobAndNamedVersions);
   };
   const removePendingJob = (jobId: string) => {
     dialogPendingJobs.current.delete(jobId);

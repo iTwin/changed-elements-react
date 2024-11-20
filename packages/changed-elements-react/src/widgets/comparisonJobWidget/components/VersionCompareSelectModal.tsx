@@ -142,22 +142,8 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         createJobId(targetVersion, currentVersion),
         {
           comparisonJob: startResult.comparisonJob,
-          targetNamedVersion: {
-            id: targetVersion.id,
-            displayName: targetVersion.displayName,
-            changesetId: targetVersion.changesetId,
-            changesetIndex: targetVersion.changesetIndex,
-            description: targetVersion.description,
-            createdDateTime: targetVersion.createdDateTime,
-          },
-          currentNamedVersion: {
-            id: currentVersion.id,
-            displayName: currentVersion.displayName,
-            changesetId: currentVersion.changesetId,
-            changesetIndex: currentVersion.changesetIndex,
-            description: currentVersion.description,
-            createdDateTime: currentVersion.createdDateTime,
-          },
+          targetNamedVersion: targetVersion,
+          currentNamedVersion: currentVersion,
         },
       );
       pollForInProgressJobs({
