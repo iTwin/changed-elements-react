@@ -20,10 +20,9 @@ import {
 import {
   createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2,
 } from "../common/versionCompareV2WidgetUtils";
-import {
-  useNamedVersionLoader, type NamedVersionLoaderState,
-} from "../hooks/useNamedVersionLoader";
+import { useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
 import type { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions.js";
 import { VersionProcessedState } from "../models/VersionProcessedState";
 import type { VersionState } from "../models/VersionState";
 import { V2DialogContext, type ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
@@ -80,13 +79,33 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
   const [currentVersion, setCurrentVersion] = useState<NamedVersion>();
   const [result, setResult] = useState<NamedVersionLoaderState>();
-  const { isLoading } = useNamedVersionLoader(
+  const { isLoading, ...rest } = useNamedVersionLoader(
     props.iModelConnection,
     iModelsClient,
     comparisonJobClient,
-    setResult,
     getPendingJobs,
   );
+
+  // Synchronise with previous result store, WIP
+  useEffect(
+    () => {
+      if (!rest.currentVersion) {
+        return;
+      }
+
+      setResult((prev) => ({
+        ...prev,
+        namedVersions: {
+          currentVersion: rest.currentVersion,
+          entries: (prev?.namedVersions.entries ?? []).concat(
+            rest.entries.slice(prev?.namedVersions.entries.length ?? 0),
+          ),
+        },
+      }));
+    },
+    [rest.currentVersion, rest.entries],
+  );
+
   useEffect(
     () => {
       let isDisposed = false;
@@ -208,6 +227,11 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
       </ModalButtonBar>
     </Modal>
   );
+}
+
+interface NamedVersionLoaderState {
+  /** Named versions to display in the list. */
+  namedVersions: CurrentNamedVersionAndNamedVersions;
 }
 
 // TODO: refactor all types in this file they are not dry. We want "type" space

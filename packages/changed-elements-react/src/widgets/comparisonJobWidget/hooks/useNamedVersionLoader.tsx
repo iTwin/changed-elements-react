@@ -12,17 +12,14 @@ import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompar
 import type {
   JobAndNamedVersions, JobProgress, JobStatus, JobStatusAndJobProgress,
 } from "../models/ComparisonJobModels";
-import type { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
 import { VersionProcessedState } from "../models/VersionProcessedState";
-
-/** Result type for versionLoader. */
-export interface NamedVersionLoaderState {
-  /** Named versions to display in the list. */
-  namedVersions: CurrentNamedVersionAndNamedVersions;
-}
+import type { VersionState } from "../models/VersionState.js";
 
 interface UseNamedVersionLoaderResult {
   isLoading: boolean;
+  isError: boolean;
+  entries: VersionState[];
+  currentVersion: VersionState | undefined;
 }
 
 /**
@@ -35,31 +32,35 @@ export function useNamedVersionLoader(
   iModelConnection: IModelConnection,
   iModelsClient: IModelsClient,
   comparisonJobClient: IComparisonJobClient,
-  setNamedVersionResult: (state: NamedVersionLoaderState) => void,
   getPendingJobs: () => JobAndNamedVersions[],
   pageSize: number = 20,
 ): UseNamedVersionLoaderResult {
-  const [isLoading, setIsLoading] = useState(true);
+  const [result, setResult] = useState<UseNamedVersionLoaderResult>({
+    isLoading: true,
+    isError: false,
+    entries: [],
+    currentVersion: undefined,
+  });
   useEffect(
     () => {
       const setResultNoNamedVersions = () => {
-        setNamedVersionResult({
-          namedVersions: { entries: [], currentVersion: undefined },
+        setResult({
+          isLoading: false,
+          isError: false,
+          entries: [],
+          currentVersion: undefined,
         });
       };
-      const iTwinId = iModelConnection?.iTwinId;
-      const iModelId = iModelConnection?.iModelId;
-      const currentChangeSetId = iModelConnection?.changeset.id;
-      const currentChangeSetIndex = iModelConnection?.changeset.index;
-      let disposed = false;
-      if (!iTwinId || !iModelId || !currentChangeSetId) {
+      const { iTwinId, iModelId, changeset } = iModelConnection;
+      if (!iTwinId || !iModelId) {
         setResultNoNamedVersions();
         return;
       }
 
+      let disposed = false;
       void (async () => {
         let currentNamedVersion: NamedVersion | undefined;
-        let currentState: NamedVersionLoaderState | undefined = undefined;
+        let currentState: Pick<UseNamedVersionLoaderResult, "currentVersion" | "entries"> | undefined = undefined;
         let currentPage = 0;
         while (!disposed) {
           try {
@@ -74,16 +75,17 @@ export function useNamedVersionLoader(
             if (!currentNamedVersion) {
               currentNamedVersion = await getOrCreateCurrentNamedVersion(
                 namedVersions,
-                currentChangeSetId,
+                changeset.id,
                 iModelsClient,
                 iModelId,
-                currentChangeSetIndex,
+                changeset.index,
               );
             }
 
             if (namedVersions.length === 0) {
-              setIsLoading(false);
-              break; // No more named versions to process
+              // No more named versions to process
+              setResult((prev) => ({ ...prev, isLoading: false }));
+              break;
             }
 
             // Process the named versions
@@ -93,7 +95,7 @@ export function useNamedVersionLoader(
               setResultNoNamedVersions,
               iModelsClient,
               iModelId,
-              updatePaging: setIsLoading,
+              updatePaging: (isPaging) => setResult((prev) => ({ ...prev, isLoading: isPaging })),
               iTwinId,
               iModelConnection,
               comparisonJobClient,
@@ -103,23 +105,26 @@ export function useNamedVersionLoader(
             if (processedNamedVersionsState) {
               if (currentState) {
                 currentState = {
-                  namedVersions: {
-                    entries: currentState.namedVersions.entries.concat(
-                      processedNamedVersionsState.namedVersions.entries,
-                    ),
-                    currentVersion: processedNamedVersionsState?.namedVersions.currentVersion,
-                  },
+                  entries: currentState.entries.concat(processedNamedVersionsState.entries),
+                  currentVersion: processedNamedVersionsState?.currentVersion,
                 };
               } else {
                 currentState = processedNamedVersionsState;
               }
 
-              setNamedVersionResult(currentState);
+              const localCurrentState = currentState;
+              setResult((prev) => ({
+                ...prev,
+                currentVersion: localCurrentState.currentVersion,
+                entries: localCurrentState.entries,
+              }));
             }
 
             currentPage++;
           } catch (error) {
-            setIsLoading(false);
+            // eslint-disable-next-line no-console
+            console.error(error);
+            setResult((prev) => ({ ...prev, isError: true, isLoading: false }));
             break;
           }
         }
@@ -131,7 +136,7 @@ export function useNamedVersionLoader(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [comparisonJobClient, iModelConnection, iModelsClient],
   );
-  return { isLoading };
+  return result;
 }
 
 interface ProcessNamedVersionsArgs {
@@ -147,10 +152,9 @@ interface ProcessNamedVersionsArgs {
   getPendingJobs: () => JobAndNamedVersions[];
 }
 
-
 async function processNamedVersions(
   args: ProcessNamedVersionsArgs,
-): Promise<NamedVersionLoaderState | undefined> {
+): Promise<Pick<UseNamedVersionLoaderResult, "currentVersion" | "entries"> | undefined> {
   const {
     namedVersions,
     setResultNoNamedVersions,
@@ -181,20 +185,18 @@ async function processNamedVersions(
     currentProgress: 0,
     maxProgress: 0,
   };
-  const namedVersionState: NamedVersionLoaderState = {
-    namedVersions: {
-      entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
-        version: namedVersion,
-        state: VersionProcessedState.Verifying,
-        jobStatus: initialComparisonJobStatus,
-        jobProgress: initialJobProgress,
-      })),
-      currentVersion: {
-        version: currentNamedVersion,
-        state: VersionProcessedState.Processed,
-        jobStatus: initialComparisonJobStatus,
-        jobProgress: initialJobProgress,
-      },
+  const namedVersionState: Pick<UseNamedVersionLoaderResult, "currentVersion" | "entries"> = {
+    entries: sortedAndOffsetNamedVersions.map((namedVersion) => ({
+      version: namedVersion,
+      state: VersionProcessedState.Verifying,
+      jobStatus: initialComparisonJobStatus,
+      jobProgress: initialJobProgress,
+    })),
+    currentVersion: {
+      version: currentNamedVersion,
+      state: VersionProcessedState.Processed,
+      jobStatus: initialComparisonJobStatus,
+      jobProgress: initialJobProgress,
     },
   };
   return getComparisonJobInfoForNamedVersions({
@@ -312,7 +314,7 @@ async function sortAndSetIndexOfNamedVersions(
 interface ProcessChangesetsArgs {
   iTwinId: string;
   iModelId: string;
-  namedVersionLoaderState: NamedVersionLoaderState;
+  namedVersionLoaderState: Pick<UseNamedVersionLoaderResult, "currentVersion" | "entries">;
   iModelConnection: IModelConnection;
   comparisonJobClient: IComparisonJobClient;
   getPendingJobs: () => JobAndNamedVersions[];
@@ -320,15 +322,15 @@ interface ProcessChangesetsArgs {
 
 async function getComparisonJobInfoForNamedVersions(
   args: ProcessChangesetsArgs,
-): Promise<NamedVersionLoaderState> {
+): Promise<Pick<UseNamedVersionLoaderResult, "currentVersion" | "entries">> {
   const pendingJobsMap = arrayToMap(
     args.getPendingJobs(),
     (job) => createJobId(job.targetNamedVersion, job.currentNamedVersion),
   );
-  const currentVersionId = args.namedVersionLoaderState.namedVersions
-    .currentVersion?.version.changesetId ?? args.iModelConnection?.changeset.id;
+  const currentVersionId = args.namedVersionLoaderState.currentVersion?.version.changesetId
+    ?? args.iModelConnection?.changeset.id;
   const newEntries = await Promise.all(
-    args.namedVersionLoaderState.namedVersions.entries.map(async (entry) => {
+    args.namedVersionLoaderState.entries.map(async (entry) => {
       const jobStatusAndJobProgress: JobStatusAndJobProgress = await getJobStatusAndJobProgress({
         comparisonJobClient: args.comparisonJobClient,
         entry,
@@ -354,9 +356,7 @@ async function getComparisonJobInfoForNamedVersions(
     }),
   );
   return {
-    namedVersions: {
-      currentVersion: args.namedVersionLoaderState.namedVersions.currentVersion,
-      entries: newEntries,
-    },
+    currentVersion: args.namedVersionLoaderState.currentVersion,
+    entries: newEntries,
   };
 }
