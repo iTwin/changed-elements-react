@@ -7,9 +7,9 @@ import { Badge, ProgressLinear, Radio, Text } from "@itwin/itwinui-react";
 import type { ReactElement, ReactNode } from "react";
 
 import type { NamedVersion } from "../../../clients/iModelsClient";
-import type { JobProgress, JobStatus } from "../models/ComparisonJobModels";
-import { VersionProcessedState } from "../models/VersionProcessedState";
-import type { VersionState } from "../models/VersionState";
+import {
+  VersionProcessedState, type JobProgress, type JobStatus, type VersionState,
+} from "../NamedVersions.js";
 
 interface CurrentVersionEntryProps {
   versionState: VersionState;

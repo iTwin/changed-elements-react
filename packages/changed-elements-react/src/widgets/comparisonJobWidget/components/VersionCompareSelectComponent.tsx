@@ -8,7 +8,7 @@ import { useState, type ReactNode } from "react";
 
 import type { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
 import type { NamedVersion } from "../../../clients/iModelsClient";
-import type { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
+import type { CurrentNamedVersionAndNamedVersions } from "../NamedVersions";
 import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
 
 /** Options for VersionCompareSelectComponent. */

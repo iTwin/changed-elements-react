@@ -15,20 +15,20 @@ import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient
 import { arrayToMap, tryXTimes } from "../../../utils/utils";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import {
+  VersionProcessedState, type CurrentNamedVersionAndNamedVersions, type JobAndNamedVersions,
+  type VersionState,
+} from "../NamedVersions.js";
+import { useNamedVersionLoader } from "../useNamedVersionLoader.js";
+import {
   toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing,
-} from "../common/versionCompareToasts";
+} from "../versionCompareToasts";
 import {
   createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2,
-} from "../common/versionCompareV2WidgetUtils";
-import { useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import type { JobAndNamedVersions } from "../models/ComparisonJobModels";
-import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions.js";
-import { VersionProcessedState } from "../models/VersionProcessedState";
-import type { VersionState } from "../models/VersionState";
+} from "../versionCompareV2WidgetUtils";
 import { V2DialogContext, type ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 
-import "./styles/ComparisonJobWidget.scss";
+import "./VersionCompareSelectDialogV2.scss";
 
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogV2Props {

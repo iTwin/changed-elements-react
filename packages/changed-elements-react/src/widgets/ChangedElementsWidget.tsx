@@ -26,13 +26,13 @@ import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
 import { FeedbackButton } from "./FeedbackButton.js";
 import InfoButton from "./InformationButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
+import type { JobAndNamedVersions } from "./comparisonJobWidget/NamedVersions.js";
 import {
   VersionCompareSelectProviderV2, type ComparisonJobUpdateType,
 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
 import {
-  VersionCompareSelectDialogV2
-} from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
-import type { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
+  VersionCompareSelectDialogV2,
+} from "./comparisonJobWidget/components/VersionCompareSelectDialogV2.js";
 
 import "./ChangedElementsWidget.scss";
 

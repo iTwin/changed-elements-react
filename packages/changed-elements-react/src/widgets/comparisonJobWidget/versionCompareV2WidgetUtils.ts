@@ -5,14 +5,15 @@
 import { Logger } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
 
-import { VersionCompare } from "../../../api/VersionCompare";
+import { VersionCompare } from "../../api/VersionCompare";
 import type {
   ComparisonJob, ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient,
-} from "../../../clients/IComparisonJobClient";
-import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import type { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
-import type { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
-import type { VersionState } from "../models/VersionState";
+} from "../../clients/IComparisonJobClient";
+import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
+import type { ComparisonJobUpdateType } from "./components/VersionCompareDialogProvider";
+import type {
+  JobAndNamedVersions, JobStatusAndJobProgress, VersionState,
+} from "./NamedVersions.js";
 import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 
 export interface ManagerStartComparisonV2Args {

@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { createContext, type ReactElement, type ReactNode, useRef } from "react";
 
-import type { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import type { JobAndNamedVersions } from "../NamedVersions.js";
 
 /**
  * Comparison Job Update Type

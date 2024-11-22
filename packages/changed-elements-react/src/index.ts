@@ -29,11 +29,11 @@ export * from "./contentviews/PropertyComparisonTable.js";
 export type { FilterData, FilterOptions, SavedFiltersManager } from "./SavedFiltersManager.js";
 export { VersionCompareContext, type VersionCompareContextValue } from "./VersionCompareContext.js";
 export * from "./widgets/ChangedElementsWidget.js";
-export * from "./widgets/comparisonJobWidget/common/versionCompareToasts.js";
+export * from "./widgets/comparisonJobWidget/versionCompareToasts.js";
 export * from "./widgets/comparisonJobWidget/components/VersionCompareDialogProvider.js";
-export * from "./widgets/comparisonJobWidget/components/VersionCompareSelectModal.js";
-export type {
-  JobAndNamedVersions
-} from "./widgets/comparisonJobWidget/models/ComparisonJobModels.js";
+export {
+  VersionCompareSelectDialogV2, pollForInProgressJobs,
+} from "./widgets/comparisonJobWidget/components/VersionCompareSelectDialogV2.js";
+export type { JobAndNamedVersions } from "./widgets/comparisonJobWidget/NamedVersions.js";
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";
 export * from "./widgets/VersionCompareSelectWidget.js";

@@ -7,7 +7,7 @@ import { Text } from "@itwin/itwinui-react";
 import { ReactNode } from "react";
 
 import type { NamedVersion } from "../../../clients/iModelsClient";
-import type { VersionState } from "../models/VersionState";
+import type { VersionState } from "../NamedVersions.js";
 import { ManageNamedVersions } from "./VersionCompareManageNamedVersions";
 import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionList } from "./VersionList";

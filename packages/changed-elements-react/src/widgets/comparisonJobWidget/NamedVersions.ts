@@ -2,8 +2,32 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ComparisonJob } from "../../../clients/IComparisonJobClient";
-import { NamedVersion } from "../../../clients/iModelsClient";
+import type { ComparisonJob } from "../../clients/IComparisonJobClient.js";
+import type { NamedVersion } from "../../clients/iModelsClient.js";
+
+/**
+ * Holds the version state of named versions and the current version.
+*/
+export interface CurrentNamedVersionAndNamedVersions {
+  entries: VersionState[];
+  currentVersion: VersionState | undefined;
+}
+
+export type VersionState = {
+  version: NamedVersion;
+  state: VersionProcessedState;
+  // nullable because we don't run jobs in V1. For v2 use only.
+  jobStatus?: JobStatus;
+  // nullable because we don't run jobs in V1. For v2 use only.
+  jobProgress?: JobProgress;
+};
+
+export enum VersionProcessedState {
+  Verifying,
+  Processed,
+  Processing,
+  Unavailable,
+}
 
 /**
  * Job status used for identification of job progress
@@ -17,26 +41,16 @@ import { NamedVersion } from "../../../clients/iModelsClient";
 */
 export type JobStatus = "Unknown" | "Available" | "Not Processed" | "Processing" | "Error" | "Queued";
 
-/**
- * Used to display progress of a job.
- * current progress / maximum progress.
-*/
 export type JobProgress = {
   currentProgress: number;
   maxProgress: number;
 };
 
-/**
- * Holds both the job progress and job status.
-*/
 export type JobStatusAndJobProgress = {
   jobStatus: JobStatus;
   jobProgress: JobProgress;
 };
 
-/**
- * Holds comparison job and its named versions.
-*/
 export type JobAndNamedVersions = {
   comparisonJob?: ComparisonJob;
   targetNamedVersion: NamedVersion;

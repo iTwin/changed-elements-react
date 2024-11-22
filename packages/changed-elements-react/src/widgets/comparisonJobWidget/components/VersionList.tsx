@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@itwin/core-react";
 import type { ReactElement } from "react";
 
 import type { NamedVersion } from "../../../clients/iModelsClient";
-import type { VersionState } from "../models/VersionState";
+import type { VersionState } from "../NamedVersions.js";
 import { VersionListEntry } from "./VersionEntries";
 
 interface VersionListProps {

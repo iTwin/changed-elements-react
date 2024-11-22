@@ -5,15 +5,14 @@
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { useEffect, useState } from "react";
 
-import type { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { arrayToMap } from "../../../utils/utils";
-import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
-import type {
-  JobAndNamedVersions, JobProgress, JobStatus, JobStatusAndJobProgress,
-} from "../models/ComparisonJobModels";
-import { VersionProcessedState } from "../models/VersionProcessedState";
-import type { VersionState } from "../models/VersionState.js";
+import type { IComparisonJobClient } from "../../clients/IComparisonJobClient";
+import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
+import { arrayToMap } from "../../utils/utils";
+import {
+  VersionProcessedState, type JobAndNamedVersions, type JobProgress, type JobStatus,
+  type JobStatusAndJobProgress, type VersionState,
+} from "./NamedVersions.js";
+import { createJobId, getJobStatusAndJobProgress } from "./versionCompareV2WidgetUtils";
 
 interface UseNamedVersionLoaderResult {
   isLoading: boolean;
