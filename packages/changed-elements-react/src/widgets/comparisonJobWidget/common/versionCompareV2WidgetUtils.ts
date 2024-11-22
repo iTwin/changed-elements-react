@@ -2,15 +2,18 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { IModelConnection } from "@itwin/core-frontend";
-import { ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { VersionCompare } from "../../../api/VersionCompare";
-import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 import { Logger } from "@itwin/core-bentley";
-import { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
-import { VersionState } from "../models/VersionState";
-import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
+import type { IModelConnection } from "@itwin/core-frontend";
+
+import { VersionCompare } from "../../../api/VersionCompare";
+import type {
+  ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient,
+} from "../../../clients/IComparisonJobClient";
+import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
+import type { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
+import type { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
+import type { VersionState } from "../models/VersionState";
+import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 
 export type ManagerStartComparisonV2Args = {
   comparisonJob: ComparisonJobCompleted;

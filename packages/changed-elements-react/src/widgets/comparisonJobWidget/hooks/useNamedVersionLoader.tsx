@@ -2,15 +2,18 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { useEffect, useState } from "react";
-import { JobStatus, JobProgress, JobStatusAndJobProgress, JobAndNamedVersions } from "../models/ComparisonJobModels";
-import { VersionProcessedState } from "../models/VersionProcessedState";
-import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
-import { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
+
+import type { IComparisonJobClient } from "../../../clients/IComparisonJobClient";
+import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { arrayToMap } from "../../../utils/utils";
+import { createJobId, getJobStatusAndJobProgress } from "../common/versionCompareV2WidgetUtils";
+import type {
+  JobAndNamedVersions, JobProgress, JobStatus, JobStatusAndJobProgress,
+} from "../models/ComparisonJobModels";
+import type { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
+import { VersionProcessedState } from "../models/VersionProcessedState";
 
 /**
  * Result type for versionLoader.

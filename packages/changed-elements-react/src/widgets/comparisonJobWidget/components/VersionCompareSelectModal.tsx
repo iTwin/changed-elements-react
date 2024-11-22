@@ -2,25 +2,34 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Modal, ModalContent, ModalButtonBar, Button } from "@itwin/itwinui-react";
-import { ReactNode, useEffect, useState } from "react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import React from "react";
-import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
-import { NamedVersionLoaderState, useNamedVersionLoader } from "../hooks/useNamedVersionLoader";
-import { IComparisonJobClient, ComparisonJob, ComparisonJobCompleted } from "../../../clients/IComparisonJobClient";
-import { useVersionCompare } from "../../../VersionCompareContext";
+import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
+import { Button, Modal, ModalButtonBar, ModalContent } from "@itwin/itwinui-react";
+import { useContext, useEffect, useState, type ReactNode, } from "react";
+
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
-import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { VersionCompare } from "../../../api/VersionCompare";
-import "./styles/ComparisonJobWidget.scss";
+import {
+  ComparisonJob, ComparisonJobCompleted, IComparisonJobClient,
+} from "../../../clients/IComparisonJobClient";
+import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
 import { arrayToMap, tryXTimes } from "../../../utils/utils";
-import { VersionState } from "../models/VersionState";
-import { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
+import { useVersionCompare } from "../../../VersionCompareContext";
+import {
+  toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing,
+} from "../common/versionCompareToasts";
+import {
+  createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2,
+} from "../common/versionCompareV2WidgetUtils";
+import {
+  useNamedVersionLoader, type NamedVersionLoaderState,
+} from "../hooks/useNamedVersionLoader";
+import type { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels";
 import { VersionProcessedState } from "../models/VersionProcessedState";
-import { toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing } from "../common/versionCompareToasts";
-import { createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2 } from "../common/versionCompareV2WidgetUtils";
-import { ComparisonJobUpdateType, V2DialogContext } from "./VersionCompareDialogProvider";
+import type { VersionState } from "../models/VersionState";
+import { V2DialogContext, type ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
+import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
+
+import "./styles/ComparisonJobWidget.scss";
 
 /** Options for VersionCompareSelectDialogV2. */
 export interface VersionCompareSelectDialogV2Props {
@@ -59,7 +68,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     throw new Error("V1 Client Is Not Initialized In Given Context.");
   }
   const { openDialog, closedDialog, getDialogOpen, addRunningJob, removeRunningJob, getRunningJobs
-    , getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate } = React.useContext(V2DialogContext);
+    , getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate } = useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion | undefined>(undefined);
   const [currentVersion, setCurrentVersion] = useState<NamedVersion | undefined>(undefined);
   const [result, setResult] = useState<NamedVersionLoaderState>();
