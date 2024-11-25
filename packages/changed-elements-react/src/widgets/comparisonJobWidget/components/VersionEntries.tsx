@@ -12,23 +12,20 @@ import {
 } from "../NamedVersions.js";
 
 interface CurrentVersionEntryProps {
-  versionState: VersionState;
+  namedVersion: NamedVersion;
+  isProcessed: boolean;
 }
 
 /** Component for current version. Displays the current version's name date description. */
 export function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
-  const isProcessed = props.versionState.state === VersionProcessedState.Processed;
   return (
-    <div className="vc-entry-current" key={props.versionState.version.changesetId}>
-      <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
-      <DateCurrentAndJobInfo
-        createdDate={props.versionState.version.createdDateTime}
-        jobStatus={"Unknown"}
-      >
+    <div className="vc-entry-current" key={props.namedVersion.changesetId}>
+      <VersionNameAndDescription version={props.namedVersion} isProcessed={props.isProcessed} />
+      <DateCurrentAndJobInfo createdDate={props.namedVersion.createdDateTime} jobStatus={"Unknown"}>
         <div className="entry-info">
           {
-            props.versionState.version.createdDateTime &&
-            new Date(props.versionState.version.createdDateTime).toDateString()
+            props.namedVersion.createdDateTime &&
+            new Date(props.namedVersion.createdDateTime).toDateString()
           }
         </div>
         <div className="entry-info">
@@ -61,6 +58,7 @@ function VersionNameAndDescription(props: VersionNameAndDescriptionProps): React
 }
 
 interface VersionListEntryProps {
+  namedVersion: NamedVersion;
   versionState: VersionState;
   isSelected: boolean;
   onClicked: (targetVersion: NamedVersion) => void;
@@ -84,7 +82,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
       return;
     }
 
-    props.onClicked(props.versionState.version);
+    props.onClicked(props.namedVersion);
   };
 
   const versionStateMap = {
@@ -126,13 +124,13 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
           onChange={() => { /* no-op: avoid complaints for missing onChange */ }}
         />
       </div>
-      <VersionNameAndDescription version={props.versionState.version} isProcessed={isProcessed} />
+      <VersionNameAndDescription version={props.namedVersion} isProcessed={isProcessed} />
       {
         props.versionState.state === VersionProcessedState.Verifying
           ? (
             <>
               <DateCurrentAndJobInfo
-                createdDate={props.versionState.version.createdDateTime}
+                createdDate={props.namedVersion.createdDateTime}
                 jobStatus={props.versionState.jobStatus}
                 jobProgress={props.versionState.jobProgress}
               >
@@ -142,7 +140,7 @@ export function VersionListEntry(props: VersionListEntryProps): ReactElement {
             </>
           ) : (
             <DateCurrentAndJobInfo
-              createdDate={props.versionState.version.createdDateTime}
+              createdDate={props.namedVersion.createdDateTime}
               jobStatus={props.versionState.jobStatus ?? "Unknown"}
               jobProgress={props.versionState.jobProgress}
             >

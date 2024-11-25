@@ -187,13 +187,9 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           iModelConnection={props.iModelConnection}
           onVersionSelected={_onVersionSelected}
           namedVersions={result && {
-            currentVersion: result.currentVersion && {
-              version: result.currentVersion,
-              state: VersionProcessedState.Processed,
-              jobStatus: "Unknown",
-              jobProgress: { currentProgress: 0, maxProgress: 0 },
-            },
-            entries: result.entries.map((entry, i) => ({ version: entry, ...result.versionState[i] })),
+            currentVersion: result.currentVersion,
+            entries: result.entries,
+            versionState: result.versionState,
           }}
           manageNamedVersionsSlot={props.manageNamedVersionsSlot}
           isLoading={isLoading}
@@ -218,7 +214,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
 interface NamedVersionLoaderState {
   entries: NamedVersion[];
   currentVersion: NamedVersion | undefined;
-  versionState: Array<Omit<VersionState, "version">>;
+  versionState: VersionState[];
 }
 
 // TODO: refactor all types in this file they are not dry. We want "type" space
@@ -359,7 +355,7 @@ interface PollForInProgressJobsArgs {
   namedVersionLoaderState?: NamedVersionLoaderState;
   comparisonJobClient: IComparisonJobClient;
   iModelConnection: IModelConnection;
-  setResult: (result: Array<Omit<VersionState, "version">>) => void;
+  setResult: (result: VersionState[]) => void;
   removeRunningJob: (jobId: string) => void;
   getRunningJobs: () => JobAndNamedVersions[];
   getDialogOpen: () => boolean;
@@ -481,7 +477,7 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
     ({ jobStatus }) => jobStatus === "Processing" || jobStatus === "Queued",
   ) || args.getRunningJobs().length > 0;
   if (jobsAreInProgress) {
-    const idEntryMap = new Map<string, { entry: NamedVersion; state: Omit<VersionState, "version">; }>();
+    const idEntryMap = new Map<string, { entry: NamedVersion; state: VersionState; }>();
     for (let i = 0; i < entries.length; ++i) {
       idEntryMap.set(entries[i].id, { entry: entries[i], state: states[i] });
     }
@@ -517,7 +513,7 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
           acc.states.push(state);
           return acc;
         },
-        { entries: [] as NamedVersion[], states: [] as Array<Omit<VersionState, "version">> },
+        { entries: [] as NamedVersion[], states: [] as VersionState[] },
       ));
       updatingEntries = getUpdatingEntries(entries, states, currentVersionId, currentRunningJobsMap);
 
@@ -530,10 +526,10 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
 
 function getUpdatingEntries(
   entries: NamedVersion[],
-  versionStates: Array<Omit<VersionState, "version">>,
+  versionStates: VersionState[],
   currentVersionId: string,
   currentRunningJobsMap: Map<string, JobAndNamedVersions>,
-): { entries: NamedVersion[]; versionStates: Array<Omit<VersionState, "version">>; } {
+): { entries: NamedVersion[]; versionStates: VersionState[]; } {
   const result: ReturnType<typeof getUpdatingEntries> = { entries: [], versionStates: [] };
   for (let i = 0; i < entries.length; ++i) {
     const entry = entries[i];

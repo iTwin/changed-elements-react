@@ -43,7 +43,7 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
   const handleVersionClicked = (targetVersion: NamedVersion) => {
     setTargetVersion(targetVersion);
     if (props.namedVersions && props.namedVersions.currentVersion) {
-      props.onVersionSelected?.(props.namedVersions.currentVersion.version, targetVersion);
+      props.onVersionSelected?.(props.namedVersions.currentVersion, targetVersion);
     }
   };
 
@@ -58,6 +58,7 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
   return (
     <VersionCompareSelectorInner
       entries={props.namedVersions.entries}
+      versionState={props.namedVersions.versionState}
       currentVersion={props.namedVersions.currentVersion}
       selectedVersionChangesetId={targetVersion?.changesetId ?? undefined}
       onVersionClicked={handleVersionClicked}

@@ -19,9 +19,9 @@ interface UseNamedVersionLoaderResult {
   result: {
     entries: NamedVersion[];
     currentVersion: NamedVersion | undefined;
-    versionState: Array<Omit<VersionState, "version">>;
+    versionState: VersionState[];
   } | undefined;
-  setResult: (value: Array<Omit<VersionState, "version">>) => void;
+  setResult: (value: VersionState[]) => void;
 }
 
 /**
@@ -313,7 +313,7 @@ interface QueryComparisonState {
 
 async function queryComparisonState(
   args: QueryComparisonState,
-): Promise<Array<Omit<VersionState, "version">>> {
+): Promise<VersionState[]> {
   const pendingJobsMap = arrayToMap(
     args.getPendingJobs(),
     (job) => createJobId(job.targetNamedVersion, job.currentNamedVersion),

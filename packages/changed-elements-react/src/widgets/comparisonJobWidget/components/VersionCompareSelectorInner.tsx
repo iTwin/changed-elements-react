@@ -13,8 +13,9 @@ import { CurrentVersionEntry } from "./VersionEntries";
 import { VersionList } from "./VersionList";
 
 interface VersionCompareSelectorInnerProps {
-  entries: VersionState[];
-  currentVersion: VersionState | undefined;
+  entries: NamedVersion[];
+  versionState: VersionState[];
+  currentVersion: NamedVersion | undefined;
   selectedVersionChangesetId: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
   wantTitle: boolean | undefined;
@@ -40,7 +41,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
             {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}:`}
           </div>
           <div className="comparison-job-container-current">
-            <CurrentVersionEntry versionState={props.currentVersion} />
+            <CurrentVersionEntry namedVersion={props.currentVersion} isProcessed />
           </div>
         </div>
       }
@@ -57,6 +58,7 @@ export function VersionCompareSelectorInner(props: VersionCompareSelectorInnerPr
         props.entries.length > 0 && props.currentVersion ? (
           <VersionList
             entries={props.entries}
+            versionState={props.versionState}
             currentVersion={props.currentVersion}
             selectedVersionChangesetId={props.selectedVersionChangesetId}
             onVersionClicked={props.onVersionClicked}

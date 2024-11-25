@@ -9,12 +9,12 @@ import type { NamedVersion } from "../../clients/iModelsClient.js";
  * Holds the version state of named versions and the current version.
 */
 export interface CurrentNamedVersionAndNamedVersions {
-  entries: VersionState[];
-  currentVersion: VersionState | undefined;
+  entries: NamedVersion[];
+  versionState: VersionState[];
+  currentVersion: NamedVersion | undefined;
 }
 
 export type VersionState = {
-  version: NamedVersion;
   state: VersionProcessedState;
   // nullable because we don't run jobs in V1. For v2 use only.
   jobStatus?: JobStatus;

@@ -11,9 +11,11 @@ import type { VersionState } from "../NamedVersions.js";
 import { VersionListEntry } from "./VersionEntries";
 
 interface VersionListProps {
-  entries: VersionState[];
+  entries: NamedVersion[];
 
-  currentVersion: VersionState;
+  versionState: VersionState[];
+
+  currentVersion: NamedVersion;
 
   selectedVersionChangesetId: string | undefined;
 
@@ -38,13 +40,14 @@ export function VersionList(props: VersionListProps): ReactElement {
         </div>
         <div className="comparison-job-container">
           {
-            props.entries.map((versionState) => (
+            props.entries.map((entry, i) => (
               <VersionListEntry
-                key={versionState.version.changesetId}
-                versionState={versionState}
+                key={entry.changesetId}
+                namedVersion={entry}
+                versionState={props.versionState[i]}
                 isSelected={
                   props.selectedVersionChangesetId !== undefined &&
-                  versionState.version.changesetId === props.selectedVersionChangesetId
+                  entry.changesetId === props.selectedVersionChangesetId
                 }
                 onClicked={props.onVersionClicked}
               />
