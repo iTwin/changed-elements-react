@@ -11,9 +11,7 @@ import type {
 } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
 import type { ComparisonJobUpdateType } from "./components/VersionCompareDialogProvider";
-import type {
-  JobAndNamedVersions, JobStatusAndJobProgress, VersionState,
-} from "./NamedVersions.js";
+import type { JobAndNamedVersions, JobStatusAndJobProgress } from "./NamedVersions.js";
 import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 
 export interface ManagerStartComparisonV2Args {
@@ -85,10 +83,10 @@ async function updateTargetVersion(
 
 export interface GetJobStatusAndJobProgress {
   comparisonJobClient: IComparisonJobClient;
-  entry: VersionState;
   iTwinId: string;
   iModelId: string;
-  currentChangesetId: string;
+  startChangesetId: string | null;
+  endChangesetId: string;
 }
 
 export async function getJobStatusAndJobProgress(
@@ -99,7 +97,7 @@ export async function getJobStatusAndJobProgress(
     res = await args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iTwinId,
       iModelId: args.iModelId,
-      jobId: `${args.entry.version.changesetId}-${args.currentChangesetId}`,
+      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
     });
   } catch {
     return {
