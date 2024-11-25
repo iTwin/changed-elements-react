@@ -17,9 +17,6 @@ export type ComparisonJobUpdateType = "JobComplete" | "JobError" | "JobProcessin
   | "ComparisonVisualizationStarting";
 
 export interface V2Context {
-  getDialogOpen: () => boolean;
-  openDialog: () => void;
-  closedDialog: () => void;
   addRunningJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
   removeRunningJob: (jobId: string) => void;
   getRunningJobs: () => JobAndNamedVersions[];
@@ -95,14 +92,6 @@ export function VersionCompareSelectProviderV2(
     dialogPendingJobs.current.delete(jobId);
   };
   const getPendingJobs = () => Array.from(dialogPendingJobs.current.values());
-  const dialogOpenRef = useRef(false);
-  const openDialog = () => {
-    dialogOpenRef.current = true;
-  };
-  const closedDialog = () => {
-    dialogOpenRef.current = false;
-  };
-  const getDialogOpen = () => dialogOpenRef.current;
   const getToastsEnabled = () => enableComparisonJobUpdateToasts ?? false;
   const runOnJobUpdate = async (
     comparisonEventType: ComparisonJobUpdateType,
@@ -112,9 +101,8 @@ export function VersionCompareSelectProviderV2(
   };
   return (
     <V2DialogContext.Provider value={{
-      openDialog, getDialogOpen: getDialogOpen, closedDialog, addRunningJob,
-      removeRunningJob, getRunningJobs, getPendingJobs, addPendingJob, removePendingJob,
-      getToastsEnabled, runOnJobUpdate,
+      addRunningJob, removeRunningJob, getRunningJobs, getPendingJobs, addPendingJob,
+      removePendingJob, getToastsEnabled, runOnJobUpdate,
     }}>
       {children}
     </V2DialogContext.Provider>

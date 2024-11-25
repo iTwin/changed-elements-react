@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { Button, Modal, ModalButtonBar, ModalContent } from "@itwin/itwinui-react";
-import { useContext, useEffect, useState, type ReactNode, } from "react";
+import { useContext, useEffect, useRef, useState, type ReactNode, type RefObject, } from "react";
 
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
 import { VersionCompare } from "../../../api/VersionCompare";
@@ -72,8 +72,8 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
   }
 
   const {
-    openDialog, closedDialog, getDialogOpen, addRunningJob, removeRunningJob, getRunningJobs,
-    getPendingJobs, removePendingJob, addPendingJob, getToastsEnabled, runOnJobUpdate,
+    addRunningJob, removeRunningJob, getRunningJobs, getPendingJobs, removePendingJob,
+    addPendingJob, getToastsEnabled, runOnJobUpdate,
   } = useContext(V2DialogContext);
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
   const [currentVersion, setCurrentVersion] = useState<NamedVersion>();
@@ -84,11 +84,13 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     getPendingJobs,
   );
 
+  const isDisposedRef = useRef(false);
+  useEffect(() => () => { isDisposedRef.current = true; }, []);
+
   useEffect(
     () => {
       let isDisposed = false;
       const getIsDisposed = () => isDisposed;
-      openDialog();
       if (result?.entries) {
         pollForInProgressJobs({
           iTwinId: props.iModelConnection.iTwinId as string,
@@ -99,7 +101,6 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
           setResult,
           removeRunningJob,
           getRunningJobs,
-          getDialogOpen,
           getIsDisposed,
           getToastsEnabled,
           runOnJobUpdate,
@@ -120,16 +121,15 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     }
 
     props.onClose?.();
-    closedDialog();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
     const startResult = await createOrRunManagerStartComparisonV2({
       targetVersion,
       comparisonJobClient,
       iModelConnection: props.iModelConnection,
       currentVersion,
+      isDisposedRef,
       addPendingJob,
       removePendingJob,
-      getDialogOpen,
       getToastsEnabled,
       runOnJobUpdate,
       iModelsClient,
@@ -152,7 +152,6 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
         setResult,
         removeRunningJob,
         getRunningJobs,
-        getDialogOpen,
         getIsDisposed: () => true,
         getToastsEnabled,
         runOnJobUpdate,
@@ -163,7 +162,6 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
 
   const _handleCancel = (): void => {
     props.onClose?.();
-    closedDialog();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogClosed);
   };
 
@@ -226,7 +224,7 @@ interface RunStartComparisonV2Args {
   currentVersion: NamedVersion;
   removePendingJob: (jobId: string) => void;
   addPendingJob: (jobId: string, comparisonJob: JobAndNamedVersions) => void;
-  getDialogOpen: () => boolean;
+  isDisposedRef: RefObject<boolean>;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (
     comparisonJobUpdateType: ComparisonJobUpdateType,
@@ -284,7 +282,7 @@ async function createOrRunManagerStartComparisonV2(
       return { startedComparison: true };
     }
 
-    if (args.getToastsEnabled() && !args.getDialogOpen()) {
+    if (args.getToastsEnabled() && !args.isDisposedRef.current) {
       toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
     }
 
@@ -358,7 +356,6 @@ interface PollForInProgressJobsArgs {
   setResult: (result: VersionState[]) => void;
   removeRunningJob: (jobId: string) => void;
   getRunningJobs: () => JobAndNamedVersions[];
-  getDialogOpen: () => boolean;
   getIsDisposed: () => boolean;
   getToastsEnabled: () => boolean;
   runOnJobUpdate: (
@@ -372,9 +369,8 @@ export function pollForInProgressJobs(args: PollForInProgressJobsArgs): void {
   void pollUntilCurrentRunningJobsCompleteAndToast(args);
   if (
     args.namedVersionLoaderState &&
-    args.namedVersionLoaderState.entries.length > 0 &&
-    args.getDialogOpen() &&
-    !args.getIsDisposed()
+    args.namedVersionLoaderState.entries.length > 0
+    && !args.getIsDisposed()
   ) {
     void pollUpdateCurrentEntriesForModal(args);
   }
@@ -403,7 +399,7 @@ async function pollUntilCurrentRunningJobsCompleteAndToast(
         notifyComparisonCompletion({
           isConnectionClosed: isConnectionClosed,
           getRunningJobs: args.getRunningJobs,
-          getDialogOpen: args.getDialogOpen,
+          getIsDisposed: args.getIsDisposed,
           runningJob,
           currentJobRsp: completedJob,
           removeRunningJob: args.removeRunningJob,
@@ -424,7 +420,7 @@ async function pollUntilCurrentRunningJobsCompleteAndToast(
 interface ConditionallyToastCompletionArgs {
   isConnectionClosed: boolean;
   getRunningJobs: () => JobAndNamedVersions[];
-  getDialogOpen: () => boolean;
+  getIsDisposed: () => boolean;
   runningJob: JobAndNamedVersions;
   currentJobRsp: ComparisonJob;
   removeRunningJob: (jobId: string) => void;
@@ -441,7 +437,7 @@ interface ConditionallyToastCompletionArgs {
 function notifyComparisonCompletion(args: ConditionallyToastCompletionArgs): void {
   if (args.currentJobRsp.comparisonJob.status === "Completed") {
     args.removeRunningJob(args.runningJob?.comparisonJob?.comparisonJob.jobId as string);
-    if (!VersionCompare.manager?.isComparing && !args.getDialogOpen()) {
+    if (!VersionCompare.manager?.isComparing && !args.getIsDisposed()) {
       if (args.getToastsEnabled()) {
         toastComparisonJobComplete({
           comparisonJob: args.currentJobRsp as ComparisonJobCompleted,
@@ -489,7 +485,7 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
     args.setResult(localState.slice());
   };
 
-  while (args.getDialogOpen() && !args.getIsDisposed()) {
+  while (!args.getIsDisposed()) {
     syncState();
 
     const loopDelayInMilliseconds = 5000;
