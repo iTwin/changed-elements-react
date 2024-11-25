@@ -482,7 +482,7 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
       idEntryMap.set(entries[i].id, { entry: entries[i], state: states[i] });
     }
 
-    let updatingEntries = getUpdatingEntries(entries, states, currentVersionId, currentRunningJobsMap);
+    let updatingEntries = getUpdatingEntries(states, currentRunningJobsMap);
     const loopDelayInMilliseconds = 5000;
     while (args.getDialogOpen() && !args.getIsDisposed()) {
       for (let i = 0; i < updatingEntries.entries.length; ++i) {
@@ -493,10 +493,10 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
           comparisonJobClient: args.comparisonJobClient,
           iTwinId: args.iTwinId,
           iModelId: args.iModelId,
-          startChangesetId: entry.changesetId,
-          endChangesetId: currentVersionId,
+          jobId: state.jobId,
         });
         state = {
+          jobId: state.jobId,
           state: VersionProcessedState.Processed,
           jobStatus: jobStatusAndJobProgress.jobStatus,
           jobProgress: jobStatusAndJobProgress.jobProgress,
@@ -515,7 +515,7 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
         },
         { entries: [] as NamedVersion[], states: [] as VersionState[] },
       ));
-      updatingEntries = getUpdatingEntries(entries, states, currentVersionId, currentRunningJobsMap);
+      updatingEntries = getUpdatingEntries(states, currentRunningJobsMap);
 
       if (args.getDialogOpen() && !args.getIsDisposed()) {
         args.setResult(states);
@@ -525,20 +525,15 @@ async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs)
 }
 
 function getUpdatingEntries(
-  entries: NamedVersion[],
   versionStates: VersionState[],
-  currentVersionId: string,
   currentRunningJobsMap: Map<string, JobAndNamedVersions>,
 ): { entries: NamedVersion[]; versionStates: VersionState[]; } {
   const result: ReturnType<typeof getUpdatingEntries> = { entries: [], versionStates: [] };
-  for (let i = 0; i < entries.length; ++i) {
-    const entry = entries[i];
-    const versionState = versionStates[i];
+  for (const versionState of versionStates) {
     if (
       versionState.jobStatus === "Processing" || versionState.jobStatus === "Queued" ||
-      currentRunningJobsMap.has(`${entry.changesetId}-${currentVersionId}`)
+      currentRunningJobsMap.has(versionState.jobId)
     ) {
-      result.entries.push(entry);
       result.versionStates.push(versionState);
     }
   }

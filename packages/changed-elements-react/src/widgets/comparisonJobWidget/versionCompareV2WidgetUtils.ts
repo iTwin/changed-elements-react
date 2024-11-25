@@ -85,8 +85,7 @@ export interface GetJobStatusAndJobProgress {
   comparisonJobClient: IComparisonJobClient;
   iTwinId: string;
   iModelId: string;
-  startChangesetId: string | null;
-  endChangesetId: string;
+  jobId: string;
 }
 
 export async function getJobStatusAndJobProgress(
@@ -97,7 +96,7 @@ export async function getJobStatusAndJobProgress(
     res = await args.comparisonJobClient.getComparisonJob({
       iTwinId: args.iTwinId,
       iModelId: args.iModelId,
-      jobId: `${args.startChangesetId}-${args.endChangesetId}`,
+      jobId: args.jobId,
     });
   } catch {
     return {

@@ -321,8 +321,10 @@ async function queryComparisonState(
   const currentVersionId = args.currentVersion?.changesetId ?? args.iModelConnection?.changeset.id;
   return Promise.all(
     args.namedVersions.map(async (entry) => {
-      if (pendingJobsMap.has(`${entry.changesetId}-${currentVersionId}`)) {
+      const jobId = `${entry.changesetId}-${currentVersionId}`;
+      if (pendingJobsMap.has(jobId)) {
         return {
+          jobId,
           state: VersionProcessedState.Processed,
           jobStatus: "Processing",
           jobProgress: { currentProgress: 0, maxProgress: 1 },
@@ -333,10 +335,9 @@ async function queryComparisonState(
         comparisonJobClient: args.comparisonJobClient,
         iTwinId: args.iTwinId,
         iModelId: args.iModelId,
-        startChangesetId: entry.changesetId,
-        endChangesetId: currentVersionId,
+        jobId,
       });
-      return { state: VersionProcessedState.Processed, jobStatus, jobProgress };
+      return { jobId, state: VersionProcessedState.Processed, jobStatus, jobProgress };
     }),
   );
 }

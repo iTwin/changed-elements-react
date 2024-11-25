@@ -15,6 +15,7 @@ export interface CurrentNamedVersionAndNamedVersions {
 }
 
 export type VersionState = {
+  jobId: string;
   state: VersionProcessedState;
   // nullable because we don't run jobs in V1. For v2 use only.
   jobStatus?: JobStatus;
