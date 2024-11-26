@@ -23,6 +23,13 @@
 
   "typescript.format.semicolons": "insert",
   "typescript.preferences.importModuleSpecifierEnding": "js",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.preferences.organizeImports": {
+    "caseFirst": "lower",
+    "caseSensitivity": "caseSensitive",
+    "numericCollation": true,
+    "typeOrder": "last",
+  },
   "typescript.reportStyleChecksAsWarnings": true,
 
   "[javascript][typescript][typescriptreact]": {
