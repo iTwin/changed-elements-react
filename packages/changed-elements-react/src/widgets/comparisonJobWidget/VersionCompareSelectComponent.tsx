@@ -98,7 +98,20 @@ function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps): R
             {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}:`}
           </div>
           <div className="comparison-job-container-current">
-            <CurrentVersionEntry namedVersion={props.currentVersion} isProcessed />
+            <div className="vc-entry-current">
+              <VersionNameAndDescription version={props.currentVersion} isProcessed />
+              <DateCurrentAndJobInfo createdDate={props.currentVersion.createdDateTime} jobStatus="Unknown">
+                <div className="entry-info">
+                  {
+                    props.currentVersion.createdDateTime &&
+                    new Date(props.currentVersion.createdDateTime).toDateString()
+                  }
+                </div>
+                <div className="entry-info">
+                  {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
+                </div>
+              </DateCurrentAndJobInfo>
+            </div>
           </div>
         </div>
       }
@@ -108,9 +121,11 @@ function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps): R
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
         </div>
       }
-      {<div className="comparison-job-label">
-        {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.withPrevious")}:`}
-      </div>}
+      {
+        <div className="comparison-job-label">
+          {`${IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.withPrevious")}:`}
+        </div>
+      }
       {
         props.entries.length > 0 && props.currentVersion ? (
           <VersionList
@@ -129,9 +144,9 @@ function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps): R
       }
       {
         props.manageNamedVersionsSlot &&
-        <ManageNamedVersions>
+        <div className="comparison-job-selector-manage-link">
           {props.manageNamedVersionsSlot}
-        </ManageNamedVersions>
+        </div>
       }
     </div>
   );
@@ -183,44 +198,6 @@ function VersionList(props: VersionListProps): ReactElement {
           {props.isLoading && <LoadingSpinner className="vc-spinner-entry-list" />}
         </div>
       </div>
-    </div>
-  );
-}
-
-interface ManageNamedVersionsProps {
-  children: ReactNode;
-}
-
-/** Provides a div that should be populated by child component. */
-function ManageNamedVersions(props: ManageNamedVersionsProps): ReactElement {
-  return (
-    <div className="comparison-job-selector-manage-link">
-      {props.children}
-    </div>
-  );
-}
-
-interface CurrentVersionEntryProps {
-  namedVersion: NamedVersion;
-  isProcessed: boolean;
-}
-
-/** Component for current version. Displays the current version's name date description. */
-function CurrentVersionEntry(props: CurrentVersionEntryProps): ReactElement {
-  return (
-    <div className="vc-entry-current" key={props.namedVersion.changesetId}>
-      <VersionNameAndDescription version={props.namedVersion} isProcessed={props.isProcessed} />
-      <DateCurrentAndJobInfo createdDate={props.namedVersion.createdDateTime} jobStatus={"Unknown"}>
-        <div className="entry-info">
-          {
-            props.namedVersion.createdDateTime &&
-            new Date(props.namedVersion.createdDateTime).toDateString()
-          }
-        </div>
-        <div className="entry-info">
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.current")}
-        </div>
-      </DateCurrentAndJobInfo>
     </div>
   );
 }
