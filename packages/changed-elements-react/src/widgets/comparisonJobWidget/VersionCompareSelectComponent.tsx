@@ -14,29 +14,17 @@ import {
   type JobStatus, type VersionState
 } from "./NamedVersions";
 
-/** Options for VersionCompareSelectComponent. */
 interface VersionCompareSelectorProps {
-  /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
-
-  /** Optional handler for when a version is selected. */
   onVersionSelected: (
     currentVersion: NamedVersion,
     targetVersion: NamedVersion,
     chunks?: ChangesetChunk[],
   ) => void;
-
-  /** Whether to show a title for the component or not. */
-  wantTitle?: boolean;
-
-  /** Named Versions to be displayed */
-  namedVersions: CurrentNamedVersionAndNamedVersions | undefined;
-
-  /** Optional prop for a user supplied component to handle managing named versions. */
+  wantTitle?: boolean | undefined;
+  namedVersions?: CurrentNamedVersionAndNamedVersions | undefined;
   manageNamedVersionsSlot?: ReactNode | undefined;
-
-  /** If true display loading spinner to indicate we are receiving more named versions. */
-  isLoading: boolean;
+  isLoading?: boolean | undefined;
 }
 
 /** Component that lets the user select which named version to compare to. */
@@ -75,16 +63,12 @@ export function VersionCompareSelectComponent(props: VersionCompareSelectorProps
 interface VersionCompareSelectorInnerProps {
   entries: NamedVersion[];
   versionState: VersionState[];
-  currentVersion: NamedVersion | undefined;
-  selectedVersionChangesetId: string | undefined;
+  currentVersion?: NamedVersion | undefined;
+  selectedVersionChangesetId?: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
-  wantTitle: boolean | undefined;
-
-  /** Optional prop for a user supplied component to handle managing named versions. */
+  wantTitle?: boolean | undefined;
   manageNamedVersionsSlot?: ReactNode | undefined;
-
-  /** If true display loading spinner to indicate we are receiving more named versions. */
-  isLoading: boolean;
+  isLoading?: boolean | undefined;
 }
 
 /** Component that houses named version list. Also displays the current versions information. */
@@ -154,17 +138,11 @@ function VersionCompareSelectorInner(props: VersionCompareSelectorInnerProps): R
 
 interface VersionListProps {
   entries: NamedVersion[];
-
   versionState: VersionState[];
-
   currentVersion: NamedVersion;
-
-  selectedVersionChangesetId: string | undefined;
-
+  selectedVersionChangesetId?: string | undefined;
   onVersionClicked: (targetVersion: NamedVersion) => void;
-
-  /** If true display loading spinner to indicate we are receiving more named versions. */
-  isLoading: boolean;
+  isLoading?: boolean | undefined;
 }
 
 /** Component that displays named versions (non current). */
