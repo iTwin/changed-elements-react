@@ -8,7 +8,6 @@ import { useState, type ReactNode } from "react";
 
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../api/VerboseMessages";
 import type { NamedVersion } from "../../clients/iModelsClient";
-import { useVersionCompare } from "../../VersionCompareContext";
 import { useNamedVersionLoader } from "./useNamedVersionLoader.js";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 
@@ -51,18 +50,13 @@ interface VersionCompareSelectDialogV2Props {
  * @throws Exception if context does not include iModelsClient and comparisonJobClient.
 */
 export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2Props) {
-  const { comparisonJobClient } = useVersionCompare();
-  if (!comparisonJobClient) {
-    throw new Error("V2 Client is not initialized in given context.");
-  }
-
   const { isLoading, result, prepareComparison } = useNamedVersionLoader(props.iModelConnection);
 
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
   const [currentVersion, setCurrentVersion] = useState<NamedVersion>();
 
   const _handleOk = async (): Promise<void> => {
-    if (!comparisonJobClient || !result || !targetVersion || !currentVersion) {
+    if (!result || !targetVersion || !currentVersion) {
       return;
     }
 
@@ -81,6 +75,7 @@ export function VersionCompareSelectDialogV2(props: VersionCompareSelectDialogV2
     setCurrentVersion(currentVersion);
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.selectDialogOpened);
   };
+
   return (
     <Modal
       data-testid={props["data-testid"]}
