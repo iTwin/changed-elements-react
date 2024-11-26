@@ -92,7 +92,13 @@ export function VersionCompareSelectProviderV2(
     dialogPendingJobs.current.delete(jobId);
   };
   const getPendingJobs = () => Array.from(dialogPendingJobs.current.values());
-  const getToastsEnabled = () => enableComparisonJobUpdateToasts ?? false;
+
+  // This is a hack to get the most recent value of enableComparisonJobUpdateToasts
+  // in useNamedVersionLoader because the effects there don't list all their dependencies
+  const enableComparisonJobUpdateToastsRef = useRef(enableComparisonJobUpdateToasts);
+  enableComparisonJobUpdateToastsRef.current = enableComparisonJobUpdateToasts;
+
+  const getToastsEnabled = () => enableComparisonJobUpdateToastsRef.current ?? false;
   const runOnJobUpdate = async (
     comparisonEventType: ComparisonJobUpdateType,
     jobAndNamedVersions?: JobAndNamedVersions,

@@ -416,31 +416,33 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             initialProperties={this.state.reportProperties}
           />
         }
-        {
-          this.state.versionSelectDialogVisible &&
-          (
-            this.props.useV2Widget
-              ? (
-                <VersionCompareSelectProviderV2
-                  onJobUpdate={this.props.onJobUpdate}
-                  enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}
-                >
+        <VersionCompareSelectProviderV2
+          onJobUpdate={this.props.onJobUpdate}
+          enableComparisonJobUpdateToasts={
+            !this.state.versionSelectDialogVisible && this.props.enableComparisonJobUpdateToasts
+          }
+        >
+          {
+            this.state.versionSelectDialogVisible &&
+            (
+              this.props.useV2Widget
+                ? (
                   <VersionCompareSelectDialogV2
                     data-testid="comparison-widget-v2-modal"
                     iModelConnection={this.props.iModelConnection}
                     onClose={this._handleVersionSelectDialogClose}
                     manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
                   />
-                </VersionCompareSelectProviderV2>
-              ) : (
-                <VersionCompareSelectDialog
-                  isOpen
-                  iModelConnection={this.props.iModelConnection}
-                  onClose={this._handleVersionSelectDialogClose}
-                />
-              )
-          )
-        }
+                ) : (
+                  <VersionCompareSelectDialog
+                    isOpen
+                    iModelConnection={this.props.iModelConnection}
+                    onClose={this._handleVersionSelectDialogClose}
+                  />
+                )
+            )
+          }
+        </VersionCompareSelectProviderV2>
       </>
     );
   }
