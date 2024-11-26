@@ -561,7 +561,7 @@ interface ConditionallyToastCompletionArgs {
 function notifyComparisonCompletion(args: ConditionallyToastCompletionArgs): void {
   if (args.currentJobRsp.comparisonJob.status === "Completed") {
     args.removeRunningJob(args.runningJob?.comparisonJob?.comparisonJob.jobId as string);
-    if (!VersionCompare.manager?.isComparing && !args.getIsDisposed()) {
+    if (!VersionCompare.manager?.isComparing && args.getIsDisposed()) {
       if (args.getToastsEnabled()) {
         toastComparisonJobComplete({
           comparisonJob: args.currentJobRsp as ComparisonJobCompleted,
@@ -706,7 +706,7 @@ async function createOrRunManagerStartComparisonV2(
       return { startedComparison: true };
     }
 
-    if (args.getToastsEnabled() && !args.isDisposedRef.current) {
+    if (args.getToastsEnabled() && args.isDisposedRef.current) {
       toastComparisonJobProcessing(args.currentVersion, args.targetVersion);
     }
 
