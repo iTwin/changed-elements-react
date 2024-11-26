@@ -11,7 +11,7 @@ import type {
   ComparisonJobCompleted, IComparisonJobClient,
 } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
-import type { ComparisonJobUpdateType } from "./components/VersionCompareDialogProvider";
+import type { ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
 import type { JobAndNamedVersions } from "./NamedVersions.js";
 import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils.js";
 

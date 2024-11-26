@@ -6,16 +6,16 @@ import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import { Button, Modal, ModalButtonBar, ModalContent } from "@itwin/itwinui-react";
 import { useState, type ReactNode } from "react";
 
-import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages";
-import type { NamedVersion } from "../../../clients/iModelsClient";
-import { useVersionCompare } from "../../../VersionCompareContext";
-import { useNamedVersionLoader } from "../useNamedVersionLoader.js";
+import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../api/VerboseMessages";
+import type { NamedVersion } from "../../clients/iModelsClient";
+import { useVersionCompare } from "../../VersionCompareContext";
+import { useNamedVersionLoader } from "./useNamedVersionLoader.js";
 import { VersionCompareSelectComponent } from "./VersionCompareSelectComponent";
 
 import "./VersionCompareSelectDialogV2.scss";
 
 /** Options for VersionCompareSelectDialogV2. */
-export interface VersionCompareSelectDialogV2Props {
+interface VersionCompareSelectDialogV2Props {
   /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
 

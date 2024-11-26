@@ -10,7 +10,7 @@ import type {
   ComparisonJob, ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient,
 } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
-import type { ComparisonJobUpdateType } from "./components/VersionCompareDialogProvider";
+import type { ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
 import type { JobAndNamedVersions, JobStatusAndJobProgress } from "./NamedVersions.js";
 import { toastComparisonVisualizationStarting } from "./versionCompareToasts";
 

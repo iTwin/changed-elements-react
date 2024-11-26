@@ -7,12 +7,12 @@ import { LoadingSpinner } from "@itwin/core-react";
 import { Badge, ProgressLinear, ProgressRadial, Radio, Text } from "@itwin/itwinui-react";
 import { useState, type ReactElement, type ReactNode } from "react";
 
-import type { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
-import type { NamedVersion } from "../../../clients/iModelsClient";
+import type { ChangesetChunk } from "../../api/ChangedElementsApiClient";
+import type { NamedVersion } from "../../clients/iModelsClient";
 import {
   VersionProcessedState, type CurrentNamedVersionAndNamedVersions, type JobProgress,
   type JobStatus, type VersionState,
-} from "../NamedVersions";
+} from "./NamedVersions";
 
 /** Options for VersionCompareSelectComponent. */
 interface VersionCompareSelectorProps {

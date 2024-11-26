@@ -29,10 +29,10 @@ import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 import type { JobAndNamedVersions } from "./comparisonJobWidget/NamedVersions.js";
 import {
   VersionCompareSelectProviderV2, type ComparisonJobUpdateType,
-} from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
+} from "./comparisonJobWidget/VersionCompareDialogProvider.js";
 import {
   VersionCompareSelectDialogV2,
-} from "./comparisonJobWidget/components/VersionCompareSelectDialogV2.js";
+} from "./comparisonJobWidget/VersionCompareSelectDialogV2.js";
 
 import "./ChangedElementsWidget.scss";
 

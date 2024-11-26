@@ -29,10 +29,10 @@ export * from "./contentviews/PropertyComparisonTable.js";
 export type { FilterData, FilterOptions, SavedFiltersManager } from "./SavedFiltersManager.js";
 export { VersionCompareContext, type VersionCompareContextValue } from "./VersionCompareContext.js";
 export * from "./widgets/ChangedElementsWidget.js";
-export * from "./widgets/comparisonJobWidget/components/VersionCompareDialogProvider.js";
+export * from "./widgets/comparisonJobWidget/VersionCompareDialogProvider.js";
 export {
   VersionCompareSelectDialogV2,
-} from "./widgets/comparisonJobWidget/components/VersionCompareSelectDialogV2.js";
+} from "./widgets/comparisonJobWidget/VersionCompareSelectDialogV2.js";
 export type { JobAndNamedVersions } from "./widgets/comparisonJobWidget/NamedVersions.js";
 export { pollForInProgressJobs } from "./widgets/comparisonJobWidget/useNamedVersionLoader.js";
 export * from "./widgets/comparisonJobWidget/versionCompareToasts.js";

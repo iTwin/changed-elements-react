@@ -16,7 +16,7 @@ import { tryXTimes } from "../../utils/utils.js";
 import { useVersionCompare } from "../../VersionCompareContext.js";
 import {
   V2DialogContext, type ComparisonJobUpdateType,
-} from "./components/VersionCompareDialogProvider.js";
+} from "./VersionCompareDialogProvider.js";
 import {
   VersionProcessedState, type JobAndNamedVersions, type VersionState,
 } from "./NamedVersions.js";
