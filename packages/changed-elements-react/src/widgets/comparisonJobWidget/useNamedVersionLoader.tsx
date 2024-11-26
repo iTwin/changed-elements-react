@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 
 import type { IComparisonJobClient } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
-import { arrayToMap } from "../../utils/utils";
 import {
   VersionProcessedState, type JobAndNamedVersions, type VersionState,
 } from "./NamedVersions.js";
@@ -314,9 +313,10 @@ interface QueryComparisonState {
 async function queryComparisonState(
   args: QueryComparisonState,
 ): Promise<VersionState[]> {
-  const pendingJobsMap = arrayToMap(
-    args.getPendingJobs(),
-    (job) => createJobId(job.targetNamedVersion, job.currentNamedVersion),
+  const pendingJobsMap = new Set(
+    args.getPendingJobs().map(
+      (job) => `${createJobId(job.targetNamedVersion, job.currentNamedVersion)}`,
+    ),
   );
   const currentVersionId = args.currentVersion?.changesetId ?? args.iModelConnection?.changeset.id;
   return Promise.all(

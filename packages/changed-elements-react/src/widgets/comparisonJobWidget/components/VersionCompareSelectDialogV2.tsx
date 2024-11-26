@@ -12,7 +12,7 @@ import {
   ComparisonJob, ComparisonJobCompleted, IComparisonJobClient,
 } from "../../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
-import { arrayToMap, tryXTimes } from "../../../utils/utils";
+import { tryXTimes } from "../../../utils/utils";
 import { useVersionCompare } from "../../../VersionCompareContext";
 import {
   VersionProcessedState, type JobAndNamedVersions, type VersionState
@@ -466,79 +466,57 @@ function notifyComparisonCompletion(args: ConditionallyToastCompletionArgs): voi
 }
 
 async function pollUpdateCurrentEntriesForModal(args: PollForInProgressJobsArgs): Promise<void> {
-  const currentVersionId = args.iModelConnection?.changeset.id;
-  let entries = args.namedVersionLoaderState!.entries.slice();
-  let states = args.namedVersionLoaderState!.versionState.slice();
-  const currentRunningJobsMap = arrayToMap(
-    args.getRunningJobs(),
-    (job) => job.comparisonJob?.comparisonJob.jobId as string,
+  /** Mutable array of immutable VersionState elements. */
+  const localState = args.namedVersionLoaderState!.versionState;
+
+  const currentRunningJobs = new Set(
+    args.getRunningJobs().map((job) => job.comparisonJob?.comparisonJob.jobId),
   );
-  const jobsAreInProgress = states.some(
-    ({ jobStatus }) => jobStatus === "Processing" || jobStatus === "Queued",
-  ) || args.getRunningJobs().length > 0;
-  if (jobsAreInProgress) {
-    const idEntryMap = new Map<string, { entry: NamedVersion; state: VersionState; }>();
-    for (let i = 0; i < entries.length; ++i) {
-      idEntryMap.set(entries[i].id, { entry: entries[i], state: states[i] });
-    }
+  const currentUpdatingEntries = localState
+    .map((entry, entryIndex) => ({ entry, entryIndex }))
+    .filter(({ entry }) => (
+      entry.jobStatus === "Processing" ||
+      entry.jobStatus === "Queued" ||
+      currentRunningJobs.has(entry.jobId)
+    ));
 
-    let updatingEntries = getUpdatingEntries(states, currentRunningJobsMap);
+  if (currentUpdatingEntries.length === 0) {
+    return;
+  }
+
+  const syncState = () => {
+    currentUpdatingEntries.forEach(({ entry, entryIndex }) => localState[entryIndex] = entry);
+    args.setResult(localState.slice());
+  };
+
+  while (args.getDialogOpen() && !args.getIsDisposed()) {
+    syncState();
+
     const loopDelayInMilliseconds = 5000;
-    while (args.getDialogOpen() && !args.getIsDisposed()) {
-      for (let i = 0; i < updatingEntries.entries.length; ++i) {
-        const entry = updatingEntries.entries[i];
-        let state = updatingEntries.versionStates[i];
-        await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
-        const jobStatusAndJobProgress = await getJobStatusAndJobProgress({
-          comparisonJobClient: args.comparisonJobClient,
-          iTwinId: args.iTwinId,
-          iModelId: args.iModelId,
-          jobId: state.jobId,
-        });
-        state = {
-          jobId: state.jobId,
-          state: VersionProcessedState.Processed,
-          jobStatus: jobStatusAndJobProgress.jobStatus,
-          jobProgress: jobStatusAndJobProgress.jobProgress,
-        };
-        idEntryMap.set(entry.id, { entry, state });
-        if (jobStatusAndJobProgress.jobStatus === "Available") {
-          args.removeRunningJob(`${entry.changesetId}-${currentVersionId}`);
-        }
+    for (let i = 0; i < currentUpdatingEntries.length; i++) {
+      const { entry } = currentUpdatingEntries[i];
+      if (entry.jobStatus !== "Processing" && entry.jobStatus !== "Queued") {
+        continue;
       }
 
-      ({ entries, states } = Array.from(idEntryMap.values()).reduce(
-        (acc, { entry, state }) => {
-          acc.entries.push(entry);
-          acc.states.push(state);
-          return acc;
-        },
-        { entries: [] as NamedVersion[], states: [] as VersionState[] },
-      ));
-      updatingEntries = getUpdatingEntries(states, currentRunningJobsMap);
-
-      if (args.getDialogOpen() && !args.getIsDisposed()) {
-        args.setResult(states);
+      await new Promise((resolve) => setTimeout(resolve, loopDelayInMilliseconds));
+      const jobStatusAndJobProgress = await getJobStatusAndJobProgress({
+        comparisonJobClient: args.comparisonJobClient,
+        iTwinId: args.iTwinId,
+        iModelId: args.iModelId,
+        jobId: entry.jobId,
+      });
+      currentUpdatingEntries[i].entry = {
+        jobId: entry.jobId,
+        state: VersionProcessedState.Processed,
+        jobStatus: jobStatusAndJobProgress.jobStatus,
+        jobProgress: jobStatusAndJobProgress.jobProgress,
+      };
+      if (jobStatusAndJobProgress.jobStatus === "Available") {
+        args.removeRunningJob(entry.jobId);
       }
     }
   }
-}
-
-function getUpdatingEntries(
-  versionStates: VersionState[],
-  currentRunningJobsMap: Map<string, JobAndNamedVersions>,
-): { entries: NamedVersion[]; versionStates: VersionState[]; } {
-  const result: ReturnType<typeof getUpdatingEntries> = { entries: [], versionStates: [] };
-  for (const versionState of versionStates) {
-    if (
-      versionState.jobStatus === "Processing" || versionState.jobStatus === "Queued" ||
-      currentRunningJobsMap.has(versionState.jobId)
-    ) {
-      result.versionStates.push(versionState);
-    }
-  }
-
-  return result;
 }
 
 interface PostOrGetComparisonJobParams {
