@@ -3,16 +3,16 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  IModelApp, NotifyMessageDetails, OutputMessagePriority, OutputMessageType, type IModelConnection,
+  IModelApp, NotifyMessageDetails, OutputMessagePriority, OutputMessageType, type IModelConnection
 } from "@itwin/core-frontend";
 import { toaster } from "@itwin/itwinui-react";
 
 import type {
-  ComparisonJobCompleted, IComparisonJobClient,
+  ComparisonJobCompleted, IComparisonJobClient
 } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
-import type { ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
 import type { JobAndNamedVersions } from "./NamedVersions.js";
+import type { ComparisonJobUpdateType } from "./VersionCompareDialogProvider";
 import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils.js";
 
 /** Toast Comparison Job Processing.

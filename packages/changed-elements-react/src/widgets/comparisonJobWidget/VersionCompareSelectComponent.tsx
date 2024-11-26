@@ -11,7 +11,7 @@ import type { ChangesetChunk } from "../../api/ChangedElementsApiClient";
 import type { NamedVersion } from "../../clients/iModelsClient";
 import {
   VersionProcessedState, type CurrentNamedVersionAndNamedVersions, type JobProgress,
-  type JobStatus, type VersionState,
+  type JobStatus, type VersionState
 } from "./NamedVersions";
 
 /** Options for VersionCompareSelectComponent. */

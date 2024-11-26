@@ -5,7 +5,7 @@
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
   IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection,
-  type ScreenViewport,
+  type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
@@ -28,10 +28,10 @@ import InfoButton from "./InformationButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
 import type { JobAndNamedVersions } from "./comparisonJobWidget/NamedVersions.js";
 import {
-  VersionCompareSelectProviderV2, type ComparisonJobUpdateType,
+  VersionCompareSelectProviderV2, type ComparisonJobUpdateType
 } from "./comparisonJobWidget/VersionCompareDialogProvider.js";
 import {
-  VersionCompareSelectDialogV2,
+  VersionCompareSelectDialogV2
 } from "./comparisonJobWidget/VersionCompareSelectDialogV2.js";
 
 import "./ChangedElementsWidget.scss";

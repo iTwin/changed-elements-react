@@ -15,14 +15,14 @@ export * from "./api/VersionCompareTiles.js";
 export * from "./api/VersionCompareVisualization.js";
 export type { MainVisualizationOptions, VisualizationHandler } from "./api/VisualizationHandler.js";
 export {
-  ComparisonJobClient, type ComparisonJobClientParams
+  ComparisonJobClient, type ComparisonJobClientParams,
 } from "./clients/ComparisonJobClient.js";
 export type {
   ComparisonJob, ComparisonJobCompleted, ComparisonJobFailed, ComparisonJobQueued,
-  ComparisonJobStarted
+  ComparisonJobStarted,
 } from "./clients/IComparisonJobClient.js";
 export type {
-  Changeset, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
+  Changeset, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion,
 } from "./clients/iModelsClient.js";
 export { ITwinIModelsClient, type ITwinIModelsClientParams } from "./clients/iTwinIModelsClient.js";
 export * from "./contentviews/PropertyComparisonTable.js";

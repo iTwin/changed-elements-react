@@ -7,7 +7,7 @@ import type { IModelConnection } from "@itwin/core-frontend";
 
 import { VersionCompare } from "../../api/VersionCompare";
 import type {
-  ComparisonJob, ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient,
+  ComparisonJob, ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient
 } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
 import type { ComparisonJobUpdateType } from "./VersionCompareDialogProvider";

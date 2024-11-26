@@ -4,27 +4,25 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import {
-  useContext, useEffect, useRef, useState, type RefObject, type SetStateAction,
+  useContext, useEffect, useRef, useState, type RefObject, type SetStateAction
 } from "react";
 
 import { VersionCompare } from "../../api/VersionCompare.js";
 import type {
-  ComparisonJob, ComparisonJobCompleted, IComparisonJobClient,
+  ComparisonJob, ComparisonJobCompleted, IComparisonJobClient
 } from "../../clients/IComparisonJobClient";
 import type { IModelsClient, NamedVersion } from "../../clients/iModelsClient";
 import { tryXTimes } from "../../utils/utils.js";
 import { useVersionCompare } from "../../VersionCompareContext.js";
 import {
-  V2DialogContext, type ComparisonJobUpdateType,
-} from "./VersionCompareDialogProvider.js";
-import {
-  VersionProcessedState, type JobAndNamedVersions, type VersionState,
+  VersionProcessedState, type JobAndNamedVersions, type VersionState
 } from "./NamedVersions.js";
+import { V2DialogContext, type ComparisonJobUpdateType } from "./VersionCompareDialogProvider.js";
 import {
-  toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing,
+  toastComparisonJobComplete, toastComparisonJobError, toastComparisonJobProcessing
 } from "./versionCompareToasts.js";
 import {
-  createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2,
+  createJobId, getJobStatusAndJobProgress, runManagerStartComparisonV2
 } from "./versionCompareV2WidgetUtils";
 
 interface UseNamedVersionLoaderResult {
@@ -218,7 +216,7 @@ function useInitialLoading(args: UseInitialLoadingArgs): void {
                 changeset.id,
                 args.iModelsClient,
                 iModelId,
-                changeset.index
+                changeset.index,
               );
             }
 
