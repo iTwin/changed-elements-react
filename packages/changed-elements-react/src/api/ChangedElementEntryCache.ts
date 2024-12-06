@@ -451,6 +451,10 @@ export class ChangedElementEntryCache {
     return entries;
   }
 
+  public getChangeElementIdFromModelId(modelId: string) {
+    return new Set( this.getAll().filter((entry) => entry.modelId === modelId).map((entry) => entry.id));
+  }
+
   /**
    * Returns true if the cache has this element in comparison
    * @param id Id of element to check
