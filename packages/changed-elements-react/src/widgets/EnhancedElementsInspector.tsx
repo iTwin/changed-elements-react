@@ -338,7 +338,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
           key={localeStr}
           label={IModelApp.localization.getLocalizedString(`VersionCompare:typeOfChange.${localeStr}`)}
           checked={isOn}
-          onClick={() => {
+          onChange={() => {
             const opts = props.options;
             opts.wantedTypeOfChange = isOn ? opts.wantedTypeOfChange & ~flag : opts.wantedTypeOfChange | flag;
             props.onFilterChange(opts);
