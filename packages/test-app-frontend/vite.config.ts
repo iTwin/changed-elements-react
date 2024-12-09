@@ -36,31 +36,31 @@ export default defineConfig(() => ({
       },
       {
         find: /^~(.*\/core-react\/)scrollbar$/,
-        replacement: "node_modules/$1/_scrollbar.scss",
+        replacement: path.resolve("node_modules/$1/_scrollbar.scss"),
       },
       {
         find: /^~(.*\/core-react\/)typography$/,
-        replacement: "node_modules/$1/_typography.scss",
+        replacement: path.resolve("node_modules/$1/_typography.scss"),
       },
       {
         find: /^~(.*\/core-react\/)z-index$/,
-        replacement: "node_modules/$1/_z-index.scss",
+        replacement: path.resolve("node_modules/$1/_z-index.scss"),
       },
       {
         find: /^~(.*\/core-react\/)geometry$/,
-        replacement: "node_modules/$1/_geometry.scss",
+        replacement: path.resolve("node_modules/$1/_geometry.scss"),
       },
       {
         find: /^~(.*\/appui-layout-react\/.*\/)variables$/,
-        replacement: "node_modules/$1/_variables.scss",
+        replacement: path.resolve("node_modules/$1/_variables.scss"),
       },
       {
         find: /^~(.*\.scss)$/,
-        replacement: "node_modules/$1",
+        replacement: path.resolve("node_modules/$1"),
       },
       {
         find: /^~(.*)(?!\.scss)$/,
-        replacement: "node_modules/$1.scss",
+        replacement: path.resolve("node_modules/$1.scss"),
       },
     ],
   },
