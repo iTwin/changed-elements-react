@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Fixes
 
+* Fixed model toggle when hide all is on. When hide all is on and a model is toggled on we would show only unchanged elements for that model and not all changed elements for given model.
+
+## [0.11.3](https://github.com/iTwin/changed-elements-react/tree/v0.11.3/packages/changed-elements-react) - 2024-11-6
+
+## Fixes
+
+* Fixed emphasized elements(EE) not being respected when version compare is stopped. Now (version compare)VC restores EE that were present before VC is run.
+
+## [0.11.2](https://github.com/iTwin/changed-elements-react/tree/v0.11.2/packages/changed-elements-react) - 2024-10-29
+
+## Fixes
+
 * Fixed color issues for feedback btn text
 
 ## [0.11.1](https://github.com/iTwin/changed-elements-react/tree/v0.11.1/packages/changed-elements-react) - 2024-10-16
