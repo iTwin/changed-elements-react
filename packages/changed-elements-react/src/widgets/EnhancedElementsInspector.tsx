@@ -1150,9 +1150,9 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (visualizationManager) {
       if (item.extendedData?.isModel) {
-        const set = this.props.manager.changedElementsManager.entryCache.getChangeElementIdFromModelId(item.id);
+        const set = this.props.manager.changedElementsManager.entryCache.getChangeElementIdsFromModelId(item.id);
         await visualizationManager.toggleModel(item.id);
-        await visualizationManager?.toggleElementsVisibility(!isVisible, set, false, false);
+        await visualizationManager.toggleElementsVisibility(!isVisible, set, false, false);
       } else if (!ChangesTreeDataProvider.isFakeNode(item)) {
         await visualizationManager.toggleChangedElementsVisibility(!isVisible, elementsNeededForVisibility);
       } else {
