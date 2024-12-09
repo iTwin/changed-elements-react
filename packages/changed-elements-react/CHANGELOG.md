@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Fixes
 
+* Fix the following console warnings in development environment
+  * Receiving invalid property when mounting `<ChangedElementsWidget />` with V2 version selector
+  * Receiving invalid list ref when displaying changed elements list
+  * `checked` checkbox property not being accompanied by `onChange` event handler when rendering element filters popup
 * Fixed color issues for feedback btn text
 
 ## [0.11.1](https://github.com/iTwin/changed-elements-react/tree/v0.11.1/packages/changed-elements-react) - 2024-10-16

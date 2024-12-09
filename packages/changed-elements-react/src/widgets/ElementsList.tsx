@@ -10,6 +10,7 @@ import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
 import { AutoSizer } from "../AutoSizer.js";
+import { mergeRefs } from "../common.js";
 import { ElementNodeComponent } from "./ElementNodeComponent.js";
 
 import "./ChangedElementsInspector.scss";
@@ -180,10 +181,10 @@ export const ElementsList = forwardRef<HTMLDivElement, ElementsListProps>(
               itemCount={props.nodes.length}
               loadMoreItems={loadMoreItems}
             >
-              {({ onItemsRendered }) => {
+              {({ onItemsRendered, ref }) => {
                 return (
                   <FixedSizeList
-                    ref={listRef}
+                    ref={mergeRefs(ref, listRef)}
                     style={{ overflow: "overlay" }}
                     height={size.height}
                     itemCount={props.nodes.length}
