@@ -32,10 +32,9 @@
 }
 
 .manage-named-versions-message {
+  margin-left: auto;
   color: var(--iui-color-text-accent);
   padding-left: var(--iui-size-2xs);
-  width: 100%;
-  text-align: right;
   text-decoration: underline;
   cursor: pointer;
 }
