@@ -93,7 +93,7 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
         }
         <div className="settings">
           {
-            (displaySideBySideToggle ?? true) &&
+            (displaySideBySideToggle ?? props.onSideBySideToggle) &&
             <SideBySideToggle
               manager={manager}
               selection={selection}
