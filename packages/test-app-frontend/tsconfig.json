@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "paths": {
       "@itwin/changed-elements-react": [ "../changed-elements-react/src/index.ts" ],
+      "@itwin/changed-elements-react/experimental": [ "../changed-elements-react/src/experimental.ts" ],
     },
   },
   "include": [ "src" ],

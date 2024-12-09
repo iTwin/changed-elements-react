@@ -4,17 +4,19 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance, StagePanelLocation,
-  StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, UiFramework, UiItemsManager,
-  UiItemsProvider, type Widget
+  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance,
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
+  UiFramework, UiItemsManager, UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
+  ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
   VersionCompareFeatureTracking
 } from "@itwin/changed-elements-react";
+import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
 import { Id64 } from "@itwin/core-bentley";
 import {
-  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface,
+  IModelTileRpcInterface
 } from "@itwin/core-common";
 import {
   CheckpointConnection, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d, ViewState
@@ -269,6 +271,7 @@ class MainFrontstageProvider extends StandardFrontstageProvider {
         pinned: true,
         defaultState: StagePanelState.Open,
         size: 400,
+        maxSizeSpec: Number.POSITIVE_INFINITY,
       },
     });
 
@@ -294,15 +297,24 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    return [{
-      id: "ChangedElementsWidget",
-      content: <ChangedElementsWidget useV2Widget
-        feedbackUrl="https://example.com"
-        iModelConnection={UiFramework.getIModelConnection()!}
-        enableComparisonJobUpdateToasts
-        manageNamedVersionsSlot={<ManageNamedVersions />}
-      />,
-    }];
+    const iModel = UiFramework.getIModelConnection();
+    if (!iModel) {
+      return [];
+    }
+
+    return [
+      {
+        id: "NamedVersionSelector",
+        label: "NamedVersionSelector",
+        content: (
+          <NamedVersionSelectorWidget
+            iModel={iModel}
+            manager={VersionCompare.manager}
+            manageVersions={<ManageNamedVersions />}
+          />
+        ),
+      },
+    ];
   }
 }
 

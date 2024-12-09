@@ -1,0 +1,40 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+@layer itwinui.v3;
+
+@layer changed-elements-react.v1 {
+  ._cer_v1_text {
+    &[data-weight="light"] {
+      font-weight: var(--iui-font-weight-light);
+    }
+
+    &[data-weight="normal"] {
+      font-weight: var(--iui-font-weight-normal);
+    }
+
+    &[data-weight="semibold"] {
+      font-weight: var(--iui-font-weight-semibold);
+    }
+
+    &[data-weight="bold"] {
+      font-weight: var(--iui-font-weight-bold);
+    }
+
+    &[data-overflow="wrap"] {
+      white-space: normal;
+    }
+
+    &[data-overflow="nowrap"] {
+      white-space: nowrap;
+    }
+
+    &[data-overflow="ellipsis"] {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

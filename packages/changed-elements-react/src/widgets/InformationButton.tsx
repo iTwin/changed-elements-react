@@ -3,14 +3,12 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { SvgInfo } from "@itwin/itwinui-icons-react";
-import { DropdownMenu, IconButton, MenuExtraContent, Text } from "@itwin/itwinui-react";
+import { DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
+import type { ReactNode } from "react";
 
 interface Props {
-  // title of information drop down
-  title: string;
-  // contents of information drop down
-  message: string;
   "data-testid"?: string;
+  children: ReactNode;
 }
 
 /**
@@ -24,13 +22,13 @@ function InfoButton(props: Props) {
       placement="bottom-end"
       menuItems={() => [
         <MenuExtraContent key={0}>
-          <Text variant="leading">{props.title}</Text>
-          <Text>{props.message}</Text>
+          {props.children}
         </MenuExtraContent>,
       ]}
     >
       <IconButton
         data-testid={props["data-testid"]}
+        size="small"
         styleType="borderless"
         aria-label="Information"
       >
