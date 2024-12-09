@@ -279,9 +279,11 @@ export class VersionCompareManager {
         IModelVersion.asOfChangeSet(changesetId),
       );
 
-      // Keep metadata around for UI uses and other queries
-      this.currentVersion = currentVersion;
-      this.targetVersion = targetVersion;
+      // Keep metadata around for UI uses and other queries. We may receive an
+      // immutable React state, thus a copy is needed in case user ever atttempts
+      // to mutate the objects.
+      this.currentVersion = structuredClone(currentVersion);
+      this.targetVersion = structuredClone(targetVersion);
 
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
@@ -414,9 +416,11 @@ export class VersionCompareManager {
         IModelVersion.asOfChangeSet(changesetId),
       );
 
-      // Keep metadata around for UI uses and other queries
-      this.currentVersion = currentVersion;
-      this.targetVersion = targetVersion;
+      // Keep metadata around for UI uses and other queries. We may receive an
+      // immutable React state, thus a copy is needed in case user ever atttempts
+      // to mutate the objects.
+      this.currentVersion = structuredClone(currentVersion);
+      this.targetVersion = structuredClone(targetVersion);
 
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),

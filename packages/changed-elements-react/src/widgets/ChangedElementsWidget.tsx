@@ -4,30 +4,37 @@
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
-  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
+  IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection,
+  type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
 import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement, ReactNode } from "react";
-import { FilterOptions } from "../SavedFiltersManager.js";
-import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
-import { ReportProperty } from "../api/ReportGenerator.js";
+import { Component, type ReactElement, type ReactNode } from "react";
+
+import type { FilterOptions } from "../SavedFiltersManager.js";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import type { ReportProperty } from "../api/ReportGenerator.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
-import { VersionCompareManager } from "../api/VersionCompareManager.js";
+import type { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { CenteredDiv } from "../common/CenteredDiv.js";
 import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
 import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
-import "./ChangedElementsWidget.scss";
-import InfoButton from "./InformationButton.js";
-import { VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
 import { FeedbackButton } from "./FeedbackButton.js";
+import InfoButton from "./InformationButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
-import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
-import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
+import type { JobAndNamedVersions } from "./comparisonJobWidget/NamedVersions.js";
+import {
+  VersionCompareSelectProviderV2, type ComparisonJobUpdateType
+} from "./comparisonJobWidget/VersionCompareDialogProvider.js";
+import {
+  VersionCompareSelectDialogV2
+} from "./comparisonJobWidget/VersionCompareSelectDialogV2.js";
+
+import "./ChangedElementsWidget.scss";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -409,22 +416,33 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             initialProperties={this.state.reportProperties}
           />
         }
-        {this.props.useV2Widget ?
-          <VersionCompareSelectProviderV2 onJobUpdate={this.props.onJobUpdate} enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}>
-            {this.state.versionSelectDialogVisible &&
-              <VersionCompareSelectDialogV2
-                data-testid="⁠comparison-widget-v2-modal"
-                iModelConnection={this.props.iModelConnection}
-                onClose={this._handleVersionSelectDialogClose}
-                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
-              />}
-          </VersionCompareSelectProviderV2> :
-          this.state.versionSelectDialogVisible &&
-          <VersionCompareSelectDialog
-            isOpen
-            iModelConnection={this.props.iModelConnection}
-            onClose={this._handleVersionSelectDialogClose}
-          />}
+        <VersionCompareSelectProviderV2
+          onJobUpdate={this.props.onJobUpdate}
+          enableComparisonJobUpdateToasts={
+            !this.state.versionSelectDialogVisible && this.props.enableComparisonJobUpdateToasts
+          }
+        >
+          {
+            this.state.versionSelectDialogVisible &&
+            (
+              this.props.useV2Widget
+                ? (
+                  <VersionCompareSelectDialogV2
+                    data-testid="comparison-widget-v2-modal"
+                    iModelConnection={this.props.iModelConnection}
+                    onClose={this._handleVersionSelectDialogClose}
+                    manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
+                  />
+                ) : (
+                  <VersionCompareSelectDialog
+                    isOpen
+                    iModelConnection={this.props.iModelConnection}
+                    onClose={this._handleVersionSelectDialogClose}
+                  />
+                )
+            )
+          }
+        </VersionCompareSelectProviderV2>
       </>
     );
   }
