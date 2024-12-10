@@ -3,8 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { PageLayout } from "@itwin/itwinui-layouts-react";
-import { PropsWithChildren, ReactElement } from "react";
-import { LoadingIndicator } from "./LoadingIndicator";
+import type { PropsWithChildren, ReactElement } from "react";
+
+import { LoadingIndicator } from "./LoadingIndicator.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function LoadingScreen(props: PropsWithChildren<{}>): ReactElement {

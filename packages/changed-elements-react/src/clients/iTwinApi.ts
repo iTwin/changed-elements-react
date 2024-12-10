@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { HalLinks } from "./common";
+import type { HalLinks } from "./common.js";
 
 export interface CallITwinApiParams {
   method?: "GET" | "POST" | "DELETE";

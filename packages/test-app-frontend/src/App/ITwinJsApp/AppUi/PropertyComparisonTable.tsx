@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ConfigurableCreateInfo, ContentControl, UiFramework } from "@itwin/appui-react";
+import { ContentControl, UiFramework, type ConfigurableCreateInfo } from "@itwin/appui-react";
 import {
   PropertyComparisonTable, updateVersionComparisonTransparencies, type PropertyComparisonTableProps,
   type VersionCompareManager
@@ -10,8 +10,8 @@ import {
 import { IModelApp } from "@itwin/core-frontend";
 import { connect } from "react-redux";
 
-import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
-import { type VersionCompareState } from "./redux/VersionCompareStore";
+import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
+import { type VersionCompareState } from "./redux/VersionCompareStore.js";
 
 export interface PropertyComparisonTableControlOptions {
   manager?: VersionCompareManager | undefined;

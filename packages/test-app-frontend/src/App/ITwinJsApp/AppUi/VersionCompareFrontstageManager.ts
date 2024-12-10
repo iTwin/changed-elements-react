@@ -3,22 +3,25 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  FrontstageDef, StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageReadyEventArgs
+  StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageDef,
+  type FrontstageReadyEventArgs
 } from "@itwin/appui-react";
 import {
-  ChangedElementEntry, ChangedElementsWidget, ModelsCategoryCache, SideBySideVisualizationManager, VersionCompare,
-  VersionCompareManager, VersionCompareVisualizationManager, changedElementsWidgetAttachToViewportEvent,
-  enableVersionCompareVisualizationCaching
+  ChangedElementsWidget, changedElementsWidgetAttachToViewportEvent,
+  enableVersionCompareVisualizationCaching, ModelsCategoryCache, SideBySideVisualizationManager,
+  VersionCompare, VersionCompareVisualizationManager, type ChangedElementEntry,
+  type VersionCompareManager
 } from "@itwin/changed-elements-react";
-import { BeEvent, DbOpcode, Logger, type Id64String } from "@itwin/core-bentley";
+import { DbOpcode, Logger, type BeEvent, type Id64String } from "@itwin/core-bentley";
 import {
-  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport, ViewState
+  IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection,
+  type ScreenViewport, type ViewState
 } from "@itwin/core-frontend";
 import { KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
-import { VersionCompareActionTypes } from "./redux/VersionCompareStore";
+import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
+import { VersionCompareActionTypes } from "./redux/VersionCompareStore.js";
 
 /** Manages version compare workflows based on design review's use case. */
 export class VersionCompareFrontstageManager {

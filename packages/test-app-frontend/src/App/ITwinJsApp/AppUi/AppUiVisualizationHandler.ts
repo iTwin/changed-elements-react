@@ -5,12 +5,12 @@
 import { UiFramework, WidgetState } from "@itwin/appui-react";
 import {
   ChangedElementsListComponent, ChangedElementsWidget, type MainVisualizationOptions,
-  type SideBySideVisualizationManager, type VersionCompareManager, type VersionCompareVisualizationManager,
-  type VisualizationHandler
+  type SideBySideVisualizationManager, type VersionCompareManager,
+  type VersionCompareVisualizationManager, type VisualizationHandler
 } from "@itwin/changed-elements-react";
 
-import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage";
-import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager";
+import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
+import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager.js";
 
 export interface AppUiVisualizationOptions {
   /* Frontstage Ids where version compare will be available. */
