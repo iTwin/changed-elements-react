@@ -2,8 +2,8 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ComparisonJob } from "../../../clients/IComparisonJobClient";
-import { NamedVersion } from "../../../clients/iModelsClient";
+import type { ComparisonJob } from "../../../clients/IComparisonJobClient.js";
+import type { NamedVersion } from "../../../clients/iModelsClient.js";
 
 /**
  * Job status used for identification of job progress

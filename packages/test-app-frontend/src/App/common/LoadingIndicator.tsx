@@ -2,9 +2,10 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { CSSProperties, ReactElement, ReactNode } from "react";
 import { Leading, ProgressRadial } from "@itwin/itwinui-react";
-import { VerticalStack } from "./VerticalStack";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
+
+import { VerticalStack } from "./VerticalStack.js";
 
 export interface LoadingIndicatorProps {
   style?: CSSProperties | undefined;

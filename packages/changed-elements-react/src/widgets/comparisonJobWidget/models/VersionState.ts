@@ -2,9 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { NamedVersion } from "../../../clients/iModelsClient";
-import { VersionProcessedState } from "./VersionProcessedState";
-import { JobProgress, JobStatus } from "./ComparisonJobModels";
+import type { NamedVersion } from "../../../clients/iModelsClient.js";
+import type { JobProgress, JobStatus } from "./ComparisonJobModels.js";
+import type { VersionProcessedState } from "./VersionProcessedState.js";
 
 /**
  * Holds the state of of the version and its subsequent meta data.
