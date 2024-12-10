@@ -338,7 +338,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
           key={localeStr}
           label={IModelApp.localization.getLocalizedString(`VersionCompare:typeOfChange.${localeStr}`)}
           checked={isOn}
-          onClick={() => {
+          onChange={() => {
             const opts = props.options;
             opts.wantedTypeOfChange = isOn ? opts.wantedTypeOfChange & ~flag : opts.wantedTypeOfChange | flag;
             props.onFilterChange(opts);
@@ -1150,7 +1150,9 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (visualizationManager) {
       if (item.extendedData?.isModel) {
+        const set = this.props.manager.changedElementsManager.entryCache.getChangeElementIdsFromModelId(item.id);
         await visualizationManager.toggleModel(item.id);
+        await visualizationManager.toggleElementsVisibility(!isVisible, set, false, false);
       } else if (!ChangesTreeDataProvider.isFakeNode(item)) {
         await visualizationManager.toggleChangedElementsVisibility(!isVisible, elementsNeededForVisibility);
       } else {

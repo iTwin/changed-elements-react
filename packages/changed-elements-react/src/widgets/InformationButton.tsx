@@ -22,7 +22,6 @@ function InfoButton(props: Props) {
     <DropdownMenu
       style={{ width: 500 }}
       placement="bottom-end"
-      data-testid={props["data-testid"]}
       menuItems={() => [
         <MenuExtraContent key={0}>
           <Text variant="leading">{props.title}</Text>
@@ -30,7 +29,11 @@ function InfoButton(props: Props) {
         </MenuExtraContent>,
       ]}
     >
-      <IconButton styleType="borderless" aria-label="Information">
+      <IconButton
+        data-testid={props["data-testid"]}
+        styleType="borderless"
+        aria-label="Information"
+      >
         <SvgInfo />
       </IconButton>
     </DropdownMenu>
