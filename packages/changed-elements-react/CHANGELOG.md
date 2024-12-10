@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+### Fixes
+
+* Fix ES module imports not specifying script file extensions
 * Fixed model toggle when hide all is on. When hide all is on and a model is toggled on we would show only unchanged elements for that model and not all changed elements for given model.
 * Fix the following console warnings in development environment
   * Receiving invalid property when mounting `<ChangedElementsWidget />` with V2 version selector

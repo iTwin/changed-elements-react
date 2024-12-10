@@ -2,13 +2,17 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, OutputMessageType } from "@itwin/core-frontend";
-import { IModelsClient, NamedVersion } from "../../../clients/iModelsClient";
+import {
+  IModelApp, NotifyMessageDetails, OutputMessagePriority, OutputMessageType, type IModelConnection
+} from "@itwin/core-frontend";
 import { toaster } from "@itwin/itwinui-react";
-import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils";
-import { ComparisonJobCompleted, IComparisonJobClient } from "../../../clients/IComparisonJobClient";
-import { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider";
-import { JobAndNamedVersions } from "../models/ComparisonJobModels";
+import {
+  ComparisonJobCompleted, IComparisonJobClient
+} from "../../../clients/IComparisonJobClient.js";
+import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient.js";
+import type { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider.js";
+import type { JobAndNamedVersions } from "../models/ComparisonJobModels.js";
+import { runManagerStartComparisonV2 } from "./versionCompareV2WidgetUtils.js";
 
 /** Toast Comparison Job Processing.
  * Outputs toast message following the pattern:
