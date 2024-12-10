@@ -2,11 +2,4 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-
-.itwin-common-centered-div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
+export { NamedVersionSelectorWidget } from "./NamedVersionSelector/NamedVersionSelector.js";
