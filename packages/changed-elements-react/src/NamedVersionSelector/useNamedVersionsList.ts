@@ -41,16 +41,37 @@ interface UseNamedVersionListArgs {
 }
 
 interface UseNamedVersionListResult {
+  /** True while Named Version list is still being appended. */
   isLoading: boolean;
+
+  /** True when an error encountered. {@linkcode isLoading} is `false` in this state. */
   isError: boolean;
+
+  /**
+   * Returned as `undefined` initially while being asynchronously retrieved based
+   * on the `currentChangesetId` prop.
+   */
   currentNamedVersion: NamedVersion | undefined;
+
+  /** Currently known {@link NamedVersions} that are older than `currentChangesetId`. */
   entries: NamedVersionEntry[];
+
+  /**
+   * Allows updating job status of associated {@link NamedVersion}. When an error
+   * occurs, you won't necessarily have a job object you can supply, in which case
+   * use `updateJobStatus.failed(namedVersion)` to set the status to `"Failed"`.
+   */
   updateJobStatus: {
     (job: ComparisonJobStatus): void;
     failed: (namedVersion: NamedVersion) => void;
   };
 }
 
+/**
+ * Downloads information about available and current Named Versions. The Named Version
+ * list is sorted in reverse chronological order and incrementally updated as new
+ * Named Version pages are loaded.
+ */
 export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVersionListResult {
   const { iTwinId, iModelId, currentChangesetId } = args;
   const { iModelsClient } = useVersionCompare();

@@ -13,6 +13,17 @@ interface IconExProps extends ComponentProps<typeof Icon> {
   fill?: "default" | "currentColor" | "positive" | "informational" | "negative" | "warning" | undefined;
 }
 
+/**
+ * iTwinUI3 `<Icon />` component with extended capabilities.
+ *
+ * @example
+ * // Attribute `fill` now colors the icon
+ * <IconEx fill="red"><SvgImodel /></IconEx>
+ *
+ * @example
+ * // `size` prop now accepts `"xl"` as a value
+ * <IconEx size="xl"><SvgImodel /></IconEx>
+ */
 export function IconEx(props: IconExProps): ReactElement {
   const { className, ...rest } = props;
   return <Icon className={clsx("_cer_v1_icon", className)} {...rest} />;

@@ -9,7 +9,10 @@ interface UseQueueResult<T> {
   addItem: (item: T) => { cancel: () => void; };
 }
 
-/** For each added queue item, sequentially executes and awaits the provided callback. */
+/**
+ * For each added queue item, sequentially executes and awaits the provided callback.
+ * Watch out, items are deduplicated and won't be re-inserted until queue empties.
+ */
 export function useQueue<T>(
   callback: (item: T, signal: AbortSignal) => Promise<void>,
 ): UseQueueResult<T> {

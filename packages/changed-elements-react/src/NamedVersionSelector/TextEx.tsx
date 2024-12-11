@@ -16,7 +16,27 @@ interface TextExProps extends ComponentProps<typeof Text> {
   children?: string | undefined;
 }
 
-/** iui3 <Text /> component with extended capabilities. */
+/**
+ * iTwinUI3 `<Text />` component with extended capabilities.
+ *
+ * @example
+ * // Set the font weight
+ * <TextEx weight="semibold">semi-bold text</TextEx>
+ *
+ * @example
+ * // Make the tetxt italic
+ * <TextEx oblique>italic text</TextEx>
+ *
+ * @example
+ * // Control text overflow
+ * <TextEx overflow="ellipsis" style={{ width: 10 }}>
+ *   This text will be truncated with ellipsis
+ * </TextEx>
+ *
+ * @example
+ * // Change text and accompanying SVG icon color
+ * <TextEx color="red"><SvgImodel /> red text and icon</TextEx>
+ */
 export function TextEx(props: TextExProps): ReturnType<typeof Text> {
   const {
     className,

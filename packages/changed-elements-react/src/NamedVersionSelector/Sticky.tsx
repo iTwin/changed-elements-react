@@ -14,9 +14,13 @@ interface StickyProps {
   children?: ReactNode | undefined;
 }
 
+/**
+ * A <div /> element that clings to the top of a scrollable container when scrolled
+ * past. While the element is stuck, it displays a subtle shadow beneath.
+ */
 export function Sticky(props: StickyProps): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
-  const stuck = useSticky(ref);
+  const stuck = useIsStuck(ref);
 
   return (
     <div ref={ref} className={clsx("_cer_v1_sticky", props.className)} data-stuck={stuck}>
@@ -25,7 +29,12 @@ export function Sticky(props: StickyProps): ReactElement {
   );
 }
 
-function useSticky(ref: RefObject<HTMLElement>): boolean {
+/**
+ * When given an element with `position: sticky`, finds its closest scrollable container,
+ * and determines whether the container has scrolled down far enough for the element
+ * to shift from its resting position.
+ */
+function useIsStuck(ref: RefObject<HTMLElement>): boolean {
   const [stuck, setStuck] = useState(false);
 
   useLayoutEffect(

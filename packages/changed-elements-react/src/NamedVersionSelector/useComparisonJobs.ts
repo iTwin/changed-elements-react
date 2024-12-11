@@ -18,7 +18,14 @@ interface UseComparisonJobsArgs {
 }
 
 interface UseComparisonJobsResult {
+  /** Inquires `IComparisonJobClient` about current status of the job. */
   queryJobStatus: (targetVersionId: string, signal?: AbortSignal) => Promise<ComparisonJobStatus>;
+
+  /**
+   * Starts comparison job if one is not running already.
+   * @returns A promise that resolves to the job status and a generator function
+   *          that queries the current job status with each invocation.
+   */
   startJob: (
     namedVersion: NamedVersion & { targetChangesetId: string; },
     signal?: AbortSignal,
@@ -31,6 +38,7 @@ interface UseComparisonJobsResult {
   }>;
 }
 
+/** Provides memoized utility functions to manipulate comparison jobs. */
 export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJobsResult {
   const { comparisonJobClient } = useVersionCompare();
   if (!comparisonJobClient) {

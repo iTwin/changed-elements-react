@@ -44,6 +44,10 @@ interface NamedVersionSelectorWidgetProps {
   manageVersions?: ReactNode | undefined;
 }
 
+/**
+ * By default, displays Named Version selector, but when {@link VersionCompareManager}
+ * is actively comparing versions, presents the comparison results.
+ */
 export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProps): ReactElement {
   const manager = props.manager ?? VersionCompare.manager;
   if (!manager) {
