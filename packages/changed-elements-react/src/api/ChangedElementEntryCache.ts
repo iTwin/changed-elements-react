@@ -452,6 +452,14 @@ export class ChangedElementEntryCache {
   }
 
   /**
+   * Returns a set of element Ids that are children of given model Id
+   * @param modelId Id of model to get changed elements from
+   */
+  public getChangeElementIdsFromModelId(modelId: string):Set<string> {
+    return new Set(this.getAll().filter((entry) => entry.modelId === modelId).map((entry) => entry.id));
+  }
+
+  /**
    * Returns true if the cache has this element in comparison
    * @param id Id of element to check
    */

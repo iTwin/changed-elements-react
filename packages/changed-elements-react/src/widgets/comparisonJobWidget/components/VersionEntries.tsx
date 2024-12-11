@@ -2,13 +2,15 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ReactElement, ReactNode } from "react";
-import { ProgressLinear, Radio, Badge, Text } from "@itwin/itwinui-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { JobStatus, JobProgress } from "../models/ComparisonJobModels";
-import { VersionProcessedState } from "../models/VersionProcessedState";
-import { NamedVersion } from "../../../clients/iModelsClient";
-import { VersionState } from "../models/VersionState";
+import { Badge, ProgressLinear, Radio, Text } from "@itwin/itwinui-react";
+import type { ReactElement, ReactNode } from "react";
+
+import type { NamedVersion } from "../../../clients/iModelsClient.js";
+import type { JobProgress, JobStatus } from "../models/ComparisonJobModels.js";
+import { VersionProcessedState } from "../models/VersionProcessedState.js";
+import type { VersionState } from "../models/VersionState.js";
+
 import "./styles/ComparisonJobWidget.scss";
 
 interface CurrentVersionEntryProps {

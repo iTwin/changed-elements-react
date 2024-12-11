@@ -6,7 +6,7 @@
 import {
   AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance,
   StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
-  UiFramework, UiItemsManager, UiItemsProvider, type Widget
+  UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
   ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
@@ -15,11 +15,11 @@ import {
 import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
 import { Id64 } from "@itwin/core-bentley";
 import {
-  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface,
-  IModelTileRpcInterface
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d, ViewState
+  CheckpointConnection, IModelApp, QuantityFormatter, ViewCreator3d, type IModelConnection,
+  type ViewState
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
@@ -29,14 +29,14 @@ import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { toaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { ReactElement, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { applyUrlPrefix, localBackendPort, usingLocalBackend } from "../../environment";
-import { LoadingScreen } from "../common/LoadingScreen";
-import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler";
-import { UIFramework } from "./AppUi/UiFramework";
-import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore";
-import { MockSavedFiltersManager } from "./MockSavedFiltersManager";
+import { applyUrlPrefix, localBackendPort, usingLocalBackend } from "../../environment.js";
+import { LoadingScreen } from "../common/LoadingScreen.js";
+import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
+import { UIFramework } from "./AppUi/UiFramework.js";
+import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore.js";
+import { MockSavedFiltersManager } from "./MockSavedFiltersManager.js";
 
 export interface ITwinJsAppProps {
   iTwinId: string;

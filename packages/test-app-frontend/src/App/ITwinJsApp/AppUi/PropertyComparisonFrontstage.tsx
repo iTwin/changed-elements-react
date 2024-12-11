@@ -4,16 +4,17 @@
 *--------------------------------------------------------------------------------------------*/
 import type { ContentLayoutProps, LayoutVerticalSplitProps } from "@itwin/appui-abstract";
 import {
-  ContentGroup, ContentLayoutDef, FrontstageActivatedEventArgs, FrontstageConfig, FrontstageProvider, StatusBarComposer,
-  UiFramework, ViewToolWidgetComposer, type ContentProps
+  ContentGroup, ContentLayoutDef, FrontstageProvider, StatusBarComposer, UiFramework,
+  ViewToolWidgetComposer, type ContentProps, type FrontstageActivatedEventArgs,
+  type FrontstageConfig
 } from "@itwin/appui-react";
 import { VersionCompareManager } from "@itwin/changed-elements-react";
-import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
+import { IModelApp, type IModelConnection, type ViewState } from "@itwin/core-frontend";
 
-import { DummyTool } from "./DummyTool";
-import { PropertyComparisonTableControl } from "./PropertyComparisonTable";
-import { PropertyComparisonToolWidget } from "./PropertyComparisonToolWidget";
-import { PropertyComparisonViewportControl } from "./PropertyComparisonViewport";
+import { DummyTool } from "./DummyTool.js";
+import { PropertyComparisonTableControl } from "./PropertyComparisonTable.js";
+import { PropertyComparisonToolWidget } from "./PropertyComparisonToolWidget.js";
+import { PropertyComparisonViewportControl } from "./PropertyComparisonViewport.js";
 
 import "./PropertyComparisonFrontstage.scss";
 

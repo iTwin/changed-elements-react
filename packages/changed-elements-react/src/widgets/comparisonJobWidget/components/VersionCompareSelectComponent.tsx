@@ -3,12 +3,14 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelConnection } from "@itwin/core-frontend";
-import { ReactNode, useState } from "react";
 import { ProgressRadial } from "@itwin/itwinui-react";
-import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner";
-import { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions";
-import { NamedVersion } from "../../../clients/iModelsClient";
-import { ChangesetChunk } from "../../../api/ChangedElementsApiClient";
+import { useState, type ReactNode } from "react";
+
+import type { ChangesetChunk } from "../../../api/ChangedElementsApiClient.js";
+import type { NamedVersion } from "../../../clients/iModelsClient.js";
+import type { CurrentNamedVersionAndNamedVersions } from "../models/NamedVersions.js";
+import { VersionCompareSelectorInner } from "./VersionCompareSelectorInner.js";
+
 import "./styles/ComparisonJobWidget.scss";
 
 /** Options for VersionCompareSelectComponent. */

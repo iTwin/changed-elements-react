@@ -3,12 +3,14 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp } from "@itwin/core-frontend";
-import { ReactElement } from "react";
-import { VersionListEntry } from "./VersionEntries";
-import { VersionState } from "../models/VersionState";
-import { NamedVersion } from "../../../clients/iModelsClient";
-import "./styles/ComparisonJobWidget.scss";
 import { LoadingSpinner } from "@itwin/core-react";
+import type { ReactElement } from "react";
+
+import type { NamedVersion } from "../../../clients/iModelsClient.js";
+import type { VersionState } from "../models/VersionState.js";
+import { VersionListEntry } from "./VersionEntries.js";
+
+import "./styles/ComparisonJobWidget.scss";
 
 interface VersionListProps {
   entries: VersionState[];
