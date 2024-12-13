@@ -1,0 +1,21 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+@layer itwinui.v3;
+
+@layer changed-elements-react.v1 {
+  ._cer_v1_icon {
+
+    /* <IconEx fill="red"><SvgImodel /></IconEx> will now colour the icon red */
+    &[data-iui-icon-color="currentColor"] svg {
+      fill: currentColor;
+    }
+
+    /* Define xl size to use in addition to s, m, and l */
+    &[data-iui-icon-size="xl"] {
+      --_iui-svg-size: var(--iui-size-xl);
+    }
+  }
+}

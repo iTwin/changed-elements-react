@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/iTwin/changed-elements-react/tree/HEAD/packages/changed-elements-react)
 
+### Minor changes
+
+* Add experimental React component for the new Named Version selector. Its name or API is not stable yet, but you can try it out the following way.
+
+  ```TypeScript
+  import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
+
+  [...]
+
+    return (
+      <VersionCompareContext iModelsClient={iModelsClient}>
+        <NamedVersionSelectorWidget iModel={iModel} />
+      </VersionCompareContext>
+    );
+  }
+  ```
+
 ## [0.11.4](https://github.com/iTwin/changed-elements-react/tree/v0.11.4/packages/changed-elements-react) - 2024-12-10
 
 ### Fixes

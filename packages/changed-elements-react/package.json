@@ -20,6 +20,12 @@
         "types": "./lib/esm/index.d.ts",
         "default": "./lib/esm/index.js"
       }
+    },
+    "./experimental": {
+      "import": {
+        "types": "./lib/esm/experimental.d.ts",
+        "default": "./lib/esm/experimental.js"
+      }
     }
   },
   "files": [
@@ -80,8 +86,11 @@
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "dependencies": {
+    "@itwin/itwinui-icons-color-react": "^2.1.0",
     "@itwin/itwinui-icons-react": "^2.2.0",
     "@itwin/itwinui-react": "^2.11.11",
+    "@itwin/itwinui-react-3": "npm:@itwin/itwinui-react@^3.0.0",
+    "clsx": "^2.1.1",
     "react-table": "^7.8.0",
     "react-window": "^1.8.8",
     "react-window-infinite-loader": "^1.0.8"

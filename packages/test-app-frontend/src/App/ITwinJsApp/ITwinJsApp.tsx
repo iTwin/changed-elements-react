@@ -9,13 +9,13 @@ import {
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, ComparisonJobClient, ITwinIModelsClient, VersionCompare,
-  VersionCompareContext, VersionCompareFeatureTracking
+  ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
+  VersionCompareFeatureTracking
 } from "@itwin/changed-elements-react";
+import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
 import { Id64 } from "@itwin/core-bentley";
 import {
-  BentleyCloudRpcManager, IModelReadRpcInterface, IModelTileRpcInterface, type AuthorizationClient,
-  type BentleyCloudRpcParams
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
 } from "@itwin/core-common";
 import {
   CheckpointConnection, IModelApp, QuantityFormatter, ViewCreator3d, type IModelConnection,
@@ -271,6 +271,7 @@ class MainFrontstageProvider extends StandardFrontstageProvider {
         pinned: true,
         defaultState: StagePanelState.Open,
         size: 400,
+        maxSizeSpec: Number.POSITIVE_INFINITY,
       },
     });
 
@@ -296,15 +297,24 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    return [{
-      id: "ChangedElementsWidget",
-      content: <ChangedElementsWidget useV2Widget
-        feedbackUrl="https://example.com"
-        iModelConnection={UiFramework.getIModelConnection()!}
-        enableComparisonJobUpdateToasts
-        manageNamedVersionsSlot={<ManageNamedVersions />}
-      />,
-    }];
+    const iModel = UiFramework.getIModelConnection();
+    if (!iModel) {
+      return [];
+    }
+
+    return [
+      {
+        id: "NamedVersionSelector",
+        label: "NamedVersionSelector",
+        content: (
+          <NamedVersionSelectorWidget
+            iModel={iModel}
+            manager={VersionCompare.manager}
+            manageVersions={<ManageNamedVersions />}
+          />
+        ),
+      },
+    ];
   }
 }
 

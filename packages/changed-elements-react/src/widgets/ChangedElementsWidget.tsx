@@ -4,14 +4,16 @@
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent, Logger, type Id64String } from "@itwin/core-bentley";
 import {
-  IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority, ScreenViewport
+  IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection, type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
-import { IconButton, ProgressRadial } from "@itwin/itwinui-react";
-import { Component, ReactElement, ReactNode } from "react";
-import { FilterOptions } from "../SavedFiltersManager.js";
-import { type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
-import { ReportProperty } from "../api/ReportGenerator.js";
+import { IconButton, ProgressRadial, Text } from "@itwin/itwinui-react";
+import { Component, type ReactElement, type ReactNode } from "react";
+
+import { namedVersionSelectorContext } from "../NamedVersionSelector/NamedVersionSelectorContext.js";
+import type { FilterOptions } from "../SavedFiltersManager.js";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import type { ReportProperty } from "../api/ReportGenerator.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../api/VerboseMessages.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 import { VersionCompareManager } from "../api/VersionCompareManager.js";
@@ -21,13 +23,18 @@ import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
-import "./ChangedElementsWidget.scss";
-import InfoButton from "./InformationButton.js";
-import { VersionCompareSelectDialogV2 } from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
 import { FeedbackButton } from "./FeedbackButton.js";
+import InfoButton from "./InformationButton.js";
 import { VersionCompareSelectDialog } from "./VersionCompareSelectWidget.js";
-import { ComparisonJobUpdateType, VersionCompareSelectProviderV2 } from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
+import {
+  ComparisonJobUpdateType, VersionCompareSelectProviderV2
+} from "./comparisonJobWidget/components/VersionCompareDialogProvider.js";
+import {
+  VersionCompareSelectDialogV2
+} from "./comparisonJobWidget/components/VersionCompareSelectModal.js";
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
+
+import "./ChangedElementsWidget.scss";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -36,28 +43,49 @@ export interface ChangedElementsWidgetProps {
   /** IModel Connection that is being visualized. */
   iModelConnection: IModelConnection;
 
-  /** Optional manager if you don't want the default static VersionCompare.manager to be used. */
+  /**
+   * Optional manager if you don't want the default static VersionCompare.manager
+   * to be used.
+   */
   manager?: VersionCompareManager;
 
   /** Used to maintain scroll positions in widget controls. */
+
   rootElementRef?: React.Ref<HTMLDivElement>;
-  /**Optional. If true will use v2 dialog and will run comparison jobs for faster comparisons @beta.*/
+
+  /**
+   * Optional. If true will use v2 dialog and will run comparison jobs for faster
+   * comparisons.
+   * @beta
+   */
   useV2Widget?: boolean;
-  /** Optional. Supply a link for feedback. Should only be used if v2 is enabled*/
+
+  /** Optional. Supply a link for feedback. Should only be used if v2 is enabled. */
   feedbackUrl?: string;
-  /** Optional. When enabled will toast messages regarding job status. If not defined will default to false and will not show toasts (Only for V2). */
+
+  /**
+   * Optional. When enabled will toast messages regarding job status. If not defined
+   * will default to false and will not show toasts (Only for V2).
+   */
   enableComparisonJobUpdateToasts?: boolean;
-  /** On Job Update (Only for V2)
- * Optional. a call back function for handling job updates.
- * @param comparisonJobUpdateType param for the type of update:
- *  - "JobComplete" = invoked when job is completed
- *  - "JobError" = invoked on job error
- *  - "JobProgressing" = invoked on job is started
- *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
- * @param jobAndNamedVersion param contain job and named version info to be passed to call back
-*/
-  onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
-  /** Optional prop for a user supplied component to handle managing named versions.*/
+
+  /**
+   * On Job Update (Only for V2). Optional. A callback function for handling job
+   * updates.
+   *
+   * @param comparisonJobUpdateType param for the type of update:
+   *  - "JobComplete" = invoked when job is completed
+   *  - "JobError" = invoked on job error
+   *  - "JobProgressing" = invoked on job is started
+   *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
+   * @param jobAndNamedVersion param contain job and named version info to be passed to call back
+   */
+  onJobUpdate?: (
+    comparisonJobUpdateType: ComparisonJobUpdateType,
+    jobAndNamedVersions?: JobAndNamedVersions,
+  ) => Promise<void>;
+
+  /** Optional prop for a user supplied component to handle managing named versions. */
   manageNamedVersionsSlot?: ReactNode | undefined;
 }
 
@@ -78,13 +106,12 @@ export interface ChangedElementsWidgetState {
 }
 
 /**
- * Widget to display changed elements and inspect them further. This widget contains functionality to hide/show type of
- * change. Filter based on properties, inspect models, save visualization filters.
+ * Widget to display changed elements and inspect them further. This widget contains
+ * functionality to hide/show type of change. Filter based on properties, inspect
+ * models, save visualization filters.
  */
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
-
-  private readonly _widgetInfo = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareInfo");
 
   private _onComparisonStarting = (): void => {
     this.setState({
@@ -98,7 +125,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   private _onComparisonStopped = (): void => {
     this.setState({
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2") : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: this.props.useV2Widget
+        ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
+        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       loading: false,
       loaded: false,
     });
@@ -125,7 +154,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _onProgressEvent = (message: string): void => {
-    this.setState({ message, description: "" });
+    this.setState({ message, loading: true, description: "" });
   };
 
   private _refreshCheckboxesEvent = new BeEvent<() => void>();
@@ -158,7 +187,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: this.props.useV2Widget ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2") : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      description: this.props.useV2Widget
+        ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
+        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       versionSelectDialogVisible: false,
       informationDialogVisible: false,
       reportDialogVisible: false,
@@ -198,26 +229,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         onHideAll={this._hideAll}
         onInvert={this._invert}
       />
-    );
-  }
-
-  private getLoadingContent(): ReactElement {
-    return (
-      <CenteredDiv data-testid="clw-loading-content">
-        {
-          this.state.loading &&
-          <>
-            <ProgressRadial indeterminate size="large" />
-            <span className="comparison-legend-message">
-              {this.state.message}
-            </span>
-          </>
-        }
-        {
-          !this.state.loading &&
-          <EmptyStateComponent icon="icon-compare" title={this.state.message} description={this.state.description} />
-        }
-      </CenteredDiv>
     );
   }
 
@@ -275,7 +286,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ loaded: false });
   };
 
-  private _handleReportGeneration = async (): Promise<void> => {
+  public openReportDialog = async (): Promise<void> => {
     let properties: ReportProperty[] = [];
     if (this._currentFilterOptions !== undefined && this.state.manager.currentIModel) {
       const propertyNames: string[] = [];
@@ -301,67 +312,6 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     }
 
     VersionCompare.manager?.featureTracking?.trackChangeReportGenerationUsage();
-    this.openReportDialog(properties.length > 0 ? properties : undefined);
-  };
-
-  private getHeader(): ReactElement {
-    return (
-      <>
-        <IconButton
-          size="small"
-          styleType="borderless"
-          onClick={this._handleCompare}
-          title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.compare")}
-          data-testid="comparison-legend-widget-compare"
-        >
-          <SvgAdd />
-        </IconButton>
-        {
-          this.props.useV2Widget &&
-          <InfoButton data-testid="⁠comparison-legend-widget-info" title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")} message={this._widgetInfo} />
-        }
-        {
-          this.state.loaded &&
-          <IconButton
-            size="small"
-            styleType="borderless"
-            onClick={this._handleStopCompare}
-            title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.stopComparison")}
-            data-testid="comparison-legend-widget-stop-comparison"
-          >
-            <SvgStop />
-          </IconButton>
-        }
-        {
-          this.state.manager.wantReportGeneration &&
-          this.state.loaded &&
-          <IconButton
-            size="small"
-            styleType="borderless"
-            onClick={this._handleReportGeneration}
-            title={IModelApp.localization.getLocalizedString("VersionCompare:report.reportGeneration")}
-            data-testid="comparison-legend-widget-report-generation"
-          >
-            <SvgExport />
-          </IconButton>
-        }
-        {
-          this.state.loaded &&
-          <IconButton
-            size="small"
-            styleType="borderless"
-            onClick={this._handleInspect}
-            title={IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.inspectProperties")}
-            data-testid="comparison-legend-widget-inspectBtn"
-          >
-            <SvgCompare />
-          </IconButton>
-        }
-      </>
-    );
-  }
-
-  private openReportDialog = (properties: ReportProperty[] | undefined): void => {
     if (reportIsBeingGenerated) {
       IModelApp.notifications.outputMessage(
         new NotifyMessageDetails(
@@ -373,7 +323,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     }
 
     reportIsBeingGenerated = true;
-    this.setState({ reportDialogVisible: true, reportProperties: properties });
+    this.setState({
+      reportDialogVisible: true,
+      reportProperties: properties.length > 0 ? properties : undefined,
+    });
   };
 
   private closeReportDialog = (): void => {
@@ -385,20 +338,56 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     return (
       <>
         <WidgetComponent data-testid="comparison-legend-widget">
-          <WidgetComponent.Header>
-            <WidgetComponent.Header.Label>
-              {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
-            </WidgetComponent.Header.Label>
-            <WidgetComponent.Header.Actions>
-              {this.getHeader()}
-            </WidgetComponent.Header.Actions>
-          </WidgetComponent.Header>
+          <namedVersionSelectorContext.Consumer>
+            {
+              ({ contextExists }) => (
+                !contextExists &&
+                <WidgetComponent.Header>
+                  <WidgetComponent.Header.Label>
+                    {IModelApp.localization.getLocalizedString(
+                      "VersionCompare:versionCompare.versionCompare",
+                    )}
+                  </WidgetComponent.Header.Label>
+                  <WidgetComponent.Header.Actions>
+                    <ChangedElementsHeaderButtons
+                      loaded={this.state.loaded}
+                      useV2Widget={this.props.useV2Widget}
+                      onOpenVersionSelector={this._handleCompare}
+                      onStopComparison={this._handleStopCompare}
+                      onOpenReportDialog={
+                        this.state.manager.wantReportGeneration ? this.openReportDialog : undefined
+                      }
+                      onInspect={this._handleInspect}
+                    />
+                  </WidgetComponent.Header.Actions>
+                </WidgetComponent.Header>
+              )
+            }
+          </namedVersionSelectorContext.Consumer>
           <WidgetComponent.Body data-testid="comparison-legend-widget-content">
-            {this.state.loaded ? this.getChangedElementsContent() : this.getLoadingContent()}
+            {
+              this.state.loaded
+                ? this.getChangedElementsContent()
+                : this.state.loading
+                  ? <LoadingContent>{this.state.message}</LoadingContent>
+                  : (
+                    <EmptyStateComponent
+                      icon="icon-compare"
+                      title={this.state.message}
+                      description={this.state.description}
+                    />
+                  )
+            }
           </WidgetComponent.Body>
-          <WidgetComponent.ToolBar>
-            {(this.props.useV2Widget && (!!this.props.feedbackUrl)) && <FeedbackButton data-testid="⁠comparison-widget-v2-feedback-btn" feedbackUrl={this.props.feedbackUrl ?? ""}></FeedbackButton>}
-          </WidgetComponent.ToolBar>
+          {
+            this.props.useV2Widget && this.props.feedbackUrl &&
+            <WidgetComponent.ToolBar>
+              <FeedbackButton
+                data-testid="comparison-widget-v2-feedback-btn"
+                feedbackUrl={this.props.feedbackUrl ?? ""}
+              />
+            </WidgetComponent.ToolBar>
+          }
         </WidgetComponent>
         {
           this.state.reportDialogVisible &&
@@ -409,29 +398,150 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             initialProperties={this.state.reportProperties}
           />
         }
-        {this.props.useV2Widget ?
-          <VersionCompareSelectProviderV2 onJobUpdate={this.props.onJobUpdate} enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}>
-            {this.state.versionSelectDialogVisible &&
-              <VersionCompareSelectDialogV2
-                data-testid="⁠comparison-widget-v2-modal"
+        {
+          this.props.useV2Widget
+            ? (
+              <VersionCompareSelectProviderV2
+                onJobUpdate={this.props.onJobUpdate}
+                enableComparisonJobUpdateToasts={this.props.enableComparisonJobUpdateToasts}
+              >
+                {
+                  this.state.versionSelectDialogVisible &&
+                  <VersionCompareSelectDialogV2
+                    data-testid="comparison-widget-v2-modal"
+                    iModelConnection={this.props.iModelConnection}
+                    onClose={this._handleVersionSelectDialogClose}
+                    manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
+                  />
+                }
+              </VersionCompareSelectProviderV2>
+            ) : (
+              this.state.versionSelectDialogVisible &&
+              <VersionCompareSelectDialog
+                isOpen
                 iModelConnection={this.props.iModelConnection}
                 onClose={this._handleVersionSelectDialogClose}
-                manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
-              />}
-          </VersionCompareSelectProviderV2> :
-          this.state.versionSelectDialogVisible &&
-          <VersionCompareSelectDialog
-            isOpen
-            iModelConnection={this.props.iModelConnection}
-            onClose={this._handleVersionSelectDialogClose}
-          />}
+              />
+            )
+        }
       </>
     );
   }
 }
 
 /**
- * Make sure that we are not letting the user start multiple reports in parallel to avoid overwhelming backend with
- * requests.
- *  */
+ * Make sure that we are not letting the user start multiple reports in parallel
+ * to avoid overwhelming backend with requests.
+ */
 let reportIsBeingGenerated = false;
+
+interface ChangedElementsHeaderButtonsProps {
+  loaded?: boolean | undefined;
+  useV2Widget?: boolean | undefined;
+  useNewNamedVersionSelector?: boolean | undefined;
+  onlyInfo?: boolean | undefined;
+  onOpenVersionSelector?: (() => void) | undefined;
+  onStopComparison?: (() => void) | undefined;
+  onOpenReportDialog?: (() => void) | undefined;
+  onInspect?: (() => void) | undefined;
+}
+
+export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtonsProps): ReactElement {
+  const t = (key: string) => IModelApp.localization.getLocalizedString(key);
+
+  const paragraphs = t("VersionCompare:versionCompare.versionCompareInfoV2").split("\n");
+  const infoButton = (
+    <InfoButton>
+      <Text variant="leading">
+        {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
+      </Text>
+      {paragraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+    </InfoButton>
+  );
+
+  if (props.onlyInfo) {
+    return infoButton;
+  }
+
+  return (
+    <>
+      {
+        !props.useNewNamedVersionSelector &&
+        <IconButton
+          size="small"
+          styleType="borderless"
+          onClick={props.onOpenVersionSelector}
+          title={t("VersionCompare:versionCompare.compare")}
+          data-testid="comparison-legend-widget-compare"
+        >
+          <SvgAdd />
+        </IconButton>
+      }
+      {
+        props.useNewNamedVersionSelector &&
+        infoButton
+      }
+      {
+        !props.useNewNamedVersionSelector && props.useV2Widget &&
+        <InfoButton data-testid="comparison-legend-widget-info" >
+          <Text variant="leading">{t("VersionCompare:versionCompare.versionCompare")}</Text>
+          <Text>{t("VersionCompare:versionCompare.versionCompareInfo")}</Text>
+        </InfoButton>
+      }
+      {
+        !props.useNewNamedVersionSelector && props.loaded &&
+        <IconButton
+          size="small"
+          styleType="borderless"
+          onClick={props.onStopComparison}
+          title={t("VersionCompare:versionCompare.stopComparison")}
+          data-testid="comparison-legend-widget-stop-comparison"
+        >
+          <SvgStop />
+        </IconButton>
+      }
+      {
+        props.onOpenReportDialog && props.loaded &&
+        <IconButton
+          size="small"
+          styleType="borderless"
+          onClick={props.onOpenReportDialog}
+          title={t("VersionCompare:report.reportGeneration")}
+          data-testid="comparison-legend-widget-report-generation"
+        >
+          <SvgExport />
+        </IconButton>
+      }
+      {
+        props.loaded &&
+        <IconButton
+          size="small"
+          styleType="borderless"
+          onClick={props.onInspect}
+          title={t("VersionCompare:versionCompare.inspectProperties")}
+          data-testid="comparison-legend-widget-inspectBtn"
+        >
+          <SvgCompare />
+        </IconButton>
+      }
+    </>
+  );
+}
+
+interface LoadingContentProps {
+  progress?: { current: number; max: number; } | undefined;
+  children?: ReactNode | undefined;
+}
+
+export function LoadingContent(props: LoadingContentProps): ReactElement {
+  const { progress, children } = props;
+  const value = progress && Math.floor(100.0 * progress.current / (progress.max || 1));
+  return (
+    <CenteredDiv data-testid="clw-loading-content">
+      <ProgressRadial indeterminate={!value} value={value} size="large" />
+      <Text className="comparison-legend-message">
+        {children}
+      </Text>
+    </CenteredDiv>
+  );
+}

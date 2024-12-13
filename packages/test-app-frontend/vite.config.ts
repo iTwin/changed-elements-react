@@ -3,17 +3,19 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import react from "@vitejs/plugin-react-swc";
-import * as path from "path";
+import { config } from "dotenv-flow";
+import path from "path";
 import { defineConfig, Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import { config } from "dotenv-flow";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 config();
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   plugins: [
-    new StringReplacePlugin(),
+    tsconfigPaths(),
+    stringReplacePlugin(),
     react(),
     viteStaticCopy({
       targets: [
@@ -31,36 +33,8 @@ export default defineConfig(() => ({
   resolve: {
     alias: [
       {
-        find: "@itwin/changed-elements-react",
-        replacement: path.resolve(__dirname, "../changed-elements-react/src/index.ts"),
-      },
-      {
-        find: /^~(.*\/core-react\/)scrollbar$/,
-        replacement: "node_modules/$1/_scrollbar.scss",
-      },
-      {
-        find: /^~(.*\/core-react\/)typography$/,
-        replacement: "node_modules/$1/_typography.scss",
-      },
-      {
-        find: /^~(.*\/core-react\/)z-index$/,
-        replacement: "node_modules/$1/_z-index.scss",
-      },
-      {
-        find: /^~(.*\/core-react\/)geometry$/,
-        replacement: "node_modules/$1/_geometry.scss",
-      },
-      {
-        find: /^~(.*\/appui-layout-react\/.*\/)variables$/,
-        replacement: "node_modules/$1/_variables.scss",
-      },
-      {
-        find: /^~(.*\.scss)$/,
-        replacement: "node_modules/$1",
-      },
-      {
         find: /^~(.*)(?!\.scss)$/,
-        replacement: "node_modules/$1.scss",
+        replacement: path.resolve(__dirname, "./node_modules/$1.scss"),
       },
     ],
   },
@@ -69,12 +43,13 @@ export default defineConfig(() => ({
   },
 }));
 
-class StringReplacePlugin implements Plugin {
-  public name = StringReplacePlugin.name;
-  public enforce = "pre" as const;
-
-  public transform(code: string): string {
-    // iTwin.js by default injects a font that is incorrect and lacks some required font weights
-    return code.replace("document.head.prepend(openSans);", "// document.head.prepend(openSans);");
-  }
+function stringReplacePlugin(): Plugin {
+  return {
+    name: stringReplacePlugin.name,
+    enforce: "pre",
+    transform: (code: string) => {
+      // iTwin.js by default injects a font that is incorrect and lacks some required font weights
+      return code.replace("document.head.prepend(openSans);", "// document.head.prepend(openSans);");
+    },
+  };
 }

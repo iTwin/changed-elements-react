@@ -14,10 +14,12 @@ export interface VersionCompareContextProps {
 }
 
 /**
- * Main entry point for setting version comparison configuration. This component will eventually completely replace the
- * global `VersionCompare` object.
+ * Main entry point for setting version comparison configuration. This component
+ * will eventually completely replace the global `VersionCompare` object.
  */
-export function VersionCompareContext(props: PropsWithChildren<VersionCompareContextProps>): ReactElement {
+export function VersionCompareContext(
+  props: PropsWithChildren<VersionCompareContextProps>,
+): ReactElement {
   const value = useMemo(
     () => ({
       iModelsClient: props.iModelsClient,
@@ -26,7 +28,11 @@ export function VersionCompareContext(props: PropsWithChildren<VersionCompareCon
     }),
     [props.comparisonJobClient, props.iModelsClient, props.savedFilters],
   );
-  return <versionCompareContext.Provider value={value}>{props.children}</versionCompareContext.Provider>;
+  return (
+    <versionCompareContext.Provider value={value}>
+      {props.children}
+    </versionCompareContext.Provider>
+  );
 }
 
 export function useVersionCompare(): VersionCompareContextValue {
@@ -35,7 +41,7 @@ export function useVersionCompare(): VersionCompareContextValue {
     throw new Error(`VersionCompare module is not initialized. Did you forget to wrap your application with VersionCompareContext?
 
 Example:
-  <VersionCompareContext>
+  <VersionCompareContext {...args}>
     <App/>
   </VersionCompareContext>
 `);

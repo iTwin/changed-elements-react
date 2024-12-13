@@ -1,0 +1,138 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+@layer itwinui.v3;
+
+@layer changed-elements-react.v1 {
+  ._cer_v1_version-selector {
+    --_cer_v1_container-margin: unset;
+    --_cer_v1_container-margin-internal: var(--_cer_v1_container-margin, var(--iui-size-m));
+
+    height: 100%;
+    padding-top: var(--_cer_v1_container-margin-internal);
+
+    > * {
+      margin-inline: var(--_cer_v1_container-margin-internal);
+    }
+
+    ._cer_v1_version-selector-header {
+      min-height: calc(3 * var(--iui-size-m));
+      display: grid;
+      grid: 1fr / minmax(min-content, 1fr) max-content minmax(max-content, 1fr);
+      gap: var(--iui-size-xs);
+      place-content: space-between;
+      align-items: center;
+
+      > :first-child {
+        justify-self: start;
+      }
+
+      > :last-child {
+        justify-self: end;
+      }
+    }
+
+    ._cer_v1_active-versions-box {
+      min-width: min-content;
+      padding: var(--iui-size-s);
+      display: grid;
+      grid: 1fr / 1fr auto 1fr;
+      gap: var(--iui-size-s);
+      border: 1px solid var(--iui-color-background-accent-muted);
+      border-radius: 0;
+      align-items: center;
+
+      > * {
+        height: calc(4 * var(--iui-size-m));
+        display: grid;
+        white-space: nowrap;
+      }
+    }
+
+    ._cer_v1_vertical-divider {
+      background-color: var(--iui-color-background-accent-muted);
+    }
+
+    ._cer_v1_placeholder-select-version {
+      min-width: var(--iui-size-3xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+
+      > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    ._cer_v1_named-version-list-header {
+      grid-column: 1 / 4;
+      padding-block: var(--iui-size-m);
+
+      display: flex;
+      gap: var(--iui-size-s);
+      justify-content: space-between;
+
+      :last-child {
+        text-align: end;
+      }
+    }
+
+    ._cer_v1_empty-state {
+      height: 100%;
+      display: grid;
+      place-items: center;
+    }
+
+    ._cer_v1_named-version-list {
+      margin: 0;
+      min-width: min-content;
+      overflow: auto;
+
+      display: grid;
+      grid: 1fr / minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, auto);
+      column-gap: var(--iui-size-m);
+
+      > * {
+        padding-inline: var(--_cer_v1_container-margin-internal);
+      }
+    }
+
+    ._cer_v1_named-version-entry {
+      min-height: min-content;
+      padding-block: var(--iui-size-m);
+      border: 1px solid var(--iui-color-border-subtle);
+      border-radius: 0;
+
+      display: grid;
+      gap: unset;
+      grid-template-columns: subgrid;
+      grid-column: 1 / 4;
+      align-items: center;
+
+      > :nth-child(2):last-child {
+        grid-column: 2 / 4;
+      }
+
+      &:hover {
+        background-color: var(--iui-color-background-accent-muted);
+      }
+    }
+
+    ._cer_v1_action-button {
+      justify-content: start;
+
+      &:not([aria-disabled="true"]) {
+        color: var(--iui-color-icon-accent);
+      }
+    }
+
+    ._cer_v1_not-processed {
+      color: var(--iui-color-border);
+    }
+  }
+}
