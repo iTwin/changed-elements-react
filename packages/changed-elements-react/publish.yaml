@@ -64,8 +64,8 @@ stages:
           - task: CmdLine@2
             displayName: Pack package files
             inputs:
-             script: pnpm pack
-             workingDirectory: packages/$(packageName)/
+              script: pnpm pack
+              workingDirectory: packages/$(packageName)/
 
           - task: CmdLine@2
             displayName: Bump version and update changelog
@@ -75,7 +75,7 @@ stages:
                 npm version $VERSION_TYPE --no-git-tag-version
                 PACKAGE_VERSION=$(node -p "require('./package.json').version")
                 sed -i "s/## \[Unreleased\]/## [Unreleased]\n\n## [$PACKAGE_VERSION] - $(date +'%Y-%m-%d')/" CHANGELOG.md
-            workingDirectory: packages/$(packageName)/
+              workingDirectory: packages/$(packageName)/
 
           - task: CmdLine@2
             displayName: Commit changes
