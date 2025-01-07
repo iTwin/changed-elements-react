@@ -111,7 +111,9 @@ stages:
                 git tag "v$PACKAGE_VERSION"
                 git push origin HEAD --tags
 
-          - template: templates/npmjs-publish-deployment.yaml@templates
-            parameters:
-              path: $(tarballName)
-              artifactName: published-package
+          - task: CmdLine@2
+            displayName: Publish to npm
+            env:
+              NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            inputs:
+              script: npm publish
