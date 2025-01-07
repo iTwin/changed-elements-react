@@ -64,8 +64,8 @@ stages:
           - task: CmdLine@2
             displayName: Pack package files
             inputs:
-             script: pnpm pack
-             workingDirectory: packages/$(packageName)/
+              script: pnpm pack
+              workingDirectory: packages/$(packageName)/
 
           - publish: packages/$(packageName)/$(tarballName)
             displayName: Publish package artifact
@@ -111,9 +111,7 @@ stages:
                 git tag "v$PACKAGE_VERSION"
                 git push origin HEAD --tags
 
-          - task: CmdLine@2
-            displayName: Publish to npm
-            env:
-              NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-            inputs:
-              script: npm publish
+          - template: templates/npmjs-publish-deployment.yaml@templates
+            parameters:
+              path: $(tarballName)
+              artifactName: published-package
