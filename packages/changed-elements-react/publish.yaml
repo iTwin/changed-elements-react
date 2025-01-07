@@ -87,7 +87,8 @@ stages:
                 git commit -m "chore(release): $PACKAGE_VERSION"
                 git tag "v$PACKAGE_VERSION"
                 git push origin HEAD --tags
-
+              workingDirectory: packages/$(packageName)/
+              
           - publish: packages/$(packageName)/$(tarballName)
             displayName: Publish package artifact
             artifact: published-package
