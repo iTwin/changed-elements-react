@@ -89,7 +89,7 @@ stages:
                 git push origin HEAD --tags
               workingDirectory: packages/$(packageName)/
               env:
-                GITHUB_TOKEN: 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
+                GITHUB_TOKEN: $(GITHUB_TOKEN)
 
           - publish: packages/$(packageName)/$(tarballName)
             displayName: Publish package artifact
