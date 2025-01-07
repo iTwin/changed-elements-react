@@ -87,7 +87,7 @@ stages:
                 git commit -m "chore(release): $PACKAGE_VERSION"
                 git tag "v$PACKAGE_VERSION"
                 git push https://$(GITHUB_TOKEN)@github.com/$(Build.Repository.Name).git HEAD:$(Build.SourceBranchName) --tags
-            workingDirectory: packages/$(packageName)/
+              workingDirectory: packages/$(packageName)/
             env:
               GITHUB_TOKEN: $(PAT)
 
