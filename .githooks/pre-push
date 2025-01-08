@@ -9,11 +9,25 @@ if [[ "$BRANCH_NAME" =~ ^release/changed-elements-react-v[0-9a-zA-Z]+\.[0-9a-zA-
   VERSION=$(grep -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' packages/changed-elements-react/CHANGELOG.md | head -1)
 
   # Extract version from package.json
-  PACKAGE_VERSION=$(jq -r '.version' packages/changed-elements-react/package.json)
+  PACKAGE_VERSION=$(grep -oP '"version": "\K[0-9]+\.[0-9]+\.[0-9]+' packages/changed-elements-react/package.json)
+
+  echo "Package version: $PACKAGE_VERSION"
+  echo "CHANGELOG version: $VERSION"
 
   # Compare versions
   if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
-    echo "Version mismatch: CHANGELOG.md version ($VERSION) does not match package.json version ($PACKAGE_VERSION) Please run npx changeset version. Then run again."
+    echo "Version mismatch: CHANGELOG.md version ($VERSION) does not match package.json version ($PACKAGE_VERSION). Please run npx changeset version. Then run again. For more details read publish_readme.md"
+    exit 1
+  fi
+
+  # Extract version from branch name
+  BRANCH_VERSION=$(echo "$BRANCH_NAME" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+$')
+
+  echo "Branch version: $BRANCH_VERSION"
+
+  # Compare branch version with package and changelog versions
+  if [ "$BRANCH_VERSION" != "$VERSION" ] || [ "$BRANCH_VERSION" != "$PACKAGE_VERSION" ]; then
+    echo "Version mismatch: release branch version ($BRANCH_VERSION) does not equal CHANGELOG.md version ($VERSION) or package.json version ($PACKAGE_VERSION)."
     exit 1
   fi
 fi
