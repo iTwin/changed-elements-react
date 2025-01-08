@@ -1,0 +1,55 @@
+name: Release Workflow
+
+on:
+  push:
+    branches:
+      - 'release/changed-elements-react-v*.*.*'
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Extract version and release notes from CHANGELOG.md
+      id: extract_version_and_notes
+      run: |
+        VERSION=$(grep -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' packages/changed-elements-react/CHANGELOG.md | head -1)
+        NOTES=$(awk '/^## '"$VERSION"'/{flag=1;next}/^##/{flag=0}flag' packages/changed-elements-react/CHANGELOG.md)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "NOTES<<EOF" >> $GITHUB_ENV
+        echo "$NOTES" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Create tag
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git tag -a "v${{ env.VERSION }}" -m "Release ${{ env.VERSION }}"
+        git push origin "v${{ env.VERSION }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create GitHub release
+      uses: actions/create-release@v1
+      with:
+        tag_name: "v${{ env.VERSION }}"
+        release_name: "Release ${{ env.VERSION }}"
+        body: ${{ env.NOTES }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create pull request to merge release branch into master
+      uses: peter-evans/create-pull-request@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "Merge release branch into master"
+        branch: ${{ github.ref }}
+        base: master
+        title: "Merge release branch ${{ github.ref }} into master"
+        body: "This PR merges the release branch ${{ github.ref }} back into master."

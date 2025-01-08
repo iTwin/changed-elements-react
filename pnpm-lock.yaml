@@ -35,6 +35,13 @@ importers:
       typescript:
         specifier: ~5.5.4
         version: 5.5.4
+    devDependencies:
+      '@changesets/cli':
+        specifier: ^2.27.11
+        version: 2.27.11
+      '@changesets/types':
+        specifier: ^6.0.0
+        version: 6.0.0
 
   packages/changed-elements-react:
     dependencies:
@@ -63,9 +70,6 @@ importers:
         specifier: ^1.0.8
         version: 1.0.9(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@changesets/cli':
-        specifier: ^2.27.11
-        version: 2.27.11
       '@itwin/appui-abstract':
         specifier: ^4.0.6
         version: 4.10.2(@itwin/core-bentley@4.10.2)
