@@ -19,6 +19,7 @@ jobs:
       run: |
         VERSION=$(jq -r '.version' packages/changed-elements-react/package.json)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Extracted version: $VERSION"
 
     - name: Extract release notes from CHANGELOG.md
       id: extract_notes
@@ -27,6 +28,7 @@ jobs:
         echo "NOTES<<EOF" >> $GITHUB_ENV
         echo "$NOTES" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
+        echo "Extracted notes: $NOTES"
 
     - name: Create tag
       run: |
