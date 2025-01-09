@@ -38,7 +38,7 @@ jobs:
         git tag -a "v${{ env.VERSION }}" -m "Release ${{ env.VERSION }}"
         git push origin "v${{ env.VERSION }}"
       env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create GitHub release
       uses: actions/create-release@v1
@@ -49,12 +49,12 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create pull request to merge release branch into master
       uses: peter-evans/create-pull-request@v3
       with:
-        token: ${{ secrets.PAT_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "Merge release branch into master"
         branch: ${{ github.ref }}
         base: master
