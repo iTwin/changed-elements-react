@@ -40,3 +40,4 @@ export const AutoSizer = forwardRef<HTMLDivElement, AutoSizerProps>(
     return <div ref={mergedRefs} className={props.className}>{size && props.children(size)}</div>;
   },
 );
+
