@@ -14,12 +14,16 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Extract version and release notes from CHANGELOG.md
-      id: extract_version_and_notes
+    - name: Extract version from package.json
+      id: extract_version
       run: |
-        VERSION=$(grep -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' packages/changed-elements-react/CHANGELOG.md | head -1)
-        NOTES=$(awk '/^## '"$VERSION"'/{flag=1;next}/^##/{flag=0}flag' packages/changed-elements-react/CHANGELOG.md)
+        VERSION=$(jq -r '.version' packages/changed-elements-react/package.json)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Extract release notes from CHANGELOG.md
+      id: extract_notes
+      run: |
+        NOTES=$(awk '/^## '"$VERSION"'/{flag=1;next}/^##/{flag=0}flag' packages/changed-elements-react/CHANGELOG.md)
         echo "NOTES<<EOF" >> $GITHUB_ENV
         echo "$NOTES" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
