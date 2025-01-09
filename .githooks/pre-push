@@ -20,14 +20,20 @@ if [[ "$BRANCH_NAME" =~ ^release/changed-elements-react-v[0-9a-zA-Z]+\.[0-9a-zA-
     exit 1
   fi
 
-  # Extract version from branch name
-  BRANCH_VERSION=$(echo "$BRANCH_NAME" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+$')
+  # Extract major and minor version from branch name
+  BRANCH_VERSION=$(echo "$BRANCH_NAME" | grep -oP 'v\K[0-9]+\.[0-9]+')
 
-  echo "Branch version: $BRANCH_VERSION"
+  # Extract major and minor version from package.json and CHANGELOG.md
+  PACKAGE_MAJOR_MINOR=$(echo "$PACKAGE_VERSION" | grep -oP '^[0-9]+\.[0-9]+')
+  CHANGELOG_MAJOR_MINOR=$(echo "$VERSION" | grep -oP '^[0-9]+\.[0-9]+')
 
-  # Compare branch version with package and changelog versions
-  if [ "$BRANCH_VERSION" != "$VERSION" ] || [ "$BRANCH_VERSION" != "$PACKAGE_VERSION" ]; then
-    echo "Version mismatch: release branch version ($BRANCH_VERSION) does not equal CHANGELOG.md version ($VERSION) or package.json version ($PACKAGE_VERSION)."
+  echo "Branch major.minor version: $BRANCH_VERSION"
+  echo "Package major.minor version: $PACKAGE_MAJOR_MINOR"
+  echo "CHANGELOG major.minor version: $CHANGELOG_MAJOR_MINOR"
+
+  # Compare branch major.minor version with package and changelog major.minor versions
+  if [ "$BRANCH_VERSION" != "$PACKAGE_MAJOR_MINOR" ] || [ "$BRANCH_VERSION" != "$CHANGELOG_MAJOR_MINOR" ]; then
+    echo "Version mismatch: release branch major.minor version ($BRANCH_VERSION) does not equal CHANGELOG.md major.minor version ($CHANGELOG_MAJOR_MINOR) or package.json major.minor version ($PACKAGE_MAJOR_MINOR)."
     exit 1
   fi
 fi
