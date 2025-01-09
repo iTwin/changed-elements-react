@@ -11,11 +11,11 @@ This will generate a file in the .changeset folder that will have the change des
 
 Before creating release branch in the format release/changed-elements-react-vx.x.x
 Run `npx changeset version` on master to update the package.json and changelog then create the release branch.
-This will create and tag a release for the repository
+This will create and tag a release for the repository.
+**When pushing to release branch include changelog and package.json in commit being pushed from local to remote**
 
 ### Post branch release
 
-(Todo)Maybe figure out better way of doing this.
 A Pr will be created from release branch pointing at master. Merge PR in and do not delete branch.
 
 Go to [ADO Pipeline](https://bentleycs.visualstudio.com/iModelTechnologies/_build?definitionId=9397) and run based on tagged release. This will publish the package.
