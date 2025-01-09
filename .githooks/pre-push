@@ -33,7 +33,7 @@ if [[ "$BRANCH_NAME" =~ ^release/changed-elements-react-v[0-9a-zA-Z]+\.[0-9a-zA-
 
   # Compare branch major.minor version with package and changelog major.minor versions
   if [ "$BRANCH_VERSION" != "$PACKAGE_MAJOR_MINOR" ] || [ "$BRANCH_VERSION" != "$CHANGELOG_MAJOR_MINOR" ]; then
-    echo "Version mismatch: release branch major.minor version ($BRANCH_VERSION) does not equal CHANGELOG.md major.minor version ($CHANGELOG_MAJOR_MINOR) or package.json major.minor version ($PACKAGE_MAJOR_MINOR)."
+    echo "Version mismatch: release branch major.minor version ($BRANCH_VERSION) does not equal CHANGELOG.md major.minor version ($CHANGELOG_MAJOR_MINOR) or package.json major.minor version ($PACKAGE_MAJOR_MINOR). Please run npx changeset version. Then run again. For more details read publish_readme.md"
     exit 1
   fi
 fi
