@@ -24,11 +24,12 @@ jobs:
     - name: Extract release notes from CHANGELOG.md
       id: extract_notes
       run: |
-        NOTES=$(awk '/^## '"$VERSION"'/{flag=1;next}/^##/{flag=0}flag' packages/changed-elements-react/CHANGELOG.md)
+        NOTES=$(awk '/^## [0-9]+\.[0-9]+\.[0-9]+/{flag=1;next}/^##/{flag=0}flag' packages/changed-elements-react/CHANGELOG.md)
         echo "NOTES<<EOF" >> $GITHUB_ENV
         echo "$NOTES" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
         echo "Extracted notes: $NOTES"
+
 
     - name: Create tag
       run: |
