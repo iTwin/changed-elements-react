@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   build:
@@ -17,32 +17,35 @@ jobs:
 
     name: Build and run tests
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: false
+    - name: Fetch all branches
+      run: git fetch --all
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+        run_install: false
 
-      - name: Install dependencies
-        run: pnpm install
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: "pnpm"
 
-      - name: ESLint
-        run: npm run lint -- --max-warnings 0
+    - name: Install dependencies
+      run: pnpm install
 
-      - name: Typecheck
-        run: npm run typecheck
+    - name: ESLint
+      run: pnpm run lint -- --max-warnings 0
 
-      - name: Check changed-elements-react unit test coverage
-        run: npm run test:cover --prefix ./packages/changed-elements-react
+    - name: Typecheck
+      run: pnpm run typecheck
 
-      - name: Check if changeset is present
-        run: pnpm changeset status
+    - name: Check changed-elements-react unit test coverage
+      run: pnpm run test:cover --prefix ./packages/changed-elements-react
+
+    - name: Check if changeset is present
+      run: pnpm exec changeset status
