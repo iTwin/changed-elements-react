@@ -39,13 +39,13 @@ jobs:
       run: pnpm install
 
     - name: ESLint
-      run: pnpm run lint -- --max-warnings 0
+      run: npm run lint -- --max-warnings 0
 
     - name: Typecheck
-      run: pnpm run typecheck
+      run: npm run typecheck
 
     - name: Check changed-elements-react unit test coverage
-      run: pnpm run test:cover --prefix ./packages/changed-elements-react
-
+      run: npm run test:cover --prefix ./packages/changed-elements-react
+      
     - name: Check if changeset is present
       run: pnpm exec changeset status
