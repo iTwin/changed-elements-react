@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -17,29 +17,32 @@ jobs:
 
     name: Build and run tests
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
-        run_install: false
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: "pnpm"
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
 
-    - name: Install dependencies
-      run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
 
-    - name: ESLint
-      run: npm run lint -- --max-warnings 0
+      - name: ESLint
+        run: npm run lint -- --max-warnings 0
 
-    - name: Typecheck
-      run: npm run typecheck
+      - name: Typecheck
+        run: npm run typecheck
 
-    - name: Check changed-elements-react unit test coverage
-      run: npm run test:cover --prefix ./packages/changed-elements-react
+      - name: Check changed-elements-react unit test coverage
+        run: npm run test:cover --prefix ./packages/changed-elements-react
+
+      - name: Check if changeset is present
+        run: pnpm changeset status
