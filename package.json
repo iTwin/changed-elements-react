@@ -14,7 +14,8 @@
     "typecheck:backend": "npm run typecheck --prefix packages/test-app-backend",
     "typecheck:frontend": "npm run typecheck --prefix packages/test-app-frontend",
     "release": "ts-node --esm scripts/release.ts",
-    "post-release": "ts-node --esm scripts/post-release.ts"
+    "post-release": "ts-node --esm scripts/post-release.ts",
+    "check": "changeset status"
   },
   "engines": {
     "pnpm": ">=8",
