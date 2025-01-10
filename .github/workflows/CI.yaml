@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -27,6 +25,9 @@ jobs:
 
     - name: Checkout PR branch
       run: git checkout ${{ github.head_ref }}
+
+    - name: Fetch master branch
+      run: git fetch origin master:refs/remotes/origin/master
 
     - name: Install pnpm
       uses: pnpm/action-setup@v2
