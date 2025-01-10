@@ -44,7 +44,7 @@ jobs:
       uses: actions/create-release@v1
       with:
         tag_name: "v${{ env.VERSION }}"
-        release_name: "@itwin/changed-elements-react${{ env.VERSION }}"
+        release_name: "@itwin/changed-elements-react@${{ env.VERSION }}"
         body: ${{ env.NOTES }}
         draft: false
         prerelease: false
@@ -60,4 +60,3 @@ jobs:
         base: master
         title: "Merge release branch ${{ github.ref }} into master"
         body: "This PR merges the release branch ${{ github.ref }} back into master."
-
