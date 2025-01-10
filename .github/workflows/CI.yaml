@@ -53,4 +53,4 @@ jobs:
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
     - name: Check if changeset is present
-      run: npx changeset status
+      run: pnpm changeset status
