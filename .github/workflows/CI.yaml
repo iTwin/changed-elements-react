@@ -25,6 +25,9 @@ jobs:
     - name: Fetch all branches
       run: git fetch origin +refs/heads/*:refs/remotes/origin/*
 
+    - name: Checkout master branch
+      run: git checkout master
+
     - name: Install pnpm
       uses: pnpm/action-setup@v2
       with:
