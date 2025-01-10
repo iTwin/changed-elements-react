@@ -53,7 +53,7 @@ jobs:
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
     - name: Install @changesets/cli
-      run: pnpm add @changesets/cli
+      run: pnpm -w add @changesets/cli
 
     - name: Check if changeset is present
       run: pnpm changeset status
