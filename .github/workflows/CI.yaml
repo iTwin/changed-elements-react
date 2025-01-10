@@ -52,5 +52,8 @@ jobs:
     - name: Check changed-elements-react unit test coverage
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
+    - name: Install @changesets/cli
+      run: pnpm add @changesets/cli
+
     - name: Check if changeset is present
-      run: pnpm exec changeset status
+      run: pnpm changeset status
