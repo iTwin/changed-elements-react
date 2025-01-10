@@ -25,7 +25,7 @@ jobs:
 
     - name: Checkout master branch
       run: git checkout master
-      
+
     - name: Install pnpm
       uses: pnpm/action-setup@v2
       with:
@@ -51,4 +51,4 @@ jobs:
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
     - name: Check if changeset is present
-      run: pnpm exec changeset status
+      run: pnpm changeset status
