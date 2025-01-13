@@ -49,8 +49,12 @@ jobs:
     - name: Run Audit
       run: pnpm audit
 
-    - name: Run changeset version
-      run : pnpm changeset publish --dry-run
+    - name: Create release PR or publish to npm
+      uses: changesets/action@v1
+      with:
+          publish: pnpm run build:components && changeset publish --dry-run
+          title: Release packages [publish docs]
+          commit: Release packages [publish docs]
 
     - name: Extract version from package.json
       id: extract_version
