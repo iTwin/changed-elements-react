@@ -43,12 +43,6 @@ jobs:
     - name: Check changed-elements-react unit test coverage
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
-    - name: Debugging - List branches
-      run: git branch -a
-
-    - name: Debugging - Show commit history
-      run: git log --oneline --graph --all --decorate
-
     - name: Check if changeset is present
       run: |
         #There are issues with changesets in github workflows, so we need to force pull the master branch
