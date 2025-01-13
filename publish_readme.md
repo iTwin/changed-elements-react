@@ -10,7 +10,7 @@ This will generate a file in the .changeset folder that will have the change des
 
 ### Publishing
 
-Go to [actions](https://github.com/iTwin/changed-elements-react/actions) on github and run `Changesets Release` github action. This will create a release tag, github release, and publish the npm package.
+Go to [actions](https://github.com/iTwin/changed-elements-react/actions) on github and run `Changesets Release` github action. This will create a release tag, github release, version the package, create a release pr, and publish the npm package.
 
 ### Post branch release
 
