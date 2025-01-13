@@ -55,7 +55,7 @@ jobs:
           publish: pnpm run build:components && changeset publish --dry-run
           title: Release packages [publish docs]
           commit: Release packages [publish docs]
-          baseBranch: master
+          baseBranch: origin/master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
