@@ -9,23 +9,50 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    name: Build and run tests
+    strategy:
+      matrix:
+        node-version: [18]
+
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
 
-    - name: Set up Node.js
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+        run_install: false
+
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
-        node-version: '18'
-
-    - name: Install pnpm
-      run: npm install -g pnpm
+        node-version: ${{ matrix.node-version }}
+        cache: "pnpm"
 
     - name: Install dependencies
       run: pnpm install
 
+    - name: ESLint
+      run: npm run lint -- --max-warnings 0
+
+    - name: Typecheck
+      run: npm run typecheck
+
+    - name: Check changed-elements-react unit test coverage
+      run: npm run test:cover --prefix ./packages/changed-elements-react
+
+    - name: Debugging - List branches
+      run: git branch -a
+
+    - name: Debugging - Show commit history
+      run: git log --oneline --graph --all --decorate
+
     - name: Check if changeset is present
-      run: npx changeset status
+      run: |
+        # Checkout PR head commit instead of merge commit
+        # See: https://github.com/atlassian/changesets/issues/517
+        git checkout ${{ github.event.pull_request.head.sha }}
+        npx changeset status --since=origin/main
+      if: ${{ github.event_name == 'pull_request' }}
