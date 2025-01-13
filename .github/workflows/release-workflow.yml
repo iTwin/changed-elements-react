@@ -55,6 +55,7 @@ jobs:
         publish: pnpm build && npx changeset publish --dry-run
         title: Release packages [publish docs]
         commit: Release packages [publish docs]
+        base: master
 
     - name: Extract version from package.json
       id: extract_version
