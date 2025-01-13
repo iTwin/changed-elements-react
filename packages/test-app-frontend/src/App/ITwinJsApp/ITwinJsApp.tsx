@@ -9,6 +9,7 @@ import {
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
+  ChangedElementsWidget,
   ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
   VersionCompareFeatureTracking
 } from "@itwin/changed-elements-react";
@@ -31,7 +32,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { applyUrlPrefix, localBackendPort, usingLocalBackend } from "../../environment.js";
+import { applyUrlPrefix, localBackendPort, runExperimental, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
@@ -302,19 +303,31 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    return [
-      {
-        id: "NamedVersionSelector",
-        label: "NamedVersionSelector",
-        content: (
-          <NamedVersionSelectorWidget
-            iModel={iModel}
-            manager={VersionCompare.manager}
-            manageVersions={<ManageNamedVersions />}
-          />
-        ),
-      },
-    ];
+    if (runExperimental) {
+      return [
+        {
+          id: "NamedVersionSelector",
+          label: "NamedVersionSelector",
+          content: (
+            <NamedVersionSelectorWidget
+              iModel={iModel}
+              manager={VersionCompare.manager}
+              manageVersions={<ManageNamedVersions />}
+            />
+          ),
+        },
+      ];
+    } else {
+      return [{
+        id: "ChangedElementsWidget",
+        content: <ChangedElementsWidget useV2Widget
+          feedbackUrl="https://example.com"
+          iModelConnection={UiFramework.getIModelConnection()!}
+          enableComparisonJobUpdateToasts
+          manageNamedVersionsSlot={<ManageNamedVersions />}
+        />,
+      }];
+    }
   }
 }
 

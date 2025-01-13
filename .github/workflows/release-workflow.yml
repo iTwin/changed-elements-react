@@ -1,0 +1,88 @@
+name: Changesets Release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+jobs:
+  CreateRelease:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.IMJS_ADMIN_GH_TOKEN  }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
+      GIT_AUTHOR_NAME: imodeljs-admin
+      GIT_AUTHOR_EMAIL: imodeljs-admin@users.noreply.github.com
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+        run_install: false
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: "pnpm"
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: ESLint
+      run: pnpm run lint
+
+    - name: Typecheck
+      run: pnpm run typecheck
+
+    - name: Check changed-elements-react unit test coverage
+      run: npm run test:cover --prefix ./packages/changed-elements-react
+
+    - name: Run Audit
+      run: pnpm audit
+
+    - name: Create release PR or publish to npm
+      uses: changesets/action@v1
+      with:
+          publish: pnpm run build:components && changeset publish --dry-run
+          title: Release packages [publish docs]
+          commit: Release packages [publish docs]
+          baseBranch: origin/master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract version from package.json
+      id: extract_version
+      run: |
+        VERSION=$(jq -r '.version' packages/changed-elements-react/package.json)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Extracted version: $VERSION"
+
+    - name: Extract release notes from CHANGELOG.md
+      id: extract_notes
+      run: |
+        NOTES=$(awk '/^## '"$VERSION"'/{flag=1;next}/^## [0-9]+\.[0-9]+\.[0-9]+/{flag=0}flag' packages/changed-elements-react/CHANGELOG.md)
+        echo "NOTES<<EOF" >> $GITHUB_ENV
+        echo "$NOTES" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+        echo "Extracted notes: $NOTES"
+      shell: /usr/bin/bash -e {0}
+
+
+
+    - name: Create GitHub release
+      uses: actions/create-release@v1
+      with:
+        tag_name: "v${{ env.VERSION }}"
+        release_name: "@itwin/changed-elements-react@${{ env.VERSION }}"
+        body: ${{ env.NOTES }}
+        draft: false
+        prerelease: false
