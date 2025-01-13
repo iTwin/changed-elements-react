@@ -37,7 +37,7 @@ jobs:
       run: pnpm run typecheck
 
     - name: Check changed-elements-react unit test coverage
-      run: pnpm run test:cover --prefix ./packages/changed-elements-react
+      run: pnpm run cover:components
 
     - name: Run Audit
       run: pnpm audit
