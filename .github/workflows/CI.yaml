@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v1
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
 
@@ -51,8 +51,5 @@ jobs:
 
     - name: Check if changeset is present
       run: |
-        # Checkout PR head commit instead of merge commit
-        # See: https://github.com/atlassian/changesets/issues/517
-        git checkout ${{ github.event.pull_request.head.sha }}
-        npx changeset status --since=origin/main
-      if: ${{ github.event_name == 'pull_request' }}
+        git pull -f origin master:master
+        npx changeset status --since=master
