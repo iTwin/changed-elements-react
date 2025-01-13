@@ -73,7 +73,7 @@ jobs:
       run: |
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
-        git tag -a "v${{ env.VERSION }}" -m "Release @itwin\changed-elements-react@${{ env.VERSION }}"
+        git tag -a "v${{ env.VERSION }}" -m "Release @itwin/changed-elements-react@${{ env.VERSION }}"
         git push origin "v${{ env.VERSION }}"
 
     - name: Create GitHub release
