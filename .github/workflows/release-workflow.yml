@@ -1,7 +1,10 @@
 name: Changesets Release
 
-on: workflow_dispatch
-
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
 jobs:
   CreateRelease:
     runs-on: ubuntu-latest
@@ -44,7 +47,7 @@ jobs:
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
     - name: Run changeset version
-      run : pnpm changeset version
+      run : pnpm changeset release --dry-run
 
     - name: Extract version from package.json
       id: extract_version
@@ -63,12 +66,7 @@ jobs:
         echo "Extracted notes: $NOTES"
       shell: /usr/bin/bash -e {0}
 
-    - name: Create tag
-      run: |
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
-        git tag -a "v${{ env.VERSION }}" -m "Release @itwin/changed-elements-react@${{ env.VERSION }}"
-        git push origin "v${{ env.VERSION }}"
+
 
     - name: Create GitHub release
       uses: actions/create-release@v1
@@ -78,29 +76,3 @@ jobs:
         body: ${{ env.NOTES }}
         draft: false
         prerelease: false
-
-    - name: Create release branch
-      run: |
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
-        git checkout -b release/change-elements-react-v${{ env.VERSION }}
-        git push origin release/change-elements-react-v${{ env.VERSION }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Create pull request
-      id: create_pr
-      uses: peter-evans/create-pull-request@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "Release ${{ env.VERSION }}"
-        branch: release/change-elements-react-v${{ env.VERSION }}
-        title: "Release ${{ env.VERSION }}"
-        body: "This pull request merges the release changes back into master."
-        base: master
-
-    - name: Build and release
-      run: |
-        cd packages/changed-elements-react
-        pnpm build
-        pnpm release
