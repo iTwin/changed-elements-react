@@ -46,8 +46,11 @@ jobs:
     - name: Check changed-elements-react unit test coverage
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
+    - name: Run Audit
+      run: pnpm audit
+
     - name: Run changeset version
-      run : pnpm changeset release --dry-run
+      run : pnpm changeset publish --dry-run
 
     - name: Extract version from package.json
       id: extract_version
