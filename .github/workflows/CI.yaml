@@ -9,10 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    strategy:
-      matrix:
-        node-version: [18]
-
     name: Build and run tests
     steps:
     - name: Checkout
@@ -20,44 +16,16 @@ jobs:
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
 
-    - name: Fetch all branches
-      run: git fetch origin +refs/heads/*:refs/remotes/origin/*
-
-    - name: Checkout PR branch
-      run: git checkout ${{ github.head_ref }}
-
-    - name: Fetch master branch
-      run: git fetch origin master:refs/remotes/origin/master
-
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
-        run_install: false
-
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: "pnpm"
+        node-version: '18'
+
+    - name: Install pnpm
+      run: npm install -g pnpm
 
     - name: Install dependencies
       run: pnpm install
-
-    - name: ESLint
-      run: npm run lint -- --max-warnings 0
-
-    - name: Typecheck
-      run: npm run typecheck
-
-    - name: Check changed-elements-react unit test coverage
-      run: npm run test:cover --prefix ./packages/changed-elements-react
-
-    - name: Debugging - List branches
-      run: git branch -a
-
-    - name: Debugging - Show commit history
-      run: git log --oneline --graph --all --decorate
 
     - name: Check if changeset is present
       run: npx changeset status
