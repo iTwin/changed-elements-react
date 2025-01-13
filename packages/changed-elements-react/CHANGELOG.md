@@ -1,6 +1,29 @@
 # Changelog
 
-All notable changes to this package will be documented in this file.
+## 0.12.0
+
+### Minor Changes
+
+#### [0.12.0](https://github.com/iTwin/changed-elements-react/tree/v0.12.0/packages/changed-elements-react) - 2025-01-13
+
+- Added new env file bool for toggling experimental features VITE_RUN_EXPERIMENTAL
+- Added new workflow for releases/publish and documented process in publish_readme.md
+- Added experimental React component for the new Named Version selector. Its name or API is not stable yet, but you can try it out the following way.
+
+  ```TypeScript
+  import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
+
+  [...]
+
+    return (
+      <VersionCompareContext iModelsClient={iModelsClient}>
+        <NamedVersionSelectorWidget iModel={iModel} />
+      </VersionCompareContext>
+    );
+  }
+  ```
+
+## 0.11.4
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
