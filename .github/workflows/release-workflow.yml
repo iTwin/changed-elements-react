@@ -105,25 +105,6 @@ jobs:
         body: "This pull request merges the release changes back into master."
         base: master
 
-    - name: Install GitHub CLI
-      run: |
-        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-        sudo apt-add-repository https://cli.github.com/packages
-        sudo apt update
-        sudo apt install gh
-
-    - name: Approve pull request
-      run: |
-        PR_NUMBER=$(jq -r '.pull_request.number' < $GITHUB_EVENT_PATH)
-        gh pr review $PR_NUMBER --approve
-
-    # - name: Merge pull request
-    #   run: |
-    #     PR_NUMBER=$(jq -r '.pull_request.number' < $GITHUB_EVENT_PATH)
-    #     gh pr merge $PR_NUMBER --squash --delete-branch
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build and release
       run: |
         cd packages/changed-elements-react
