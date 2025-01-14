@@ -73,6 +73,13 @@ export const useNamedVersionLoader = (
                 orderby: "changesetIndex",
                 ascendingOrDescending: "desc",
               });
+
+            if (currentPage === 0 && namedVersions.length === 0) {
+              setResultNoNamedVersions();
+              setIsLoading(false);
+              break;
+             }
+
             if (!currentNamedVersion)
               currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);
 
