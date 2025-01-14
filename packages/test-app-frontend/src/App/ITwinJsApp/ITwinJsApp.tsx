@@ -303,7 +303,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    if (runExperimental) {
+    if (!runExperimental) {
       return [
         {
           id: "NamedVersionSelector",
