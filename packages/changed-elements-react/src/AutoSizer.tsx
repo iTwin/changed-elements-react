@@ -3,12 +3,11 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  forwardRef, useLayoutEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode
+  forwardRef, useLayoutEffect, useRef, useState, type ForwardedRef, type HTMLAttributes, type ReactNode,
+  type RefCallback
 } from "react";
 
-import { mergeRefs } from "./common.js";
-
-export interface AutoSizerProps extends HTMLAttributes<HTMLDivElement> {
+export interface AutoSizerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   children: (size: Size) => ReactNode;
 }
 
@@ -36,7 +35,18 @@ export const AutoSizer = forwardRef<HTMLDivElement, AutoSizerProps>(
       [],
     );
 
-    const mergedRefs = useMemo(() => mergeRefs(divRef, ref), [divRef, ref]);
-    return <div ref={mergedRefs} className={props.className}>{size && props.children(size)}</div>;
+    return <div ref={mergeRefs(divRef, ref)} className={props.className}>{size && props.children(size)}</div>;
   },
 );
+
+function mergeRefs<T>(...refs: Array<ForwardedRef<T>>): RefCallback<T> {
+  return (value) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(value);
+      } else if (ref) {
+        ref.current = value;
+      }
+    });
+  };
+}

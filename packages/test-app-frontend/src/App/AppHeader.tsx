@@ -4,17 +4,17 @@
 *--------------------------------------------------------------------------------------------*/
 import { SvgDeveloper, SvgMoon, SvgSun } from "@itwin/itwinui-icons-react";
 import {
-  Button, DropdownMenu, Header, HeaderLogo, IconButton, MenuItem, UserIcon, getUserColor
+  Button, DropdownMenu, Header, HeaderLogo, IconButton, MenuItem, Avatar, getUserColor
 } from "@itwin/itwinui-react";
-import { type ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAppContext } from "./AppContext.js";
-import { AuthorizationState, useAuthorization } from "./Authorization.js";
-import { GetUserProfileResult, getUserProfile } from "./ITwinApi.js";
+import { useAppContext } from "./AppContext";
+import { AuthorizationState, useAuthorization } from "./Authorization";
+import { GetUserProfileResult, getUserProfile } from "./ITwinApi";
 
 export function AppHeader(): ReactElement {
-  const { state, signIn, signOut, authorizationClient } = useAuthorization();
+  const { state, signIn, signOut, userAuthorizationClient } = useAuthorization();
   const navigate = useNavigate();
 
   const [user, setUser] = useState<UserProfile>();
@@ -26,7 +26,7 @@ export function AppHeader(): ReactElement {
 
       let disposed = false;
       void (async () => {
-        const profile = await getUserProfile({ authorizationClient });
+        const profile = await getUserProfile({ authorizationClient: userAuthorizationClient });
         if (!disposed) {
           setUser(profile?.user);
         }
@@ -34,8 +34,12 @@ export function AppHeader(): ReactElement {
 
       return () => { disposed = true; };
     },
-    [state, authorizationClient],
+    [state, userAuthorizationClient],
   );
+
+  const UserIcon = (state === AuthorizationState.SignedIn && user !== undefined)
+    ? () => <HeaderUserIcon profile={user} signOut={signOut} />
+    : null;
 
   const actions = [
     <ThemeButton key="Theme Toggle" />,
@@ -48,20 +52,17 @@ export function AppHeader(): ReactElement {
     >
       <GitHubLogo />
     </IconButton>,
+    UserIcon && <UserIcon key="User Icon" />,
   ];
+
   if (state === AuthorizationState.SignedOut) {
     actions.push(<Button key="signin" styleType="borderless" onClick={signIn}>Sign In</Button>);
   }
-
-  const userIcon = (state === AuthorizationState.SignedIn && user !== undefined)
-    ? <HeaderUserIcon profile={user} signOut={signOut} />
-    : null;
 
   return (
     <Header
       appLogo={<HeaderLogo logo={<SvgDeveloper />} onClick={() => navigate("/")}>Changed Elements Test App</HeaderLogo>}
       actions={actions}
-      userIcon={userIcon}
     />
   );
 }
@@ -82,11 +83,11 @@ function HeaderUserIcon(props: HeaderUserIconProps): ReactElement | null {
   const displayName = preferredName ?? "Unknown Account";
 
   return (
-    <DropdownMenu menuItems={() => [<MenuItem key="signout" onClick={signOut}>Sign Out</MenuItem>]}>
+    (<DropdownMenu menuItems={() => [<MenuItem key="signout" onClick={signOut}>Sign Out</MenuItem>]}>
       <IconButton styleType="borderless" title="Account Actions">
-        <UserIcon title={displayName} abbreviation={initials} backgroundColor={getUserColor(displayName)} />
+        <Avatar title={displayName} abbreviation={initials} backgroundColor={getUserColor(displayName)} />
       </IconButton>
-    </DropdownMenu>
+    </DropdownMenu>)
   );
 }
 
