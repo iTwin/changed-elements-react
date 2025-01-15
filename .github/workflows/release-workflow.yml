@@ -42,7 +42,7 @@ jobs:
       run: npm run test:cover --prefix ./packages/changed-elements-react
 
     - name: Run Audit
-      run: pnpm audit
+      run: pnpm audit --audit-level high
 
     - name: Create release PR or publish to npm
       uses: changesets/action@v1
