@@ -40,7 +40,7 @@ jobs:
       run: pnpm run cover:components
 
     - name: Run Audit
-      run: pnpm audit
+      run: pnpm audit --audit-level high
 
     - name: Check if changeset is present
       run: |

@@ -1,3 +1,4 @@
+/** @type {import('@changesets/types').ChangelogFunctions} */
 const fs = require('fs');
 const path = require('path');
 
