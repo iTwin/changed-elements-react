@@ -1,21 +1,19 @@
-name: Changesets Release
+name: Release Workflow
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
-  CreateRelease:
+  release:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      id-token: write
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
-        token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
     - name: Install pnpm
       uses: pnpm/action-setup@v2
@@ -45,6 +43,7 @@ jobs:
       run: pnpm audit --audit-level high
 
     - name: Create release PR or publish to npm
+      id: changesets
       uses: changesets/action@v1
       with:
         publish: pnpm run build:components && pnpm changeset publish
