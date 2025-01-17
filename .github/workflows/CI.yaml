@@ -43,6 +43,7 @@ jobs:
       run: pnpm audit --audit-level high
 
     - name: Check if changeset is present
+      if: github.actor != 'imodeljs-admin'
       run: |
         # There are issues with changesets in github workflows, so we need to force pull the master branch
         # Fix for issue https://github.com/changesets/changesets/issues/517#issuecomment-884778604
