@@ -1,4 +1,3 @@
-/** @type {import('@changesets/types').ChangelogFunctions} */
 const fs = require('fs');
 const path = require('path');
 
@@ -56,6 +55,7 @@ async function getDependencyReleaseLine() {
   // Implementation for dependency release line
 }
 
+/** @type {import('@changesets/types').ChangelogFunctions} */
 const defaultChangelogFunctions = {
   getReleaseLine,
   getDependencyReleaseLine,
