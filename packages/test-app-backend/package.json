@@ -11,6 +11,9 @@
     "start": "ts-node-dev --transpile-only --respawn -- src/main.ts",
     "typecheck": "tsc --noEmit"
   },
+    "devDependencies": {
+    "@types/express":"5.0.0"
+    },
   "dependencies": {
     "@itwin/core-backend": "^4.0.6",
     "@itwin/core-bentley": "^4.0.6",
@@ -24,6 +27,7 @@
     "@types/node": "^18.0.0",
     "dotenv-flow": "^3.2.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "~5.5.4"
+    "typescript": "~5.5.4",
+    "express":"4.21.2"
   }
 }
