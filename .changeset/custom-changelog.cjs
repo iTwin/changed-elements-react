@@ -14,7 +14,7 @@ async function getPackageVersion() {
 /**
  * Increment the version based on the version type
  * @param {string} version - The current version
- * @param {string} versionType - The type of version increment (major, minor, patch)
+ * @param {import('@changesets/types').VersionType} versionType - The type of version increment (major, minor, patch)
  * @returns {string} - The incremented version
  */
 function incrementVersion(version, versionType) {
@@ -35,10 +35,11 @@ function incrementVersion(version, versionType) {
 /**
  * Get the release line for the changelog
  * @param {import('@changesets/types').NewChangesetWithCommit} changeset - The changeset object
- * @param {string} versionType - The type of version increment (major, minor, patch)
+ * @param {import('@changesets/types').VersionType} versionType - The type of version increment (major, minor, patch)
+ * @param {null | Record<string, any>} changelogOpts - Changelog options
  * @returns {Promise<string>} - The release line for the changelog
  */
-async function getReleaseLine(changeset, versionType) {
+async function getReleaseLine(changeset, versionType, changelogOpts) {
   const newVersion = incrementVersion(await getPackageVersion(), versionType);
   // Get the current date in yyyy-mm-dd format
   const date = new Date().toISOString().split('T')[0];
@@ -49,9 +50,12 @@ async function getReleaseLine(changeset, versionType) {
 
 /**
  * Get the dependency release line for the changelog
+ * @param {import('@changesets/types').NewChangesetWithCommit[]} changesets - Array of changesets with commit
+ * @param {import('@changesets/types').ModCompWithPackage[]} dependenciesUpdated - Array of updated dependencies
+ * @param {any} changelogOpts - Changelog options
  * @returns {Promise<string>} - The dependency release line for the changelog
  */
-async function getDependencyReleaseLine() {
+async function getDependencyReleaseLine(changesets, dependenciesUpdated, changelogOpts) {
   // Implementation for dependency release line
 }
 
