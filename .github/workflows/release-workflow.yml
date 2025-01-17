@@ -1,19 +1,21 @@
-name: Release Workflow
+name: Changesets Release
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
-  release:
+  CreateRelease:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
+        token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
     - name: Install pnpm
       uses: pnpm/action-setup@v2
