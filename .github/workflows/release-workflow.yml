@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches: master
 
 jobs:
   CreateRelease:
@@ -53,7 +55,6 @@ jobs:
 
     # Issue with .npmrc file not being found by action.
     # https://github.com/changesets/action/issues/147#issue-1124312041
-    # source code from action: https://github.com/changesets/action/blob/07dc948a9f77d5ebbdbcea0d7e452a2f57c55ca9/src/index.ts#L57
     - name: Create release PR or publish to npm
       id: changesets
       uses: changesets/action@v1
