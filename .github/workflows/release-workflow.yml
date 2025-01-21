@@ -53,6 +53,9 @@ jobs:
         cd packages/changed-elements-react &&
         pnpm run build
 
+    - name: Set HOME
+      run: echo "HOME=$(pwd)" >> $GITHUB_ENV
+
     # Issue with .npmrc file not being found by action.
     # https://github.com/changesets/action/issues/147#issue-1124312041
     - name: Create release PR or publish to npm
