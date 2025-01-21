@@ -13,8 +13,7 @@
     "typecheck:components": "npm run typecheck --prefix packages/changed-elements-react",
     "typecheck:backend": "npm run typecheck --prefix packages/test-app-backend",
     "typecheck:frontend": "npm run typecheck --prefix packages/test-app-frontend",
-    "check": "changeset status",
-    "build:components": "pnpm build --prefix packages/changed-elements-react"
+    "check": "changeset status"
   },
   "engines": {
     "pnpm": ">=8",

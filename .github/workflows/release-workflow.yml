@@ -46,11 +46,16 @@ jobs:
     - name: Run Audit
       run: pnpm audit --audit-level high
 
+    - name: Build components
+      run: |
+        cd packages/changed-elements-react &&
+        pnpm run build
+
     - name: Create release PR or publish to npm
       id: changesets
       uses: changesets/action@v1
       with:
-        publish: pnpm run build:components && pnpm changeset publish
+        publish: pnpm changeset publish
         title: Release packages [publish docs]
         commit: Release packages [publish docs]
         createGithubReleases: true
