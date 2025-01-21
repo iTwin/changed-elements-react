@@ -70,7 +70,6 @@ jobs:
         GIT_AUTHOR_EMAIL: imodeljs-admin@users.noreply.github.com
         GIT_COMMITTER_NAME: imodeljs-admin
         GIT_COMMITTER_EMAIL: imodeljs-admin@users.noreply.github.com
-        HOME: ${{ github.workspace }}
 
     - name: Log Changesets Outputs
       run: |
