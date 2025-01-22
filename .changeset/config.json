@@ -1,12 +1,12 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.5/schema.json",
-  "changelog":"./custom-changelog.cjs",
+  "changelog": "./custom-changelog.cjs",
   "commit": false,
-  "fixed": [],
-  "linked": [],
+  "fixed": [ ],
+  "linked": [ ],
   "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "minor",
-  "ignore": ["test-app-frontend", "test-app-backend"],
-  "bumpVersionsWithWorkspaceProtocolOnly":true
+  "ignore": [ "test-app-frontend", "test-app-backend" ],
+  "bumpVersionsWithWorkspaceProtocolOnly": true
 }
