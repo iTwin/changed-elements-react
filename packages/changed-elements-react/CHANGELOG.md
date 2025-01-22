@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.1
+
+### Patch Changes
+
+#### [0.12.1](https://github.com/iTwin/changed-elements-react/tree/v0.12.1/packages/changed-elements-react) - 2025-01-22
+
+Fixed issue with modal where loading spinner appears if no named versions where available. Now a message appears letting user know if named versions are not available.
+
 ## 0.12.0
 
 ### Minor Changes
