@@ -13,8 +13,7 @@
     "typecheck:components": "npm run typecheck --prefix packages/changed-elements-react",
     "typecheck:backend": "npm run typecheck --prefix packages/test-app-backend",
     "typecheck:frontend": "npm run typecheck --prefix packages/test-app-frontend",
-    "release": "ts-node --esm scripts/release.ts",
-    "post-release": "ts-node --esm scripts/post-release.ts"
+    "check": "changeset status"
   },
   "engines": {
     "pnpm": ">=8",
@@ -22,7 +21,9 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@changesets/cli": "^2.27.11",
     "@types/node": "^18.11.9",
+    "@changesets/types":"6.0.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.57.0",
