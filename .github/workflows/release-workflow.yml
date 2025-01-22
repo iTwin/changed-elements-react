@@ -3,10 +3,10 @@ name: Changesets Release
 on:
   push:
     branches:
-      - master
+      - cgerman/publish-testing
   pull_request:
     branches:
-      - master
+      - cgerman/publish-testing
 
 jobs:
   CreateRelease:
