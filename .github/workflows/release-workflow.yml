@@ -52,10 +52,6 @@ jobs:
         cd packages/changed-elements-react &&
         pnpm run build
 
-    - name: Debug if .npmrc is present in working directory
-      run: |
-        cat ${{ github.workspace }}/.npmrc
-
     - name: Create release PR or publish to npm
       id: changesets
       uses: changesets/action@v1.2.1
