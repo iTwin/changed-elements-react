@@ -59,13 +59,14 @@ jobs:
       run: |
         cat ${{ github.workspace }}/.npmrc
 
-    - name: Create Release Pull Request or Publish to GPR
+    - name: Create release PR or publish to npm
       id: changesets
       uses: changesets/action@v1.2.1
       with:
-        publish: yarn g:release
-        cwd: ${{ github.workspace }}
-        title: '[Release] Version packages'
+        publish: pnpm changeset publish
+        title: Release packages [publish docs]
+        commit: Release packages [publish docs]
+        createGithubReleases: true
       env:
         GITHUB_TOKEN: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
         NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
