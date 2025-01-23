@@ -103,11 +103,10 @@
     }
 
     ._cer_v1_named-version-entry {
-      min-height: min-content;
+      min-height: calc(3 * var(--iui-size-xl));
       padding-block: var(--iui-size-m);
       border: 1px solid var(--iui-color-border-subtle);
       border-radius: 0;
-
       display: grid;
       gap: unset;
       grid-template-columns: subgrid;
