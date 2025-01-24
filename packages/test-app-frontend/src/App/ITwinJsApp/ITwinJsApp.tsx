@@ -313,6 +313,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
               iModel={iModel}
               manager={VersionCompare.manager}
               manageVersions={<ManageNamedVersions />}
+              feedbackUrl="https://example.com"
             />
           ),
         },

@@ -380,7 +380,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             }
           </WidgetComponent.Body>
           {
-            this.props.useV2Widget && this.props.feedbackUrl &&
+            this.props.feedbackUrl &&
             <WidgetComponent.ToolBar>
               <FeedbackButton
                 data-testid="comparison-widget-v2-feedback-btn"

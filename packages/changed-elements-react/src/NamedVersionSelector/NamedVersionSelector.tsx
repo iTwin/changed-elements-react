@@ -36,12 +36,14 @@ import {
 import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.css";
+import { FeedbackButton } from "../widgets/FeedbackButton.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
   manager?: VersionCompareManager | undefined;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
+  feedbackUrl?: string | undefined;
 }
 
 /**
@@ -54,7 +56,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
     throw new Error("VersionCompare is not initialized.");
   }
 
-  const { iModel, emptyState, manageVersions } = props;
+  const { iModel, emptyState, manageVersions , feedbackUrl } = props;
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
 
@@ -82,6 +84,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         manager={manager}
         emptyState={emptyState}
         manageVersions={manageVersions}
+        feedbackUrl={feedbackUrl}
       />
     );
   }
@@ -115,6 +118,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
               ref={widgetRef}
               iModelConnection={iModel}
               manager={manager}
+              feedbackUrl={feedbackUrl}
             />
           </namedVersionSelectorContext.Provider>
         )}
@@ -128,6 +132,7 @@ interface NamedVersionSelectorProps {
   manager: VersionCompareManager;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
+  feedbackUrl?: string | undefined;
 }
 
 function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
@@ -136,7 +141,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
     throw new Error("V2 Client is not initialized in given context.");
   }
 
-  const { iModel, manager, emptyState, manageVersions } = props;
+  const { iModel, manager, emptyState, manageVersions, feedbackUrl } = props;
 
   const iTwinId = iModel.iTwinId as string;
   const iModelId = iModel.iModelId as string;
@@ -212,6 +217,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
               updateJobStatus={updateJobStatus}
               emptyState={emptyState}
               manageVersions={manageVersions}
+              feedbackUrl={feedbackUrl}
             />
           )
       }
@@ -329,6 +335,7 @@ interface NamedVersionSelectorLoadedProps {
   onNamedVersionOpened: (version: NamedVersionEntry) => void;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
+  feedbackUrl?: string | undefined;
 }
 
 function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): ReactElement {
@@ -342,6 +349,7 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
     onNamedVersionOpened,
     emptyState,
     manageVersions,
+    feedbackUrl,
   } = props;
 
   const { queryJobStatus, startJob } = useComparisonJobs({
@@ -463,6 +471,9 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
           ))
         }
       </namedVersionSelectorContext.Provider>
+      <div>
+        {feedbackUrl ? <FeedbackButton feedbackUrl={feedbackUrl} /> : <></>}
+      </div>
     </List>
   );
 }
