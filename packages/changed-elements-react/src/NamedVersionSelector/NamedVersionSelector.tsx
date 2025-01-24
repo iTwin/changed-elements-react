@@ -79,13 +79,13 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
 
   if (!isComparing) {
     return (
-      <NamedVersionSelector
-        iModel={iModel}
-        manager={manager}
-        emptyState={emptyState}
-        manageVersions={manageVersions}
-        feedbackUrl={feedbackUrl}
-      />
+        <NamedVersionSelector
+          iModel={iModel}
+          manager={manager}
+          emptyState={emptyState}
+          manageVersions={manageVersions}
+          feedbackUrl={feedbackUrl}
+        />
     );
   }
 
@@ -216,10 +216,12 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
               updateJobStatus={updateJobStatus}
               emptyState={emptyState}
               manageVersions={manageVersions}
-              feedbackUrl={feedbackUrl}
             />
           )
       }
+      <div className="_cer_v1_feedback_btn_container">
+        {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
+      </div>
     </Widget>
   );
 }
@@ -334,7 +336,6 @@ interface NamedVersionSelectorLoadedProps {
   onNamedVersionOpened: (version: NamedVersionEntry) => void;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
-  feedbackUrl?: string | undefined;
 }
 
 function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): ReactElement {
@@ -348,7 +349,6 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
     onNamedVersionOpened,
     emptyState,
     manageVersions,
-    feedbackUrl,
   } = props;
 
   const { queryJobStatus, startJob } = useComparisonJobs({
@@ -454,7 +454,6 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
   }
 
   return (
-    <>
       <List className="_cer_v1_named-version-list">
         <Sticky className="_cer_v1_named-version-list-header">
           <TextEx weight="semibold">
@@ -472,10 +471,6 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
           }
         </namedVersionSelectorContext.Provider>
       </List>
-      <div>
-        {feedbackUrl ? <FeedbackButton feedbackUrl={feedbackUrl} /> : <></>}
-      </div>
-    </>
   );
 }
 

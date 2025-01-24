@@ -34,6 +34,11 @@
       }
     }
 
+    ._cer_v1_feedback_btn_container {
+      margin-top: auto;
+      text-align: center
+    }
+
     ._cer_v1_active-versions-box {
       min-width: min-content;
       padding: var(--iui-size-s);
@@ -103,7 +108,7 @@
     }
 
     ._cer_v1_named-version-entry {
-      min-height: calc(3 * var(--iui-size-xl));
+      min-height: 7rem;
       padding-block: var(--iui-size-m);
       border: 1px solid var(--iui-color-border-subtle);
       border-radius: 0;
