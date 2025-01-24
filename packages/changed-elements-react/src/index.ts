@@ -37,3 +37,4 @@ export type {
 } from "./widgets/comparisonJobWidget/models/ComparisonJobModels.js";
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
+export { NamedVersionSelectorWidget } from "./NamedVersionSelector/NamedVersionSelector.js";
