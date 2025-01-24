@@ -100,13 +100,6 @@
       > * {
         padding-inline: var(--_cer_v1_container-margin-internal);
       }
-      > :last-child {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        grid-column: 1 / -1; /* Ensure it spans all columns */
-      }
     }
 
     ._cer_v1_named-version-entry {

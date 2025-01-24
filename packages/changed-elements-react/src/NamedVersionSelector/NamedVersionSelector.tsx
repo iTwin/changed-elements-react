@@ -118,7 +118,6 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
               ref={widgetRef}
               iModelConnection={iModel}
               manager={manager}
-              feedbackUrl={feedbackUrl}
             />
           </namedVersionSelectorContext.Provider>
         )}
@@ -455,26 +454,28 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
   }
 
   return (
-    <List className="_cer_v1_named-version-list">
-      <Sticky className="_cer_v1_named-version-list-header">
-        <TextEx weight="semibold">
-          {t("VersionCompare:versionCompare.previousVersions")}
-        </TextEx>
-        {manageVersions}
-      </Sticky>
-      <namedVersionSelectorContext.Provider
-        value={{ processResults, viewResults, initialLoad, checkStatus }}
-      >
-        {
-          props.entries.map((entry) => (
-            <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
-          ))
-        }
-      </namedVersionSelectorContext.Provider>
+    <>
+      <List className="_cer_v1_named-version-list">
+        <Sticky className="_cer_v1_named-version-list-header">
+          <TextEx weight="semibold">
+            {t("VersionCompare:versionCompare.previousVersions")}
+          </TextEx>
+          {manageVersions}
+        </Sticky>
+        <namedVersionSelectorContext.Provider
+          value={{ processResults, viewResults, initialLoad, checkStatus }}
+        >
+          {
+            props.entries.map((entry) => (
+              <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
+            ))
+          }
+        </namedVersionSelectorContext.Provider>
+      </List>
       <div>
         {feedbackUrl ? <FeedbackButton feedbackUrl={feedbackUrl} /> : <></>}
       </div>
-    </List>
+    </>
   );
 }
 
