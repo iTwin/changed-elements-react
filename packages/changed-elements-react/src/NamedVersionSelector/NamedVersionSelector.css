@@ -108,7 +108,7 @@
     }
 
     ._cer_v1_named-version-entry {
-      min-height: 7rem;
+      min-height: var(--iui-size-3xl);
       padding-block: var(--iui-size-m);
       border: 1px solid var(--iui-color-border-subtle);
       border-radius: 0;
