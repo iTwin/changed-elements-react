@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.12.2
+
+### Patch Changes
+
+#### [0.12.2](https://github.com/iTwin/changed-elements-react/tree/v0.12.2/packages/changed-elements-react) - 2025-01-28
+
+Added a feedback button to the experimental UI and fixed the spacing on named versions in the new widget list.
+Import moved for experimental UI. As previous way of importing did not work.
+Marked new component as a alpha and and subject to change.
+
+```TypeScript
+import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react";
+
+[...]
+
+  return (
+    <VersionCompareContext iModelsClient={iModelsClient}>
+      <NamedVersionSelectorWidget iModel={iModel} />
+    </VersionCompareContext>
+  );
+}
+```
+
 ## 0.12.1
 
 ### Patch Changes
