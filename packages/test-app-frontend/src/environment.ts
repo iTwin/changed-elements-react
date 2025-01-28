@@ -26,6 +26,6 @@ export function applyUrlPrefix(base: string, url = ""): string {
 
 export const clientId: string = import.meta.env.VITE_CLIENT_ID;
 export const urlPrefix: string = import.meta.env.VITE_URL_PREFIX;
-export const runExperimental: boolean = import.meta.env.VITE_RUN_EXPERIMENTAL;
+export const runExperimental: boolean = import.meta.env.VITE_RUN_EXPERIMENTAL === "true";
 export const usingLocalBackend: boolean = import.meta.env.VITE_USE_LOCAL_BACKEND === "true";
 export const localBackendPort: number = Number.parseInt(import.meta.env.VITE_LOCAL_BACKEND_PORT, 10);

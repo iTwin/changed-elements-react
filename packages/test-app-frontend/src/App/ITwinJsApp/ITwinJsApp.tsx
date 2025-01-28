@@ -11,9 +11,9 @@ import {
 import {
   ChangedElementsWidget,
   ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
-  VersionCompareFeatureTracking
+  VersionCompareFeatureTracking,
+  NamedVersionSelectorWidget
 } from "@itwin/changed-elements-react";
-import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
 import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
@@ -303,7 +303,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    if (!runExperimental) {
+    if (runExperimental) {
       return [
         {
           id: "NamedVersionSelector",
@@ -313,6 +313,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
               iModel={iModel}
               manager={VersionCompare.manager}
               manageVersions={<ManageNamedVersions />}
+              feedbackUrl="https://example.com"
             />
           ),
         },
