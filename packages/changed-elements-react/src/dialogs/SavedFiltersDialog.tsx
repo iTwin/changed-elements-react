@@ -183,7 +183,6 @@ export function EditableFilterName(props: EditableFilterNameProps): ReactElement
     ? <Input
       className="saved-filters-edit-dialog-input"
       type="string"
-      setFocus={true}
       disabled={disableRenameInput}
       value={newName}
       onChange={onRenameInputChanged}
