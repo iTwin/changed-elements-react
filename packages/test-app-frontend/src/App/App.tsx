@@ -7,6 +7,7 @@ import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
 import { type ReactElement, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import '@itwin/itwinui-react/styles.css';
 
 import { applyAuthUrlPrefix, clientId } from "../environment.js";
 import { AppContext, appContext } from "./AppContext.js";
@@ -30,6 +31,7 @@ export function App(): ReactElement {
 
   return (
     <appContext.Provider value={appContextValue}>
+      <ThemeProvider theme={appContextValue.theme}>
       <AuthorizationProvider
         authority={applyAuthUrlPrefix("https://ims.bentley.com")}
         clientId={clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx" ? undefined : clientId}
@@ -38,7 +40,6 @@ export function App(): ReactElement {
         postLogoutRedirectUri="/"
         scope="itwin-platform"
       >
-        <ThemeProvider theme={appContextValue.theme}>
           <PageLayout>
             <PageLayout.Header>
               <AppHeader />
@@ -49,8 +50,8 @@ export function App(): ReactElement {
               <Route path="/*" element={<><SignInSilent /><Main /></>} />
             </Routes>
           </PageLayout>
-        </ThemeProvider>
-      </AuthorizationProvider>
+        </AuthorizationProvider>
+      </ThemeProvider>
     </appContext.Provider>
   );
 }
