@@ -53,7 +53,7 @@
     "@itwin/presentation-components": "^5.10.0",
     "@itwin/presentation-frontend": "^4.10.6",
     "@testing-library/react": "^16.2.0",
-    "@types/react": "^17.0.0",
+    "@types/react": "^18.0.0",
     "@types/react-redux": "^7.1.25",
     "@types/react-table": "^7.7.14",
     "@types/react-window": "^1.8.5",
