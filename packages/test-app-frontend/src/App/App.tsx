@@ -7,7 +7,7 @@ import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { Button, Surface, ThemeProvider } from "@itwin/itwinui-react";
 import { type ReactElement, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
-import '@itwin/itwinui-react/styles.css';
+import "@itwin/itwinui-react/styles.css";
 
 import { applyAuthUrlPrefix, clientId } from "../environment.js";
 import { AppContext, appContext } from "./AppContext.js";

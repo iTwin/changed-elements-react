@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type { AuthorizationClient } from "@itwin/core-common";
-import { Button, Code, useToaster } from '@itwin/itwinui-react';
+import { Button, Code, useToaster } from "@itwin/itwinui-react";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import {
   Fragment, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
@@ -71,7 +71,7 @@ function InternalAuthorizationProvider(props: AuthorizationProviderProps & { cli
 
   const authorizationClient = useMemo(
     () => new AuthClient(userManager, props.toaster, signIn),
-    [userManager, signIn],
+    [userManager, props.toaster, signIn],
   );
 
   const [authorizationContextValue, setAuthorizationContextValue] = useState<AuthorizationContext>({

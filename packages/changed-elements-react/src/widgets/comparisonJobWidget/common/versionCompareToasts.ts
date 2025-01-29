@@ -5,7 +5,7 @@
 import {
   IModelApp, NotifyMessageDetails, OutputMessagePriority, OutputMessageType, type IModelConnection
 } from "@itwin/core-frontend";
-import { useToaster } from '@itwin/itwinui-react';
+import { useToaster } from "@itwin/itwinui-react";
 import {
   ComparisonJobCompleted, IComparisonJobClient
 } from "../../../clients/IComparisonJobClient.js";

@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Button, Modal, ModalButtonBar, ModalContent, useToaster } from '@itwin/itwinui-react';
+import { Button, Modal, ModalButtonBar, ModalContent, useToaster } from "@itwin/itwinui-react";
 import React, { useEffect, useState, type ReactNode } from "react";
 
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "../../../api/VerboseMessages.js";

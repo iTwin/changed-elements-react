@@ -231,7 +231,7 @@ function useIModel(
         })();
       };
     },
-    [authorizationClient, iModelId, iTwinId],
+    [authorizationClient, iModelId, iTwinId, toaster],
   );
 
   return iModel;
