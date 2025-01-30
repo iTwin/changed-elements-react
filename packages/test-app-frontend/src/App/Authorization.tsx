@@ -135,7 +135,7 @@ function InternalAuthorizationProvider(props: AuthorizationProviderProps & { cli
         userManager.events.removeUserUnloaded(handleUserUnloaded);
       };
     },
-    [authorizationClient, internalAuthorizationContextValue, userManager, signIn, signOut],
+    [authorizationClient, internalAuthorizationContextValue, userManager, signIn, signOut, props.toaster],
   );
 
   return (
