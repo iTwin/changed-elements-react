@@ -106,7 +106,7 @@ function InternalAuthorizationProvider(props: AuthorizationProviderProps & { cli
         try {
           await userManager.signinSilent();
         } catch (error) {
-          toaster.informational(
+         props.toaster.informational(
             <SignInPopupPrompt text="Access token is expiring." onClick={signIn} />,
             { type: "persisting", hasCloseButton: true },
           );
