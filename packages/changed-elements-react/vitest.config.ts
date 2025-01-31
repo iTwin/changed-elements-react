@@ -13,6 +13,8 @@ export default defineConfig({
     environment: "happy-dom",
     server: {
       deps: {
+        // we must inline deps that have css or scss in them.
+        // https://github.com/vitest-dev/vitest/issues/5283#issuecomment-1962265873
         inline: ["@itwin/presentation-components", "@itwin/components-react", "@itwin/core-react"],
       },
     },
