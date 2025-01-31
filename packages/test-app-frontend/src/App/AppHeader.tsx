@@ -83,11 +83,11 @@ function HeaderUserIcon(props: HeaderUserIconProps): ReactElement | null {
   const displayName = preferredName ?? "Unknown Account";
 
   return (
-    (<DropdownMenu menuItems={() => [<MenuItem key="signout" onClick={signOut}>Sign Out</MenuItem>]}>
+    <DropdownMenu menuItems={() => [<MenuItem key="signout" onClick={signOut}>Sign Out</MenuItem>]}>
       <IconButton styleType="borderless" title="Account Actions">
         <Avatar title={displayName} abbreviation={initials} backgroundColor={getUserColor(displayName)} />
       </IconButton>
-    </DropdownMenu>)
+    </DropdownMenu>
   );
 }
 

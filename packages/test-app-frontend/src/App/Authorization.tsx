@@ -25,7 +25,6 @@ interface AuthorizationProviderProps {
   children: ReactNode;
 }
 
-
 export type Toaster = ReturnType<typeof useToaster>;
 
 export function AuthorizationProvider(props: AuthorizationProviderProps): ReactElement {
