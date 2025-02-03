@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { type ComponentProps, type CSSProperties } from "react";
-import { Text } from "@itwin/itwinui-react-3";
+import { Text } from "@itwin/itwinui-react";
 import clsx from "clsx";
 
 import "./TextEx.css";

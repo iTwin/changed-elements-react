@@ -5,7 +5,7 @@
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
-import { IconButton, Slider, Table, Text, ToggleSwitch, type TableProps } from "@itwin/itwinui-react";
+import { IconButton, Slider, Table, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import type { KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { memo, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
@@ -18,8 +18,11 @@ import type { ChangedElementsManager } from "../api/ChangedElementsManager.js";
 import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
 import type { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { updateVersionComparisonTransparencies } from "../api/VersionCompareTiles.js";
-
+import { Row } from "@itwin/itwinui-react/react-table";
 import "./PropertyComparisonTable.scss";
+
+
+type TableProps<T extends Record<string, unknown>> = React.ComponentProps<typeof Table<T>>;
 
 export interface PropertyComparisonTableProps {
   manager: VersionCompareManager;
@@ -93,7 +96,7 @@ export function PropertyComparisonTable(props: PropertyComparisonTableProps): Re
         }
         <div className="settings">
           {
-            (displaySideBySideToggle ?? props.onSideBySideToggle) &&
+            displaySideBySideToggle &&
             <SideBySideToggle
               manager={manager}
               selection={selection}
@@ -621,18 +624,21 @@ function SideBySideToggle(props: SideBySideToggleProps): ReactElement {
   );
 }
 
-const getRowProps: TableProps<ComparisonDataRow>["rowProps"] = (row) => {
-  const { current, target } = (row.values as ComparisonDataRow);
+const getRowProps: (row: Row<ComparisonDataRow>) => React.ComponentPropsWithRef<"div"> & {
+  status?: "positive" | "warning" | "negative";
+  isLoading?: boolean;
+} = (row) => {
+  const { current, target } = row.values;
   if (current === "" && target !== "") {
-    return { className: "row-deleted" };
+    return { className: "row-deleted", status: "negative" };
   }
 
   if (current !== "" && target === "") {
-    return { className: "row-added" };
+    return { className: "row-added", status: "positive" };
   }
 
   if (current !== target) {
-    return { className: "row-modified" };
+    return { className: "row-modified", status: "warning" };
   }
 
   return {};

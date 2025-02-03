@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type { AuthorizationClient } from "@itwin/core-common";
-import { Button, Code, toaster } from "@itwin/itwinui-react";
+import { Button, Code, useToaster } from "@itwin/itwinui-react";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import {
   Fragment, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
@@ -25,16 +25,19 @@ interface AuthorizationProviderProps {
   children: ReactNode;
 }
 
+export type Toaster = ReturnType<typeof useToaster>;
+
 export function AuthorizationProvider(props: AuthorizationProviderProps): ReactElement {
+  const toaster = useToaster();
   const { clientId } = props;
   if (clientId === undefined) {
     return <>{props.children}</>;
   }
 
-  return <InternalAuthorizationProvider {...props} clientId={clientId} />;
+  return <InternalAuthorizationProvider {...props} clientId={clientId} toaster={toaster} />;
 }
 
-function InternalAuthorizationProvider(props: AuthorizationProviderProps & { clientId: string; }): ReactElement {
+function InternalAuthorizationProvider(props: AuthorizationProviderProps & { clientId: string; } & { toaster: Toaster; }): ReactElement {
   const [userManager] = useState(() => new UserManager({
     authority: props.authority,
     client_id: props.clientId,
@@ -66,8 +69,8 @@ function InternalAuthorizationProvider(props: AuthorizationProviderProps & { cli
   const signOut = useCallback(async () => userManager.signoutRedirect(), [userManager]);
 
   const authorizationClient = useMemo(
-    () => new AuthClient(userManager, toaster, signIn),
-    [userManager, signIn],
+    () => new AuthClient(userManager, props.toaster, signIn),
+    [userManager, props.toaster, signIn],
   );
 
   const [authorizationContextValue, setAuthorizationContextValue] = useState<AuthorizationContext>({
@@ -102,7 +105,7 @@ function InternalAuthorizationProvider(props: AuthorizationProviderProps & { cli
         try {
           await userManager.signinSilent();
         } catch (error) {
-          toaster.informational(
+         props.toaster.informational(
             <SignInPopupPrompt text="Access token is expiring." onClick={signIn} />,
             { type: "persisting", hasCloseButton: true },
           );
@@ -131,7 +134,7 @@ function InternalAuthorizationProvider(props: AuthorizationProviderProps & { cli
         userManager.events.removeUserUnloaded(handleUserUnloaded);
       };
     },
-    [authorizationClient, internalAuthorizationContextValue, userManager, signIn, signOut],
+    [authorizationClient, internalAuthorizationContextValue, userManager, signIn, signOut, props.toaster],
   );
 
   return (
@@ -193,13 +196,13 @@ export enum AuthorizationState {
 
 class AuthClient implements AuthorizationClient {
   #userManager: UserManager;
-  #toaster: typeof import("@itwin/itwinui-react").toaster;
+  #toaster: Toaster;
   #signIn: () => Promise<void>;
   #toastPromise: Promise<string> | undefined;
 
   constructor(
     userManager: UserManager,
-    toaster: typeof import("@itwin/itwinui-react").toaster,
+    toaster: Toaster,
     signIn: () => Promise<void>,
   ) {
     this.#userManager = userManager;

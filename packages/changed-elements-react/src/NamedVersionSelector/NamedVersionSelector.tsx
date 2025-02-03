@@ -8,7 +8,7 @@ import {
 } from "@itwin/itwinui-icons-react";
 import {
   Button, Divider, Flex, List, ListItem, ProgressRadial, Text, ThemeProvider
-} from "@itwin/itwinui-react-3";
+} from "@itwin/itwinui-react";
 import {
   forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
   type ReactNode
