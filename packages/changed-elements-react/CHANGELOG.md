@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+#### [0.13.0](https://github.com/iTwin/changed-elements-react/tree/v0.13.0/packages/changed-elements-react) - 2025-02-03
+
+Updated Dependencies:
+
+- appUi updated to 5.x.x
+- itwinUi updated to 3.x.x
+  Important Notice: These updates may cause breaking changes if consumers of this package have not yet updated to the latest versions of these dependencies. Please ensure that you have updated your dependencies to avoid any potential issues.
+
 ## 0.12.2
 
 ### Patch Changes
