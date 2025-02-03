@@ -78,6 +78,7 @@ export interface ChangedElementsWidgetProps {
    *  - "JobError" = invoked on job error
    *  - "JobProgressing" = invoked on job is started
    *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
+   * @param toaster from iTwin Ui's useToaster hook. This is necessary for showing toast messages.
    * @param jobAndNamedVersion param contain job and named version info to be passed to call back
    */
   onJobUpdate?: (
