@@ -7,7 +7,7 @@ import {
   IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection, type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
-import { IconButton, ProgressRadial, Text } from "@itwin/itwinui-react";
+import { IconButton, ProgressRadial, Text, useToaster } from "@itwin/itwinui-react";
 import { Component, type ReactElement, type ReactNode } from "react";
 
 import { namedVersionSelectorContext } from "../NamedVersionSelector/NamedVersionSelectorContext.js";
@@ -82,6 +82,7 @@ export interface ChangedElementsWidgetProps {
    */
   onJobUpdate?: (
     comparisonJobUpdateType: ComparisonJobUpdateType,
+    toaster: ReturnType<typeof useToaster>,
     jobAndNamedVersions?: JobAndNamedVersions,
   ) => Promise<void>;
 

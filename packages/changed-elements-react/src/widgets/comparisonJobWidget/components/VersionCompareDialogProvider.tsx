@@ -5,6 +5,7 @@
 import React from "react";
 
 import type { JobAndNamedVersions } from "../models/ComparisonJobModels.js";
+import { useToaster } from "@itwin/itwinui-react";
 
 /** Comparison Job Update Type
 *  - "JobComplete" = job is completed
@@ -41,9 +42,10 @@ export type V2DialogProviderProps = {
  *  - "JobError" = invoked on job error
  *  - "JobProcessing" = invoked on job is started
  *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
+ * @param toaster from iTwin Ui's useToaster hook. This is necessary for showing toast messages.
  * @param jobAndNamedVersion param contain job and named version info to be passed to call back
 */
-  onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
+  onJobUpdate?: (comparisonJobUpdateType: ComparisonJobUpdateType, toaster: ReturnType<typeof useToaster> ,jobAndNamedVersions?: JobAndNamedVersions) => Promise<void>;
 };
 
 /** V2DialogProvider use comparison jobs for processing.
@@ -60,6 +62,7 @@ export type V2DialogProviderProps = {
  *</V2DialogProvider>
 */
 export function VersionCompareSelectProviderV2({ children, enableComparisonJobUpdateToasts, onJobUpdate }: V2DialogProviderProps) {
+  const toaster = useToaster();
   const dialogRunningJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
   const dialogPendingJobs = React.useRef<Map<string, JobAndNamedVersions>>(new Map<string, JobAndNamedVersions>());
   const addRunningJob = (jobId: string, jobAndNamedVersions: JobAndNamedVersions) => {
@@ -103,7 +106,7 @@ export function VersionCompareSelectProviderV2({ children, enableComparisonJobUp
   };
   const runOnJobUpdate = async (comparisonEventType: ComparisonJobUpdateType, jobAndNamedVersions?: JobAndNamedVersions) => {
     if (onJobUpdate) {
-      void onJobUpdate(comparisonEventType, jobAndNamedVersions);
+      void onJobUpdate(comparisonEventType, toaster, jobAndNamedVersions);
     }
   };
   return (
