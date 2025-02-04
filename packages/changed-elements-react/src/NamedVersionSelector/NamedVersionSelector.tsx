@@ -198,6 +198,11 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
+        (!isLoading && entries.length === 0)?
+          <Text className="_cer_v1_empty-state" isMuted>
+            {t("VersionCompare:versionCompare.noPreviousVersionAvailable")}
+          </Text>
+          :
         (!currentNamedVersion || (isLoading && entries.length === 0))
           ? (
             <LoadingContent>
@@ -441,18 +446,6 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
       [queryStatus],
     ),
   );
-
-  if (!isLoading && entries.length === 0) {
-    if (emptyState) {
-      return <>{emptyState}</>;
-    }
-
-    return (
-      <Text className="_cer_v1_empty-state" isMuted>
-        {t("VersionCompare:versionCompare.noPreviousVersionAvailable")}
-      </Text>
-    );
-  }
 
   return (
       <List className="_cer_v1_named-version-list">
