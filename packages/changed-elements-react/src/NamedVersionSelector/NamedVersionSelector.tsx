@@ -349,11 +349,9 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
     iTwinId,
     iModelId,
     currentNamedVersion,
-    isLoading,
     entries,
     updateJobStatus,
     onNamedVersionOpened,
-    emptyState,
     manageVersions,
   } = props;
 
