@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.1
+
+### Patch Changes
+
+#### [0.14.1](https://github.com/iTwin/changed-elements-react/tree/v0.14.1/packages/changed-elements-react) - 2025-02-05
+
+-Fixes NamedVersionSelectorWidget showing loading and spinning forever when no named version present.
+
+-Fixes default dialog being shown for NamedVersionSelectorWidget when comparison is started. Now we show the proper loading state with spinner instead of "no comparison loaded".
+
 ## 0.14.0
 
 ### Minor Changes
