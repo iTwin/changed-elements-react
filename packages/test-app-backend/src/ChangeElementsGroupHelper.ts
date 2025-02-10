@@ -1,6 +1,6 @@
-import { AnyDb, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, PartialECChangeUnifier, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
+import { AnyDb, BriefcaseManager, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, IModelHost, PartialECChangeUnifier, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
 import { DbOpcode, Id64String } from "@itwin/core-bentley";
-import { ChangedElements, ChangesetFileProps } from "@itwin/core-common";
+import { ChangedElements, ChangesetFileProps, ChangesetIdWithIndex } from "@itwin/core-common";
 
 /**
  * Representation of a Changed Element during ChangesetGroup processing.
@@ -20,6 +20,17 @@ export interface ChangesetGroupChangedElement {
 }
 
 export class ChangesetGroup {
+
+  public static async _downloadChangesetFiles(endChangesetId: ChangesetIdWithIndex,iModelId:string):Promise<void> {
+   await IModelHost.getHubAccess()?.downloadChangesets({
+     targetDir: BriefcaseManager.getChangeSetsPath(iModelId),
+     iModelId: iModelId,
+     range: {
+        first: endChangesetId.index as number,
+     },
+   })
+  }
+
   /**
    * Get all changes from the range of changesets, grouped together as if they were a single changeset.
    * The type of change is automatically resolved by the grouping (e.g., updated + deleted = deleted).

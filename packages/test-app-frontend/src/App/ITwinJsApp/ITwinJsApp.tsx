@@ -31,7 +31,7 @@ import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-
+import { ChangesetGroupRPCInterface } from "../../../../test-app-backend/src/RPC/ChangesetGroupRPCInterface.js"
 import { applyUrlPrefix, localBackendPort, runExperimental, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
@@ -167,7 +167,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesetGroupRPCInterface],
   );
 
   await Promise.all([

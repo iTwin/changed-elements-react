@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import * as express from "express";
+import express from "express";
 import { IModelHost } from "@itwin/core-backend";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager, HttpServerRequest, HttpServerResponse, IModelReadRpcInterface, IModelTileRpcInterface, RpcManager } from "@itwin/core-common";
@@ -12,8 +12,8 @@ import { IModelsClient } from "@itwin/imodels-client-authoring";
 import { Presentation } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { config } from "dotenv-flow";
-import { ChangesetGroupRPCInterface } from "./RPC/ChangesetGroupRPCInterface.js";
-import { ChangesetGroupRPCImpl } from "./RPC/ChangesetGroupRPCImpl.js";
+import { ChangesetGroupRPCInterface } from "./RPC/ChangesetGroupRPCInterface";
+import { ChangesetGroupRPCImpl } from "./RPC/ChangesetGroupRPCImpl";
 
 config({ path: "../test-app-frontend" });
 
