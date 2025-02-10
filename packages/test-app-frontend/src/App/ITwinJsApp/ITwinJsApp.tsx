@@ -9,10 +9,11 @@ import {
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
+  ChangedElementsWidget,
   ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
-  VersionCompareFeatureTracking
+  VersionCompareFeatureTracking,
+  NamedVersionSelectorWidget
 } from "@itwin/changed-elements-react";
-import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react/experimental";
 import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
@@ -26,12 +27,12 @@ import { UiCore } from "@itwin/core-react";
 import { FrontendIModelsAccess } from "@itwin/imodels-access-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
-import { toaster } from "@itwin/itwinui-react";
+import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { applyUrlPrefix, localBackendPort, usingLocalBackend } from "../../environment.js";
+import { applyUrlPrefix, localBackendPort, runExperimental, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
@@ -191,6 +192,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
 }
 
+export type Toaster = ReturnType<typeof useToaster>;
 function useIModel(
   iTwinId: string,
   iModelId: string,
@@ -198,6 +200,7 @@ function useIModel(
 ): IModelConnection | undefined {
   const [iModel, setIModel] = useState<IModelConnection>();
 
+  const toaster = useToaster();
   useEffect(
     () => {
       setIModel(undefined);
@@ -212,7 +215,7 @@ function useIModel(
             setIModel(openedIModel);
           }
         } catch (error) {
-          displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-open-remote"), error);
+          displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-open-remote"), error, toaster);
         }
       })();
 
@@ -223,18 +226,18 @@ function useIModel(
           try {
             await openedIModel.close();
           } catch (error) {
-            displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-close-remote"), error);
+            displayIModelError(IModelApp.localization.getLocalizedString("App:error:imodel-close-remote"), error, toaster);
           }
         })();
       };
     },
-    [authorizationClient, iModelId, iTwinId],
+    [authorizationClient, iModelId, iTwinId, toaster],
   );
 
   return iModel;
 }
 
-function displayIModelError(message: string, error: unknown): void {
+function displayIModelError(message: string, error: unknown, toaster: Toaster): void {
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
   toaster.negative(<>{message}<br /> {errorMessage}</>);
 }
@@ -302,19 +305,32 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [];
     }
 
-    return [
-      {
-        id: "NamedVersionSelector",
-        label: "NamedVersionSelector",
-        content: (
-          <NamedVersionSelectorWidget
-            iModel={iModel}
-            manager={VersionCompare.manager}
-            manageVersions={<ManageNamedVersions />}
-          />
-        ),
-      },
-    ];
+    if (runExperimental) {
+      return [
+        {
+          id: "NamedVersionSelector",
+          label: "NamedVersionSelector",
+          content: (
+            <NamedVersionSelectorWidget
+              iModel={iModel}
+              manager={VersionCompare.manager}
+              manageVersions={<ManageNamedVersions />}
+              feedbackUrl="https://example.com"
+            />
+          ),
+        },
+      ];
+    } else {
+      return [{
+        id: "ChangedElementsWidget",
+        content: <ChangedElementsWidget useV2Widget
+          feedbackUrl="https://example.com"
+          iModelConnection={UiFramework.getIModelConnection()!}
+          enableComparisonJobUpdateToasts
+          manageNamedVersionsSlot={<ManageNamedVersions />}
+        />,
+      }];
+    }
   }
 }
 

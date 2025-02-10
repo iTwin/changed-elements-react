@@ -7,7 +7,7 @@ import { ComponentType, createElement, ReactElement, ReactNode, useEffect } from
 import { useNavigate } from "react-router-dom";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
-import { Button, ExpandableBlock, Title } from "@itwin/itwinui-react";
+import { Button, ExpandableBlock, Text } from "@itwin/itwinui-react";
 
 export interface ErrorPageProps {
   /** Illustration component. Default: {@link SvgError}. */
@@ -40,7 +40,7 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
     <PageLayout.Content className="error-page">
       {createElement(props.illustration ?? SvgError, { className: "error-illustration" })}
       <div className="error-details">
-        <Title>{props.title}</Title>
+        <Text>{props.title}</Text>
         <span>{props.children}</span>
       </div>
       {

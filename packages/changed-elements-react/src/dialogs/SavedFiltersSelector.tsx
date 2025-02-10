@@ -261,7 +261,6 @@ export function SavedFiltersSelector(props: SavedFiltersSelectorProps): ReactEle
           <Input
             className="filter-name-input"
             type="string"
-            setFocus={true}
             value={filterName}
             onChange={onNameInputChanged}
             onBlur={onNameInputBlur}

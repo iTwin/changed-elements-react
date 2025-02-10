@@ -8,7 +8,7 @@ import {
 
 import { mergeRefs } from "./common.js";
 
-export interface AutoSizerProps extends HTMLAttributes<HTMLDivElement> {
+export interface AutoSizerProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   children: (size: Size) => ReactNode;
 }
 

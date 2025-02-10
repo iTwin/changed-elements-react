@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { SvgDeveloper, SvgMoon, SvgSun } from "@itwin/itwinui-icons-react";
 import {
-  Button, DropdownMenu, Header, HeaderLogo, IconButton, MenuItem, UserIcon, getUserColor
+  Button, DropdownMenu, Header, HeaderLogo, IconButton, MenuItem, Avatar, getUserColor
 } from "@itwin/itwinui-react";
 import { type ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +37,10 @@ export function AppHeader(): ReactElement {
     [state, authorizationClient],
   );
 
+  const UserIcon = (state === AuthorizationState.SignedIn && user !== undefined)
+    ? () => <HeaderUserIcon profile={user} signOut={signOut} />
+    : null;
+
   const actions = [
     <ThemeButton key="Theme Toggle" />,
     <IconButton
@@ -48,20 +52,17 @@ export function AppHeader(): ReactElement {
     >
       <GitHubLogo />
     </IconButton>,
+    UserIcon && <UserIcon key="User Icon" />,
   ];
+
   if (state === AuthorizationState.SignedOut) {
     actions.push(<Button key="signin" styleType="borderless" onClick={signIn}>Sign In</Button>);
   }
-
-  const userIcon = (state === AuthorizationState.SignedIn && user !== undefined)
-    ? <HeaderUserIcon profile={user} signOut={signOut} />
-    : null;
 
   return (
     <Header
       appLogo={<HeaderLogo logo={<SvgDeveloper />} onClick={() => navigate("/")}>Changed Elements Test App</HeaderLogo>}
       actions={actions}
-      userIcon={userIcon}
     />
   );
 }
@@ -84,7 +85,7 @@ function HeaderUserIcon(props: HeaderUserIconProps): ReactElement | null {
   return (
     <DropdownMenu menuItems={() => [<MenuItem key="signout" onClick={signOut}>Sign Out</MenuItem>]}>
       <IconButton styleType="borderless" title="Account Actions">
-        <UserIcon title={displayName} abbreviation={initials} backgroundColor={getUserColor(displayName)} />
+        <Avatar title={displayName} abbreviation={initials} backgroundColor={getUserColor(displayName)} />
       </IconButton>
     </DropdownMenu>
   );

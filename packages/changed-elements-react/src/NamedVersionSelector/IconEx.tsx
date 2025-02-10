@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Icon } from "@itwin/itwinui-react-3";
+import { Icon } from "@itwin/itwinui-react";
 import clsx from "clsx";
 import type { ComponentProps, ReactElement } from "react";
 

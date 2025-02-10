@@ -8,7 +8,7 @@ import {
 } from "@itwin/itwinui-icons-react";
 import {
   Button, Divider, Flex, List, ListItem, ProgressRadial, Text, ThemeProvider
-} from "@itwin/itwinui-react-3";
+} from "@itwin/itwinui-react";
 import {
   forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
   type ReactNode
@@ -36,17 +36,20 @@ import {
 import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.css";
+import { FeedbackButton } from "../widgets/FeedbackButton.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
   manager?: VersionCompareManager | undefined;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
+  feedbackUrl?: string | undefined;
 }
 
 /**
  * By default, displays Named Version selector, but when {@link VersionCompareManager}
  * is actively comparing versions, presents the comparison results.
+ * @alpha feature is experimental and may change in future releases.
  */
 export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProps): ReactElement {
   const manager = props.manager ?? VersionCompare.manager;
@@ -54,7 +57,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
     throw new Error("VersionCompare is not initialized.");
   }
 
-  const { iModel, emptyState, manageVersions } = props;
+  const { iModel, emptyState, manageVersions , feedbackUrl } = props;
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
 
@@ -77,12 +80,13 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
 
   if (!isComparing) {
     return (
-      <NamedVersionSelector
-        iModel={iModel}
-        manager={manager}
-        emptyState={emptyState}
-        manageVersions={manageVersions}
-      />
+        <NamedVersionSelector
+          iModel={iModel}
+          manager={manager}
+          emptyState={emptyState}
+          manageVersions={manageVersions}
+          feedbackUrl={feedbackUrl}
+        />
     );
   }
 
@@ -128,6 +132,7 @@ interface NamedVersionSelectorProps {
   manager: VersionCompareManager;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
+  feedbackUrl?: string | undefined;
 }
 
 function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
@@ -136,7 +141,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
     throw new Error("V2 Client is not initialized in given context.");
   }
 
-  const { iModel, manager, emptyState, manageVersions } = props;
+  const { iModel, manager, emptyState, manageVersions, feedbackUrl } = props;
 
   const iTwinId = iModel.iTwinId as string;
   const iModelId = iModel.iModelId as string;
@@ -193,6 +198,11 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
+        (!isLoading && entries.length === 0)?
+          <Text className="_cer_v1_empty-state" isMuted>
+            {t("VersionCompare:versionCompare.noPreviousVersionAvailable")}
+          </Text>
+          :
         (!currentNamedVersion || (isLoading && entries.length === 0))
           ? (
             <LoadingContent>
@@ -215,6 +225,9 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
             />
           )
       }
+      <div className="_cer_v1_feedback_btn_container">
+        {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
+      </div>
     </Widget>
   );
 }
@@ -336,11 +349,9 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
     iTwinId,
     iModelId,
     currentNamedVersion,
-    isLoading,
     entries,
     updateJobStatus,
     onNamedVersionOpened,
-    emptyState,
     manageVersions,
   } = props;
 
@@ -434,36 +445,24 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
     ),
   );
 
-  if (!isLoading && entries.length === 0) {
-    if (emptyState) {
-      return <>{emptyState}</>;
-    }
-
-    return (
-      <Text className="_cer_v1_empty-state" isMuted>
-        {t("VersionCompare:versionCompare.noPreviousVersionAvailable")}
-      </Text>
-    );
-  }
-
   return (
-    <List className="_cer_v1_named-version-list">
-      <Sticky className="_cer_v1_named-version-list-header">
-        <TextEx weight="semibold">
-          {t("VersionCompare:versionCompare.previousVersions")}
-        </TextEx>
-        {manageVersions}
-      </Sticky>
-      <namedVersionSelectorContext.Provider
-        value={{ processResults, viewResults, initialLoad, checkStatus }}
-      >
-        {
-          props.entries.map((entry) => (
-            <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
-          ))
-        }
-      </namedVersionSelectorContext.Provider>
-    </List>
+      <List className="_cer_v1_named-version-list">
+        <Sticky className="_cer_v1_named-version-list-header">
+          <TextEx weight="semibold">
+            {t("VersionCompare:versionCompare.previousVersions")}
+          </TextEx>
+          {manageVersions}
+        </Sticky>
+        <namedVersionSelectorContext.Provider
+          value={{ processResults, viewResults, initialLoad, checkStatus }}
+        >
+          {
+            props.entries.map((entry) => (
+              <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
+            ))
+          }
+        </namedVersionSelectorContext.Provider>
+      </List>
   );
 }
 

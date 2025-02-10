@@ -7,7 +7,7 @@ import {
   IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection, type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
-import { IconButton, ProgressRadial, Text } from "@itwin/itwinui-react";
+import { IconButton, ProgressRadial, Text, useToaster } from "@itwin/itwinui-react";
 import { Component, type ReactElement, type ReactNode } from "react";
 
 import { namedVersionSelectorContext } from "../NamedVersionSelector/NamedVersionSelectorContext.js";
@@ -78,10 +78,12 @@ export interface ChangedElementsWidgetProps {
    *  - "JobError" = invoked on job error
    *  - "JobProgressing" = invoked on job is started
    *  - "ComparisonVisualizationStarting" = invoked on when version compare visualization is starting
+   * @param toaster from iTwin Ui's useToaster hook. This is necessary for showing toast messages.
    * @param jobAndNamedVersion param contain job and named version info to be passed to call back
    */
   onJobUpdate?: (
     comparisonJobUpdateType: ComparisonJobUpdateType,
+    toaster: ReturnType<typeof useToaster>,
     jobAndNamedVersions?: JobAndNamedVersions,
   ) => Promise<void>;
 
@@ -177,24 +179,41 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     manager.versionCompareStarted.addListener(this._onComparisonStarted);
     manager.loadingProgressEvent.addListener(this._onProgressEvent);
     manager.versionCompareStopped.addListener(this._onComparisonStopped);
-
-    this.state = {
-      manager,
-      loading: manager.isComparing,
-      loaded: manager.isComparing,
-      menuOpened: false,
-      elements: manager.changedElementsManager.entryCache.getAll(),
-      currentIModel: manager.currentIModel,
-      targetIModel: manager.targetIModel,
-      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: this.props.useV2Widget
-        ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
-        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
-      versionSelectDialogVisible: false,
-      informationDialogVisible: false,
-      reportDialogVisible: false,
-      reportProperties: undefined,
-    };
+    if (!this.props.manager?.isComparing) {
+      this.state = {
+        manager,
+        loading: manager.isComparing,
+        loaded: manager.isComparing,
+        menuOpened: false,
+        elements: manager.changedElementsManager.entryCache.getAll(),
+        currentIModel: manager.currentIModel,
+        targetIModel: manager.targetIModel,
+        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+        description: this.props.useV2Widget
+          ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
+          : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+        versionSelectDialogVisible: false,
+        informationDialogVisible: false,
+        reportDialogVisible: false,
+        reportProperties: undefined,
+      };
+    } else {
+      this.state = {
+        manager,
+        loading: true,
+        loaded: false,
+        menuOpened: false,
+        elements: manager.changedElementsManager.entryCache.getAll(),
+        currentIModel: manager.currentIModel,
+        targetIModel: manager.targetIModel,
+              message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
+        description: "",
+        versionSelectDialogVisible: false,
+        informationDialogVisible: false,
+        reportDialogVisible: false,
+        reportProperties: undefined,
+      };
+    }
   }
 
   public override componentWillUnmount(): void {
