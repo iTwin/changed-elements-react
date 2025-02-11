@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { getClassName } from "@itwin/appui-abstract";
 import type { AccessToken } from "@itwin/core-bentley";
-import type { ModelProps } from "@itwin/core-common";
+import type { ModelProps, ChangedElements, ChangesetIdWithIndex } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 
@@ -91,13 +91,17 @@ export interface VersionCompareOptions {
 
   getAccessToken?: () => Promise<AccessToken>;
   createVisualizationHandler: (manager: VersionCompareManager) => VisualizationHandler;
+  changesetProcessor: (endChangesetId: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements[]>;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
-
+  private static _changesetProcessor: (endChangesetId: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements[]>;
+  public static get changesetProcessor() {
+    return VersionCompare._changesetProcessor;
+  }
   public static get logCategory(): string {
     return "VersionCompare";
   }
@@ -137,7 +141,7 @@ export class VersionCompare {
   public static initialize(options: VersionCompareOptions): void {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
-
+    VersionCompare._changesetProcessor= options.changesetProcessor;
     // get the access token
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 

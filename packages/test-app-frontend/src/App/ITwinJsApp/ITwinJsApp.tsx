@@ -16,10 +16,10 @@ import {
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
-  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, IModelReadRpcInterface, IModelTileRpcInterface
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, IModelApp, QuantityFormatter, ViewCreator3d, type IModelConnection,
+  CheckpointConnection, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d,
   type ViewState
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
@@ -177,6 +177,13 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ]);
 
 
+  const blah = async (changedsetId: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
+    const client = ChangesetGroupRPCInterface.getClient();
+    await client.getChangesetGroup(iModelConnection.getRpcProps(), changedsetId);
+    return [];
+  }
+
+
   VersionCompare.initialize({
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
     getAccessToken: () => authorizationClient.getAccessToken(),
@@ -187,10 +194,11 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
     featureTracking: featureTrackingTesterFunctions,
+    changesetProcessor: blah,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
-}
+  }
 
 export type Toaster = ReturnType<typeof useToaster>;
 function useIModel(

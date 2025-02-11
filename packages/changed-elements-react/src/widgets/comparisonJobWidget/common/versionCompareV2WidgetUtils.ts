@@ -26,6 +26,10 @@ export type ManagerStartComparisonV2Args = {
 };
 
 export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
+  await VersionCompare.changesetProcessor({
+    id: args.targetVersion.changesetId ?? "",
+    index: args.targetVersion.changesetIndex ?? 0,
+  },args.iModelConnection)
   // await VersionCompare.rpcGroupClient.getChangesetGroup(args.iModelConnection.getRpcProps(),
   //   {
   //     id: args.targetVersion.changesetId ?? "",
