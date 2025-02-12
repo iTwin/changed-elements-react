@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { SvgInfo } from "@itwin/itwinui-icons-react";
+import { SvgInfoCircularHollow } from "@itwin/itwinui-icons-react";
 import { DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
 import type { ReactNode } from "react";
 
@@ -28,11 +28,10 @@ function InfoButton(props: Props) {
     >
       <IconButton
         data-testid={props["data-testid"]}
-        size="small"
         styleType="borderless"
         aria-label="Information"
       >
-        <SvgInfo />
+        <SvgInfoCircularHollow />
       </IconButton>
     </DropdownMenu>
   );

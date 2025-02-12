@@ -35,6 +35,8 @@
   margin-left: auto;
   color: var(--iui-color-text-accent);
   padding-left: var(--iui-size-2xs);
-  text-decoration: underline;
   cursor: pointer;
+  font-size: small;
+  font-weight: normal;
+  text-decoration: none;
 }
