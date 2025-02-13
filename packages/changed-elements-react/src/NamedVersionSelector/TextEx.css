@@ -23,6 +23,14 @@
       font-weight: 700;
     }
 
+    &[data-variant="small"]{
+      font-size: 10px;
+    }
+
+    &[data-variant="body"]{
+      font-size: 12px;
+    }
+
     &[data-overflow="wrap"] {
       white-space: normal;
     }
