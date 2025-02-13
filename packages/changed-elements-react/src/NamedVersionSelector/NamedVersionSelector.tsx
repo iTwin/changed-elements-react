@@ -101,7 +101,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         <NavigationButton backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>
-        <TextEx variant="leading" weight="bold">
+        <TextEx variant="leading" weight="semibold">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
         <div>
@@ -194,7 +194,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
   return (
     <Widget>
       <Widget.Header>
-        <TextEx variant="leading" weight="bold">
+        <TextEx variant="leading" weight="semibold">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
         {currentNamedVersion && <ChangedElementsHeaderButtons onlyInfo />}
@@ -317,8 +317,8 @@ function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
   return (
     <div>
       <Flex gap="var(--iui-size-xs)">
-        <TextEx variant="small" weight="semibold" oblique>{props.annotation}</TextEx>
-        <TextEx variant="small" weight="normal" oblique>{dateString}</TextEx>
+        <TextEx variant="small" weight="light" oblique>{props.annotation}</TextEx>
+        <TextEx variant="small" weight="light" oblique>{dateString}</TextEx>
       </Flex>
       <TextEx variant="leading" weight="bold" overflow="ellipsis">
         {props.namedVersion.displayName}
@@ -499,7 +499,7 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
                   <circle cx="8" cy="8" r="8" />
                 </svg>
               </IconEx>
-              <TextEx variant="body">
+              <TextEx weight="normal" variant="body">
                 {t("VersionCompare:versionCompare.notProcessed")}
               </TextEx>
             </Flex>
@@ -531,7 +531,7 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
               <IconEx size="m" fill="positive">
                 <SvgStatusSuccess />
               </IconEx>
-              <TextEx variant="body">
+              <TextEx weight="normal" variant="body">
                 {t("VersionCompare:versionCompare.available")}
               </TextEx>
             </Flex>
@@ -552,7 +552,7 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
               <IconEx size="m" fill="negative" >
                 <SvgStatusError />
               </IconEx>
-              <TextEx variant="body">
+              <TextEx weight="normal" variant="body">
                 {t("VersionCompare:versionCompare.error")}
               </TextEx>
             </Flex>
@@ -576,7 +576,7 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
         <div>
           <TextEx variant="small" overflow="nowrap" oblique>{dateString}</TextEx>
           <div style={{ display: "grid" }}>
-            <TextEx variant="leading" weight="bold" overflow="ellipsis">
+            <TextEx variant="leading" weight="semibold" overflow="ellipsis">
               {namedVersion.displayName}
             </TextEx>
             <TextEx variant="small" overflow="ellipsis">{namedVersion.description ?? ""}</TextEx>
@@ -662,7 +662,7 @@ function NavigationButton(props: ActionButtonProps): ReactElement {
         <IconEx size="m" fill="currentColor">
           {props.backward ? <SvgChevronLeft /> : <SvgChevronRight />}
         </IconEx>
-        <TextEx >{props.children}</TextEx>
+        <TextEx weight="normal" >{props.children}</TextEx>
       </Flex>
     </Button>
   );

@@ -15,7 +15,6 @@ config();
 export default defineConfig(() => ({
   plugins: [
     tsconfigPaths(),
-    stringReplacePlugin(),
     react(),
     viteStaticCopy({
       targets: [
