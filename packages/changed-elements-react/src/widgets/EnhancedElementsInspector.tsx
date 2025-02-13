@@ -431,7 +431,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
           <SvgVisibilityHalf />
         </IconButton>
         <div className="filter-header-separator" />
-        <DropdownButton size="small" menuItems={legendButtonItems}>
+        <DropdownButton style={{ minWidth:"fit-content" }} menuItems={legendButtonItems}>
           {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.filter")}
         </DropdownButton>
       </ExpandableSearchBar>
