@@ -5,7 +5,7 @@
 import react from "@vitejs/plugin-react-swc";
 import { config } from "dotenv-flow";
 import path from "path";
-import { defineConfig, Plugin } from "vite";
+import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -15,7 +15,6 @@ config();
 export default defineConfig(() => ({
   plugins: [
     tsconfigPaths(),
-    stringReplacePlugin(),
     react(),
     viteStaticCopy({
       targets: [
@@ -42,14 +41,3 @@ export default defineConfig(() => ({
     port: Number.parseInt(process.env.VITE_FRONTEND_PORT ?? "", 10),
   },
 }));
-
-function stringReplacePlugin(): Plugin {
-  return {
-    name: stringReplacePlugin.name,
-    enforce: "pre",
-    transform: (code: string) => {
-      // iTwin.js by default injects a font that is incorrect and lacks some required font weights
-      return code.replace("document.head.prepend(openSans);", "// document.head.prepend(openSans);");
-    },
-  };
-}

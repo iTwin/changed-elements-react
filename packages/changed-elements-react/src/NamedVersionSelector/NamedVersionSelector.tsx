@@ -60,6 +60,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
   const { iModel, emptyState, manageVersions , feedbackUrl } = props;
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
+  const [isComparisonStarted,setIsComparisonStarted] = useState(false);
 
   useEffect(
     () => {
@@ -69,6 +70,10 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         }),
         manager.versionCompareStopped.addListener(() => {
           setIsComparing(false);
+          setIsComparisonStarted(false);
+        }),
+        manager.versionCompareStarted.addListener(() => {
+          setIsComparisonStarted(true);
         }),
       ];
       return () => cleanup.forEach((cb) => cb());
@@ -96,7 +101,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         <NavigationButton backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>
-        <TextEx variant="subheading" weight="bold">
+        <TextEx variant="body" weight="semibold">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
         <div>
@@ -115,6 +120,8 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
       <namedVersionSelectorContext.Consumer>
         {(value) => (
           <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
+            {props.manager?.currentVersion && isComparisonStarted &&
+              <ActiveVersionsBox current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
             <ChangedElementsWidget
               ref={widgetRef}
               iModelConnection={iModel}
@@ -187,8 +194,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
   return (
     <Widget>
       <Widget.Header>
-        <div />
-        <TextEx variant="subheading" weight="bold">
+        <TextEx variant="body" weight="semibold">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
         {currentNamedVersion && <ChangedElementsHeaderButtons onlyInfo />}
@@ -311,13 +317,13 @@ function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
   return (
     <div>
       <Flex gap="var(--iui-size-xs)">
-        <TextEx variant="small" weight="semibold" oblique>{props.annotation}</TextEx>
-        <TextEx variant="small" weight="normal" oblique>{dateString}</TextEx>
+        <TextEx variant="small" weight="light" oblique>{props.annotation}</TextEx>
+        <TextEx variant="small" weight="light" oblique>{dateString}</TextEx>
       </Flex>
-      <TextEx variant="leading" weight="bold" overflow="ellipsis">
+      <TextEx variant="body" weight="semibold" overflow="ellipsis">
         {props.namedVersion.displayName}
       </TextEx>
-      <TextEx overflow="ellipsis">{props.namedVersion.description ?? ""}</TextEx>
+      <TextEx variant="small" overflow="ellipsis">{props.namedVersion.description ?? ""}</TextEx>
     </div>
   );
 }
@@ -325,9 +331,9 @@ function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
 function PlaceholderNamedVersionInfo(): ReactElement {
   return (
     <div className="_cer_v1_placeholder-select-version">
-      <Text isMuted>
+      <TextEx variant="body" weight="normal" isMuted>
         {t("VersionCompare:versionCompare.selectVersionToCompare")}
-      </Text>
+      </TextEx>
     </div>
   );
 }
@@ -448,7 +454,7 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
   return (
       <List className="_cer_v1_named-version-list">
         <Sticky className="_cer_v1_named-version-list-header">
-          <TextEx weight="semibold">
+          <TextEx variant="small">
             {t("VersionCompare:versionCompare.previousVersions")}
           </TextEx>
           {manageVersions}
@@ -488,12 +494,14 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
         stateInfo = {
           status: (
             <Flex>
-              <IconEx className="_cer_v1_not-processed" size="xl" fill="currentColor">
+              <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
                 <svg viewBox="0 0 16 16">
                   <circle cx="8" cy="8" r="8" />
                 </svg>
               </IconEx>
-              {t("VersionCompare:versionCompare.notProcessed")}
+              <TextEx weight="normal" variant="body">
+                {t("VersionCompare:versionCompare.notProcessed")}
+              </TextEx>
             </Flex>
           ),
           action: (
@@ -520,10 +528,12 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
         stateInfo = {
           status: (
             <Flex>
-              <IconEx size="xl" fill="positive">
+              <IconEx size="m" fill="positive">
                 <SvgStatusSuccess />
               </IconEx>
-              {t("VersionCompare:versionCompare.available")}
+              <TextEx weight="normal" variant="body">
+                {t("VersionCompare:versionCompare.available")}
+              </TextEx>
             </Flex>
           ),
           action: (
@@ -539,10 +549,12 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
         stateInfo = {
           status: (
             <Flex>
-              <IconEx size="xl" fill="negative" >
+              <IconEx size="m" fill="negative" >
                 <SvgStatusError />
               </IconEx>
-              {t("VersionCompare:versionCompare.error")}
+              <TextEx weight="normal" variant="body">
+                {t("VersionCompare:versionCompare.error")}
+              </TextEx>
             </Flex>
           ),
           action: (
@@ -562,12 +574,12 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
     return (
       <ListItem ref={ref} className="_cer_v1_named-version-entry">
         <div>
-          <TextEx variant="small" overflow="nowrap" oblique>{dateString}</TextEx>
-          <div style={{ display: "grid" }}>
-            <TextEx variant="leading" weight="bold" overflow="ellipsis">
+          <div style={{ display: "grid", gap: "1px" }}>
+            <TextEx variant="small" overflow="nowrap" oblique>{dateString}</TextEx>
+            <TextEx variant="body" weight="semibold" overflow="ellipsis">
               {namedVersion.displayName}
             </TextEx>
-            <TextEx overflow="ellipsis">{namedVersion.description ?? ""}</TextEx>
+            <TextEx variant="small" overflow="ellipsis">{namedVersion.description ?? ""}</TextEx>
           </div>
         </div>
         {stateInfo.status}
@@ -647,10 +659,10 @@ function NavigationButton(props: ActionButtonProps): ReactElement {
       onClick={props.onClick}
     >
       <Flex gap="var(--iui-size-xs)">
-        <IconEx size="l" fill="currentColor">
+        <IconEx size="m" fill="currentColor">
           {props.backward ? <SvgChevronLeft /> : <SvgChevronRight />}
         </IconEx>
-        <TextEx weight="semibold">{props.children}</TextEx>
+        <TextEx variant="small" weight="normal" >{props.children}</TextEx>
       </Flex>
     </Button>
   );

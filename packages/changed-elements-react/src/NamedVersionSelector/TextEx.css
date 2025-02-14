@@ -8,19 +8,27 @@
 @layer changed-elements-react.v1 {
   ._cer_v1_text {
     &[data-weight="light"] {
-      font-weight: var(--iui-font-weight-light);
+      font-weight: 200;
     }
 
     &[data-weight="normal"] {
-      font-weight: var(--iui-font-weight-normal);
+      font-weight: 400;
     }
 
     &[data-weight="semibold"] {
-      font-weight: var(--iui-font-weight-semibold);
+      font-weight: 600;
     }
 
     &[data-weight="bold"] {
-      font-weight: var(--iui-font-weight-bold);
+      font-weight: 700;
+    }
+
+    &[data-variant="small"]{
+      font-size: 10px;
+    }
+
+    &[data-variant="body"]{
+      font-size: 12px;
     }
 
     &[data-overflow="wrap"] {

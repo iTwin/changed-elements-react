@@ -29,6 +29,7 @@ import { changedElementsWidgetAttachToViewportEvent } from "./ChangedElementsWid
 import { ElementsList } from "./ElementsList.js";
 
 import "./ChangedElementsInspector.scss";
+import { TextEx } from "../NamedVersionSelector/TextEx.js";
 
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
@@ -431,8 +432,10 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
           <SvgVisibilityHalf />
         </IconButton>
         <div className="filter-header-separator" />
-        <DropdownButton size="small" menuItems={legendButtonItems}>
-          {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.filter")}
+        <DropdownButton style={{ minWidth: "fit-content" }} menuItems={legendButtonItems}>
+          <TextEx variant="body" weight="normal">
+            {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.filter")}
+          </TextEx>
         </DropdownButton>
       </ExpandableSearchBar>
     </div>

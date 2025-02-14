@@ -46,11 +46,13 @@ export function TextEx(props: TextExProps): ReturnType<typeof Text> {
     overflow,
     color,
     children,
+    variant,
     ...rest
   } = props;
   return (
     <Text
       {...rest}
+      data-variant={variant}
       as={oblique ? "i" : "div"}
       className={clsx("_cer_v1_text", className)}
       data-weight={weight}
