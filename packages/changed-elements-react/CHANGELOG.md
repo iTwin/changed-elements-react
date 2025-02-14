@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.2
+
+### Patch Changes
+
+#### [0.14.2](https://github.com/iTwin/changed-elements-react/tree/v0.14.2/packages/changed-elements-react) - 2025-02-14
+
+- Updates the new experimental widget's font weight and font size.
+- Updates the current and target comparison header info to now be shown on the comparison tree widget.
+- Fixes the filter box to fit the content, getting rid of the horizontal scroll bar.
+
 ## 0.14.1
 
 ### Patch Changes
