@@ -1,6 +1,6 @@
-import { AnyDb, BriefcaseManager, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, IModelHost, PartialECChangeUnifier, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
-import { DbOpcode, Id64String } from "@itwin/core-bentley";
-import { BentleyCloudRpcManager, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex } from "@itwin/core-common";
+import { AnyDb, BriefcaseDb, BriefcaseManager, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, IModelDb, IModelHost, PartialECChangeUnifier, RequestNewBriefcaseArg, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
+import { DbOpcode, Id64String, OpenMode } from "@itwin/core-bentley";
+import { BentleyCloudRpcManager, BriefcaseIdValue, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex, IModelVersion } from "@itwin/core-common";
 import { AuthClient } from './RPC/ChangesetGroupRPCInterface';
 
 /**
@@ -22,21 +22,73 @@ export interface ChangesetGroupChangedElement {
 
 export class ChangesetGroup {
 
-  public static async _downloadChangesetFiles(endChangesetId: ChangesetIdWithIndex, iModelId: string, authToken :string): Promise<void> {
-    const changesetPath = BriefcaseManager.getChangeSetsPath(iModelId)
+  private static async _downloadChangesetFiles(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string): Promise<ChangesetFileProps[]> {
     const authClient: AuthClient = {
       getAccessToken: function (): Promise<string> {
         return Promise.resolve(authToken);
       },
     }
     IModelHost.authorizationClient = authClient;
-    await IModelHost.getHubAccess()?.downloadChangesets({
-       targetDir: changesetPath,
-       iModelId: iModelId,
-       range: {
-          first: endChangesetId.index as number,
-       },
-     })
+    try {
+      const csFileProps = [];
+      // TODO: should the first changeset in a reverse sync really be included even though its 'initialized branch provenance'? The answer is no, its a bug that needs to be fixed.
+      const fileProps = await IModelHost.hubAccess.downloadChangesets({
+        iModelId: iModelId,
+        targetDir: BriefcaseManager.getChangeSetsPath(iModelId),
+        range: { first: startChangesetIdWithIndex.index!, end: endChangesetIdWithIndex.index! },
+        accessToken: authToken,
+      });
+      csFileProps.push(...fileProps);
+      return csFileProps;
+    } catch (e: unknown) {
+      return [];
+    }
+  }
+
+
+  /**
+   * Download and open a briefcase for an iModel
+   * @param contextId
+   * @param iModelId
+   * @param changesetId
+   * @returns The open iModel briefcase
+   */
+  private static async _downloadBriefcase(
+    contextId: string,
+    iModelId: string,
+    changesetId: string,
+    authToken: string,
+  ): Promise<IModelDb> {
+    const args: RequestNewBriefcaseArg = {
+      iModelId,
+      iTwinId: contextId,
+      asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
+      briefcaseId: BriefcaseIdValue.Unassigned,
+      accessToken: authToken,
+    };
+    // Download briefcase for the oldest changeset Id
+    const briefcaseProps = await BriefcaseManager.downloadBriefcase(
+      args
+    );
+
+    return BriefcaseDb.open(briefcaseProps);
+  }
+
+  private static async cleanUp(iModelId: string, authToken: string, db: IModelDb) {
+    BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
+    db.close();
+    // await BriefcaseManager.deleteBriefcaseFiles(BriefcaseManager.getBriefcaseBasePath(iModelId), authToken)
+    // BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
+  }
+
+  public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string): Promise<ChangedElements> {
+    const changesetPaths = await this._downloadChangesetFiles(startChangesetIdWithIndex, endChangesetIdWithIndex, iModelId, authToken);
+    //check if stuff is downloaded?
+    const db = await this._downloadBriefcase(contextId, iModelId, startChangesetIdWithIndex.id, authToken);
+    const changedECInstance = this._getGroupedChangesetChanges(changesetPaths, db)
+    await this.cleanUp(iModelId, authToken, db);
+    //const changedElements = this.transformToAPIChangedElements(changedECInstance);
+    return { elements: [], classIds: [], modelIds: [], opcodes: [], type: [], properties: [], parentIds: [], parentClassIds: [] };
   }
 
   /**
@@ -75,7 +127,7 @@ export class ChangesetGroup {
  * @param changedElements
  * @returns
  */
-  private static  transformToAPIChangedElements (changedElements: ChangesetGroupChangedElement[]): ChangedElements  {
+  private static transformToAPIChangedElements(changedElements: ChangedECInstance[]): ChangedElements  {
     const ce: ChangedElements = ChangesetGroup.createEmptyChangedElements();
     for (const elem of changedElements) {
       ce.elements.push(elem.id);

@@ -91,14 +91,14 @@ export interface VersionCompareOptions {
 
   getAccessToken?: () => Promise<AccessToken>;
   createVisualizationHandler: (manager: VersionCompareManager) => VisualizationHandler;
-  changesetProcessor: (endChangesetId: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements[]>;
+  changesetProcessor: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements[]>;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
-  private static _changesetProcessor: (endChangesetId: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements[]>;
+  private static _changesetProcessor: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements[]>;
   public static get changesetProcessor() {
     return VersionCompare._changesetProcessor;
   }

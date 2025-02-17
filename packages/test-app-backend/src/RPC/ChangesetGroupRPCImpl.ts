@@ -1,10 +1,9 @@
-import { ChangesetIdWithIndex, IModelRpcProps, RpcInterface } from "@itwin/core-common";
+import { ChangedElements, ChangesetIdWithIndex, IModelRpcProps, RpcInterface } from "@itwin/core-common";
 import { ChangesetGroupRPCInterface } from "./ChangesetGroupRPCInterface";
 import { ChangesetGroup } from "../ChangeElementsGroupHelper";
 
 export class ChangesetGroupRPCImpl extends RpcInterface implements ChangesetGroupRPCInterface {
-  public async getChangesetGroup(_iModelToken: IModelRpcProps, endChangeset: ChangesetIdWithIndex, authToken:string ): Promise<unknown> {
-    await  ChangesetGroup._downloadChangesetFiles(endChangeset, _iModelToken.iModelId!, authToken);
-    return Promise.resolve("success");
+  public async getChangesetGroup(_iModelToken: IModelRpcProps, startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, authToken: string): Promise<ChangedElements> {
+    return ChangesetGroup.runGroupComparison(startChangeset, endChangeset, _iModelToken.iModelId!, authToken, _iModelToken.iTwinId!) ;
   }
 }
