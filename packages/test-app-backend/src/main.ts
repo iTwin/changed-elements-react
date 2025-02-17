@@ -36,7 +36,6 @@ void (async () => {
   );
   const app = express();
   const server = new IModelJsExpressServer(rpcConfig.protocol);
-
   await server.initialize(port);
   console.log(`Backend (PID ${process.pid}) is listening on port ${port}.`);
 

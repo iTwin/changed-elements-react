@@ -1,6 +1,7 @@
 import { AnyDb, BriefcaseManager, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, IModelHost, PartialECChangeUnifier, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
 import { DbOpcode, Id64String } from "@itwin/core-bentley";
-import { ChangedElements, ChangesetFileProps, ChangesetIdWithIndex } from "@itwin/core-common";
+import { BentleyCloudRpcManager, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex } from "@itwin/core-common";
+import { AuthClient } from './RPC/ChangesetGroupRPCInterface';
 
 /**
  * Representation of a Changed Element during ChangesetGroup processing.
@@ -21,14 +22,21 @@ export interface ChangesetGroupChangedElement {
 
 export class ChangesetGroup {
 
-  public static async _downloadChangesetFiles(endChangesetId: ChangesetIdWithIndex,iModelId:string):Promise<void> {
-   await IModelHost.getHubAccess()?.downloadChangesets({
-     targetDir: BriefcaseManager.getChangeSetsPath(iModelId),
-     iModelId: iModelId,
-     range: {
-        first: endChangesetId.index as number,
-     },
-   })
+  public static async _downloadChangesetFiles(endChangesetId: ChangesetIdWithIndex, iModelId: string, authToken :string): Promise<void> {
+    const changesetPath = BriefcaseManager.getChangeSetsPath(iModelId)
+    const authClient: AuthClient = {
+      getAccessToken: function (): Promise<string> {
+        return Promise.resolve(authToken);
+      },
+    }
+    IModelHost.authorizationClient = authClient;
+    await IModelHost.getHubAccess()?.downloadChangesets({
+       targetDir: changesetPath,
+       iModelId: iModelId,
+       range: {
+          first: endChangesetId.index as number,
+       },
+     })
   }
 
   /**
