@@ -101,7 +101,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         <NavigationButton backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>
-        <TextEx variant="body" weight="semibold">
+        <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
         <div>
@@ -194,7 +194,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
   return (
     <Widget>
       <Widget.Header>
-        <TextEx variant="body" weight="semibold">
+        <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
         {currentNamedVersion && <ChangedElementsHeaderButtons onlyInfo />}
@@ -531,7 +531,7 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
               <IconEx size="m" fill="positive">
                 <SvgStatusSuccess />
               </IconEx>
-              <TextEx weight="normal" variant="body">
+              <TextEx variant="body">
                 {t("VersionCompare:versionCompare.available")}
               </TextEx>
             </Flex>
@@ -662,7 +662,7 @@ function NavigationButton(props: ActionButtonProps): ReactElement {
         <IconEx size="m" fill="currentColor">
           {props.backward ? <SvgChevronLeft /> : <SvgChevronRight />}
         </IconEx>
-        <TextEx variant="small" weight="normal" >{props.children}</TextEx>
+        <TextEx variant="body" weight="normal" >{props.children}</TextEx>
       </Flex>
     </Button>
   );

@@ -8,27 +8,31 @@
 @layer changed-elements-react.v1 {
   ._cer_v1_text {
     &[data-weight="light"] {
-      font-weight: 200;
+      font-weight: var(--iui-font-weight-light);
     }
 
     &[data-weight="normal"] {
-      font-weight: 400;
+      font-weight: var(--iui-font-weight-normal);
     }
 
     &[data-weight="semibold"] {
-      font-weight: 600;
+      font-weight: var(--iui-font-weight-semibold);
     }
 
     &[data-weight="bold"] {
-      font-weight: 700;
+      font-weight: var(--iui-font-weight-bold);
     }
 
     &[data-variant="small"]{
-      font-size: 10px;
+      font-size: var(--iui-font-size-0);
     }
 
     &[data-variant="body"]{
-      font-size: 12px;
+      font-size: var(--iui-font-size-1);
+    }
+
+    &[data-variant="title"]{
+      font-size: var(--iui-font-size-2);
     }
 
     &[data-overflow="wrap"] {

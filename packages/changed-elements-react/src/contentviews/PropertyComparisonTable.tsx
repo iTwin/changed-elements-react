@@ -5,7 +5,7 @@
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
-import { IconButton, Slider, Table, Text, ToggleSwitch } from "@itwin/itwinui-react";
+import { DefaultCell, IconButton, Slider, Table, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import type { KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { memo, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
@@ -169,6 +169,16 @@ function useColumnsDefinition(
           id: "category",
           Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.category"),
           accessor: "category",
+          //  cellRenderer: (props) => {
+          //    return (
+          //      <DefaultCell
+          //        {...props}
+          //        className="row-added"
+          //      >
+          //        blah
+          //      </DefaultCell>
+          //    );
+          //  },
         },
         {
           id: "propertyName",
@@ -630,15 +640,15 @@ const getRowProps: (row: Row<ComparisonDataRow>) => React.ComponentPropsWithRef<
 } = (row) => {
   const { current, target } = row.values;
   if (current === "" && target !== "") {
-    return { className: "row-deleted", status: "negative" };
+    return { status: "negative" };
   }
 
   if (current !== "" && target === "") {
-    return { className: "row-added", status: "positive" };
+    return { status: "positive" };
   }
 
   if (current !== target) {
-    return { className: "row-modified", status: "warning" };
+    return { status: "warning" };
   }
 
   return {};
