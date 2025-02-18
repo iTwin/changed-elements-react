@@ -169,16 +169,6 @@ function useColumnsDefinition(
           id: "category",
           Header: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.category"),
           accessor: "category",
-          //  cellRenderer: (props) => {
-          //    return (
-          //      <DefaultCell
-          //        {...props}
-          //        className="row-added"
-          //      >
-          //        blah
-          //      </DefaultCell>
-          //    );
-          //  },
         },
         {
           id: "propertyName",
