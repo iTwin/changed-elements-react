@@ -132,7 +132,8 @@ export class VersionCompareManager {
 
   private _currentIModel: IModelConnection | undefined;
   private _targetIModel: IModelConnection | undefined;
-  private _isComparisonStarted: boolean = false;
+  private _isComparisonReady: boolean = false;
+  private _isComparisonInitializing: boolean = false;
 
   /** Get current IModelConnection being compared against. */
   public get currentIModel(): IModelConnection | undefined {
@@ -145,12 +146,12 @@ export class VersionCompareManager {
   }
   /** Returns true if version compare manager is ready to show loaded comparison.*/
   public get isComparisonReady(): boolean {
-    return this._isComparisonStarted;
+    return this._isComparisonReady;
   }
 
   /** Returns true if version compare manager is currently engaged in comparison.*/
   public get isComparing(): boolean {
-    return this._targetIModel !== undefined;
+    return this._targetIModel !== undefined || this._isComparisonInitializing;
   }
 
   /**
@@ -274,7 +275,7 @@ export class VersionCompareManager {
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
       );
-
+      this._isComparisonInitializing = true;
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
       this._targetIModel = await CheckpointConnection.openRemote(
@@ -282,7 +283,7 @@ export class VersionCompareManager {
         this._currentIModel.iModelId,
         IModelVersion.asOfChangeSet(changesetId),
       );
-
+      this._isComparisonInitializing = false;
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
@@ -346,7 +347,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
-      this._isComparisonStarted = true;
+      this._isComparisonReady = true;
       VersionCompare.manager?.featureTracking?.trackVersionSelectorUsage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
@@ -368,7 +369,8 @@ export class VersionCompareManager {
       this.versionCompareStartFailed.raiseEvent();
       this._currentIModel = undefined;
       this._targetIModel = undefined;
-      this._isComparisonStarted = false;
+      this._isComparisonReady = false;
+      this._isComparisonInitializing = false;
       success = false;
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
     }
@@ -408,7 +410,7 @@ export class VersionCompareManager {
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
       );
-
+      this._isComparisonInitializing = true;
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
       this._targetIModel = await CheckpointConnection.openRemote(
@@ -416,7 +418,7 @@ export class VersionCompareManager {
         this._currentIModel.iModelId,
         IModelVersion.asOfChangeSet(changesetId),
       );
-
+      this._isComparisonInitializing = false;
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
@@ -477,7 +479,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
-      this._isComparisonStarted = true;
+      this._isComparisonReady = true;
       VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
@@ -500,7 +502,8 @@ export class VersionCompareManager {
       } finally {
         this._currentIModel = undefined;
         this._targetIModel = undefined;
-        this._isComparisonStarted = false;
+        this._isComparisonReady = false;
+        this._isComparisonInitializing = false;
         success = false;
         VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
 
@@ -534,7 +537,8 @@ export class VersionCompareManager {
       if (this._targetIModel) {
         await this._targetIModel.close();
         this._targetIModel = undefined;
-        this._isComparisonStarted = false;
+        this._isComparisonReady = false;
+        this._isComparisonInitializing = false;
       }
 
       this.changedElementsManager.cleanup();
@@ -542,7 +546,7 @@ export class VersionCompareManager {
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
     } catch (ex) {
-      this._isComparisonStarted = false;
+      this._isComparisonReady = false;
       // Log anything not a string or we don't handle
       Logger.logError(LOGGER_CATEGORY, "Failed to stop comparison", () => ({ ex }));
     }
@@ -552,7 +556,7 @@ export class VersionCompareManager {
     this.targetVersion = undefined;
     this._currentIModel = undefined;
     this._targetIModel = undefined;
-    this._isComparisonStarted = false;
+    this._isComparisonReady = false;
 
     // Clean-up visualization handler
     await this._visualizationHandler?.cleanUp();

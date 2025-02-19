@@ -179,11 +179,12 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     manager.versionCompareStarted.addListener(this._onComparisonStarted);
     manager.loadingProgressEvent.addListener(this._onProgressEvent);
     manager.versionCompareStopped.addListener(this._onComparisonStopped);
-    if (manager.isComparisonReady) {
+    if (!this.props.manager?.isComparisonReady && !this.props.manager?.isComparing) {
+      // starting state for widget
       this.state = {
         manager,
-        loading: !manager.isComparisonReady,
-        loaded: manager.isComparisonReady,
+        loading: false,
+        loaded: false,
         menuOpened: false,
         elements: manager.changedElementsManager.entryCache.getAll(),
         currentIModel: manager.currentIModel,
@@ -197,7 +198,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         reportDialogVisible: false,
         reportProperties: undefined,
       };
-    } else {
+    }
+    else if (this.props.manager?.isComparing && !this.props.manager?.isComparisonReady) {
+      // loading
       this.state = {
         manager,
         loading: true,
@@ -206,8 +209,30 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         elements: manager.changedElementsManager.entryCache.getAll(),
         currentIModel: manager.currentIModel,
         targetIModel: manager.targetIModel,
-        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
-        description: "",
+        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+        description: this.props.useV2Widget
+          ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
+          : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+        versionSelectDialogVisible: false,
+        informationDialogVisible: false,
+        reportDialogVisible: false,
+        reportProperties: undefined,
+      };
+    }
+    else if (this.props.manager?.isComparisonReady) {
+      // ready
+      this.state = {
+        manager,
+        loading: false,
+        loaded: true,
+        menuOpened: false,
+        elements: manager.changedElementsManager.entryCache.getAll(),
+        currentIModel: manager.currentIModel,
+        targetIModel: manager.targetIModel,
+        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+        description: this.props.useV2Widget
+          ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
+          : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
         versionSelectDialogVisible: false,
         informationDialogVisible: false,
         reportDialogVisible: false,
