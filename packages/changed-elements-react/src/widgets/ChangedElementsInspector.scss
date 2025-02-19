@@ -284,15 +284,15 @@
 }
 
 .added {
-  color: RGB(86, 170, 28);
+  color: var(--iui-color-background-positive-hover);
 }
 
 .modified {
-  color: RGB(0, 139, 225);
+  color: var(--iui-color-background-informational-hover);
 }
 
 .deleted {
-  color: RGB(204, 0, 0);
+  color: var(--iui-color-background-negative-hover);
 }
 
 .unchanged {
