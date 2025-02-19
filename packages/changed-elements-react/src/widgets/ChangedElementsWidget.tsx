@@ -211,7 +211,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         this.state = { ... initWidgetState, loading: true, loaded: false };
       }
     } else {
-      this.state = { ... initWidgetState, loading: manager.isComparing, loaded: manager.isComparing };
+      this.state = initWidgetState;
     }
   }
 
