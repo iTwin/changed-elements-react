@@ -55,27 +55,24 @@
     }
   }
 
-  .row-added.iui-table-row .iui-table-cell {
-    background: #56aa1c;
+  /* Override status positive color */
+  .added-row {
+    > :first-child {
+      box-shadow: inset .4rem 0 0 0 var(--iui-color-background-positive-hover);
+    }
   }
 
-  .row-added.iui-table-row:hover .iui-table-cell {
-    background: #d4f4bd;
+  /* Override status warning color */
+  .modified-row {
+    > :first-child {
+      box-shadow: inset .4rem 0 0 0 var(--iui-color-background-informational-hover);
+    }
   }
 
-  .row-deleted.iui-table-row .iui-table-cell {
-    background: #cc0000;
-  }
-
-  .row-deleted.iui-table-row:hover .iui-table-cell {
-    background: #ffb3b3;
-  }
-
-  .row-modified.iui-table-row .iui-table-cell {
-    background: #008be1;
-  }
-
-  .row-modified.iui-table-row:hover .iui-table-cell {
-    background: #b3e2ff;
+  /* Override status warning color */
+  .removed-row {
+    > :first-child {
+      box-shadow: inset .4rem 0 0 0 var(--iui-color-background-negative-hover);
+    }
   }
 }

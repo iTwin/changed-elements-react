@@ -625,20 +625,19 @@ function SideBySideToggle(props: SideBySideToggleProps): ReactElement {
 }
 
 const getRowProps: (row: Row<ComparisonDataRow>) => React.ComponentPropsWithRef<"div"> & {
-  status?: "positive" | "warning" | "negative";
   isLoading?: boolean;
 } = (row) => {
   const { current, target } = row.values;
   if (current === "" && target !== "") {
-    return { className: "row-deleted", status: "negative" };
+    return { className:"removed-row" };
   }
 
   if (current !== "" && target === "") {
-    return { className: "row-added", status: "positive" };
+    return { className: "added-row" };
   }
 
   if (current !== target) {
-    return { className: "row-modified", status: "warning" };
+    return { className: "modified-row"};
   }
 
   return {};
