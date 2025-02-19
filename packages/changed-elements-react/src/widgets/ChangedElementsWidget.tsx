@@ -60,6 +60,13 @@ export interface ChangedElementsWidgetProps {
    */
   useV2Widget?: boolean;
 
+  /**
+ * Optional. Only true if the new named version selector is being used.
+ * Do not provide if not running experimental selector.
+ * @alpha
+ */
+  usingExperimentalSelector?: boolean;
+
   /** Optional. Supply a link for feedback. Should only be used if v2 is enabled. */
   feedbackUrl?: string;
 
@@ -179,40 +186,32 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     manager.versionCompareStarted.addListener(this._onComparisonStarted);
     manager.loadingProgressEvent.addListener(this._onProgressEvent);
     manager.versionCompareStopped.addListener(this._onComparisonStopped);
-    if (manager.isComparisonReady) {
-      this.state = {
-        manager,
-        loading: !manager.isComparisonReady,
-        loaded: manager.isComparisonReady,
-        menuOpened: false,
-        elements: manager.changedElementsManager.entryCache.getAll(),
-        currentIModel: manager.currentIModel,
-        targetIModel: manager.targetIModel,
-        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-        description: this.props.useV2Widget
-          ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
-          : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
-        versionSelectDialogVisible: false,
-        informationDialogVisible: false,
-        reportDialogVisible: false,
-        reportProperties: undefined,
-      };
+    const initWidgetState: ChangedElementsWidgetState = {
+      manager,
+      loading: manager.isComparing,
+      loaded: manager.isComparing,
+      menuOpened: false,
+      elements: manager.changedElementsManager.entryCache.getAll(),
+      currentIModel: manager.currentIModel,
+      targetIModel: manager.targetIModel,
+      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+      description: this.props.useV2Widget
+        ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
+        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
+      versionSelectDialogVisible: false,
+      informationDialogVisible: false,
+      reportDialogVisible: false,
+      reportProperties: undefined,
+    };
+    if (props.usingExperimentalSelector) {
+      if (manager.isComparisonReady) {
+        this.state = { ... initWidgetState, loading: !manager.isComparisonReady, loaded: manager.isComparisonReady,
+        };
+      } else {
+        this.state = { ... initWidgetState, loading: true, loaded: false };
+      }
     } else {
-      this.state = {
-        manager,
-        loading: true,
-        loaded: false,
-        menuOpened: false,
-        elements: manager.changedElementsManager.entryCache.getAll(),
-        currentIModel: manager.currentIModel,
-        targetIModel: manager.targetIModel,
-        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
-        description: "",
-        versionSelectDialogVisible: false,
-        informationDialogVisible: false,
-        reportDialogVisible: false,
-        reportProperties: undefined,
-      };
+      this.state = initWidgetState;
     }
   }
 

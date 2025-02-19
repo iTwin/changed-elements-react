@@ -126,6 +126,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
               ref={widgetRef}
               iModelConnection={iModel}
               manager={manager}
+              usingExperimentalSelector
             />
           </namedVersionSelectorContext.Provider>
         )}
