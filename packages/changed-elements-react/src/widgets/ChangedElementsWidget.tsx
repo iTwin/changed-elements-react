@@ -179,11 +179,11 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     manager.versionCompareStarted.addListener(this._onComparisonStarted);
     manager.loadingProgressEvent.addListener(this._onProgressEvent);
     manager.versionCompareStopped.addListener(this._onComparisonStopped);
-    if (!this.props.manager?.isComparing) {
+    if (manager.isComparisonReady) {
       this.state = {
         manager,
-        loading: manager.isComparing,
-        loaded: manager.isComparing,
+        loading: !manager.isComparisonReady,
+        loaded: manager.isComparisonReady,
         menuOpened: false,
         elements: manager.changedElementsManager.entryCache.getAll(),
         currentIModel: manager.currentIModel,
@@ -206,7 +206,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         elements: manager.changedElementsManager.entryCache.getAll(),
         currentIModel: manager.currentIModel,
         targetIModel: manager.targetIModel,
-              message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
+        message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
         description: "",
         versionSelectDialogVisible: false,
         informationDialogVisible: false,

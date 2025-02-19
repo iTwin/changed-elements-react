@@ -60,7 +60,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
   const { iModel, emptyState, manageVersions , feedbackUrl } = props;
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
-  const [isComparisonStarted,setIsComparisonStarted] = useState(false);
+  const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
 
   useEffect(
     () => {
