@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.14.3
+
+### Patch Changes
+
+#### [0.14.3](https://github.com/iTwin/changed-elements-react/tree/v0.14.3/packages/changed-elements-react) - 2025-02-19
+
+UI tweaks for:
+
+- Font size, weight, and style
+- Property comparison table coloring changes per row
+- Updated colors for elements in tree (squares)
+
+Fixes:
+
+- Forever loading in the elements tree when backing out of property comparison (experimental widget only bug)
+
 ## 0.14.2
 
 ### Patch Changes
