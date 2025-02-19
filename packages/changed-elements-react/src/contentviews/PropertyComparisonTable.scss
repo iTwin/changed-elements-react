@@ -56,20 +56,23 @@
   }
 
   /* Override status positive color */
-._iui3166-table-body ._iui3166-table-row[data-iui-status=positive] ._iui3166-table-cell:first-of-type,
-._iui3166-table-body ._iui3166-table-row[data-iui-status=positive]+._iui3166-table-expanded-content {
-  box-shadow: inset var(--iui-size-2xs) 0 0 0 var(--iui-color-background-positive-hover) !important; /* Your custom color */
-}
+  .added-row {
+    > :first-child {
+      box-shadow: inset .4rem 0 0 0 var(--iui-color-background-positive-hover);
+    }
+  }
 
   /* Override status warning color */
-._iui3166-table-body ._iui3166-table-row[data-iui-status=warning] ._iui3166-table-cell:first-of-type,
-._iui3166-table-body ._iui3166-table-row[data-iui-status=warning]+._iui3166-table-expanded-content {
-  box-shadow: inset var(--iui-size-2xs) 0 0 0 var(--iui-color-background-informational-hover) !important; /* Your custom color */
-}
+  .modified-row {
+    > :first-child {
+      box-shadow: inset .4rem 0 0 0 var(--iui-color-background-informational-hover);
+    }
+  }
 
   /* Override status warning color */
-._iui3166-table-body ._iui3166-table-row[data-iui-status=negative] ._iui3166-table-cell:first-of-type,
-._iui3166-table-body ._iui3166-table-row[data-iui-status=negative]+._iui3166-table-expanded-content {
-  box-shadow: inset var(--iui-size-2xs) 0 0 0 var(--iui-color-background-negative-hover) !important; /* Your custom color */
-}
+  .removed-row {
+    > :first-child {
+      box-shadow: inset .4rem 0 0 0 var(--iui-color-background-negative-hover);
+    }
+  }
 }
