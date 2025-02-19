@@ -5,7 +5,7 @@
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
-import { DefaultCell, IconButton, Slider, Table, Text, ToggleSwitch } from "@itwin/itwinui-react";
+import { IconButton, Slider, Table, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import type { KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { memo, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
