@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.4
+
+### Patch Changes
+
+#### [0.14.4](https://github.com/iTwin/changed-elements-react/tree/v0.14.4/packages/changed-elements-react) - 2025-02-19
+
+Fixes:
+
+- non experimental widget init state so it will no longer forever load
+
 ## 0.14.3
 
 ### Patch Changes
