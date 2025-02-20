@@ -1,6 +1,6 @@
 import { AnyDb, BriefcaseDb, BriefcaseManager, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, IModelDb, IModelHost, PartialECChangeUnifier, RequestNewBriefcaseArg, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
 import { DbOpcode, Id64String, OpenMode } from "@itwin/core-bentley";
-import { BentleyCloudRpcManager, BriefcaseIdValue, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex, IModelVersion } from "@itwin/core-common";
+import { BentleyCloudRpcManager, BriefcaseIdValue, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex, IModelVersion, TypeOfChange } from "@itwin/core-common";
 import { AuthClient } from './RPC/ChangesetGroupRPCInterface';
 
 /**
@@ -62,7 +62,7 @@ export class ChangesetGroup {
     const args: RequestNewBriefcaseArg = {
       iModelId,
       iTwinId: contextId,
-      asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
+      //asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
       briefcaseId: BriefcaseIdValue.Unassigned,
       accessToken: authToken,
     };
@@ -84,11 +84,12 @@ export class ChangesetGroup {
   public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string): Promise<ChangedElements> {
     const changesetPaths = await this._downloadChangesetFiles(startChangesetIdWithIndex, endChangesetIdWithIndex, iModelId, authToken);
     //check if stuff is downloaded?
+    // todo check if we can get db another way?
     const db = await this._downloadBriefcase(contextId, iModelId, startChangesetIdWithIndex.id, authToken);
     const changedECInstance = this._getGroupedChangesetChanges(changesetPaths, db)
     await this.cleanUp(iModelId, authToken, db);
-    //const changedElements = this.transformToAPIChangedElements(changedECInstance);
-    return { elements: [], classIds: [], modelIds: [], opcodes: [], type: [], properties: [], parentIds: [], parentClassIds: [] };
+    const changedElements = this.transformToAPIChangedElements(changedECInstance);
+    return changedElements;
   }
 
   /**
@@ -129,18 +130,19 @@ export class ChangesetGroup {
  */
   private static transformToAPIChangedElements(changedElements: ChangedECInstance[]): ChangedElements  {
     const ce: ChangedElements = ChangesetGroup.createEmptyChangedElements();
-    for (const elem of changedElements) {
-      ce.elements.push(elem.id);
-      ce.classIds.push(elem.classId);
-      ce.opcodes.push(ChangesetGroup.stringToOpcode(elem.operation));
-      ce.type?.push(elem.type);
-      ce.parentIds?.push(elem.parentId);
-      ce.parentClassIds?.push(elem.parentRelClassId);
-      ce.properties?.push(Array.from(elem.properties.values()));
-      ce.modelIds?.push(elem.modelId);
+    const ceMap: Map<string, ChangedECInstance> = new Map<string, ChangedECInstance>();
+    changedElements.forEach((elem) => {
+      if (!ceMap.has(`${elem.ECInstanceId}:${elem.ECClassId}`)) {
+        ceMap.set(`${elem.ECInstanceId}:${elem.ECClassId}`, elem);
+      }
+     });
+    for (const elem of ceMap.values()) {
+      ce.elements.push(elem.ECInstanceId);
+      ce.classIds.push(elem.ECClassId ?? "");
+      ce.opcodes.push(ChangesetGroup.stringToOpcode(elem.$meta?.op ?? ""));
+      ce.type.push(TypeOfChange.NoChange);
       // TODO: Do we need checksums anymore? If doing parallel processing, maybe...
     }
-
     return ce;
   }
 

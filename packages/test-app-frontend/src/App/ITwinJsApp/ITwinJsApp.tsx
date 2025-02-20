@@ -179,8 +179,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   const blah = async (startChangedset: ChangesetIdWithIndex,endChangedset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
     const client = ChangesetGroupRPCInterface.getClient();
-    await client.getChangesetGroup(iModelConnection.getRpcProps(), startChangedset ,endChangedset, await authorizationClient.getAccessToken() );
-    return [];
+    return client.getChangesetGroup(iModelConnection.getRpcProps(), startChangedset, endChangedset, await authorizationClient.getAccessToken());
   }
 
 
