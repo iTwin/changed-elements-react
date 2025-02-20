@@ -203,6 +203,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
+    // todo this prop should be removed after experimental selector is fully implemented, This is bad as child component should not know about parent component.
     if (props.usingExperimentalSelector) {
       if (manager.isComparisonReady) {
         this.state = { ... initWidgetState, loading: !manager.isComparisonReady, loaded: manager.isComparisonReady,
