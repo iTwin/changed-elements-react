@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.5
+
+### Patch Changes
+
+#### [0.14.5](https://github.com/iTwin/changed-elements-react/tree/v0.14.5/packages/changed-elements-react) - 2025-02-20
+
+- Updated font weights for current and target strings in namedVersion selector
+
 ## 0.14.4
 
 ### Patch Changes
