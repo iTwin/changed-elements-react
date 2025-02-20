@@ -318,7 +318,7 @@ function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
   return (
     <div>
       <Flex gap="var(--iui-size-xs)">
-        <TextEx variant="small" weight="semibold" oblique>{props.annotation}</TextEx>
+        <TextEx variant="small" weight="normal" oblique>{props.annotation}</TextEx>
         <TextEx variant="small" weight="light" oblique>{dateString}</TextEx>
       </Flex>
       <TextEx variant="body" weight="semibold" overflow="ellipsis">
