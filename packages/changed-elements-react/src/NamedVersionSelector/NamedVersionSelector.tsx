@@ -207,7 +207,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
       {
         (!isLoading && entries.length === 0)?
           <Text className="_cer_v1_empty-state" isMuted>
-            {t("VersionCompare:versionCompare.noPreviousVersionAvailable")}
+            {t("VersionCompare:versionCompare.noPastNamedVersions")}
           </Text>
           :
         (!currentNamedVersion || (isLoading && entries.length === 0))
@@ -311,7 +311,7 @@ interface NamedVersionInfoProps {
 
 function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
   const dateString = useMemo(
-    () => new Date(props.namedVersion.createdDateTime).toLocaleDateString(),
+    () => props.namedVersion.createdDateTime === "" ? "" : new Date(props.namedVersion.createdDateTime).toLocaleDateString(),
     [props.namedVersion.createdDateTime],
   );
 
