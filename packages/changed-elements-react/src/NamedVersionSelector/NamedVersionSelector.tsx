@@ -311,7 +311,7 @@ interface NamedVersionInfoProps {
 
 function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
   const dateString = useMemo(
-    () => new Date(props.namedVersion.createdDateTime).toLocaleDateString(),
+    () => props.namedVersion.createdDateTime === "" ? "" : new Date(props.namedVersion.createdDateTime).toLocaleDateString(),
     [props.namedVersion.createdDateTime],
   );
 

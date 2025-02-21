@@ -150,11 +150,7 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
               description: IModelApp.localization.getLocalizedString(
                 "VersionCompare:versionCompare.noNamedVersions",
               ),
-              createdDateTime: (new Date()).toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }),
+              createdDateTime: "",
             });
             return;
           }
