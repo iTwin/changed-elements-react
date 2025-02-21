@@ -140,18 +140,7 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
           if (currentChangesetArrayIndex === -1) {
             setIsLoading(false);
             setIsError(true);
-            setCurrentNamedVersion({
-              id: "error",
-              displayName: IModelApp.localization.getLocalizedString(
-                "VersionCompare:versionCompare.namedVersionErrorPlaceholder",
-              ),
-              changesetId: currentChangesetId,
-              changesetIndex: -1,
-              description: IModelApp.localization.getLocalizedString(
-                "VersionCompare:versionCompare.noNamedVersions",
-              ),
-              createdDateTime: "",
-            });
+            setCurrentNamedVersion(undefined);
             return;
           }
 
