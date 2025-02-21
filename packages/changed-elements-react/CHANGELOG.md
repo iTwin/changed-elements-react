@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.6
+
+### Patch Changes
+
+#### [0.14.6](https://github.com/iTwin/changed-elements-react/tree/v0.14.6/packages/changed-elements-react) - 2025-02-21
+
+UI Updates
+
+- Updated text to be more informative for no named versions present in imodel
+
 ## 0.14.5
 
 ### Patch Changes
