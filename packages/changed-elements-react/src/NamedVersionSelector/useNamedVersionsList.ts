@@ -147,8 +147,14 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
               ),
               changesetId: currentChangesetId,
               changesetIndex: -1,
-              description: null,
-              createdDateTime: "",
+              description: IModelApp.localization.getLocalizedString(
+                "VersionCompare:versionCompare.noNamedVersions",
+              ),
+              createdDateTime: (new Date()).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
             });
             return;
           }

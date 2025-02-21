@@ -207,7 +207,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
       {
         (!isLoading && entries.length === 0)?
           <Text className="_cer_v1_empty-state" isMuted>
-            {t("VersionCompare:versionCompare.noPreviousVersionAvailable")}
+            {t("VersionCompare:versionCompare.noPastNamedVersions")}
           </Text>
           :
         (!currentNamedVersion || (isLoading && entries.length === 0))
