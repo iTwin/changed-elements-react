@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { SvgInfo, SvgInfoCircularHollow } from "@itwin/itwinui-icons-react";
+import { SvgInfo } from "@itwin/itwinui-icons-react";
 import { DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
 import type { ReactNode } from "react";
 
