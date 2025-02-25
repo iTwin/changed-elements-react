@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.14.7
+
+### Patch Changes
+
+#### [0.14.7](https://github.com/iTwin/changed-elements-react/tree/v0.14.7/packages/changed-elements-react) - 2025-02-25
+
+Updates :
+
+- tweaked on hover color for action btn
+- changed info button icon
+
 ## 0.14.6
 
 ### Patch Changes
