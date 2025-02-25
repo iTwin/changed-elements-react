@@ -51,12 +51,12 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   if (args.runOnJobUpdate) {
     void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
   }
-  const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
+  const changedElements = blah;
   VersionCompare.manager?.startComparisonV2(
     args.iModelConnection,
     args.currentVersion,
     await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
-    [changedElements.changedElements]).catch((e) => {
+    [changedElements]).catch((e) => {
       Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
     });
 };
