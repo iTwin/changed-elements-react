@@ -35,7 +35,7 @@ import {
 } from "./useNamedVersionsList.js";
 import { useQueue } from "./useQueue.js";
 
-import "./NamedVersionSelector.css";
+import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
 
 interface NamedVersionSelectorWidgetProps {
