@@ -6,7 +6,7 @@ import { type ComponentProps, type CSSProperties } from "react";
 import { Text } from "@itwin/itwinui-react";
 import clsx from "clsx";
 
-import "./TextEx.css";
+import "./TextEx.scss";
 
 interface TextExProps extends ComponentProps<typeof Text> {
   weight?: "light" | "normal" | "semibold" | "bold" | undefined;
