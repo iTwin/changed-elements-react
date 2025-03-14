@@ -69,7 +69,7 @@
     "redux": "^4.1.0",
     "typescript": "~5.5.4",
     "vite": "^5.4.11",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.9"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^4.10.6",
