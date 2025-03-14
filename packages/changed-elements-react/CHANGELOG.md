@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.8
+
+### Patch Changes
+
+#### [0.14.8](https://github.com/iTwin/changed-elements-react/tree/v0.14.8/packages/changed-elements-react) - 2025-03-14
+
+Fix vitest and axios vulnerabilities
+
 ## 0.14.7
 
 ### Patch Changes
