@@ -284,15 +284,15 @@
 }
 
 .added {
-  color: var(--iui-color-background-positive-hover);
+  color: RGB(86, 170, 28);
 }
 
 .modified {
-  color: var(--iui-color-background-informational-hover);
+  color: RGB(0, 139, 225);
 }
 
 .deleted {
-  color: var(--iui-color-background-negative-hover);
+  color: RGB(204, 0, 0);
 }
 
 .unchanged {
@@ -307,8 +307,8 @@
 
   &-modified {
     @extend .change-square;
-    background-color: var(--iui-color-background-informational-hover);
-    border-color: var(--iui-color-background-informational-hover);
+    background-color: RGB(0, 139, 225);
+    border-color:  RGB(0, 139, 225);
   }
 
   &-indirect {
@@ -318,14 +318,14 @@
 
   &-added {
     @extend .change-square;
-    background-color: var(--iui-color-background-positive-hover);
-    border-color: var(--iui-color-background-positive-hover);
+    background-color: RGB(86, 170, 28);
+    border-color:  RGB(86, 170, 28);
   }
 
   &-deleted {
     @extend .change-square;
-    background-color: var(--iui-color-background-negative-hover);
-    border-color: var(--iui-color-background-negative-hover);
+    background-color: RGB(204, 0, 0);
+    border-color: RGB(204, 0, 0);
   }
 }
 

@@ -174,36 +174,46 @@ interface PostOrGetComparisonJobParams {
 async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promise<ComparisonJob> {
   const numRetries = 3;
   const delayInMilliseconds = 5000;
-
   const { comparisonJobClient, iTwinId, iModelId, startChangesetId, endChangesetId, signal } = args;
+  const jobId = `${startChangesetId}-${endChangesetId}`;
   signal?.throwIfAborted();
 
-  const response = await tryXTimes(
-    async () => getComparisonJob({
-      comparisonJobClient,
-      iTwinId,
-      iModelId,
-      jobId: `${startChangesetId}-${endChangesetId}`,
-      signal,
-    }),
-    numRetries,
-    delayInMilliseconds,
-    signal,
-  );
+  const runGetDeletePostJobWorkflow = async () => {
+    const response = await getComparisonJob({
+        comparisonJobClient,
+        iTwinId,
+        iModelId,
+        jobId: jobId,
+        signal,
+      })
 
-  return response ?? tryXTimes(
-    () => comparisonJobClient.postComparisonJob({
-      iTwinId,
-      iModelId,
-      startChangesetId: startChangesetId,
-      endChangesetId: endChangesetId,
-      headers: { "Content-Type": "application/json" },
-      signal,
-    }),
-    numRetries,
-    delayInMilliseconds,
-    signal,
-  );
+    if (response?.comparisonJob?.status === "Failed") {
+      await args.comparisonJobClient.deleteComparisonJob({
+        iTwinId: iTwinId,
+        iModelId: iModelId,
+        jobId: jobId,
+      });
+      return comparisonJobClient.postComparisonJob({
+        iTwinId,
+        iModelId,
+        startChangesetId: startChangesetId,
+        endChangesetId: endChangesetId,
+        headers: { "Content-Type": "application/json" },
+        signal,
+      });
+    }
+
+    return response ??
+      comparisonJobClient.postComparisonJob({
+        iTwinId,
+        iModelId,
+        startChangesetId: startChangesetId,
+        endChangesetId: endChangesetId,
+        headers: { "Content-Type": "application/json" },
+        signal,
+      });
+  };
+  return tryXTimes(() => runGetDeletePostJobWorkflow(), numRetries, delayInMilliseconds, signal);
 }
 
 interface GetComparisonJobArgs {
