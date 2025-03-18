@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.9
+
+### Patch Changes
+
+#### [0.14.9](https://github.com/iTwin/changed-elements-react/tree/v0.14.9/packages/changed-elements-react) - 2025-03-18
+
+- Reverted colors of squares in property inspector
+- Fixed job error and re-run logic
+- Fixed side-by-side toggle not present in property comparison table
+
 ## 0.14.8
 
 ### Patch Changes
