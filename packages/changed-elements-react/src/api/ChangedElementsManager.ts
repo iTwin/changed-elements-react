@@ -293,6 +293,8 @@ export const extractProperties = (
 ): Map<string, Checksums> | undefined => {
   if (changeset.opcodes[index] === DbOpcode.Update && changeset.properties) {
     const map: Map<string, Checksums> = new Map<string, Checksums>();
+    if (changeset.properties[index] === undefined)
+      return undefined;
     for (
       let propIndex = 0;
       propIndex < changeset.properties[index].length;
