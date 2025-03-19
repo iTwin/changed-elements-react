@@ -58,6 +58,7 @@ export class ChangesetGroup {
     iModelId: string,
     changesetId: string,
     authToken: string,
+    briefcasePath:string,
   ): Promise<IModelDb> {
     const args: RequestNewBriefcaseArg = {
       iModelId,
@@ -65,29 +66,27 @@ export class ChangesetGroup {
       //asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
       briefcaseId: BriefcaseIdValue.Unassigned,
       accessToken: authToken,
+      fileName: briefcasePath,
     };
-    // Download briefcase for the oldest changeset Id
-    const briefcaseProps = await BriefcaseManager.downloadBriefcase(
-      args
-    );
-
-    return BriefcaseDb.open(briefcaseProps);
+    await BriefcaseManager.deleteBriefcaseFiles(briefcasePath, authToken);
+    await BriefcaseManager.downloadBriefcase(args);
+    return BriefcaseDb.open({
+      fileName: briefcasePath,
+    });
   }
 
-  private static async cleanUp(iModelId: string, authToken: string, db: IModelDb) {
-    BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
+  private static async cleanUp(iModelId: string, authToken: string, db: IModelDb, briefcasePath:string) {
     db.close();
-    // await BriefcaseManager.deleteBriefcaseFiles(BriefcaseManager.getBriefcaseBasePath(iModelId), authToken)
-    // BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
+    await BriefcaseManager.deleteBriefcaseFiles(briefcasePath, authToken);
+    BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
   }
 
   public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string): Promise<ChangedElements> {
+    const briefcasePath = `${process.cwd()}`
     const changesetPaths = await this._downloadChangesetFiles(startChangesetIdWithIndex, endChangesetIdWithIndex, iModelId, authToken);
-    //check if stuff is downloaded?
-    // todo check if we can get db another way?
-    const db = await this._downloadBriefcase(contextId, iModelId, startChangesetIdWithIndex.id, authToken);
+    const db = await this._downloadBriefcase(contextId, iModelId, startChangesetIdWithIndex.id, authToken, briefcasePath);
     const changedECInstance = this._getGroupedChangesetChanges(changesetPaths, db)
-    await this.cleanUp(iModelId, authToken, db);
+    await this.cleanUp(iModelId, authToken, db, briefcasePath);
     const changedElements = this.transformToAPIChangedElements(changedECInstance);
     return changedElements;
   }
