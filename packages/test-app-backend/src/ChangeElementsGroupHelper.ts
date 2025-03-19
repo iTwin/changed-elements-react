@@ -63,13 +63,17 @@ export class ChangesetGroup {
     const args: RequestNewBriefcaseArg = {
       iModelId,
       iTwinId: contextId,
-      //asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
+      asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
       briefcaseId: BriefcaseIdValue.Unassigned,
       accessToken: authToken,
       fileName: briefcasePath,
     };
     await BriefcaseManager.deleteBriefcaseFiles(briefcasePath, authToken);
-    await BriefcaseManager.downloadBriefcase(args);
+    const localBriefCaseProps = await BriefcaseManager.downloadBriefcase(args);
+    await BriefcaseManager.releaseBriefcase(authToken,{
+      iModelId: localBriefCaseProps.iModelId,
+      briefcaseId: localBriefCaseProps.briefcaseId,
+    });
     return BriefcaseDb.open({
       fileName: briefcasePath,
     });
@@ -77,17 +81,16 @@ export class ChangesetGroup {
 
   private static async cleanUp(iModelId: string, authToken: string, db: IModelDb, briefcasePath:string) {
     db.close();
-    await BriefcaseManager.deleteBriefcaseFiles(briefcasePath, authToken);
     BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
   }
 
   public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string): Promise<ChangedElements> {
-    const briefcasePath = `${process.cwd()}`
+    const briefcasePath = `${process.cwd()}\\breifcase-${iModelId}\\breifcase-${iModelId}.bim`;
     const changesetPaths = await this._downloadChangesetFiles(startChangesetIdWithIndex, endChangesetIdWithIndex, iModelId, authToken);
-    const db = await this._downloadBriefcase(contextId, iModelId, startChangesetIdWithIndex.id, authToken, briefcasePath);
+    const db = await this._downloadBriefcase(contextId, iModelId, endChangesetIdWithIndex.id, authToken, briefcasePath);
     const changedECInstance = this._getGroupedChangesetChanges(changesetPaths, db)
-    await this.cleanUp(iModelId, authToken, db, briefcasePath);
     const changedElements = this.transformToAPIChangedElements(changedECInstance);
+    await this.cleanUp(iModelId, authToken, db, briefcasePath);
     return changedElements;
   }
 
