@@ -68,7 +68,6 @@ export class ChangesetGroup {
       accessToken: authToken,
       fileName: briefcasePath,
     };
-    await BriefcaseManager.deleteBriefcaseFiles(briefcasePath, authToken);
     const localBriefCaseProps = await BriefcaseManager.downloadBriefcase(args);
     await BriefcaseManager.releaseBriefcase(authToken,{
       iModelId: localBriefCaseProps.iModelId,
@@ -82,6 +81,7 @@ export class ChangesetGroup {
   private static async cleanUp(iModelId: string, authToken: string, db: IModelDb, briefcasePath:string) {
     db.close();
     BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
+    await BriefcaseManager.deleteBriefcaseFiles(briefcasePath, authToken);
   }
 
   public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string): Promise<ChangedElements> {
@@ -90,7 +90,7 @@ export class ChangesetGroup {
     const db = await this._downloadBriefcase(contextId, iModelId, endChangesetIdWithIndex.id, authToken, briefcasePath);
     const changedECInstance = this._getGroupedChangesetChanges(changesetPaths, db)
     const changedElements = this.transformToAPIChangedElements(changedECInstance);
-    await this.cleanUp(iModelId, authToken, db, briefcasePath);
+    //await this.cleanUp(iModelId, authToken, db, briefcasePath);
     return changedElements;
   }
 
