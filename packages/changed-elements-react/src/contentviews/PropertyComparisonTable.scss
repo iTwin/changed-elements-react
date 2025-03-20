@@ -33,11 +33,15 @@
       }
     }
 
-    >.imodel-slider {
-        width: 100%;
-        max-width: 600px;
+  > [class*="slider-container"] {
+      width: 100%;
+      justify-content: center;
+      max-width: 800px;
+    [class$="-slider"] {
+        max-width: 100%;
         min-width: 200px;
-      }
+    }
+    }
 
     > .settings {
       grid-area: settings;

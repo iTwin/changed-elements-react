@@ -587,7 +587,6 @@ interface OverviewOpacitySliderProps {
 function OverviewOpacitySlider(props: OverviewOpacitySliderProps) {
   return (
     <Slider
-      className="imodel-slider"
       min={0}
       max={100}
       values={[50]}
