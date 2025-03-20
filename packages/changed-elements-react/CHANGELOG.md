@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.10
+
+### Patch Changes
+
+#### [0.14.10](https://github.com/iTwin/changed-elements-react/tree/v0.14.10/packages/changed-elements-react) - 2025-03-20
+
+- Fixed CSS for property comparison table slider
+
 ## 0.14.9
 
 ### Patch Changes
