@@ -33,15 +33,11 @@
       }
     }
 
-    > .iui-slider-component-container {
-      width: 100%;
-      justify-content: center;
-
-      .iui-slider-container {
-        min-width: 200px;
+    >.imodel-slider {
+        width: 100%;
         max-width: 600px;
+        min-width: 200px;
       }
-    }
 
     > .settings {
       grid-area: settings;
