@@ -26,11 +26,11 @@ export type ManagerStartComparisonV2Args = {
 };
 
 export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
- const blah = await VersionCompare.changesetProcessor(
-    { id: args.targetVersion.changesetId ?? "", index: args.targetVersion.changesetIndex ?? 0},
-    {
-    id: args.currentVersion.changesetId ?? "", index: args.currentVersion.changesetIndex ?? 0,
-  }, args.iModelConnection)
+//  const blah = await VersionCompare.changesetProcessor(
+//     { id: args.targetVersion.changesetId ?? "", index: args.targetVersion.changesetIndex ?? 0},
+//     {
+//     id: args.currentVersion.changesetId ?? "", index: args.currentVersion.changesetIndex ?? 0,
+//   }, args.iModelConnection)
   // await VersionCompare.rpcGroupClient.getChangesetGroup(args.iModelConnection.getRpcProps(),
   //   {
   //     id: args.targetVersion.changesetId ?? "",
@@ -51,14 +51,20 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   if (args.runOnJobUpdate) {
     void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
   }
-  const changedElements = blah;
-  VersionCompare.manager?.startComparisonV2(
+  VersionCompare.manager?.startDirectComparison(
     args.iModelConnection,
     args.currentVersion,
-    await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
-    [changedElements]).catch((e) => {
-      Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-    });
+    await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient)).catch((e) => {
+       Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+     });
+  //const changedElements = blah;
+  // VersionCompare.manager?.startComparisonV2(
+  //   args.iModelConnection,
+  //   args.currentVersion,
+  //   await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
+  //   [changedElements]).catch((e) => {
+  //     Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
+  //   });
 };
 
 const updateTargetVersion = async (iModelConnection: IModelConnection, targetVersion: NamedVersion, iModelsClient: IModelsClient) => {
