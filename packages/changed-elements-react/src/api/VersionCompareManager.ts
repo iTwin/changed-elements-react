@@ -387,7 +387,6 @@ export class VersionCompareManager {
     currentVersion: NamedVersion,
     targetVersion: NamedVersion): Promise<boolean> {
     this._currentIModel = currentIModel;
-    this._startedComparing = true;
     let success = true;
     this._skipParentChildRelationships = true;
     const startTime = new Date();
@@ -505,7 +504,6 @@ export class VersionCompareManager {
       } finally {
         this._currentIModel = undefined;
         this._targetIModel = undefined;
-        this._startedComparing = false;
         success = false;
         this._skipParentChildRelationships = false;
         VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
@@ -515,9 +513,6 @@ export class VersionCompareManager {
     }
 
     return success;
-
-
-
   }
   /**
    * Starts comparison by opening a new iModelConnection and setting up the store.
