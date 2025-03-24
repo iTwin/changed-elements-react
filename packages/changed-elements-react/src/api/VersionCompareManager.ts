@@ -39,6 +39,7 @@ export class VersionCompareManager {
   private _hasTypeOfChange = false;
   private _hasPropertiesForFiltering = false;
   private _hasParentIds = false;
+  private _skipParentChildRelationships = false;
 
   /** Version Compare ITwinLocalization Namespace */
   public static namespace = "VersionCompare";
@@ -77,6 +78,10 @@ export class VersionCompareManager {
 
   public get filterSpatial(): boolean {
     return this.options.filterSpatial ?? true;
+  }
+
+  public get skipParentChildRelationships(): boolean {
+    return this._skipParentChildRelationships;
   }
 
   public get wantPropertyFiltering(): boolean {
@@ -381,6 +386,7 @@ export class VersionCompareManager {
     this._currentIModel = currentIModel;
     this._startedComparing = true;
     let success = true;
+    this._skipParentChildRelationships = true;
     try {
       // Setup visualization handler
       this._initializeVisualizationHandler();
@@ -446,9 +452,7 @@ export class VersionCompareManager {
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
       // We have parent Ids available if any entries contain undefined parent data
-      this._hasParentIds = changedElementEntries.some(
-        (entry) => entry.parent !== undefined && entry.parentClassId !== undefined,
-      );
+      this._hasParentIds = false;
       // We have type of change available if any of the entries has a valid type of change value
       this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
       // We have property filtering available if any of the entries has a valid array of changed properties
@@ -460,7 +464,7 @@ export class VersionCompareManager {
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
       );
-      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
+      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id), true);
 
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
@@ -495,6 +499,7 @@ export class VersionCompareManager {
         this._targetIModel = undefined;
         this._startedComparing = false;
         success = false;
+        this._skipParentChildRelationships = false;
         VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
 
         await this.stopComparison();
@@ -659,7 +664,6 @@ export class VersionCompareManager {
   public async stopComparison(): Promise<void> {
     // Let listeners know we are cleaning up comparison
     this.versionCompareStopping.raiseEvent();
-
     try {
       if (this._targetIModel) {
         await this._targetIModel.close();
@@ -683,6 +687,7 @@ export class VersionCompareManager {
     this._currentIModel = undefined;
     this._targetIModel = undefined;
     this._startedComparing = false;
+    this._skipParentChildRelationships = false;
 
     // Clean-up visualization handler
     await this._visualizationHandler?.cleanUp();

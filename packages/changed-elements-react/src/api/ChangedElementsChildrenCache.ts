@@ -9,6 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ChangedElementDataCache } from "./ChangedElementDataCache.js";
 import { ChangeElementType, type ChangedElement, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import type { ChangedElementQueryData } from "./ElementQueries.js";
+import { VersionCompare } from "./VersionCompare.js";
 
 interface ParentChildData {
   directChildren: ChangedElementQueryData[];
@@ -115,7 +116,8 @@ export class ChangedElementsChildrenCache extends ChangedElementDataCache {
     map: Map<string, ChangedElementQueryData[]>,
     elementIds: string[],
   ) => {
-    if (elementIds.length === 0) {
+    //todo make manager prop from skipping parent,children relationship
+    if (elementIds.length === 0 || VersionCompare.manager?.skipParentChildRelationships) {
       return;
     }
 

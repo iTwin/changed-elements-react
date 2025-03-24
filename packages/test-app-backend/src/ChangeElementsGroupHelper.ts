@@ -1,6 +1,6 @@
 import { AnyDb, BriefcaseDb, BriefcaseManager, ChangedECInstance, ChangeMetaData, ChangesetECAdaptor, IModelDb, IModelHost, PartialECChangeUnifier, RequestNewBriefcaseArg, SqliteChangeOp, SqliteChangesetReader } from "@itwin/core-backend";
 import { DbOpcode, Id64String, OpenMode } from "@itwin/core-bentley";
-import { BentleyCloudRpcManager, BriefcaseIdValue, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex, IModelVersion, TypeOfChange } from "@itwin/core-common";
+import { BentleyCloudRpcManager, BriefcaseIdValue, ChangedElements, ChangesetFileProps, ChangesetIdWithIndex, IModelRpcProps, IModelVersion, TypeOfChange } from "@itwin/core-common";
 import { AuthClient } from './RPC/ChangesetGroupRPCInterface';
 
 /**
@@ -45,60 +45,11 @@ export class ChangesetGroup {
     }
   }
 
-
-  /**
-   * Download and open a briefcase for an iModel
-   * @param contextId
-   * @param iModelId
-   * @param changesetId
-   * @returns The open iModel briefcase
-   */
-  private static async _downloadBriefcase(
-    contextId: string,
-    iModelId: string,
-    changesetId: string,
-    authToken: string,
-    briefcasePath:string,
-  ): Promise<IModelDb> {
-     const args: RequestNewBriefcaseArg = {
-       iModelId,
-       iTwinId: contextId,
-       asOf: IModelVersion.asOfChangeSet(changesetId).toJSON(),
-       briefcaseId: BriefcaseIdValue.Unassigned,
-       accessToken: authToken,
-       fileName: briefcasePath,
-     };
-    try {
-      await BriefcaseManager.downloadBriefcase(args);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("already exists")) {
-        return BriefcaseDb.open({
-          fileName: briefcasePath,
-          readonly: true,
-        });
-      } else {
-        throw error;
-      }
-    }
-    return BriefcaseDb.open({
-      fileName: briefcasePath,
-    });
-  }
-
-  private static async cleanUp(iModelId: string, authToken: string, db: IModelDb, briefcasePath:string) {
-    db.close();
-    BriefcaseManager.deleteChangeSetsFromLocalDisk(iModelId);
-  }
-
-  public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string): Promise<ChangedElements> {
-    const briefcasePath = `${process.cwd()}\\${BriefcaseManager.cacheDir}\\breifcase-${iModelId}\\breifcase-${endChangesetIdWithIndex.id}.bim`;
-    //const cacheDir = BriefcaseManager.cacheDir.replace("\\imodels", "");
-    //const briefcasePath = `${process.cwd()}\\${cacheDir}\\profiles\\default\\CloudCaches\\Checkpoints\\imodelblocks-${iModelId}\\${endChangesetIdWithIndex.id}.bim`;
+  public static async runGroupComparison(startChangesetIdWithIndex: ChangesetIdWithIndex,endChangesetIdWithIndex: ChangesetIdWithIndex, iModelId: string, authToken: string, contextId:string,_iModelToken: IModelRpcProps): Promise<ChangedElements> {
     const changesetPaths = await this._downloadChangesetFiles(startChangesetIdWithIndex, endChangesetIdWithIndex, iModelId, authToken);
-    const db = await this._downloadBriefcase(contextId, iModelId, endChangesetIdWithIndex.id, authToken, briefcasePath);
+    const db = IModelDb.findByKey(_iModelToken.key);
     const changedECInstance = this._getGroupedChangesetChanges(changesetPaths, db)
     const changedElements = this.transformToAPIChangedElements(changedECInstance);
-    await this.cleanUp(iModelId, authToken, db, briefcasePath);
     return changedElements;
   }
 

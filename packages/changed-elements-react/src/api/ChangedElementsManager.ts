@@ -844,8 +844,10 @@ export class ChangedElementsManager {
       cleanMergedElements(this._changedElements);
     }
 
-    // Fix missing model Ids before we filter by model class
-    await this._fixModelIds(currentIModel, targetIModel);
+    if (!this._manager.skipParentChildRelationships) {
+      // Fix missing model Ids before we filter by model class
+      await this._fixModelIds(currentIModel, targetIModel);
+    }
 
     // Filter out changed elements that we don't care about given the model classes
     if (wantedModelClasses) {
@@ -863,6 +865,7 @@ export class ChangedElementsManager {
         return;
       }
 
+      // Filter out elements that are not GeometricElement3d
       const ecsql =
         "SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId = " +
         geom3dId;
@@ -882,8 +885,10 @@ export class ChangedElementsManager {
       }
     }
 
-    // Find proper models to display elements under
-    await this._findParentModels(currentIModel, targetIModel);
+    if (!this._manager.skipParentChildRelationships) {
+      // Find proper models to display elements under
+      await this._findParentModels(currentIModel, targetIModel);
+    }
   }
 
   /**
@@ -1171,26 +1176,28 @@ export class ChangedElementsManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
       );
     }
-
-    // Find changed models
-    this._changedModels = await this.findChangedModels(
-      currentIModel,
-      targetIModel,
-      forward ?? false,
-      progressLoadingEvent,
-    );
-
-    if (progressLoadingEvent) {
-      progressLoadingEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
+    if (!this._manager.skipParentChildRelationships) {
+      // Find changed models
+      this._changedModels = await this.findChangedModels(
+        currentIModel,
+        targetIModel,
+        forward ?? false,
+        progressLoadingEvent,
       );
-    }
 
-    // Find unchanged models
-    this._unchangedModels = await this.findUnchangedModels(
-      currentIModel,
-      this._changedModels,
-    );
+      if (progressLoadingEvent) {
+        progressLoadingEvent.raiseEvent(
+          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
+        );
+      }
+
+      // Find unchanged models
+      this._unchangedModels = await this.findUnchangedModels(
+        currentIModel,
+        this._changedModels,
+      );
+
+    }
 
     await this.generateEntries(currentIModel, targetIModel);
   }
