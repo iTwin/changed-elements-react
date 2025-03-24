@@ -529,6 +529,7 @@ export class VersionCompareManager {
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
     let success = true;
+    const startTime = new Date();
     try {
       if (!targetVersion.changesetId) {
         throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
@@ -617,6 +618,10 @@ export class VersionCompareManager {
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
       this._isComparisonStarted = true;
       VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
+      const endTime = new Date();
+      console.log(`V2 Comparison started at: ${startTime.toISOString()}`);
+      console.log(`V2 Comparison ended at: ${endTime.toISOString()}`);
+      console.log(`V2 Comparison Duration: ${endTime.getTime() - startTime.getTime()} milliseconds`);
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
       const briefError = IModelApp.localization.getLocalizedString(
