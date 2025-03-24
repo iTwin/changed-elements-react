@@ -859,7 +859,7 @@ export class ChangedElementsManager {
     }
 
     // Filter by spatial elements if we want
-    if (filterSpatial) {
+    if (filterSpatial && !this._manager.skipParentChildRelationships) {
       const geom3dId = await this._getGeometricElement3dClassId(currentIModel);
       if (!geom3dId) {
         return;

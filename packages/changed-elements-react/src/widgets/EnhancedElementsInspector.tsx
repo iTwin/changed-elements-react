@@ -1110,8 +1110,13 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   private _loadNodes = async (nodes: TreeNodeItem[]): Promise<void> => {
+    const startTime = new Date();
     await this.props.dataProvider.load(nodes);
     await this._reloadNodes();
+    const endTime = new Date();
+    console.log(`First entries loaded in tree at: ${startTime.toISOString()}`);
+    console.log(`First entries loaded in tree ended at: ${endTime.toISOString()}`);
+    console.log(`First entries loaded in tree duration: ${endTime.getTime() - startTime.getTime()} milliseconds`);
   };
 
   private _isNodeLoaded = (node: TreeNodeItem): boolean => {

@@ -387,6 +387,7 @@ export class VersionCompareManager {
     this._startedComparing = true;
     let success = true;
     this._skipParentChildRelationships = true;
+    const startTime = new Date();
     try {
       // Setup visualization handler
       this._initializeVisualizationHandler();
@@ -476,6 +477,10 @@ export class VersionCompareManager {
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
       VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
+      const endTime = new Date();
+      console.log(`Direct Comparison started at: ${startTime.toISOString()}`);
+      console.log(`Direct Comparison ended at: ${endTime.toISOString()}`);
+      console.log(`Direct Comparison Duration: ${endTime.getTime() - startTime.getTime()} milliseconds`);
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
       const briefError = IModelApp.localization.getLocalizedString(
