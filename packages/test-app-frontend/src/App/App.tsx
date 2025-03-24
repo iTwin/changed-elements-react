@@ -31,7 +31,7 @@ export function App(): ReactElement {
 
   return (
     <appContext.Provider value={appContextValue}>
-      <ThemeProvider theme={appContextValue.theme}>
+      <ThemeProvider includeCss={false} theme={appContextValue.theme}>
       <AuthorizationProvider
         authority={applyAuthUrlPrefix("https://ims.bentley.com")}
         clientId={clientId === "spa-xxxxxxxxxxxxxxxxxxxxxxxxx" ? undefined : clientId}

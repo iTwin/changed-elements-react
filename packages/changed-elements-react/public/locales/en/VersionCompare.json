@@ -107,12 +107,12 @@
     "noDescription": "No description",
     "scrollToChangedProperty": "Cycle to next changed property",
     "checkingAvailability": "Checking availability",
-    "namedVersionErrorPlaceholder": "<Error>",
-    "noNamedVersions": "No named versions found in iModel to do comparison",
+    "namedVersionErrorPlaceholder": "No named versions found.",
+    "noNamedVersions": "No named versions found in iModel for comparison.",
     "noPastNamedVersions": "There are no past named versions to compare against.",
     "noPreviousVersionAvailable": "No previous version available",
     "previousVersion": "Previous version",
-    "previousVersions": "Previous Versions",
+    "previousVersions": "Previous versions",
     "processResults": "Process Results",
     "retry": "Retry",
     "selectVersionToCompare": "Select a version to compare",
@@ -139,8 +139,8 @@
     "noChangedProperties": "Element has no changed properties",
     "currentChangeset": "Current Changeset",
     "latestChangeset": "Latest Changeset",
-    "versionsList": "Versions List",
-    "viewResults": "View Results"
+    "versionsList": "Versions list",
+    "viewResults": "View results"
   },
   "typeOfChange": {
     "title": "Element changes: ",

@@ -308,7 +308,7 @@
   &-modified {
     @extend .change-square;
     background-color: RGB(0, 139, 225);
-    border-color: RGB(0, 139, 225);
+    border-color:  RGB(0, 139, 225);
   }
 
   &-indirect {
@@ -319,7 +319,7 @@
   &-added {
     @extend .change-square;
     background-color: RGB(86, 170, 28);
-    border-color: RGB(86, 170, 28);
+    border-color:  RGB(86, 170, 28);
   }
 
   &-deleted {

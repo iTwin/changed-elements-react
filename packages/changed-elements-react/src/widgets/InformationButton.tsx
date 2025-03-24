@@ -28,7 +28,6 @@ function InfoButton(props: Props) {
     >
       <IconButton
         data-testid={props["data-testid"]}
-        size="small"
         styleType="borderless"
         aria-label="Information"
       >

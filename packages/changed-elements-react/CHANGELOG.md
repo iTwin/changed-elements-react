@@ -1,5 +1,96 @@
 # Changelog
 
+## 0.14.10
+
+### Patch Changes
+
+#### [0.14.10](https://github.com/iTwin/changed-elements-react/tree/v0.14.10/packages/changed-elements-react) - 2025-03-20
+
+- Fixed CSS for property comparison table slider
+
+## 0.14.9
+
+### Patch Changes
+
+#### [0.14.9](https://github.com/iTwin/changed-elements-react/tree/v0.14.9/packages/changed-elements-react) - 2025-03-18
+
+- Reverted colors of squares in property inspector
+- Fixed job error and re-run logic
+- Fixed side-by-side toggle not present in property comparison table
+
+## 0.14.8
+
+### Patch Changes
+
+#### [0.14.8](https://github.com/iTwin/changed-elements-react/tree/v0.14.8/packages/changed-elements-react) - 2025-03-14
+
+Fix vitest and axios vulnerabilities
+
+## 0.14.7
+
+### Patch Changes
+
+#### [0.14.7](https://github.com/iTwin/changed-elements-react/tree/v0.14.7/packages/changed-elements-react) - 2025-02-25
+
+Updates :
+
+- tweaked on hover color for action btn
+- changed info button icon
+
+## 0.14.6
+
+### Patch Changes
+
+#### [0.14.6](https://github.com/iTwin/changed-elements-react/tree/v0.14.6/packages/changed-elements-react) - 2025-02-21
+
+UI Updates
+
+- Updated text to be more informative for no named versions present in imodel
+
+## 0.14.5
+
+### Patch Changes
+
+#### [0.14.5](https://github.com/iTwin/changed-elements-react/tree/v0.14.5/packages/changed-elements-react) - 2025-02-20
+
+- Updated font weights for current and target strings in namedVersion selector
+
+## 0.14.4
+
+### Patch Changes
+
+#### [0.14.4](https://github.com/iTwin/changed-elements-react/tree/v0.14.4/packages/changed-elements-react) - 2025-02-19
+
+Fixes:
+
+- non experimental widget init state so it will no longer forever load
+
+## 0.14.3
+
+### Patch Changes
+
+#### [0.14.3](https://github.com/iTwin/changed-elements-react/tree/v0.14.3/packages/changed-elements-react) - 2025-02-19
+
+UI tweaks for:
+
+- Font size, weight, and style
+- Property comparison table coloring changes per row
+- Updated colors for elements in tree (squares)
+
+Fixes:
+
+- Forever loading in the elements tree when backing out of property comparison (experimental widget only bug)
+
+## 0.14.2
+
+### Patch Changes
+
+#### [0.14.2](https://github.com/iTwin/changed-elements-react/tree/v0.14.2/packages/changed-elements-react) - 2025-02-14
+
+- Updates the new experimental widget's font weight and font size.
+- Updates the current and target comparison header info to now be shown on the comparison tree widget.
+- Fixes the filter box to fit the content, getting rid of the horizontal scroll bar.
+
 ## 0.14.1
 
 ### Patch Changes

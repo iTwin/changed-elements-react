@@ -23,6 +23,18 @@
       font-weight: var(--iui-font-weight-bold);
     }
 
+    &[data-variant="small"]{
+      font-size: var(--iui-font-size-0);
+    }
+
+    &[data-variant="body"]{
+      font-size: var(--iui-font-size-1);
+    }
+
+    &[data-variant="title"]{
+      font-size: var(--iui-font-size-2);
+    }
+
     &[data-overflow="wrap"] {
       white-space: normal;
     }

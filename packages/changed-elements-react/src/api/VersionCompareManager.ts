@@ -137,7 +137,7 @@ export class VersionCompareManager {
 
   private _currentIModel: IModelConnection | undefined;
   private _targetIModel: IModelConnection | undefined;
-  private _startedComparing: boolean = false;
+  private _isComparisonStarted: boolean = false;
 
   /** Get current IModelConnection being compared against. */
   public get currentIModel(): IModelConnection | undefined {
@@ -148,10 +148,14 @@ export class VersionCompareManager {
   public get targetIModel(): IModelConnection | undefined {
     return this._targetIModel;
   }
+  /** Returns true if version compare manager is ready to show loaded comparison.*/
+  public get isComparisonReady(): boolean {
+    return this._isComparisonStarted;
+  }
 
-  /** Returns true if version compare manager is currently engaged in comparison. */
+  /** Returns true if version compare manager is currently engaged in comparison.*/
   public get isComparing(): boolean {
-    return this._targetIModel !== undefined || this._startedComparing === true;
+    return this._targetIModel !== undefined;
   }
 
   /**
@@ -257,7 +261,6 @@ export class VersionCompareManager {
     changesetChunks?: ChangesetChunk[],
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
-    this._startedComparing = true;
     let success = true;
     try {
       if (!targetVersion.changesetId) {
@@ -320,7 +323,6 @@ export class VersionCompareManager {
         this.filterSpatial,
         this.loadingProgressEvent,
       );
-
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
       // We have parent Ids available if any entries contain undefined parent data
@@ -349,6 +351,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      this._isComparisonStarted = true;
       VersionCompare.manager?.featureTracking?.trackVersionSelectorUsage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
@@ -370,7 +373,7 @@ export class VersionCompareManager {
       this.versionCompareStartFailed.raiseEvent();
       this._currentIModel = undefined;
       this._targetIModel = undefined;
-      this._startedComparing = false;
+      this._isComparisonStarted = false;
       success = false;
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
     }
@@ -530,7 +533,6 @@ export class VersionCompareManager {
     changedElements: ChangedElements[],
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
-    this._startedComparing = true;
     let success = true;
     try {
       if (!targetVersion.changesetId) {
@@ -618,6 +620,7 @@ export class VersionCompareManager {
       // Raise event
       this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
       VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      this._isComparisonStarted = true;
       VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
     } catch (ex) {
       // Let user know comparison failed - TODO: Give better errors
@@ -640,7 +643,7 @@ export class VersionCompareManager {
       } finally {
         this._currentIModel = undefined;
         this._targetIModel = undefined;
-        this._startedComparing = false;
+        this._isComparisonStarted = false;
         success = false;
         VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
 
@@ -673,7 +676,7 @@ export class VersionCompareManager {
       if (this._targetIModel) {
         await this._targetIModel.close();
         this._targetIModel = undefined;
-        this._startedComparing = false;
+        this._isComparisonStarted = false;
       }
 
       this.changedElementsManager.cleanup();
@@ -681,7 +684,7 @@ export class VersionCompareManager {
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
     } catch (ex) {
-      this._startedComparing = false;
+      this._isComparisonStarted = false;
       // Log anything not a string or we don't handle
       Logger.logError(LOGGER_CATEGORY, "Failed to stop comparison", () => ({ ex }));
     }
@@ -691,7 +694,7 @@ export class VersionCompareManager {
     this.targetVersion = undefined;
     this._currentIModel = undefined;
     this._targetIModel = undefined;
-    this._startedComparing = false;
+    this._isComparisonStarted = false;
     this._skipParentChildRelationships = false;
 
     // Clean-up visualization handler

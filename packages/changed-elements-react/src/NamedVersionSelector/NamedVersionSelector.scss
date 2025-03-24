@@ -18,25 +18,14 @@
     }
 
     ._cer_v1_version-selector-header {
-      min-height: calc(3 * var(--iui-size-m));
-      display: grid;
-      grid: 1fr / minmax(min-content, 1fr) max-content minmax(max-content, 1fr);
-      gap: var(--iui-size-xs);
-      place-content: space-between;
+      min-height: calc(var(--iui-size-m));
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-
-      > :first-child {
-        justify-self: start;
-      }
-
-      > :last-child {
-        justify-self: end;
-      }
     }
-
     ._cer_v1_feedback_btn_container {
       margin-top: auto;
-      text-align: center
+      text-align: center;
     }
 
     ._cer_v1_active-versions-box {
@@ -122,16 +111,31 @@
         grid-column: 2 / 4;
       }
 
-      &:hover {
-        background-color: var(--iui-color-background-accent-muted);
-      }
     }
 
     ._cer_v1_action-button {
       justify-content: start;
+      color: var(--iui-color-background-informational);
+      background-color: transparent;
+      background: transparent;
+      border: none ;
+      box-shadow: none;
+      outline: none;
 
-      &:not([aria-disabled="true"]) {
-        color: var(--iui-color-icon-accent);
+      &[aria-disabled="true"] {
+        color: var(--iui-color-background-disabled);
+      }
+
+      &:active {
+        color: var(--iui-color-background-informational-hover);
+      }
+
+      &:focus {
+        color: var(--iui-color-background-informational-hover);
+      }
+
+      &:hover {
+        color: var(--iui-color-background-informational-hover);
       }
     }
 

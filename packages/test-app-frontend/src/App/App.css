@@ -3,12 +3,6 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-@font-face {
-  font-family: "Noto Sans";
-  font-style: normal;
-  font-weight: 1 1000;
-  src: local("Noto Sans"), url("/NotoSans.ttf") format("opentype");
-}
 
 .signin-prompt {
   height: 100%;
@@ -35,6 +29,8 @@
   margin-left: auto;
   color: var(--iui-color-text-accent);
   padding-left: var(--iui-size-2xs);
-  text-decoration: underline;
   cursor: pointer;
+  font-size: small;
+  font-weight: normal;
+  text-decoration: none;
 }
