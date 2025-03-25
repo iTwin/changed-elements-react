@@ -15,11 +15,11 @@ We conducted multiple experiments to confirm our hypothesis. The steps were:
 #### Results Table
 We tested across three different iModels of varying sizes in the QA region to draw better conclusions.
 
-| Itwin | IModel | V2 Processing Time till interaction in UI (ms) | V2 Number of Changed Elements Found | Direct Comparison Processing Time till interaction in UI (ms) | Direct Comparison Number of Changed Elements Found | % diff between V2 and Direct Processing |
-| -- | -- | -- | -- | -- | -- | -- |
-| 413e666d-1e25-4d8e-9927-12db8995dfd0 | c87854bc-1197-4ed9-8d3d-ad9cb5fd1347 | 15909 | 5311 | 13249 | 59368 | 18.24% |
-| 413e666d-1e25-4d8e-9927-12db8995dfd0 | 9576d8b7-3c8f-4857-857d-1e56d2107510 | 1198084 | 169776 | 204125 | 418309 | 142% |
-| 413e666d-1e25-4d8e-9927-12db8995dfd0 | a9948fe0-022c-4b6c-bd4e-604b632a74a4 | 394015 | 112951 | 68022 | 772599 | 141% |
+| Itwin | IModel | Number Of Changeset Processed (V2 / Direct Comparison) | V2 Processing Time till interaction in UI (ms) | V2 Number of Changed Elements Found | Direct Comparison Processing Time till interaction in UI (ms) | Direct Comparison Number of Changed Elements Found | % diff between V2 and Direct Processing |
+| -- | -- | -- | -- | -- | -- | -- | -- |
+| 413e666d-1e25-4d8e-9927-12db8995dfd0 | c87854bc-1197-4ed9-8d3d-ad9cb5fd1347 | 13 | 15909 | 5311 | 13249 | 59368 | 18.24% |
+| 413e666d-1e25-4d8e-9927-12db8995dfd0 | 9576d8b7-3c8f-4857-857d-1e56d2107510 | 1811 | 1198084 | 169776 | 204125 | 418309 | 142% |
+| 413e666d-1e25-4d8e-9927-12db8995dfd0 | a9948fe0-022c-4b6c-bd4e-604b632a74a4 | 79 | 394015 | 112951 | 68022 | 772599 | 141% |
 
 ### RESULTS SUMMARY
 The most salient findings of our testing:
