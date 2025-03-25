@@ -15,7 +15,7 @@ We conducted multiple experiments to confirm our hypothesis. The steps were:
 #### Results Table
 We tested across three different iModels of varying sizes in the QA region to draw better conclusions.
 
-| Itwin | IModel | V2 Processing Time till interaction in UI (ms) | V2 Changed Elements UI Must Process | Direct Comparison Processing Time till interaction in UI (ms) | Direct Comparison Changed Elements UI Must Process | % diff between V2 and Direct Processing |
+| Itwin | IModel | V2 Processing Time till interaction in UI (ms) | V2 Number of Changed Elements Found | Direct Comparison Processing Time till interaction in UI (ms) | Direct Comparison Number of Changed Elements Found | % diff between V2 and Direct Processing |
 | -- | -- | -- | -- | -- | -- | -- |
 | 413e666d-1e25-4d8e-9927-12db8995dfd0 | c87854bc-1197-4ed9-8d3d-ad9cb5fd1347 | 15909 | 5311 | 13249 | 59368 | 18.24% |
 | 413e666d-1e25-4d8e-9927-12db8995dfd0 | 9576d8b7-3c8f-4857-857d-1e56d2107510 | 1198084 | 169776 | 204125 | 418309 | 142% |
