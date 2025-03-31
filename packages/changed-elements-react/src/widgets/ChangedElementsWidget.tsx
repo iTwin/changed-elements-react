@@ -35,6 +35,7 @@ import {
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 import "./ChangedElementsWidget.scss";
+import { ReactComponentLifeCycle } from "../NamedVersionSelector/NamedVersionSelector.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -96,6 +97,8 @@ export interface ChangedElementsWidgetProps {
 
   /** Optional prop for a user supplied component to handle managing named versions. */
   manageNamedVersionsSlot?: ReactNode | undefined;
+
+  onLifeCycleChange?: (state: ReactComponentLifeCycle) => void;
 }
 
 export interface ChangedElementsWidgetState {
@@ -181,15 +184,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         "Cannot create ChangedElementsWidget without a properly initialized or passed VersionCompareManager",
       );
     }
-
-    manager.versionCompareStarting.addListener(this._onComparisonStarting);
-    manager.versionCompareStarted.addListener(this._onComparisonStarted);
-    manager.loadingProgressEvent.addListener(this._onProgressEvent);
-    manager.versionCompareStopped.addListener(this._onComparisonStopped);
-    const initWidgetState: ChangedElementsWidgetState = {
+    this.state = {
       manager,
-      loading: manager.isComparing,
-      loaded: manager.isComparing,
+      loading: false,
+      loaded: false,
       menuOpened: false,
       elements: manager.changedElementsManager.entryCache.getAll(),
       currentIModel: manager.currentIModel,
@@ -203,18 +201,23 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
-    // todo this prop should be removed after experimental selector is fully implemented, This is bad as child component should not know about parent component.
-    if (props.usingExperimentalSelector) {
-      if (manager.isComparisonReady) {
-        this.state = { ... initWidgetState, loading: !manager.isComparisonReady, loaded: manager.isComparisonReady,
-        };
-      } else {
-        this.state = { ... initWidgetState, loading: true, loaded: false };
-      }
-    } else {
-      this.state = initWidgetState;
+  }
+
+  public override componentDidMount() {
+    const { manager } = this.state;
+    manager.versionCompareStarting.addListener(this._onComparisonStarting);
+    manager.versionCompareStarted.addListener(this._onComparisonStarted);
+    manager.loadingProgressEvent.addListener(this._onProgressEvent);
+    manager.versionCompareStopped.addListener(this._onComparisonStopped);
+    this.setState({
+      loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
+      loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
+    });
+    if (this.props.onLifeCycleChange) {
+      this.props.onLifeCycleChange("mounted");
     }
   }
+
 
   public override componentWillUnmount(): void {
     this.state.manager.versionCompareStarting.removeListener(this._onComparisonStarting);
@@ -222,6 +225,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.state.manager.loadingProgressEvent.removeListener(this._onProgressEvent);
     this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
     reportIsBeingGenerated = false;
+    if (this.props.onLifeCycleChange) {
+      this.props.onLifeCycleChange("unmounted");
+    }
   }
 
   private _currentFilterOptions: FilterOptions | undefined;

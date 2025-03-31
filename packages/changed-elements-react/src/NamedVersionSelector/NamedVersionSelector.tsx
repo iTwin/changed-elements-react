@@ -46,6 +46,9 @@ interface NamedVersionSelectorWidgetProps {
   feedbackUrl?: string | undefined;
 }
 
+// todo move this to a separate file
+export type ReactComponentLifeCycle = "mounted" | "unmounted";
+
 /**
  * By default, displays Named Version selector, but when {@link VersionCompareManager}
  * is actively comparing versions, presents the comparison results.
@@ -61,7 +64,11 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
-
+  const [changedElementsWidgetLifeCycle, setChangedElementsWidgetLifeCycle] = useState<ReactComponentLifeCycle>("unmounted");
+  const handleLifecycleChange = (lifeCycleState: ReactComponentLifeCycle) => {
+    setChangedElementsWidgetLifeCycle(lifeCycleState);
+  };
+  
   useEffect(
     () => {
       const cleanup = [
@@ -91,6 +98,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
           emptyState={emptyState}
           manageVersions={manageVersions}
           feedbackUrl={feedbackUrl}
+          canStartComparison={changedElementsWidgetLifeCycle === "unmounted"}
         />
     );
   }
@@ -98,7 +106,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
   return (
     <Widget>
       <Widget.Header>
-        <NavigationButton backward onClick={() => manager.stopComparison()}>
+        <NavigationButton disabled={ changedElementsWidgetLifeCycle !== "mounted"} backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>
         <TextEx variant="title">
@@ -127,6 +135,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
               iModelConnection={iModel}
               manager={manager}
               usingExperimentalSelector
+              onLifeCycleChange={handleLifecycleChange}
             />
           </namedVersionSelectorContext.Provider>
         )}
@@ -141,6 +150,7 @@ interface NamedVersionSelectorProps {
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
   feedbackUrl?: string | undefined;
+  canStartComparison: boolean;
 }
 
 function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
@@ -229,6 +239,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
               updateJobStatus={updateJobStatus}
               emptyState={emptyState}
               manageVersions={manageVersions}
+              canStartComparison={props.canStartComparison}
             />
           )
       }
@@ -349,6 +360,7 @@ interface NamedVersionSelectorLoadedProps {
   onNamedVersionOpened: (version: NamedVersionEntry) => void;
   emptyState?: ReactNode | undefined;
   manageVersions?: ReactNode | undefined;
+  canStartComparison: boolean;
 }
 
 function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): ReactElement {
@@ -465,7 +477,7 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
         >
           {
             props.entries.map((entry) => (
-              <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
+              <NamedVersionListEntry canStartComparison={props.canStartComparison} key={entry.namedVersion.id} entry={entry} />
             ))
           }
         </namedVersionSelectorContext.Provider>
@@ -475,6 +487,7 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
 
 interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
+  canStartComparison: boolean;
 }
 
 const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>(
@@ -538,7 +551,7 @@ const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>
             </Flex>
           ),
           action: (
-            <NavigationButton onClick={() => viewResults(props.entry)}>
+            <NavigationButton disabled={!props.canStartComparison} onClick={() => viewResults(props.entry)}>
               {t("VersionCompare:versionCompare.viewResults")}
             </NavigationButton>
           ),
