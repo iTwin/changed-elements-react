@@ -68,7 +68,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
   const handleLifecycleChange = (lifeCycleState: ReactComponentLifeCycle) => {
     setChangedElementsWidgetLifeCycle(lifeCycleState);
   };
-  
+
   useEffect(
     () => {
       const cleanup = [
@@ -106,7 +106,7 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
   return (
     <Widget>
       <Widget.Header>
-        <NavigationButton disabled={ changedElementsWidgetLifeCycle !== "mounted"} backward onClick={() => manager.stopComparison()}>
+        <NavigationButton disabled={changedElementsWidgetLifeCycle !== "mounted" || !isComparisonStarted} backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>
         <TextEx variant="title">
