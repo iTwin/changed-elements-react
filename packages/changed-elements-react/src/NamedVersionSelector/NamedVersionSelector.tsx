@@ -107,12 +107,13 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
     );
   }
 
+  const showDisabledButton = changedElementsWidgetLifeCycle === "mounted" && isComparisonStarted;
   return (
     <Widget>
       <Widget.Header>
-        <NavigationButton disabled={changedElementsWidgetLifeCycle === "unmounted" || !isComparisonStarted} backward onClick={() => manager.stopComparison()}>
+        {showDisabledButton && <NavigationButton backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
-        </NavigationButton>
+        </NavigationButton>}
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
