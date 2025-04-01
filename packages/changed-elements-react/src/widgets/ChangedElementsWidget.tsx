@@ -35,7 +35,7 @@ import {
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 import "./ChangedElementsWidget.scss";
-import { ReactComponentLifeCycle } from "../NamedVersionSelector/NamedVersionSelector.js";
+
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 

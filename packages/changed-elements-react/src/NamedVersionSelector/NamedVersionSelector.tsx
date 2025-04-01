@@ -37,6 +37,7 @@ import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
+import { ReactComponentLifeCycle } from "../common/types.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
@@ -45,9 +46,6 @@ interface NamedVersionSelectorWidgetProps {
   manageVersions?: ReactNode | undefined;
   feedbackUrl?: string | undefined;
 }
-
-// todo move this to a separate file
-export type ReactComponentLifeCycle = "mounted" | "unmounted";
 
 /**
  * By default, displays Named Version selector, but when {@link VersionCompareManager}
