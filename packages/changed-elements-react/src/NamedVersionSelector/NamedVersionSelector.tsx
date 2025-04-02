@@ -37,7 +37,6 @@ import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
-import { ReactComponentLifeCycle } from "../common/types.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
