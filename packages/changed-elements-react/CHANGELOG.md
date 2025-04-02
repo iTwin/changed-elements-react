@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.11
+
+### Patch Changes
+
+#### [0.14.11](https://github.com/iTwin/changed-elements-react/tree/v0.14.11/packages/changed-elements-react) - 2025-04-02
+
+- Fixed Changed Elements React issue where backing out of loading stage sometimes causes crashes. This is fixed by removing ability to backout of loading in experimental widget. This is in parity with how loading operates in the v2 widget.
+
 ## 0.14.10
 
 ### Patch Changes
