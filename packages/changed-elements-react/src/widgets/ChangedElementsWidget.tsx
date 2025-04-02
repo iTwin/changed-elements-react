@@ -35,7 +35,7 @@ import {
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 import "./ChangedElementsWidget.scss";
-import { ReactComponentLifeCycle } from "../common/types.js";
+import { EventActionTuple } from "../common/types.js";
 
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
@@ -99,7 +99,6 @@ export interface ChangedElementsWidgetProps {
   /** Optional prop for a user supplied component to handle managing named versions. */
   manageNamedVersionsSlot?: ReactNode | undefined;
 
-  onLifeCycleChange?: (state: ReactComponentLifeCycle) => void;
 }
 
 export interface ChangedElementsWidgetState {
@@ -125,6 +124,7 @@ export interface ChangedElementsWidgetState {
  */
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
+  private readonly eventListeners: EventActionTuple[] = [];
 
   private _onComparisonStarting = (): void => {
     this.setState({
@@ -206,29 +206,38 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 
   public override componentDidMount() {
     const { manager } = this.state;
-    manager.versionCompareStarting.addListener(this._onComparisonStarting);
-    manager.versionCompareStarted.addListener(this._onComparisonStarted);
-    manager.loadingProgressEvent.addListener(this._onProgressEvent);
-    manager.versionCompareStopped.addListener(this._onComparisonStopped);
+    this.addListeners([
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting },
+      { event: manager.versionCompareStarted, action: this._onComparisonStarted },
+      { event: manager.loadingProgressEvent, action: this._onProgressEvent },
+      { event: manager.versionCompareStopped, action: this._onComparisonStopped },
+    ]);
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
       loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
+      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison")
+        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
     });
-    if (this.props.onLifeCycleChange) {
-      this.props.onLifeCycleChange("mounted");
-    }
   }
 
 
   public override componentWillUnmount(): void {
-    this.state.manager.versionCompareStarting.removeListener(this._onComparisonStarting);
-    this.state.manager.versionCompareStarted.removeListener(this._onComparisonStarted);
-    this.state.manager.loadingProgressEvent.removeListener(this._onProgressEvent);
-    this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
+    this.removeListeners();
     reportIsBeingGenerated = false;
-    if (this.props.onLifeCycleChange) {
-      this.props.onLifeCycleChange("unmounted");
-    }
+  }
+
+  private addListeners(eventActionTuples: EventActionTuple[]): void {
+    eventActionTuples.forEach((tuple) => {
+      tuple.event.addListener(tuple.action);
+      this.eventListeners.push(tuple);
+    });
+  }
+
+  private removeListeners(): void {
+    this.eventListeners.forEach((tuple) => {
+      tuple.event.removeListener(tuple.action);
+    });
+    this.eventListeners.length = 0;
   }
 
   private _currentFilterOptions: FilterOptions | undefined;
