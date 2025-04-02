@@ -75,6 +75,10 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         manager.versionCompareStarted.addListener(() => {
           setIsComparisonStarted(true);
         }),
+        manager.versionCompareStartFailed.addListener(() => {
+          setIsComparing(false);
+          setIsComparisonStarted(false);
+        }),
       ];
       return () => cleanup.forEach((cb) => cb());
     },
@@ -98,9 +102,9 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
   return (
     <Widget>
       <Widget.Header>
-        <NavigationButton backward onClick={() => manager.stopComparison()}>
+        {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
-        </NavigationButton>
+        </NavigationButton>}
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>

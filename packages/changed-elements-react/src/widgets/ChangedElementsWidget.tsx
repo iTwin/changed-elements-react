@@ -96,6 +96,7 @@ export interface ChangedElementsWidgetProps {
 
   /** Optional prop for a user supplied component to handle managing named versions. */
   manageNamedVersionsSlot?: ReactNode | undefined;
+
 }
 
 export interface ChangedElementsWidgetState {
@@ -114,6 +115,13 @@ export interface ChangedElementsWidgetState {
   reportProperties: ReportProperty[] | undefined;
 }
 
+
+type EventActionTuple = {
+  event: BeEvent<() => void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  action: (...args: any[]) => void;
+};
+
 /**
  * Widget to display changed elements and inspect them further. This widget contains
  * functionality to hide/show type of change. Filter based on properties, inspect
@@ -121,6 +129,7 @@ export interface ChangedElementsWidgetState {
  */
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
+  private readonly eventListeners: EventActionTuple[] = [];
 
   private _onComparisonStarting = (): void => {
     this.setState({
@@ -181,15 +190,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         "Cannot create ChangedElementsWidget without a properly initialized or passed VersionCompareManager",
       );
     }
-
-    manager.versionCompareStarting.addListener(this._onComparisonStarting);
-    manager.versionCompareStarted.addListener(this._onComparisonStarted);
-    manager.loadingProgressEvent.addListener(this._onProgressEvent);
-    manager.versionCompareStopped.addListener(this._onComparisonStopped);
-    const initWidgetState: ChangedElementsWidgetState = {
+    this.state = {
       manager,
-      loading: manager.isComparing,
-      loaded: manager.isComparing,
+      loading: false,
+      loaded: false,
       menuOpened: false,
       elements: manager.changedElementsManager.entryCache.getAll(),
       currentIModel: manager.currentIModel,
@@ -203,25 +207,42 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
-    // todo this prop should be removed after experimental selector is fully implemented, This is bad as child component should not know about parent component.
-    if (props.usingExperimentalSelector) {
-      if (manager.isComparisonReady) {
-        this.state = { ... initWidgetState, loading: !manager.isComparisonReady, loaded: manager.isComparisonReady,
-        };
-      } else {
-        this.state = { ... initWidgetState, loading: true, loaded: false };
-      }
-    } else {
-      this.state = initWidgetState;
-    }
   }
 
+  public override componentDidMount() {
+    const { manager } = this.state;
+    this.addListeners([
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting },
+      { event: manager.versionCompareStarted, action: this._onComparisonStarted },
+      { event: manager.loadingProgressEvent, action: this._onProgressEvent },
+      { event: manager.versionCompareStopped, action: this._onComparisonStopped },
+    ]);
+    this.setState({
+      loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
+      loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
+      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison")
+        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+    });
+  }
+
+
   public override componentWillUnmount(): void {
-    this.state.manager.versionCompareStarting.removeListener(this._onComparisonStarting);
-    this.state.manager.versionCompareStarted.removeListener(this._onComparisonStarted);
-    this.state.manager.loadingProgressEvent.removeListener(this._onProgressEvent);
-    this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
+    this.removeListeners();
     reportIsBeingGenerated = false;
+  }
+
+  private addListeners(eventActionTuples: EventActionTuple[]): void {
+    eventActionTuples.forEach((tuple) => {
+      tuple.event.addListener(tuple.action);
+      this.eventListeners.push(tuple);
+    });
+  }
+
+  private removeListeners(): void {
+    this.eventListeners.forEach((tuple) => {
+      tuple.event.removeListener(tuple.action);
+    });
+    this.eventListeners.length = 0;
   }
 
   private _currentFilterOptions: FilterOptions | undefined;
