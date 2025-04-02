@@ -37,7 +37,6 @@ import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobM
 import "./ChangedElementsWidget.scss";
 import { EventActionTuple } from "../common/types.js";
 
-
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
 /** Props for changed elements widget. */
