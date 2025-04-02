@@ -35,7 +35,6 @@ import {
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 import "./ChangedElementsWidget.scss";
-import { EventActionTuple } from "../common/types.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -115,6 +114,13 @@ export interface ChangedElementsWidgetState {
   reportDialogVisible: boolean;
   reportProperties: ReportProperty[] | undefined;
 }
+
+
+type EventActionTuple = {
+  event: BeEvent<() => void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  action: (...args: any[]) => void;
+};
 
 /**
  * Widget to display changed elements and inspect them further. This widget contains
