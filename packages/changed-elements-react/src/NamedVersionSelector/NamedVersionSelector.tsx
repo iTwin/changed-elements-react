@@ -61,6 +61,35 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const namedVersionSelectorRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<ChangedElementsWidget>(null);
+  const [widgetDimensions, setWidgetDimensions] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const element = isComparing ? widgetRef.current : namedVersionSelectorRef.current;
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect) {
+          isComparing ? setWidgetDimensions({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          }):
+          setDimensions({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+        }
+      }
+    });
+
+    // Start observing the current element
+    resizeObserver.observe(element);
+
+    // Cleanup observer on unmount or when switching components
+    return () => resizeObserver.disconnect();
+  }, [isComparing]); // Re-run when `isComparing` changes
 
   useEffect(
     () => {
@@ -85,10 +114,9 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
     [manager],
   );
 
-  const widgetRef = useRef<ChangedElementsWidget>(null);
-
   if (!isComparing) {
     return (
+      <div ref={namedVersionSelectorRef}>
         <NamedVersionSelector
           iModel={iModel}
           manager={manager}
@@ -96,46 +124,65 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
           manageVersions={manageVersions}
           feedbackUrl={feedbackUrl}
         />
+        <div>
+          <TextEx variant="small">
+            Width: {dimensions.width}px, Height: {dimensions.height}px
+          </TextEx>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Widget>
-      <Widget.Header>
-        {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
-          {t("VersionCompare:versionCompare.versionsList")}
-        </NavigationButton>}
-        <TextEx variant="title">
-          {t("VersionCompare:versionCompare.versionPickerTitle")}
-        </TextEx>
-        <div>
-          <ChangedElementsHeaderButtons
-            useNewNamedVersionSelector
-            loaded
-            onInspect={() => manager.initializePropertyComparison()}
-            onOpenReportDialog={
-              manager.wantReportGeneration
-                ? () => void widgetRef.current?.openReportDialog()
-                : undefined
-            }
-          />
-        </div>
-      </Widget.Header>
-      <namedVersionSelectorContext.Consumer>
-        {(value) => (
-          <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
-            {props.manager?.currentVersion && isComparisonStarted &&
-              <ActiveVersionsBox current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
-            <ChangedElementsWidget
-              ref={widgetRef}
-              iModelConnection={iModel}
-              manager={manager}
-              usingExperimentalSelector
+    <div ref={widgetRef}>
+      <Widget>
+        <Widget.Header>
+          {isComparisonStarted && (
+            <NavigationButton backward onClick={() => manager.stopComparison()}>
+              {t("VersionCompare:versionCompare.versionsList")}
+            </NavigationButton>
+          )}
+          <TextEx variant="title">
+            {t("VersionCompare:versionCompare.versionPickerTitle")}
+          </TextEx>
+          <div>
+            <ChangedElementsHeaderButtons
+              useNewNamedVersionSelector
+              loaded
+              onInspect={() => manager.initializePropertyComparison()}
+              onOpenReportDialog={
+                manager.wantReportGeneration
+                  ? () => void widgetRef.current?.openReportDialog()
+                  : undefined
+              }
             />
-          </namedVersionSelectorContext.Provider>
-        )}
-      </namedVersionSelectorContext.Consumer>
-    </Widget>
+          </div>
+        </Widget.Header>
+        <namedVersionSelectorContext.Consumer>
+          {(value) => (
+            <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
+              {props.manager?.currentVersion && isComparisonStarted && (
+                <ActiveVersionsBox
+                  current={props.manager?.currentVersion}
+                  selected={props.manager?.targetVersion}
+                ></ActiveVersionsBox>
+              )}
+              <ChangedElementsWidget
+                ref={widgetRef}
+                iModelConnection={iModel}
+                manager={manager}
+                usingExperimentalSelector
+              />
+            </namedVersionSelectorContext.Provider>
+          )}
+        </namedVersionSelectorContext.Consumer>
+      </Widget>
+      <div>
+        <TextEx variant="small">
+          Widget - Width: {widgetDimensions.width}px, Height: {widgetDimensions.height}px
+        </TextEx>
+      </div>
+    </div>
   );
 }
 
