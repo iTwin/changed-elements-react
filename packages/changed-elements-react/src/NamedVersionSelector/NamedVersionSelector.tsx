@@ -57,40 +57,10 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
     throw new Error("VersionCompare is not initialized.");
   }
 
-  const { iModel, emptyState, manageVersions , feedbackUrl } = props;
+  const { iModel, emptyState, manageVersions, feedbackUrl } = props;
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const namedVersionSelectorRef = useRef<HTMLDivElement>(null);
-  const widgetRef = useRef<ChangedElementsWidget>(null);
-  const [widgetDimensions, setWidgetDimensions] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    const element = isComparing ? widgetRef.current : namedVersionSelectorRef.current;
-    if (!element) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.contentRect) {
-          isComparing ? setWidgetDimensions({
-            width: entry.contentRect.width,
-            height: entry.contentRect.height,
-          }):
-          setDimensions({
-            width: entry.contentRect.width,
-            height: entry.contentRect.height,
-          });
-        }
-      }
-    });
-
-    // Start observing the current element
-    resizeObserver.observe(element);
-
-    // Cleanup observer on unmount or when switching components
-    return () => resizeObserver.disconnect();
-  }, [isComparing]); // Re-run when `isComparing` changes
-
   useEffect(
     () => {
       const cleanup = [
@@ -114,9 +84,10 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
     [manager],
   );
 
+  const widgetRef = useRef<ChangedElementsWidget>(null);
+
   if (!isComparing) {
     return (
-      <div ref={namedVersionSelectorRef}>
         <NamedVersionSelector
           iModel={iModel}
           manager={manager}
@@ -124,49 +95,34 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
           manageVersions={manageVersions}
           feedbackUrl={feedbackUrl}
         />
-        <div>
-          <TextEx variant="small">
-            Width: {dimensions.width}px, Height: {dimensions.height}px
-          </TextEx>
-        </div>
-      </div>
     );
   }
 
   return (
-    <div ref={widgetRef}>
-      <Widget>
-        <Widget.Header>
-          {isComparisonStarted && (
-            <NavigationButton backward onClick={() => manager.stopComparison()}>
-              {t("VersionCompare:versionCompare.versionsList")}
-            </NavigationButton>
-          )}
+    <Widget>
+      <Widget.Header>
+          {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
+          {t("VersionCompare:versionCompare.versionsList")}
+        </NavigationButton>}
           <TextEx variant="title">
             {t("VersionCompare:versionCompare.versionPickerTitle")}
           </TextEx>
-          <div>
-            <ChangedElementsHeaderButtons
-              useNewNamedVersionSelector
-              loaded
-              onInspect={() => manager.initializePropertyComparison()}
-              onOpenReportDialog={
-                manager.wantReportGeneration
-                  ? () => void widgetRef.current?.openReportDialog()
-                  : undefined
-              }
-            />
-          </div>
+          <ChangedElementsHeaderButtons
+            useNewNamedVersionSelector
+            loaded
+            onInspect={() => manager.initializePropertyComparison()}
+            onOpenReportDialog={
+              manager.wantReportGeneration
+                ? () => void widgetRef.current?.openReportDialog()
+                : undefined
+            }
+          />
         </Widget.Header>
         <namedVersionSelectorContext.Consumer>
           {(value) => (
             <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
-              {props.manager?.currentVersion && isComparisonStarted && (
-                <ActiveVersionsBox
-                  current={props.manager?.currentVersion}
-                  selected={props.manager?.targetVersion}
-                ></ActiveVersionsBox>
-              )}
+              {props.manager?.currentVersion && isComparisonStarted &&
+              <ActiveVersionsBox  current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
               <ChangedElementsWidget
                 ref={widgetRef}
                 iModelConnection={iModel}
@@ -177,12 +133,6 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
           )}
         </namedVersionSelectorContext.Consumer>
       </Widget>
-      <div>
-        <TextEx variant="small">
-          Widget - Width: {widgetDimensions.width}px, Height: {widgetDimensions.height}px
-        </TextEx>
-      </div>
-    </div>
   );
 }
 
@@ -256,32 +206,32 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
-        (!isLoading && entries.length === 0)?
+        (!isLoading && entries.length === 0) ?
           <Text className="_cer_v1_empty-state" isMuted>
             {t("VersionCompare:versionCompare.noPastNamedVersions")}
           </Text>
           :
-        (!currentNamedVersion || (isLoading && entries.length === 0))
-          ? (
-            <LoadingContent>
-              <Text>
-                {t("VersionCompare:versionCompare.loadingNamedVersions")}
-              </Text>
-            </LoadingContent>
-          )
-          : (
-            <NamedVersionSelectorLoaded
-              iTwinId={iTwinId}
-              iModelId={iModelId}
-              currentNamedVersion={currentNamedVersion}
-              isLoading={isLoading}
-              entries={entries}
-              onNamedVersionOpened={handleVersionOpened}
-              updateJobStatus={updateJobStatus}
-              emptyState={emptyState}
-              manageVersions={manageVersions}
-            />
-          )
+          (!currentNamedVersion || (isLoading && entries.length === 0))
+            ? (
+              <LoadingContent>
+                <Text>
+                  {t("VersionCompare:versionCompare.loadingNamedVersions")}
+                </Text>
+              </LoadingContent>
+            )
+            : (
+              <NamedVersionSelectorLoaded
+                iTwinId={iTwinId}
+                iModelId={iModelId}
+                currentNamedVersion={currentNamedVersion}
+                isLoading={isLoading}
+                entries={entries}
+                onNamedVersionOpened={handleVersionOpened}
+                updateJobStatus={updateJobStatus}
+                emptyState={emptyState}
+                manageVersions={manageVersions}
+              />
+            )
       }
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
@@ -334,8 +284,43 @@ interface ActiveVersionsBoxProps {
 }
 
 function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const activeVersionsBoxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = activeVersionsBoxRef.current;
+    if (!element) return;
+    //https://web.dev/articles/resize-observer
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Use borderBoxSize if available
+        if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
+          const borderBox = entry.borderBoxSize[0]; // Use the first item in the array
+          setDimensions({
+            width: borderBox.inlineSize, // Width including padding and borders
+            height: borderBox.blockSize, // Height including padding and borders
+          });
+          console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
+        } else if (entry.contentRect) {
+          // Fallback to contentRect if borderBoxSize is not available
+          setDimensions({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+          console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
+        }
+      }
+    });
+
+    // Start observing the current element
+    resizeObserver.observe(element);
+
+    // Cleanup observer on unmount or when switching components
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
   return (
-    <div className="_cer_v1_active-versions-box">
+    <div ref={activeVersionsBoxRef} className="_cer_v1_active-versions-box">
       <NamedVersionInfo
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
@@ -504,23 +489,23 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
   );
 
   return (
-      <List className="_cer_v1_named-version-list">
-        <Sticky className="_cer_v1_named-version-list-header">
-          <TextEx variant="small">
-            {t("VersionCompare:versionCompare.previousVersions")}
-          </TextEx>
-          {manageVersions}
-        </Sticky>
-        <namedVersionSelectorContext.Provider
-          value={{ processResults, viewResults, initialLoad, checkStatus }}
-        >
-          {
-            props.entries.map((entry) => (
-              <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
-            ))
-          }
-        </namedVersionSelectorContext.Provider>
-      </List>
+    <List className="_cer_v1_named-version-list">
+      <Sticky className="_cer_v1_named-version-list-header">
+        <TextEx variant="small">
+          {t("VersionCompare:versionCompare.previousVersions")}
+        </TextEx>
+        {manageVersions}
+      </Sticky>
+      <namedVersionSelectorContext.Provider
+        value={{ processResults, viewResults, initialLoad, checkStatus }}
+      >
+        {
+          props.entries.map((entry) => (
+            <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
+          ))
+        }
+      </namedVersionSelectorContext.Provider>
+    </List>
   );
 }
 
