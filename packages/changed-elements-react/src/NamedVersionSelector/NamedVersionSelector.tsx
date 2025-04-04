@@ -10,7 +10,7 @@ import {
   Button, Divider, Flex, List, ListItem, ProgressRadial, Text, ThemeProvider
 } from "@itwin/itwinui-react";
 import {
-  forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactElement,
+  useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactElement,
   type ReactNode
 } from "react";
 
@@ -37,6 +37,7 @@ import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
+import { useResizeObserver } from "./hooks/useResizeObserver.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
@@ -284,51 +285,16 @@ interface ActiveVersionsBoxProps {
 }
 
 function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
-  //todo make this a hook, and add docs
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const activeVersionsBoxRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const element = activeVersionsBoxRef.current;
-    if (!element) return;
-    //https://web.dev/articles/resize-observer
-    //https://www.npmjs.com/package/react-measure
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        // Use borderBoxSize if available
-        if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
-          const borderBox = entry.borderBoxSize[0]; // Use the first item in the array
-          setDimensions({
-            width: borderBox.inlineSize, // Width including padding and borders
-            height: borderBox.blockSize, // Height including padding and borders
-          });
-          console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
-        } else if (entry.contentRect) {
-          // Fallback to contentRect if borderBoxSize is not available
-          setDimensions({
-            width: entry.contentRect.width,
-            height: entry.contentRect.height,
-          });
-          console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
-        }
-      }
-    });
-
-    // Start observing the current element
-    resizeObserver.observe(element);
-
-    // Cleanup observer on unmount or when switching components
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
+  const ref = useRef<HTMLDivElement>(null);
+  const dimensions = useResizeObserver(ref, []);
+  const widthBreakpointInPx = 364;
   return (
-    // not magic number but a constant 350 what ?
-    <div ref={activeVersionsBoxRef} className={dimensions.width <= 365 ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
+    <div ref={ref} className={dimensions.width <= widthBreakpointInPx ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
       <NamedVersionInfo
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
       />
-      <Divider className={dimensions.width <= 365 ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
+      <Divider className={dimensions.width <= widthBreakpointInPx ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
       {
         !props.selected
           ? <PlaceholderNamedVersionInfo />
@@ -520,38 +486,8 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
   const { processResults, viewResults } = useContext(namedVersionSelectorContext);
   const { namedVersion, job } = props.entry;
   const ref = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
-          const borderBox = entry.borderBoxSize[0];
-          setDimensions({
-            width: borderBox.inlineSize,
-            height: borderBox.blockSize,
-          });
-          console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
-        } else if (entry.contentRect) {
-          setDimensions({
-            width: entry.contentRect.width,
-            height: entry.contentRect.height,
-          });
-          console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
-        }
-      }
-    });
-
-    resizeObserver.observe(element);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
+  const dimensions = useResizeObserver(ref, []);
+  const widthBreakpointInPx = 400;
   const dateString = useMemo(
     () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
     [namedVersion.createdDateTime],
@@ -575,7 +511,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
                 <circle cx="8" cy="8" r="8" />
               </svg>
             </IconEx>
-            {dimensions.width >= 400 && <TextEx weight="normal" variant="body">
+            {dimensions.width >= widthBreakpointInPx && <TextEx weight="normal" variant="body">
               {t("VersionCompare:versionCompare.notProcessed")}
             </TextEx>}
           </Flex>
@@ -607,7 +543,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
             <IconEx size="m" fill="positive">
               <SvgStatusSuccess />
             </IconEx>
-            {dimensions.width >= 400 && <TextEx variant="body">
+            {dimensions.width >= widthBreakpointInPx && <TextEx variant="body">
               {t("VersionCompare:versionCompare.available")}
             </TextEx> }
           </Flex>
@@ -628,7 +564,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
             <IconEx size="m" fill="negative">
               <SvgStatusError />
             </IconEx>
-            {dimensions.width >= 400 &&
+            {dimensions.width >= widthBreakpointInPx &&
               <TextEx weight="normal" variant="body">
               {t("VersionCompare:versionCompare.error")}
             </TextEx>}
