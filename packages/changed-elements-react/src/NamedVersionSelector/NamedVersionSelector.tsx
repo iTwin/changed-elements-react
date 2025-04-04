@@ -290,6 +290,7 @@ function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
     const element = activeVersionsBoxRef.current;
     if (!element) return;
     //https://web.dev/articles/resize-observer
+    //https://www.npmjs.com/package/react-measure
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         // Use borderBoxSize if available
@@ -320,12 +321,12 @@ function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
     };
   }, []);
   return (
-    <div ref={activeVersionsBoxRef} className="_cer_v1_active-versions-box">
+    <div ref={activeVersionsBoxRef} className={dimensions.width <= 350 ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
       <NamedVersionInfo
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
       />
-      <Divider className="_cer_v1_vertical-divider" orientation="vertical" />
+      <Divider className={dimensions.width <= 350 ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
       {
         !props.selected
           ? <PlaceholderNamedVersionInfo />
