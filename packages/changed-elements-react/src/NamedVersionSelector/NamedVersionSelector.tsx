@@ -301,14 +301,14 @@ function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
             width: borderBox.inlineSize, // Width including padding and borders
             height: borderBox.blockSize, // Height including padding and borders
           });
-          //console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
+          console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
         } else if (entry.contentRect) {
           // Fallback to contentRect if borderBoxSize is not available
           setDimensions({
             width: entry.contentRect.width,
             height: entry.contentRect.height,
           });
-          //console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
+          console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
         }
       }
     });
@@ -323,12 +323,12 @@ function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
   }, []);
   return (
     // not magic number but a constant 350 what ?
-    <div ref={activeVersionsBoxRef} className={dimensions.width <= 350 ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
+    <div ref={activeVersionsBoxRef} className={dimensions.width <= 365 ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
       <NamedVersionInfo
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
       />
-      <Divider className={dimensions.width <= 350 ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
+      <Divider className={dimensions.width <= 365 ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
       {
         !props.selected
           ? <PlaceholderNamedVersionInfo />
@@ -516,155 +516,153 @@ interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
 }
 
-const NamedVersionListEntry = forwardRef<HTMLDivElement | null, NamedVersionEntryProps>(
-  function NamedVersionListEntry(props, ref): ReactElement {
-    const { processResults, viewResults } = useContext(namedVersionSelectorContext);
-    const { namedVersion, job } = props.entry;
-    const localRef = useRef<HTMLDivElement>(null);
-    // Expose the localRef to the parent via the forwarded ref
-    // todo can I rewrite this without using useImperativeHandle or forwardRef?
-    useImperativeHandle(ref, () => localRef.current!);
-    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-    //todo make this a hook, and add docs
-    useEffect(() => {
-      const element = localRef?.current ?? null;
-      if (!element) return;
-      //https://web.dev/articles/resize-observer
-      //https://www.npmjs.com/package/react-measure
-      const resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          // Use borderBoxSize if available
-          if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
-            const borderBox = entry.borderBoxSize[0]; // Use the first item in the array
-            setDimensions({
-              width: borderBox.inlineSize, // Width including padding and borders
-              height: borderBox.blockSize, // Height including padding and borders
-            });
-            console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
-          } else if (entry.contentRect) {
-            // Fallback to contentRect if borderBoxSize is not available
-            setDimensions({
-              width: entry.contentRect.width,
-              height: entry.contentRect.height,
-            });
-            console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
-          }
+function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
+  const { processResults, viewResults } = useContext(namedVersionSelectorContext);
+  const { namedVersion, job } = props.entry;
+  const ref = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
+          const borderBox = entry.borderBoxSize[0];
+          setDimensions({
+            width: borderBox.inlineSize,
+            height: borderBox.blockSize,
+          });
+          console.log(`Element resized: ${borderBox.inlineSize}px x ${borderBox.blockSize}px`);
+        } else if (entry.contentRect) {
+          setDimensions({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+          console.log(`Element resized (contentRect): ${entry.contentRect.width}px x ${entry.contentRect.height}px`);
         }
-      });
+      }
+    });
 
-      // Start observing the current element
-      resizeObserver.observe(element);
+    resizeObserver.observe(element);
 
-      // Cleanup observer on unmount or when switching components
-      return () => {
-        resizeObserver.disconnect();
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  const dateString = useMemo(
+    () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
+    [namedVersion.createdDateTime],
+  );
+
+  let stateInfo: { status: ReactNode; action: ReactNode; };
+  switch (job?.status) {
+    case undefined:
+      stateInfo = {
+        status: <LoadingEntryStatus entry={props.entry} />,
+        action: undefined,
       };
-    }, []);
-    const dateString = useMemo(
-      () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
-      [namedVersion.createdDateTime],
-    );
-    let stateInfo: { status: ReactNode; action: ReactNode; };
-    switch (job?.status) {
-      case undefined:
-        stateInfo = {
-          status: <LoadingEntryStatus entry={props.entry} />,
-          action: undefined,
-        };
-        break;
+      break;
 
-      case "NotStarted":
-        stateInfo = {
-          status: (
-            <Flex>
-              <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
-                <svg viewBox="0 0 16 16">
-                  <circle cx="8" cy="8" r="8" />
-                </svg>
-              </IconEx>
+    case "NotStarted":
+      stateInfo = {
+        status: (
+          <Flex>
+            <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
+              <svg viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="8" />
+              </svg>
+            </IconEx>
+            {dimensions.width >= 400 && <TextEx weight="normal" variant="body">
+              {t("VersionCompare:versionCompare.notProcessed")}
+            </TextEx>}
+          </Flex>
+        ),
+        action: (
+          <NavigationButton onClick={() => processResults(props.entry)}>
+            {t("VersionCompare:versionCompare.processResults")}
+          </NavigationButton>
+        ),
+      };
+      break;
+
+    case "Queued":
+    case "Started":
+      stateInfo = {
+        status: <ProcessingEntryStatus entry={props.entry} />,
+        action: (
+          <NavigationButton disabled>
+            {t("VersionCompare:versionCompare.viewResults")}
+          </NavigationButton>
+        ),
+      };
+      break;
+
+    case "Completed":
+      stateInfo = {
+        status: (
+          <Flex>
+            <IconEx size="m" fill="positive">
+              <SvgStatusSuccess />
+            </IconEx>
+            {dimensions.width >= 400 && <TextEx variant="body">
+              {t("VersionCompare:versionCompare.available")}
+            </TextEx> }
+          </Flex>
+        ),
+        action: (
+          <NavigationButton onClick={() => viewResults(props.entry)}>
+            {t("VersionCompare:versionCompare.viewResults")}
+          </NavigationButton>
+        ),
+      };
+      break;
+
+    case "Failed":
+    default:
+      stateInfo = {
+        status: (
+          <Flex>
+            <IconEx size="m" fill="negative">
+              <SvgStatusError />
+            </IconEx>
+            {dimensions.width >= 400 &&
               <TextEx weight="normal" variant="body">
-                {t("VersionCompare:versionCompare.notProcessed")}
-              </TextEx>
-            </Flex>
-          ),
-          action: (
-            <NavigationButton onClick={() => processResults(props.entry)}>
-              {t("VersionCompare:versionCompare.processResults")}
-            </NavigationButton>
-          ),
-        };
-        break;
+              {t("VersionCompare:versionCompare.error")}
+            </TextEx>}
+          </Flex>
+        ),
+        action: (
+          <NavigationButton onClick={() => processResults(props.entry)}>
+            {t("VersionCompare:versionCompare.retry")}
+          </NavigationButton>
+        ),
+      };
+      break;
+  }
 
-      case "Queued":
-      case "Started":
-        {
-          stateInfo = {
-            status: <ProcessingEntryStatus entry={props.entry} />,
-            action: <NavigationButton disabled>
-              {t("VersionCompare:versionCompare.viewResults")}
-            </NavigationButton>,
-          };
-        }
-        break;
-
-      case "Completed":
-        stateInfo = {
-          status: (
-            <Flex>
-              <IconEx size="m" fill="positive">
-                <SvgStatusSuccess />
-              </IconEx>
-              <TextEx variant="body">
-                {t("VersionCompare:versionCompare.available")}
-              </TextEx>
-            </Flex>
-          ),
-          action: (
-            <NavigationButton onClick={() => viewResults(props.entry)}>
-              {t("VersionCompare:versionCompare.viewResults")}
-            </NavigationButton>
-          ),
-        };
-        break;
-
-      case "Failed":
-      default:
-        stateInfo = {
-          status: (
-            <Flex>
-              <IconEx size="m" fill="negative" >
-                <SvgStatusError />
-              </IconEx>
-              <TextEx weight="normal" variant="body">
-                {t("VersionCompare:versionCompare.error")}
-              </TextEx>
-            </Flex>
-          ),
-          action: (
-            <NavigationButton onClick={() => processResults(props.entry)}>
-              {t("VersionCompare:versionCompare.retry")}
-            </NavigationButton>
-          ),
-        };
-        break;
-    }
-    return (
-      <ListItem ref={localRef} className="_cer_v1_named-version-entry">
-        <div>
-          <div style={{ display: "grid", gap: "1px" }}>
-            <TextEx variant="small" overflow="nowrap" oblique>{dateString}</TextEx>
-            <TextEx variant="body" weight="semibold" overflow="ellipsis">
-              {namedVersion.displayName}
-            </TextEx>
-            <TextEx variant="small" overflow="ellipsis">{namedVersion.description ?? ""}</TextEx>
-          </div>
+  return (
+    <ListItem ref={ref} className="_cer_v1_named-version-entry">
+      <div>
+        <div style={{ display: "grid", gap: "1px" }}>
+          <TextEx variant="small" overflow="nowrap" oblique>
+            {dateString}
+          </TextEx>
+          <TextEx variant="body" weight="semibold" overflow="ellipsis">
+            {namedVersion.displayName}
+          </TextEx>
+          <TextEx variant="small" overflow="ellipsis">
+            {namedVersion.description ?? ""}
+          </TextEx>
         </div>
-        {stateInfo.status}
-        {stateInfo.action}
-      </ListItem>
-    );
-  },
-);
+      </div>
+      {stateInfo.status}
+      {stateInfo.action}
+    </ListItem>
+  );
+}
 
 interface LoadingEntryStatusProps {
   entry: NamedVersionEntry;
