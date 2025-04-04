@@ -140,7 +140,8 @@
     "currentChangeset": "Current Changeset",
     "latestChangeset": "Latest Changeset",
     "versionsList": "Versions list",
-    "viewResults": "View results"
+    "viewResults": "View results",
+    "view": "View"
   },
   "typeOfChange": {
     "title": "Element changes: ",

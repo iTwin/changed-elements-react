@@ -518,7 +518,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
         ),
         action: (
           <NavigationButton onClick={() => processResults(props.entry)}>
-            {t("VersionCompare:versionCompare.processResults")}
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.processResults") : ""}
           </NavigationButton>
         ),
       };
@@ -530,7 +530,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
         status: <ProcessingEntryStatus entry={props.entry} />,
         action: (
           <NavigationButton disabled>
-            {t("VersionCompare:versionCompare.viewResults")}
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
           </NavigationButton>
         ),
       };
@@ -550,7 +550,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
         ),
         action: (
           <NavigationButton onClick={() => viewResults(props.entry)}>
-            {t("VersionCompare:versionCompare.viewResults")}
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
           </NavigationButton>
         ),
       };
@@ -566,13 +566,13 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
             </IconEx>
             {dimensions.width >= widthBreakpointInPx &&
               <TextEx weight="normal" variant="body">
-              {t("VersionCompare:versionCompare.error")}
+                {t("VersionCompare:versionCompare.error")}
             </TextEx>}
           </Flex>
         ),
         action: (
           <NavigationButton onClick={() => processResults(props.entry)}>
-            {t("VersionCompare:versionCompare.retry")}
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.retry") : ""}
           </NavigationButton>
         ),
       };
