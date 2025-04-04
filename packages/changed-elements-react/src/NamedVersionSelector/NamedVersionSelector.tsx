@@ -10,7 +10,7 @@ import {
   Button, Divider, Flex, List, ListItem, ProgressRadial, Text, ThemeProvider
 } from "@itwin/itwinui-react";
 import {
-  useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactElement,
+  useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
   type ReactNode
 } from "react";
 
@@ -89,51 +89,51 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
 
   if (!isComparing) {
     return (
-        <NamedVersionSelector
-          iModel={iModel}
-          manager={manager}
-          emptyState={emptyState}
-          manageVersions={manageVersions}
-          feedbackUrl={feedbackUrl}
-        />
+      <NamedVersionSelector
+        iModel={iModel}
+        manager={manager}
+        emptyState={emptyState}
+        manageVersions={manageVersions}
+        feedbackUrl={feedbackUrl}
+      />
     );
   }
 
   return (
     <Widget>
       <Widget.Header>
-          {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
+        {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>}
-          <TextEx variant="title">
-            {t("VersionCompare:versionCompare.versionPickerTitle")}
-          </TextEx>
-          <ChangedElementsHeaderButtons
-            useNewNamedVersionSelector
-            loaded
-            onInspect={() => manager.initializePropertyComparison()}
-            onOpenReportDialog={
-              manager.wantReportGeneration
-                ? () => void widgetRef.current?.openReportDialog()
-                : undefined
-            }
-          />
-        </Widget.Header>
-        <namedVersionSelectorContext.Consumer>
-          {(value) => (
-            <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
-              {props.manager?.currentVersion && isComparisonStarted &&
-              <ActiveVersionsBox  current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
-              <ChangedElementsWidget
-                ref={widgetRef}
-                iModelConnection={iModel}
-                manager={manager}
-                usingExperimentalSelector
-              />
-            </namedVersionSelectorContext.Provider>
-          )}
-        </namedVersionSelectorContext.Consumer>
-      </Widget>
+        <TextEx variant="title">
+          {t("VersionCompare:versionCompare.versionPickerTitle")}
+        </TextEx>
+        <ChangedElementsHeaderButtons
+          useNewNamedVersionSelector
+          loaded
+          onInspect={() => manager.initializePropertyComparison()}
+          onOpenReportDialog={
+            manager.wantReportGeneration
+              ? () => void widgetRef.current?.openReportDialog()
+              : undefined
+          }
+        />
+      </Widget.Header>
+      <namedVersionSelectorContext.Consumer>
+        {(value) => (
+          <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
+            {props.manager?.currentVersion && isComparisonStarted &&
+              <ActiveVersionsBox current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
+            <ChangedElementsWidget
+              ref={widgetRef}
+              iModelConnection={iModel}
+              manager={manager}
+              usingExperimentalSelector
+            />
+          </namedVersionSelectorContext.Provider>
+        )}
+      </namedVersionSelectorContext.Consumer>
+    </Widget>
   );
 }
 
@@ -294,7 +294,7 @@ function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
       />
-      <Divider className={dimensions.width < widthBreakpointInPx ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
+      <Divider className={dimensions.width < widthBreakpointInPx ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"} orientation="horizontal" />
       {
         !props.selected
           ? <PlaceholderNamedVersionInfo />
@@ -545,7 +545,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
             </IconEx>
             {dimensions.width >= widthBreakpointInPx && <TextEx variant="body">
               {t("VersionCompare:versionCompare.available")}
-            </TextEx> }
+            </TextEx>}
           </Flex>
         ),
         action: (
@@ -567,7 +567,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
             {dimensions.width >= widthBreakpointInPx &&
               <TextEx weight="normal" variant="body">
                 {t("VersionCompare:versionCompare.error")}
-            </TextEx>}
+              </TextEx>}
           </Flex>
         ),
         action: (
