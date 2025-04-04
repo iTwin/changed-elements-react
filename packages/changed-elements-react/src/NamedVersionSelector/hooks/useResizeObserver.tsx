@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 interface Dimensions {
   width: number;
@@ -39,12 +39,6 @@ export function useResizeObserver(
   dependencies: React.DependencyList = [],
 ): Dimensions {
   const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
-  // Memoize the dependency array, to avoid unnecessary re-renders.
-  // This is important because the ResizeObserver callback will be called with the latest ref value,
-  const depsArray: React.DependencyList = useMemo(
-    () => ([ref] as React.DependencyList).concat(dependencies),
-    [ref, dependencies],
-  );
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
@@ -78,7 +72,7 @@ export function useResizeObserver(
     };
   // disabled because this includes ref in the dependency array
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [depsArray]);
+  }, [...dependencies]);
 
   return dimensions;
 }

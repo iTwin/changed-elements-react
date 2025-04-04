@@ -287,14 +287,14 @@ interface ActiveVersionsBoxProps {
 function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(ref, []);
-  const widthBreakpointInPx = 364;
+  const widthBreakpointInPx = 368;
   return (
-    <div ref={ref} className={dimensions.width <= widthBreakpointInPx ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
+    <div ref={ref} className={dimensions.width < widthBreakpointInPx ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
       <NamedVersionInfo
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
       />
-      <Divider className={dimensions.width <= widthBreakpointInPx ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
+      <Divider className={dimensions.width < widthBreakpointInPx ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"}  orientation="horizontal"/>
       {
         !props.selected
           ? <PlaceholderNamedVersionInfo />
