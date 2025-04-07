@@ -4,7 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 import { useState, useEffect } from "react";
 
-interface Dimensions {
+// Object containing the width and height of an element.
+export interface Dimensions {
   width: number;
   height: number;
 }
