@@ -518,7 +518,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
         ),
         action: (
           <NavigationButton onClick={() => processResults(props.entry)}>
-            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.processResults") : ""}
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.processResults") : t("VersionCompare:versionCompare.process")}
           </NavigationButton>
         ),
       };
@@ -527,7 +527,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
     case "Queued":
     case "Started":
       stateInfo = {
-        status: <ProcessingEntryStatus entry={props.entry} />,
+        status: <ProcessingEntryStatus displayMin={dimensions.width <= widthBreakpointInPx} entry={props.entry} />,
         action: (
           <NavigationButton disabled>
             {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
@@ -572,7 +572,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
         ),
         action: (
           <NavigationButton onClick={() => processResults(props.entry)}>
-            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.retry") : ""}
+            {t("VersionCompare:versionCompare.retry")}
           </NavigationButton>
         ),
       };
@@ -624,6 +624,7 @@ function LoadingEntryStatus(props: LoadingEntryStatusProps): ReactElement {
 
 interface ProcessingEntryStatusProps {
   entry: NamedVersionEntry;
+  displayMin?: boolean;
 }
 
 function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement {
@@ -642,6 +643,11 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
   );
 
   return (
+    props.displayMin ? <Flex>
+      <ProgressRadial data-progress={progress} value={progress} >
+        <Text variant='small'>{progress}</Text>
+      </ProgressRadial>
+    </Flex> :
     <Flex>
       <ProgressRadial data-progress={progress} value={progress} />
       {

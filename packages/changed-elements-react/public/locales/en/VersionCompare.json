@@ -114,6 +114,7 @@
     "previousVersion": "Previous version",
     "previousVersions": "Previous versions",
     "processResults": "Process Results",
+    "process": "Process",
     "retry": "Retry",
     "selectVersionToCompare": "Select a version to compare",
     "error_versionCompareNotEnabledForIModel": "Version Comparison is not enabled for this iModel.",
