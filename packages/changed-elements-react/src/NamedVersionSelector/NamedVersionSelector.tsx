@@ -644,12 +644,11 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
 
   return (
     props.displayMin ? <Flex>
-      <ProgressRadial data-progress={progress} value={progress} >
-        <Text variant='small'>{progress}</Text>
+      <ProgressRadial size="x-small" data-progress={progress} value={progress} >
       </ProgressRadial>
     </Flex> :
     <Flex>
-      <ProgressRadial data-progress={progress} value={progress} />
+        <ProgressRadial size="x-small" data-progress={progress} value={progress} />
       {
         progress === undefined
           ? <Text>{t("VersionCompare:versionCompare.processing")}</Text>
