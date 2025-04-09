@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.12
+
+### Patch Changes
+
+#### [0.14.12](https://github.com/iTwin/changed-elements-react/tree/v0.14.12/packages/changed-elements-react) - 2025-04-09
+
+- Added responsive design for experimental widget. When widget is smaller size we display a minimal design.
+
 ## 0.14.11
 
 ### Patch Changes
