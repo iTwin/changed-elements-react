@@ -137,6 +137,97 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   );
 }
 
+function EmptyState(): ReactElement {
+  return (
+    <Text className="_cer_v1_empty-state" isMuted>
+      {t("VersionCompare:versionCompare.noPastNamedVersions")}
+    </Text>
+  );
+}
+
+function LoadingState(): ReactElement {
+  return (
+    <LoadingContent>
+      <Text>
+        {t("VersionCompare:versionCompare.loadingNamedVersions")}
+      </Text>
+    </LoadingContent>
+  );
+}
+
+type loadedStateProps = {
+  iTwinId: string;
+  iModelId: string;
+  currentNamedVersion: NamedVersion;
+  entries: NamedVersionEntry[];
+  onNamedVersionOpened: (version: NamedVersionEntry) => void;
+  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
+};
+
+function LoadedState(props: Readonly<loadedStateProps>): ReactElement {
+  const {
+    iTwinId,
+    iModelId,
+    currentNamedVersion,
+    entries,
+    onNamedVersionOpened,
+    updateJobStatus,
+    emptyState,
+    manageVersions,
+  } = props;
+
+  return (
+    <NamedVersionSelectorLoaded
+      iTwinId={iTwinId}
+      iModelId={iModelId}
+      currentNamedVersion={currentNamedVersion}
+      entries={entries}
+      onNamedVersionOpened={onNamedVersionOpened}
+      updateJobStatus={updateJobStatus}
+      emptyState={emptyState}
+      manageVersions={manageVersions}
+    />
+  );
+}
+
+type renderContentArgs = {
+  isLoading: boolean;
+  entries: NamedVersionEntry[];
+  currentNamedVersion: NamedVersion | undefined;
+  iTwinId: string;
+  iModelId: string;
+  handleVersionOpened: (version: NamedVersionEntry) => void;
+  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
+};
+
+function renderNamedVersionSelectorContent(
+  args: Readonly<renderContentArgs>,
+): ReactElement {
+  if (!args.isLoading && args.entries.length === 0) {
+    return <EmptyState />;
+  }
+
+  if (!args.currentNamedVersion || (args.isLoading && args.entries.length === 0)) {
+    return <LoadingState />;
+  }
+
+  return (
+    <LoadedState
+      iTwinId={args.iTwinId}
+      iModelId={args.iModelId}
+      currentNamedVersion={args.currentNamedVersion}
+      entries={args.entries}
+      onNamedVersionOpened={args.handleVersionOpened}
+      updateJobStatus={args.updateJobStatus}
+      emptyState={args.emptyState}
+      manageVersions={args.manageVersions}
+    />
+  );
+}
 interface NamedVersionSelectorProps {
   iModel: IModelConnection;
   manager: VersionCompareManager;
@@ -207,38 +298,18 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
-        (() => {
-          if (!isLoading && entries.length === 0) {
-            return (
-              <Text className="_cer_v1_empty-state" isMuted>
-                {t("VersionCompare:versionCompare.noPastNamedVersions")}
-              </Text>
-            );
-          }
-
-          if (!currentNamedVersion || (isLoading && entries.length === 0)) {
-            return (
-              <LoadingContent>
-                <Text>
-                  {t("VersionCompare:versionCompare.loadingNamedVersions")}
-                </Text>
-              </LoadingContent>
-            );
-          }
-
-          return (
-            <NamedVersionSelectorLoaded
-              iTwinId={iTwinId}
-              iModelId={iModelId}
-              currentNamedVersion={currentNamedVersion}
-              entries={entries}
-              onNamedVersionOpened={handleVersionOpened}
-              updateJobStatus={updateJobStatus}
-              emptyState={emptyState}
-              manageVersions={manageVersions}
-            />
-          );
-        })()
+        renderNamedVersionSelectorContent({
+          isLoading,
+          entries,
+          currentNamedVersion,
+          iTwinId,
+          iModelId,
+          handleVersionOpened,
+          updateJobStatus,
+          emptyState,
+          manageVersions,
+        },
+        )
       }
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
@@ -632,7 +703,7 @@ interface ProcessingEntryStatusProps {
   displayMin?: boolean;
 }
 
-function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement {
+function ProcessingEntryStatus(props: Readonly<ProcessingEntryStatusProps>): ReactElement {
   const { job } = props.entry;
   const progress = job?.status === "Started"
     ? Math.floor(100.0 * job.progress.current / (job.progress.max || 1))
@@ -647,19 +718,21 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
     [checkStatus, props.entry],
   );
 
-  return (
-    props.displayMin ? <Flex>
+  if (props.displayMin) {
+    return (<Flex>
       <ProgressRadial size="x-small" data-progress={progress} value={progress} >
       </ProgressRadial>
-    </Flex> :
-      <Flex>
-        <ProgressRadial size="x-small" data-progress={progress} value={progress} />
-        {
-          progress === undefined
-            ? <Text>{t("VersionCompare:versionCompare.processing")}</Text>
-            : <Text>{t("VersionCompare:versionCompare.processing")} – {progress}%</Text>
-        }
-      </Flex>
+    </Flex>);
+  }
+  return (
+    <Flex>
+      <ProgressRadial size="x-small" data-progress={progress} value={progress} />
+      {
+        progress === undefined
+          ? <Text>{t("VersionCompare:versionCompare.processing")}</Text>
+          : <Text>{t("VersionCompare:versionCompare.processing")} – {progress}%</Text>
+      }
+    </Flex>
   );
 }
 
