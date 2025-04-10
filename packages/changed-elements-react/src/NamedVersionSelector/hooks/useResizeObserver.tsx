@@ -39,7 +39,6 @@ export interface Dimensions {
  */
 export function useResizeObserver(
   ref: React.RefObject<HTMLElement>,
-  dependencies: React.DependencyList = [],
 ): Dimensions {
   const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
 
@@ -78,7 +77,7 @@ export function useResizeObserver(
     };
   // disabled because this includes ref in the dependency array
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...dependencies]);
+  }, []);
 
   return dimensions;
 }
@@ -115,7 +114,7 @@ export interface ResizeObserverWrapperProps extends Omit<HTMLAttributes<HTMLDivE
 export const ResizeObserverWrapper = forwardRef < HTMLDivElement, ResizeObserverWrapperProps>(
   function ResizeObserverWrapper(props, ref) {
     const divRef = useRef(null as unknown as HTMLDivElement);
-    const size =useResizeObserver(divRef, []);
+    const size = useResizeObserver(divRef);
     const mergedRefs = useMemo(() => mergeRefs(divRef, ref), [divRef, ref]);
     return <div ref={mergedRefs} className={props.className}>{size && props.children(size)}</div>;
   },

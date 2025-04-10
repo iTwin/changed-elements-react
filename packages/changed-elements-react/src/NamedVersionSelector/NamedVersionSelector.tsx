@@ -41,10 +41,10 @@ import { useResizeObserver } from "./hooks/useResizeObserver.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
-  manager?: VersionCompareManager | undefined;
-  emptyState?: ReactNode | undefined;
-  manageVersions?: ReactNode | undefined;
-  feedbackUrl?: string | undefined;
+  manager?: VersionCompareManager;
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
+  feedbackUrl?: string;
 }
 
 /**
@@ -52,7 +52,7 @@ interface NamedVersionSelectorWidgetProps {
  * is actively comparing versions, presents the comparison results.
  * @alpha feature is experimental and may change in future releases.
  */
-export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProps): ReactElement {
+export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorWidgetProps>): ReactElement {
   const manager = props.manager ?? VersionCompare.manager;
   if (!manager) {
     throw new Error("VersionCompare is not initialized.");
@@ -140,12 +140,12 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
 interface NamedVersionSelectorProps {
   iModel: IModelConnection;
   manager: VersionCompareManager;
-  emptyState?: ReactNode | undefined;
-  manageVersions?: ReactNode | undefined;
-  feedbackUrl?: string | undefined;
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
+  feedbackUrl?: string;
 }
 
-function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
+function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): ReactElement {
   const { iModelsClient, comparisonJobClient } = useVersionCompare();
   if (!comparisonJobClient) {
     throw new Error("V2 Client is not initialized in given context.");
@@ -164,7 +164,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
   });
 
   const [openedVersion, setOpenedVersion] = useState(manager.targetVersion);
-  const handleVersionOpened = async (targetVersion: NamedVersionEntry | undefined) => {
+  const handleVersionOpened = async (targetVersion?: NamedVersionEntry) => {
     setOpenedVersion(targetVersion?.namedVersion);
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
@@ -225,7 +225,6 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
                 iTwinId={iTwinId}
                 iModelId={iModelId}
                 currentNamedVersion={currentNamedVersion}
-                isLoading={isLoading}
                 entries={entries}
                 onNamedVersionOpened={handleVersionOpened}
                 updateJobStatus={updateJobStatus}
@@ -242,7 +241,7 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
 }
 
 interface WidgetProps {
-  children?: ReactNode | undefined;
+  children?: ReactNode;
 }
 
 const Widget = Object.assign(
@@ -252,7 +251,7 @@ const Widget = Object.assign(
   },
 );
 
-function WidgetMain(props: WidgetProps): ReactElement {
+function WidgetMain(props: Readonly<WidgetProps>): ReactElement {
   return (
     <ThemeProvider style={{ height: "100%" }}>
       <Flex
@@ -268,10 +267,10 @@ function WidgetMain(props: WidgetProps): ReactElement {
 }
 
 interface WidgetHeaderProps {
-  children?: ReactNode | undefined;
+  children?: ReactNode ;
 }
 
-function WidgetHeader(props: WidgetHeaderProps): ReactElement {
+function WidgetHeader(props: Readonly<WidgetHeaderProps>): ReactElement {
   return (
     <div className="_cer_v1_version-selector-header">
       {props.children}
@@ -281,10 +280,10 @@ function WidgetHeader(props: WidgetHeaderProps): ReactElement {
 
 interface ActiveVersionsBoxProps {
   current: NamedVersion;
-  selected?: NamedVersion | undefined;
+  selected?: NamedVersion;
 }
 
-function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
+function ActiveVersionsBox(props: Readonly<ActiveVersionsBoxProps>): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(ref);
   const widthBreakpointInPx = 368;
@@ -314,7 +313,7 @@ interface NamedVersionInfoProps {
   namedVersion: NamedVersion;
 }
 
-function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
+function NamedVersionInfo(props: Readonly<NamedVersionInfoProps>): ReactElement {
   const dateString = useMemo(
     () => props.namedVersion.createdDateTime === "" ? "" : new Date(props.namedVersion.createdDateTime).toLocaleDateString(),
     [props.namedVersion.createdDateTime],
@@ -348,15 +347,14 @@ interface NamedVersionSelectorLoadedProps {
   iTwinId: string;
   iModelId: string;
   currentNamedVersion: NamedVersion;
-  isLoading: boolean;
   entries: NamedVersionEntry[];
   updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
   onNamedVersionOpened: (version: NamedVersionEntry) => void;
-  emptyState?: ReactNode | undefined;
-  manageVersions?: ReactNode | undefined;
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
 }
 
-function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): ReactElement {
+function NamedVersionSelectorLoaded(props: Readonly<NamedVersionSelectorLoadedProps>): ReactElement {
   const {
     iTwinId,
     iModelId,
@@ -482,7 +480,7 @@ interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
 }
 
-function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
+function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
   const { processResults, viewResults } = useContext(namedVersionSelectorContext);
   const { namedVersion, job } = props.entry;
   const ref = useRef<HTMLDivElement>(null);
@@ -604,7 +602,7 @@ interface LoadingEntryStatusProps {
   entry: NamedVersionEntry;
 }
 
-function LoadingEntryStatus(props: LoadingEntryStatusProps): ReactElement {
+function LoadingEntryStatus(props: Readonly<LoadingEntryStatusProps>): ReactElement {
   const { initialLoad } = useContext(namedVersionSelectorContext);
   useEffect(
     () => {
@@ -659,13 +657,13 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
 }
 
 interface ActionButtonProps {
-  backward?: boolean | undefined;
-  disabled?: boolean | undefined;
-  onClick?: (() => void) | undefined;
+  backward?: boolean;
+  disabled?: boolean;
+  onClick?: (() => void);
   children: string;
 }
 
-function NavigationButton(props: ActionButtonProps): ReactElement {
+function NavigationButton(props: Readonly<ActionButtonProps>): ReactElement {
   return (
     <Button
       className="_cer_v1_action-button"
