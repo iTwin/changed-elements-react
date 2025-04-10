@@ -2,7 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect, HTMLAttributes, ReactNode, forwardRef, useRef, useMemo } from "react";
+import { mergeRefs } from "../../common.js";
+
 
 // Object containing the width and height of an element.
 export interface Dimensions {
@@ -40,10 +42,13 @@ export function useResizeObserver(
   dependencies: React.DependencyList = [],
 ): Dimensions {
   const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
-  useEffect(() => {
+
+  // useLayoutEffect is used here instead of useEffect to ensure that the dimensions are updated
+  // before the browser paints. This prevents layout shifts or flickering when the dimensions
+  // are used to adjust the layout or styling of the component.
+  useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
-
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         // We prefer to use borderBoxSize if available, as it is more reliable because it contains padding, but may not always be supported.
@@ -77,3 +82,30 @@ export function useResizeObserver(
 
   return dimensions;
 }
+export interface ResizeObserverWrapperProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+  children: (size: Dimensions) => ReactNode;
+}
+
+export const ResizeObserverWrapper = forwardRef < HTMLDivElement, ResizeObserverWrapperProps>(
+  function ResizeObserverWrapper(props, ref) {
+    const divRef = useRef(null as unknown as HTMLDivElement);
+    const [size, setSize] = useState<Dimensions>();
+
+    useLayoutEffect(
+      () => {
+        const resizeObserver = new ResizeObserver(
+          (entries: ResizeObserverEntry[]) => {
+            const { width, height } = entries[0].contentRect;
+            setSize({ width, height });
+          },
+        );
+        resizeObserver.observe(divRef.current);
+        return () => resizeObserver.disconnect();
+      },
+      [],
+    );
+
+    const mergedRefs = useMemo(() => mergeRefs(divRef, ref), [divRef, ref]);
+    return <div ref={mergedRefs} className={props.className}>{size && props.children(size)}</div>;
+  },
+);

@@ -286,7 +286,7 @@ interface ActiveVersionsBoxProps {
 
 function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
-  const dimensions = useResizeObserver(ref, []);
+  const dimensions = useResizeObserver(ref);
   const widthBreakpointInPx = 368;
   return (
     <div ref={ref} className={dimensions.width < widthBreakpointInPx ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
@@ -486,7 +486,7 @@ function NamedVersionListEntry(props: NamedVersionEntryProps): ReactElement {
   const { processResults, viewResults } = useContext(namedVersionSelectorContext);
   const { namedVersion, job } = props.entry;
   const ref = useRef<HTMLDivElement>(null);
-  const dimensions = useResizeObserver(ref, []);
+  const dimensions = useResizeObserver(ref);
   const widthBreakpointInPx = 400;
   const dateString = useMemo(
     () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
@@ -647,14 +647,14 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
       <ProgressRadial size="x-small" data-progress={progress} value={progress} >
       </ProgressRadial>
     </Flex> :
-    <Flex>
+      <Flex>
         <ProgressRadial size="x-small" data-progress={progress} value={progress} />
-      {
-        progress === undefined
-          ? <Text>{t("VersionCompare:versionCompare.processing")}</Text>
-          : <Text>{t("VersionCompare:versionCompare.processing")} – {progress}%</Text>
-      }
-    </Flex>
+        {
+          progress === undefined
+            ? <Text>{t("VersionCompare:versionCompare.processing")}</Text>
+            : <Text>{t("VersionCompare:versionCompare.processing")} – {progress}%</Text>
+        }
+      </Flex>
   );
 }
 

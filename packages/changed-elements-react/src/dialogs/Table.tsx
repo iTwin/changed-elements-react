@@ -9,7 +9,7 @@ import {
 } from "react-table";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
 
-import { AutoSizer } from "../AutoSizer.js";
+import { ResizeObserverWrapper } from "../NamedVersionSelector/hooks/useResizeObserver.js";
 
 import "./Table.scss";
 
@@ -153,7 +153,7 @@ export function Table<T extends object>(props: PropsWithChildren<Table<T>>): Rea
             </div>
           ))}
         </div>
-        <AutoSizer className="themedTableTbody" {...getTableBodyProps()}>
+        <ResizeObserverWrapper className="themedTableTbody" {...getTableBodyProps()}>
           {({ width, height }) => (
             <FixedSizeList
               height={height}
@@ -164,7 +164,7 @@ export function Table<T extends object>(props: PropsWithChildren<Table<T>>): Rea
               {renderRow}
             </FixedSizeList>
           )}
-        </AutoSizer>
+        </ResizeObserverWrapper>
       </div>
     </div>
   );
