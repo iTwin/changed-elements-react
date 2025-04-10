@@ -86,25 +86,36 @@ export interface ResizeObserverWrapperProps extends Omit<HTMLAttributes<HTMLDivE
   children: (size: Dimensions) => ReactNode;
 }
 
+/**
+ * A wrapper component that uses the ResizeObserver API to observe the size of an HTML element.
+ * It takes a `children` function as a prop, which receives the current dimensions of the element
+ * as an argument. This allows for dynamic rendering based on the size of the element.
+ *
+ * @param props - The props for the component, including `children` and any other HTML attributes.
+ * @param ref - A ref object to be forwarded to the underlying HTML element.
+ * @returns A React component that observes its size and renders its children based on the current dimensions.
+ *
+ * @example
+ * // Example usage:
+ * import { ResizeObserverWrapper } from "./hooks/useResizeObserver";
+ *
+ * function MyComponent() {
+ *   return (
+ *     <ResizeObserverWrapper className="resizable-container">
+ *       {(size) => (
+ *         <div>
+ *           <p>Width: {size.width}px</p>
+ *           <p>Height: {size.height}px</p>
+ *         </div>
+ *       )}
+ *     </ResizeObserverWrapper>
+ *   );
+ * }
+ */
 export const ResizeObserverWrapper = forwardRef < HTMLDivElement, ResizeObserverWrapperProps>(
   function ResizeObserverWrapper(props, ref) {
     const divRef = useRef(null as unknown as HTMLDivElement);
-    const [size, setSize] = useState<Dimensions>();
-
-    useLayoutEffect(
-      () => {
-        const resizeObserver = new ResizeObserver(
-          (entries: ResizeObserverEntry[]) => {
-            const { width, height } = entries[0].contentRect;
-            setSize({ width, height });
-          },
-        );
-        resizeObserver.observe(divRef.current);
-        return () => resizeObserver.disconnect();
-      },
-      [],
-    );
-
+    const size =useResizeObserver(divRef, []);
     const mergedRefs = useMemo(() => mergeRefs(divRef, ref), [divRef, ref]);
     return <div ref={mergedRefs} className={props.className}>{size && props.children(size)}</div>;
   },
