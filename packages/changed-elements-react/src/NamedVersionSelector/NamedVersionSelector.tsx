@@ -37,7 +37,7 @@ import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
-import { useResizeObserver } from "./hooks/useResizeObserver.js";
+import { useResizeObserver } from "../ResizeObserver.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
@@ -267,7 +267,7 @@ function WidgetMain(props: Readonly<WidgetProps>): ReactElement {
 }
 
 interface WidgetHeaderProps {
-  children?: ReactNode ;
+  children?: ReactNode;
 }
 
 function WidgetHeader(props: Readonly<WidgetHeaderProps>): ReactElement {

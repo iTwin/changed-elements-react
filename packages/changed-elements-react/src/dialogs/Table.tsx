@@ -9,7 +9,7 @@ import {
 } from "react-table";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
 
-import { ResizeObserverWrapper } from "../NamedVersionSelector/hooks/useResizeObserver.js";
+import { ResizeObserverWrapper } from "../ResizeObserver.js";
 
 import "./Table.scss";
 

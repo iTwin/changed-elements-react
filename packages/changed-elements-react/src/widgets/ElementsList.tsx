@@ -9,7 +9,7 @@ import { forwardRef, useCallback, useEffect, useRef, type ReactElement } from "r
 import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
-import { ResizeObserverWrapper } from "../NamedVersionSelector/hooks/useResizeObserver.js";
+import { ResizeObserverWrapper } from "../ResizeObserver.js";
 import { mergeRefs } from "../common.js";
 import { ElementNodeComponent } from "./ElementNodeComponent.js";
 

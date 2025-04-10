@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { useState, useLayoutEffect, HTMLAttributes, ReactNode, forwardRef, useRef, useMemo } from "react";
-import { mergeRefs } from "../../common.js";
+import { mergeRefs } from "./common.js";
 
 
 // Object containing the width and height of an element.
