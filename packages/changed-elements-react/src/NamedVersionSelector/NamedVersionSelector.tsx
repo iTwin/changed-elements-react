@@ -207,31 +207,38 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
-        (!isLoading && entries.length === 0) ?
-          <Text className="_cer_v1_empty-state" isMuted>
-            {t("VersionCompare:versionCompare.noPastNamedVersions")}
-          </Text>
-          :
-          (!currentNamedVersion || (isLoading && entries.length === 0))
-            ? (
+        (() => {
+          if (!isLoading && entries.length === 0) {
+            return (
+              <Text className="_cer_v1_empty-state" isMuted>
+                {t("VersionCompare:versionCompare.noPastNamedVersions")}
+              </Text>
+            );
+          }
+
+          if (!currentNamedVersion || (isLoading && entries.length === 0)) {
+            return (
               <LoadingContent>
                 <Text>
                   {t("VersionCompare:versionCompare.loadingNamedVersions")}
                 </Text>
               </LoadingContent>
-            )
-            : (
-              <NamedVersionSelectorLoaded
-                iTwinId={iTwinId}
-                iModelId={iModelId}
-                currentNamedVersion={currentNamedVersion}
-                entries={entries}
-                onNamedVersionOpened={handleVersionOpened}
-                updateJobStatus={updateJobStatus}
-                emptyState={emptyState}
-                manageVersions={manageVersions}
-              />
-            )
+            );
+          }
+
+          return (
+            <NamedVersionSelectorLoaded
+              iTwinId={iTwinId}
+              iModelId={iModelId}
+              currentNamedVersion={currentNamedVersion}
+              entries={entries}
+              onNamedVersionOpened={handleVersionOpened}
+              updateJobStatus={updateJobStatus}
+              emptyState={emptyState}
+              manageVersions={manageVersions}
+            />
+          );
+        })()
       }
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
