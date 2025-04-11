@@ -155,7 +155,7 @@ function LoadingState(): ReactElement {
   );
 }
 
-type loadedStateProps = {
+type LoadedStateProps = {
   iTwinId: string;
   iModelId: string;
   currentNamedVersion: NamedVersion;
@@ -166,68 +166,44 @@ type loadedStateProps = {
   manageVersions?: ReactNode;
 };
 
-function LoadedState(props: Readonly<loadedStateProps>): ReactElement {
-  const {
-    iTwinId,
-    iModelId,
-    currentNamedVersion,
-    entries,
-    onNamedVersionOpened,
-    updateJobStatus,
-    emptyState,
-    manageVersions,
-  } = props;
-
+function LoadedState(props: Readonly<LoadedStateProps>): ReactElement {
   return (
     <NamedVersionSelectorLoaded
-      iTwinId={iTwinId}
-      iModelId={iModelId}
-      currentNamedVersion={currentNamedVersion}
-      entries={entries}
-      onNamedVersionOpened={onNamedVersionOpened}
-      updateJobStatus={updateJobStatus}
-      emptyState={emptyState}
-      manageVersions={manageVersions}
+      {...props}
     />
   );
 }
 
-type renderContentArgs = {
+type NamedVersionSelectorContentProps = {
   isLoading: boolean;
   entries: NamedVersionEntry[];
   currentNamedVersion: NamedVersion | undefined;
   iTwinId: string;
   iModelId: string;
-  handleVersionOpened: (version: NamedVersionEntry) => void;
+  onNamedVersionOpened: (version: NamedVersionEntry) => void;
   updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
   emptyState?: ReactNode;
   manageVersions?: ReactNode;
 };
 
-function renderNamedVersionSelectorContent(
-  args: Readonly<renderContentArgs>,
+function NamedVersionSelectorContent(
+  props: Readonly<NamedVersionSelectorContentProps>,
 ): ReactElement {
-  if (!args.isLoading && args.entries.length === 0) {
+  if (!props.isLoading && props.entries.length === 0) {
     return <EmptyState />;
   }
 
-  if (!args.currentNamedVersion || (args.isLoading && args.entries.length === 0)) {
+  if (!props.currentNamedVersion || (props.isLoading && props.entries.length === 0)) {
     return <LoadingState />;
   }
 
   return (
     <LoadedState
-      iTwinId={args.iTwinId}
-      iModelId={args.iModelId}
-      currentNamedVersion={args.currentNamedVersion}
-      entries={args.entries}
-      onNamedVersionOpened={args.handleVersionOpened}
-      updateJobStatus={args.updateJobStatus}
-      emptyState={args.emptyState}
-      manageVersions={args.manageVersions}
+      {...{...props, currentNamedVersion:props.currentNamedVersion }}
     />
   );
 }
+
 interface NamedVersionSelectorProps {
   iModel: IModelConnection;
   manager: VersionCompareManager;
@@ -298,13 +274,13 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
-        renderNamedVersionSelectorContent({
+        NamedVersionSelectorContent({
           isLoading,
           entries,
           currentNamedVersion,
           iTwinId,
           iModelId,
-          handleVersionOpened,
+          onNamedVersionOpened: handleVersionOpened,
           updateJobStatus,
           emptyState,
           manageVersions,
