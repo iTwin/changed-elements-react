@@ -277,9 +277,7 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
         currentNamedVersion &&
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
-      {
-        NamedVersionSelectorContent(namedVersionSelectorProps)
-      }
+      <NamedVersionSelectorContent {...namedVersionSelectorProps} />
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
       </div>
