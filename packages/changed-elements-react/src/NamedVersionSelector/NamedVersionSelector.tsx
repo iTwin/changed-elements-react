@@ -155,16 +155,8 @@ function LoadingState(): ReactElement {
   );
 }
 
-type LoadedStateProps = {
-  iTwinId: string;
-  iModelId: string;
-  currentNamedVersion: NamedVersion;
-  entries: NamedVersionEntry[];
-  onNamedVersionOpened: (version: NamedVersionEntry) => void;
-  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
-  emptyState?: ReactNode;
-  manageVersions?: ReactNode;
-};
+
+type LoadedStateProps = Omit<NamedVersionSelectorContentProps, "isLoading" | "currentNamedVersion"> & { currentNamedVersion: NamedVersion; };
 
 function LoadedState(props: Readonly<LoadedStateProps>): ReactElement {
   return (
@@ -199,7 +191,7 @@ function NamedVersionSelectorContent(
 
   return (
     <LoadedState
-      {...{...props, currentNamedVersion:props.currentNamedVersion }}
+      {...{ ...props, currentNamedVersion: props.currentNamedVersion }}
     />
   );
 }
@@ -231,7 +223,7 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
   });
 
   const [openedVersion, setOpenedVersion] = useState(manager.targetVersion);
-  const handleVersionOpened = async (targetVersion?: NamedVersionEntry) => {
+  const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
     setOpenedVersion(targetVersion?.namedVersion);
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
@@ -261,6 +253,18 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
     manager.versionCompareStopped.addOnce(() => setOpenedVersion(undefined));
   };
 
+  const namedVersionSelectorProps: Readonly<NamedVersionSelectorContentProps> = {
+    isLoading,
+    currentNamedVersion,
+    entries,
+    iTwinId,
+    iModelId,
+    onNamedVersionOpened,
+    updateJobStatus,
+    emptyState,
+    manageVersions,
+  };
+
   return (
     <Widget>
       <Widget.Header>
@@ -274,18 +278,7 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
         <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
       }
       {
-        NamedVersionSelectorContent({
-          isLoading,
-          entries,
-          currentNamedVersion,
-          iTwinId,
-          iModelId,
-          onNamedVersionOpened: handleVersionOpened,
-          updateJobStatus,
-          emptyState,
-          manageVersions,
-        },
-        )
+        NamedVersionSelectorContent(namedVersionSelectorProps)
       }
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
