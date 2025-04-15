@@ -6,7 +6,7 @@ import { type PrimitiveValue } from "@itwin/appui-abstract";
 import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Logger } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ScreenViewport, ViewState } from "@itwin/core-frontend";
 import { SvgFolder, SvgVisibilityHalf, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import {
   Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, Modal, ModalButtonBar, ModalContent,
@@ -466,6 +466,7 @@ export interface ChangedElementsListState {
 
 export class ChangedElementsListComponent extends Component<ChangedElementsListProps, ChangedElementsListState> {
   private _attachedVp: ScreenViewport | undefined;
+  private _initVpState: ViewState | undefined;
 
   private static _maintainedState: ChangedElementsListState | undefined;
 
@@ -511,7 +512,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       this.setState({
         nodes,
         filteredNodes,
-        initialLoad: false,
+        initialLoad: true,
       });
 
       await this.setVisualization(nodes, undefined);
@@ -575,6 +576,12 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     if (this._attachedVp) {
       this.dettachFromViewport(this._attachedVp);
       this._attachedVp = undefined;
+    }
+    if (this._initVpState && !this.props.manager.isComparing) {
+      const vp = IModelApp.viewManager.getFirstOpenView();
+      if (vp) {
+        vp.applyViewState(this._initVpState);
+      }
     }
   }
 
@@ -851,7 +858,11 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       if (visualizationManager) {
         await visualizationManager.setFocusedElements([]);
       }
-
+      const vp = IModelApp.viewManager.getFirstOpenView();
+      if (vp && this.state.initialLoad) {
+        this._initVpState = vp.view.clone();
+        this.setState({ initialLoad: false });
+      }
       return;
     }
 
@@ -864,6 +875,11 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     } else {
       // Visualize the element nodes being inspected
       await this._visualizeElementNodes(nodes, targetNode, options);
+    }
+    const vp = IModelApp.viewManager.getFirstOpenView();
+    if (vp && this.state.initialLoad) {
+      this._initVpState = vp.view.clone();
+      this.setState({ initialLoad: false });
     }
   };
 
