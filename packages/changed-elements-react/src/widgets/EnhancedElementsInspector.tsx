@@ -6,7 +6,7 @@ import { type PrimitiveValue } from "@itwin/appui-abstract";
 import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Logger } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ScreenViewport, ViewState } from "@itwin/core-frontend";
 import { SvgFolder, SvgVisibilityHalf, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import {
   Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, Modal, ModalButtonBar, ModalContent,
@@ -462,6 +462,8 @@ export interface ChangedElementsListState {
   filterOptions: FilterOptions;
   loading: boolean;
   initialLoad: boolean;
+  mainViewState: ViewState | undefined;
+  changedElementsViewState: ViewState | undefined;
 }
 
 export class ChangedElementsListComponent extends Component<ChangedElementsListProps, ChangedElementsListState> {
@@ -480,16 +482,19 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       props.onFilterChange(defaultOptions);
     }
 
+    // see what else load state does and replicate
     this.state = {
-      nodes: [],
-      selectedIds: new Set<string>(),
-      path: [],
-      searchPath: undefined,
-      search: undefined,
-      filteredNodes: undefined,
-      filterOptions: defaultOptions,
-      loading: false,
-      initialLoad: true,
+      nodes: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.nodes : [],
+      selectedIds: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.selectedIds : new Set<string>(),
+      path: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.path : [],
+      searchPath: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.path :  undefined,
+      search: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState .search : undefined,
+      filteredNodes: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.filteredNodes : undefined,
+      filterOptions: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.filterOptions : defaultOptions,
+      loading: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.loading : false,
+      initialLoad: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.initialLoad :  true,
+      mainViewState: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.mainViewState :  IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
+      changedElementsViewState: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.changedElementsViewState : undefined,
     };
   }
 
@@ -513,7 +518,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         filteredNodes,
         initialLoad: false,
       });
-
       await this.setVisualization(nodes, undefined);
     }
   }
@@ -545,7 +549,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   public loadState = async (): Promise<void> => {
     const mState = ChangedElementsListComponent._maintainedState;
     if (mState) {
-      this.setState(mState);
       if (mState.search !== undefined) {
         this.props.dataProvider.setSearch(mState.search);
       }
@@ -575,6 +578,11 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     if (this._attachedVp) {
       this.dettachFromViewport(this._attachedVp);
       this._attachedVp = undefined;
+    }
+    const vp = IModelApp.viewManager.getFirstOpenView();
+    if (!this.props.manager.isComparing && this.state.mainViewState && vp) {
+      //TodoCg make a function to do this with options to maintain camera and models
+      vp.applyViewState(this.state.mainViewState);
     }
   }
 
@@ -660,6 +668,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         await this._handlePathClick(focusNode, true);
       }
 
+      //what is involking order cotor or this first ?
       if (ChangedElementsListComponent._maintainedState !== undefined) {
         await this.loadState();
         this.clearSavedState();
@@ -851,7 +860,12 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       if (visualizationManager) {
         await visualizationManager.setFocusedElements([]);
       }
-
+      if (this.state.initialLoad) {
+        this.setState({
+          initialLoad: false,
+          changedElementsViewState: IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
+         });
+      }
       return;
     }
 
@@ -865,7 +879,33 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       // Visualize the element nodes being inspected
       await this._visualizeElementNodes(nodes, targetNode, options);
     }
+    if (this.state.initialLoad) {
+      this.setState({
+        initialLoad: false,
+        changedElementsViewState: IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
+      });
+    }
+    const propertyNames = this.props.manager.changedElementsManager.getAllChangedPropertyNames();
+    const defaultOptions = makeDefaultFilterOptions(propertyNames);
+    if (options !==undefined &&this.areOptionsEqual(this.state.filterOptions, defaultOptions)) {
+      const vp = IModelApp.viewManager.getFirstOpenView();
+      if (vp && this.state.changedElementsViewState && !this.state.initialLoad) {
+        //TodoCg make a function to do this with options to maintain camera and models
+        vp.applyViewState(this.state.changedElementsViewState);
+      }
+    }
   };
+
+  private areOptionsEqual = (options1: FilterOptions, options2: FilterOptions): boolean => {
+    return (
+      options1.wantAdded === options2.wantAdded &&
+      options1.wantDeleted === options2.wantDeleted &&
+      options1.wantModified === options2.wantModified &&
+      options1.wantUnchanged === options2.wantUnchanged &&
+      options1.wantedTypeOfChange === options2.wantedTypeOfChange &&
+      allPropertiesVisible(options1.wantedProperties) === allPropertiesVisible(options2.wantedProperties)
+    );
+  }
 
   /** Returns true if any of the entry's properties are being visualized. */
   private _anyEntryPropertiesVisible = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
