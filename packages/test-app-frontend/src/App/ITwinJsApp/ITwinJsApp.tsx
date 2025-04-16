@@ -321,9 +321,10 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
         },
       ];
     } else {
+      
       return [{
         id: "ChangedElementsWidget",
-        content: <ChangedElementsWidget useV2Widget
+        content: <ChangedElementsWidget useV2Widget={false}
           feedbackUrl="https://example.com"
           iModelConnection={UiFramework.getIModelConnection()!}
           enableComparisonJobUpdateToasts

@@ -172,6 +172,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _onProgressEvent = (message: string): void => {
+    const { manager } = this.state;
     this.setState({ message, loading: true, description: "" });
   };
 
@@ -198,7 +199,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       elements: manager.changedElementsManager.entryCache.getAll(),
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
-      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+      message: "",
       description: this.props.useV2Widget
         ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),

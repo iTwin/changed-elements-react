@@ -14,7 +14,7 @@ import {
 } from "./ElementQueries.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare } from "./VersionCompare.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VersionCompareManager, VersionCompareTask } from "./VersionCompareManager.js";
 
 /** Changed property for a changed element */
 export interface Checksums {
@@ -81,21 +81,16 @@ export class ChangedElementEntryCache {
   }
   private _currentIModel: IModelConnection | undefined;
   private _targetIModel: IModelConnection | undefined;
-  private _progressLoadingEvent?: BeEvent<(message: string) => void>;
+  private _progressLoadingEvent?: BeEvent<(versionCompareTask: VersionCompareTask) => void>;
   private _currentLoadingMessage = "";
-  private _numSteps = 0;
   private _numProgress = 0;
 
   private readonly _findTopParentChunkSize = 1000;
   private readonly _queryEntryChunkSize = 1000;
 
   private _outputCurrentLoadingMessage() {
-    if (this._numProgress > this._numSteps) {
-      this._numProgress = this._numSteps;
-    }
-    const percentage = Math.floor((this._numProgress / this._numSteps) * 100);
     if (this._progressLoadingEvent) {
-      this._progressLoadingEvent.raiseEvent(this._currentLoadingMessage + " (" + percentage + "%)");
+      this._progressLoadingEvent.raiseEvent({name:this._currentLoadingMessage, weight:"light"});
     }
   }
 
@@ -104,9 +99,8 @@ export class ChangedElementEntryCache {
     this._outputCurrentLoadingMessage();
   };
 
-  private _setCurrentLoadingMessage(key: string, numSteps: number) {
+  private _setCurrentLoadingMessage(key: string) {
     this._currentLoadingMessage = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare." + key);
-    this._numSteps = numSteps;
     this._numProgress = 0;
   }
 
@@ -132,7 +126,7 @@ export class ChangedElementEntryCache {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     elements: Map<string, ChangedElement>,
-    progressLoadingEvent?: BeEvent<(message: string) => void>,
+    progressLoadingEvent?: BeEvent<(versionCompareTask: VersionCompareTask) => void>,
   ) {
     this._progressLoadingEvent = progressLoadingEvent;
     elements.forEach((element: ChangedElement, elementId: string) => {
@@ -604,7 +598,7 @@ export class ChangedElementEntryCache {
       (currentEntryIds.length + targetEntryIds.length) /
       this._findTopParentChunkSize +
       1;
-    this._setCurrentLoadingMessage("msg_findingParents", numTopParentQueries);
+    this._setCurrentLoadingMessage("msg_findingParents");
     const currentTopParents = await this._findTopParents(
       this._currentIModel,
       currentEntryIds,
@@ -643,7 +637,7 @@ export class ChangedElementEntryCache {
       (unchangedCurrentTopParents.length + unchangedTargetTopParents.length) /
       this._queryEntryChunkSize +
       1;
-    this._setCurrentLoadingMessage("msg_obtainingElementData", numEntryQueries);
+    this._setCurrentLoadingMessage("msg_obtainingElementData");
     const currentParentEntries = await queryEntryDataBulk(
       this._currentIModel,
       VersionCompare.manager?.wantFastParentLoad
@@ -709,7 +703,7 @@ export class ChangedElementEntryCache {
       const numQueries = this._childrenCache.calculateNumberOfRequests(
         parentEntries.length,
       );
-      this._setCurrentLoadingMessage("msg_findingChildren", numQueries);
+      this._setCurrentLoadingMessage("msg_findingChildren");
       // Populate parent entries with their child elements
       parentEntries = await this._childrenCache.populateEntries(parentEntries);
       // Clean-up usage of update function
@@ -741,7 +735,7 @@ export class ChangedElementEntryCache {
     if (this._uiDataProvider === undefined) {
       // TODO: Improve percentage feedback with query size
       // For now, use the 6 steps (3 per iModel) to get the models
-      this._setCurrentLoadingMessage("loadingModelNodes", 6);
+      this._setCurrentLoadingMessage("loadingModelNodes");
       this._updateLoadingProgress();
       this._uiDataProvider = new ChangesTreeDataProvider(this._manager);
       await this._uiDataProvider.loadChangedModelNodes(

@@ -9,7 +9,7 @@ import { IModelApp, IModelConnection, ModelState } from "@itwin/core-frontend";
 import { ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VersionCompareManager, VersionCompareTask } from "./VersionCompareManager.js";
 
 /** Properties that are not shown but still found by the agent */
 const ignoredProperties = ["Checksum", "Version"];
@@ -410,7 +410,7 @@ export class ChangedElementsManager {
 
   private readonly _queryModelsChunkSize = 1000;
 
-  private _progressLoadingEvent?: BeEvent<(message: string) => void>;
+  private _progressLoadingEvent?: BeEvent<(versionCompareTask: VersionCompareTask) => void>;
 
   /** Cache for labels of elements */
   public get labels(): ChangedElementsLabelsCache | undefined {
@@ -542,7 +542,7 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     forward: boolean,
-    progressLoadingEvent?: BeEvent<(message: string) => void>,
+    progressLoadingEvent?: BeEvent<(versionCompareTask: VersionCompareTask) => void>,
   ): Promise<Set<string>> {
     // If we have model ids in the data already, simply accumulate the models from it instead of querying
     if (this._dataHasModelIds()) {
@@ -555,25 +555,15 @@ export class ChangedElementsManager {
     const targetIds = this._getIds(this._getElementsInTarget(forward));
     const allModelIds: Set<string> = new Set<string>();
 
-    const steps: number =
-      Math.floor(currentIds.length / chunkSize) +
-      Math.floor(targetIds.length / chunkSize);
     const message =
       IModelApp.localization.getLocalizedString(
         "VersionCompare:versionCompare.msg_computingChangedModels",
       ) + " (";
-    const outputProgressMessage = (current: number, max: number) => {
-      const percentage = Math.floor((current / (max === 0 ? 1 : max)) * 100.0);
-      if (progressLoadingEvent) {
-        progressLoadingEvent.raiseEvent(message + percentage + "%)");
-      }
-    };
 
     const getModels = async (
       elementIds: string[],
       iModel: IModelConnection,
       modelIds: Set<string>,
-      lastStep?: number,
     ) => {
       let ecsql =
         "SELECT Model as model, ECInstanceId as elemId FROM BisCore.Element WHERE ECInstanceId IN (";
@@ -590,11 +580,11 @@ export class ChangedElementsManager {
         }
         const piece = elementIds.slice(i, currentMax);
 
-        const currentStep = Math.floor(i / chunkSize);
-        outputProgressMessage(
-          lastStep ? lastStep + currentStep : currentStep,
-          steps,
-        );
+        if(progressLoadingEvent)
+          progressLoadingEvent.raiseEvent({
+            name: message,
+            weight:"light",
+          });
 
         for await (const row of iModel.query(ecsql, QueryBinder.from(piece), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
@@ -609,7 +599,6 @@ export class ChangedElementsManager {
       targetIds,
       targetIModel,
       allModelIds,
-      Math.floor(currentIds.length / chunkSize),
     );
     return allModelIds;
   }
@@ -1151,7 +1140,7 @@ export class ChangedElementsManager {
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,
-    progressLoadingEvent?: BeEvent<(message: string) => void>,
+    progressLoadingEvent?: BeEvent<(versionCompareTask: VersionCompareTask) => void>,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;
 
@@ -1165,9 +1154,10 @@ export class ChangedElementsManager {
     );
 
     if (progressLoadingEvent) {
-      progressLoadingEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
-      );
+      progressLoadingEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
+        weight: "medium",
+      });
     }
 
     // Find changed models
@@ -1179,9 +1169,10 @@ export class ChangedElementsManager {
     );
 
     if (progressLoadingEvent) {
-      progressLoadingEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
-      );
+      progressLoadingEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
+        weight: "medium",
+      });
     }
 
     // Find unchanged models
