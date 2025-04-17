@@ -1149,7 +1149,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const currentNode = this._getCurrentPathNode();
     const nodes = await this.props.dataProvider.getNodes(currentNode);
     return nodes;
-  };
+  }
 
   /** Updates nodes from data provider. */
   private readonly _reloadNodes = async (): Promise<void> => {
