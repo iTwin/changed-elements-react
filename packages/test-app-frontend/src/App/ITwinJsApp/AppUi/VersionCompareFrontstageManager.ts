@@ -45,7 +45,6 @@ export class VersionCompareFrontstageManager {
     private _propertyComparisonStageId: string,
     private _manager: VersionCompareManager,
   ) {
-    //front stage does not change when opening version compare need a trigger to cache frontstage ?
     UiFramework.frontstages.onFrontstageReadyEvent.addListener(this._onFrontstageReady);
   }
 
@@ -376,8 +375,8 @@ export class VersionCompareFrontstageManager {
     const vp = IModelApp.viewManager.getFirstOpenView();
     if (vp) {
       changedElementsWidgetAttachToViewportEvent.raiseEvent(vp);
-      this._mainViewportState = vp.view.clone();
     }
+
     // If we had a viewport state for the main frontstage before, apply it
     if (this._mainViewportState) {
       vp?.changeView(this._mainViewportState);
