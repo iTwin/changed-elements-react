@@ -6,7 +6,7 @@ import { type PrimitiveValue } from "@itwin/appui-abstract";
 import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Logger } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ScreenViewport, ViewState } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ScreenViewport, SpatialViewState, ViewState } from "@itwin/core-frontend";
 import { SvgFolder, SvgVisibilityHalf, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import {
   Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, Modal, ModalButtonBar, ModalContent,
@@ -30,6 +30,7 @@ import { ElementsList } from "./ElementsList.js";
 
 import "./ChangedElementsInspector.scss";
 import { TextEx } from "../NamedVersionSelector/TextEx.js";
+import { vi } from "vitest";
 
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
@@ -579,10 +580,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       this.dettachFromViewport(this._attachedVp);
       this._attachedVp = undefined;
     }
-    const vp = IModelApp.viewManager.getFirstOpenView();
-    if (!this.props.manager.isComparing && this.state.mainViewState && vp) {
-      //TodoCg make a function to do this with options to maintain camera and models
-      vp.applyViewState(this.state.mainViewState);
+    if (!this.props.manager.isComparing && this.state.mainViewState) {
+      this.applyViewState(this.state.mainViewState as SpatialViewState, true);
     }
   }
 
@@ -888,13 +887,29 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const propertyNames = this.props.manager.changedElementsManager.getAllChangedPropertyNames();
     const defaultOptions = makeDefaultFilterOptions(propertyNames);
     if (options !==undefined &&this.areOptionsEqual(this.state.filterOptions, defaultOptions)) {
-      const vp = IModelApp.viewManager.getFirstOpenView();
-      if (vp && this.state.changedElementsViewState && !this.state.initialLoad) {
-        //TodoCg make a function to do this with options to maintain camera and models
-        vp.applyViewState(this.state.changedElementsViewState);
+      if (this.state.changedElementsViewState && !this.state.initialLoad) {
+        this.applyViewState(this.state.changedElementsViewState as SpatialViewState,true)
       }
     }
   };
+
+  private applyViewState( viewState: SpatialViewState, keepCurrentCamera: boolean): void {
+    //todoCg make a function to do this with options to maintain camera and models
+    const vp = IModelApp.viewManager.getFirstOpenView();
+    if (vp) {
+      const currentView = vp.view.isSpatialView() ? vp.view.clone() : undefined;
+      if (currentView && keepCurrentCamera) {
+        viewState.setOrigin(currentView.getOrigin());
+        viewState.setExtents(currentView.getExtents());
+        viewState.setRotation(currentView.getRotation());
+        viewState.camera.setFrom(currentView.camera);
+        vp.applyViewState(viewState);
+      }
+      else {
+        vp.applyViewState(viewState);
+      }
+    }
+  }
 
   private areOptionsEqual = (options1: FilterOptions, options2: FilterOptions): boolean => {
     return (
