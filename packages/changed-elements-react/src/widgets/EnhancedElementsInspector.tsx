@@ -6,7 +6,7 @@ import { type PrimitiveValue } from "@itwin/appui-abstract";
 import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, DbOpcode, Logger } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ScreenViewport } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ScreenViewport, SpatialViewState, ViewState } from "@itwin/core-frontend";
 import { SvgFolder, SvgVisibilityHalf, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import {
   Breadcrumbs, Button, Checkbox, DropdownButton, IconButton, MenuDivider, MenuItem, Modal, ModalButtonBar, ModalContent,
@@ -30,6 +30,7 @@ import { ElementsList } from "./ElementsList.js";
 
 import "./ChangedElementsInspector.scss";
 import { TextEx } from "../NamedVersionSelector/TextEx.js";
+
 
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
@@ -462,6 +463,8 @@ export interface ChangedElementsListState {
   filterOptions: FilterOptions;
   loading: boolean;
   initialLoad: boolean;
+  mainViewState: ViewState | undefined;
+  initialChangedElementsViewState: ViewState | undefined;
 }
 
 export class ChangedElementsListComponent extends Component<ChangedElementsListProps, ChangedElementsListState> {
@@ -480,17 +483,39 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       props.onFilterChange(defaultOptions);
     }
 
-    this.state = {
-      nodes: [],
-      selectedIds: new Set<string>(),
-      path: [],
-      searchPath: undefined,
-      search: undefined,
-      filteredNodes: undefined,
-      filterOptions: defaultOptions,
-      loading: false,
-      initialLoad: true,
-    };
+    // Load previous state if present or stored in parent component.
+    // Doing it in the constructor ensures that the init state of the component will always equal previous loaded state if present.
+    // It should be done here instead of component did mount because the init state should always be default or previous stored saved state.
+    // This ensures that the component will always be in a consistent state fixing any issues when switching frontStages.
+    if (ChangedElementsListComponent._maintainedState) {
+      this.state = {
+        nodes: ChangedElementsListComponent._maintainedState.nodes,
+        selectedIds: ChangedElementsListComponent._maintainedState.selectedIds,
+        path: ChangedElementsListComponent._maintainedState.path,
+        searchPath: ChangedElementsListComponent._maintainedState.path,
+        search: ChangedElementsListComponent._maintainedState.search,
+        filteredNodes: ChangedElementsListComponent._maintainedState.filteredNodes,
+        filterOptions: ChangedElementsListComponent._maintainedState.filterOptions,
+        loading: ChangedElementsListComponent._maintainedState.loading,
+        initialLoad: ChangedElementsListComponent._maintainedState.initialLoad,
+        mainViewState: ChangedElementsListComponent._maintainedState.mainViewState,
+        initialChangedElementsViewState: ChangedElementsListComponent._maintainedState.initialChangedElementsViewState,
+      };
+    } else {
+      this.state = {
+        nodes: [],
+        selectedIds: new Set<string>(),
+        path: [],
+        searchPath: undefined,
+        search: undefined,
+        filteredNodes: undefined,
+        filterOptions: defaultOptions,
+        loading: false,
+        initialLoad: true,
+        mainViewState: IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
+        initialChangedElementsViewState: undefined,
+      };
+    }
   }
 
   public static cleanMaintainedState = (): void => {
@@ -513,7 +538,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         filteredNodes,
         initialLoad: false,
       });
-
       await this.setVisualization(nodes, undefined);
     }
   }
@@ -545,7 +569,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   public loadState = async (): Promise<void> => {
     const mState = ChangedElementsListComponent._maintainedState;
     if (mState) {
-      this.setState(mState);
       if (mState.search !== undefined) {
         this.props.dataProvider.setSearch(mState.search);
       }
@@ -575,6 +598,9 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     if (this._attachedVp) {
       this.dettachFromViewport(this._attachedVp);
       this._attachedVp = undefined;
+    }
+    if (!this.props.manager.isComparing && this.state.mainViewState?.isSpatialView()) {
+      this._applyViewState(this.state.mainViewState, true);
     }
   }
 
@@ -845,13 +871,22 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     targetNode: TreeNodeItem | undefined,
     options?: FilterOptions,
   ): Promise<void> => {
+    // store initial viewstate for the purpose maintaining integrity between filter changes
+    const configureInitialState = () => {
+      if (this.state.initialLoad) {
+        this.setState({
+          initialLoad: false,
+          initialChangedElementsViewState: IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
+        });
+      }
+    };
     if (nodes.length === 0 && targetNode === undefined) {
       // Visualize no focused elements
       const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
       if (visualizationManager) {
         await visualizationManager.setFocusedElements([]);
       }
-
+      configureInitialState();
       return;
     }
 
@@ -865,10 +900,67 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       // Visualize the element nodes being inspected
       await this._visualizeElementNodes(nodes, targetNode, options);
     }
+    configureInitialState();
+
+    const propertyNames = this.props.manager.changedElementsManager.getAllChangedPropertyNames();
+    const defaultOptions = makeDefaultFilterOptions(propertyNames);
+
+    // Load initial view state if the options are default. This ensures any models or EE are restored back to default
+    // when we are no longer filtering. I.E no filter show what is in view with no filter.
+    if (options !== undefined && this._areOptionsEqual(this.state.filterOptions, defaultOptions)) {
+      if (this.state.initialChangedElementsViewState?.isSpatialView() && !this.state.initialLoad) {
+        this._applyViewState(this.state.initialChangedElementsViewState, true);
+      }
+    }
+  };
+
+  /**
+ * Applies the given spatial view state to the first open viewport.
+ * If `keepCurrentCamera` is true, the camera settings (origin, extents, rotation, and camera properties)
+ * from the current view are preserved and applied to the new view state.
+ *
+ * @param viewState - The spatial view state to apply to the viewport.
+ * @param keepCurrentCamera - Whether to preserve the current camera settings when applying the new view state.
+ */
+  private readonly _applyViewState = (viewState: SpatialViewState, keepCurrentCamera: boolean): void => {
+    const vp = IModelApp.viewManager.getFirstOpenView();
+    if (vp) {
+      const currentView = vp.view.isSpatialView() ? vp.view.clone() : undefined;
+      if (currentView && keepCurrentCamera) {
+        viewState.setOrigin(currentView.getOrigin());
+        viewState.setExtents(currentView.getExtents());
+        viewState.setRotation(currentView.getRotation());
+        viewState.camera.setFrom(currentView.camera);
+        vp.applyViewState(viewState);
+      }
+      else {
+        vp.applyViewState(viewState);
+      }
+    }
+  };
+
+  /**
+ * Compares two filter options to determine if they are equal.
+ * The comparison checks all relevant properties of the filter options, including visibility settings
+ * for added, deleted, modified, and unchanged elements, as well as the type of changes and properties being filtered.
+ *
+ * @param options1 - The first set of filter options to compare.
+ * @param options2 - The second set of filter options to compare.
+ * @returns `true` if the two filter options are equal; otherwise, `false`.
+ */
+  private readonly _areOptionsEqual = (options1: FilterOptions, options2: FilterOptions): boolean => {
+    return (
+      options1.wantAdded === options2.wantAdded &&
+      options1.wantDeleted === options2.wantDeleted &&
+      options1.wantModified === options2.wantModified &&
+      options1.wantUnchanged === options2.wantUnchanged &&
+      options1.wantedTypeOfChange === options2.wantedTypeOfChange &&
+      allPropertiesVisible(options1.wantedProperties) === allPropertiesVisible(options2.wantedProperties)
+    );
   };
 
   /** Returns true if any of the entry's properties are being visualized. */
-  private _anyEntryPropertiesVisible = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
+  private readonly _anyEntryPropertiesVisible = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
     if (entry.properties === undefined) {
       // Shouldn't happen
       return true;
@@ -890,7 +982,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
    * @param entry Entry to test
    * @param options FilterOptions
    */
-  private _modifiedEntryMatchesFilters = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
+  private readonly _modifiedEntryMatchesFilters = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
     // Nothing to do if we are not using type of change filtering
     if (!this.props.manager.wantTypeOfChange) {
       return true;
@@ -922,7 +1014,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /** Returns true if the entry matches the filter options. */
-  private _wantShowEntry = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
+  private readonly _wantShowEntry = (entry: ChangedElementEntry, options: FilterOptions): boolean => {
     if (entry.indirect && entry.children === undefined) {
       return true;
     }
@@ -935,7 +1027,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /** Returns true if any of the children of the entry matches the filter options. */
-  private _childrenWantShow = (parent: ChangedElementEntry, options: FilterOptions): boolean => {
+  private readonly _childrenWantShow = (parent: ChangedElementEntry, options: FilterOptions): boolean => {
     const children = parent.children;
     if (children === undefined) {
       return false;
@@ -967,7 +1059,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   }
 
   /** Returns true if the node matches the filter options. */
-  private _wantShowNode = (node: TreeNodeItem, options: FilterOptions): boolean => {
+  private readonly _wantShowNode = (node: TreeNodeItem, options: FilterOptions): boolean => {
     if (node.extendedData === undefined) {
       return false;
     }
@@ -988,7 +1080,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /** Filter nodes based on the given options. */
-  public getFilteredNodes = (nodes: TreeNodeItem[], options: FilterOptions): TreeNodeItem[] | undefined => {
+  public readonly getFilteredNodes = (nodes: TreeNodeItem[], options: FilterOptions): TreeNodeItem[] | undefined => {
     // Nothing to filter
     if (isDefaultFilterOptions(options)) {
       return undefined;
@@ -999,7 +1091,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /** Update filter options and update visualization. */
-  public handleFilterChange = async (options: FilterOptions): Promise<void> => {
+  public readonly handleFilterChange = async (options: FilterOptions): Promise<void> => {
     // Get filtered nodes and update visualization
     const filteredNodes = this.getFilteredNodes(this.state.nodes, options);
     await this.setVisualization(this.state.nodes, this.state.path[this.state.path.length - 1], options);
@@ -1050,7 +1142,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   }
 
   /** Handle clearing search */
-  private _handleClearSearch = async (): Promise<void> => {
+  private readonly _handleClearSearch = async (): Promise<void> => {
     // Clear search in data provider
     this.props.dataProvider.setSearch(undefined);
     // Get nodes, will take a while depending on iModel since labels must be loaded
@@ -1076,7 +1168,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   }
 
   /** Updates nodes from data provider. */
-  private _reloadNodes = async (): Promise<void> => {
+  private readonly _reloadNodes = async (): Promise<void> => {
     const nodes = await this._getCurrentNodesFromProvider();
     const filteredNodes = this.getFilteredNodes(nodes, this.state.filterOptions);
     this.setState({ nodes, filteredNodes });
@@ -1085,7 +1177,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /** Loads the search */
-  private _loadSearch = async (search?: string): Promise<void> => {
+  private readonly _loadSearch = async (search?: string): Promise<void> => {
     this.props.dataProvider.setSearch(search);
 
     if (!this.props.dataProvider.isSearching()) {
@@ -1112,25 +1204,25 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     this._nodesUpdated.raiseEvent();
   };
 
-  private _loadNodes = async (nodes: TreeNodeItem[]): Promise<void> => {
+  private readonly _loadNodes = async (nodes: TreeNodeItem[]): Promise<void> => {
     await this.props.dataProvider.load(nodes);
     await this._reloadNodes();
   };
 
-  private _isNodeLoaded = (node: TreeNodeItem): boolean => {
+  private readonly _isNodeLoaded = (node: TreeNodeItem): boolean => {
     return this.props.dataProvider.isLoaded(node);
   };
 
-  private _isSelected = (item: TreeNodeItem): boolean => {
+  private readonly _isSelected = (item: TreeNodeItem): boolean => {
     return this.state.selectedIds.has(item.id);
   };
 
-  private _hasChildren = (item: DelayLoadedTreeNodeItem): boolean => {
+  private readonly _hasChildren = (item: DelayLoadedTreeNodeItem): boolean => {
     return item.hasChildren ??
       (item.extendedData?.isModel ? this._modelNodeHasChangedChildren(item) : this._nodeHasChangedChildren(item));
   };
 
-  private _isItemVisible = (item: TreeNodeItem): boolean => {
+  private readonly _isItemVisible = (item: TreeNodeItem): boolean => {
     const elementIdsNeededForVisibility = this.props.dataProvider.getRelatedElementIds(item);
 
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
@@ -1144,7 +1236,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       : visualizationManager.isAnyVisible(new Set(elementIdsNeededForVisibility));
   };
 
-  private _toggleVisibility = async (item: TreeNodeItem): Promise<void> => {
+  private readonly _toggleVisibility = async (item: TreeNodeItem): Promise<void> => {
     const elementsNeededForVisibility = this.props.dataProvider.getRelatedElements(item);
 
     // Visibility of element based on its children elements and itself
@@ -1167,7 +1259,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   // On expanding the element: load the child nodes in this list
-  private _onInspect = async (item: TreeNodeItem): Promise<void> => {
+  private readonly _onInspect = async (item: TreeNodeItem): Promise<void> => {
     const isSearching = this.state.searchPath !== undefined;
     const currentPath = this._getCurrentPath();
     // If we are looking at search results, add to the search results path
@@ -1212,7 +1304,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
    * @param entries Entries to select.
    * @param directSelection Whether to do the selection directly in the iModel instead of the presentation layer.
    */
-  private _selectEntry = (iModel: IModelConnection, entry: ChangedElementEntry): void => {
+  private readonly _selectEntry = (iModel: IModelConnection, entry: ChangedElementEntry): void => {
     Presentation.selection
       .replaceSelectionWithScope("ChangedElementsWidget", iModel, entry.id, "element")
       .catch(() => { });
@@ -1222,7 +1314,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
    * Selects the given node element in both iModels if possible.
    * @param item Tree Node Item to select element for.
    */
-  private _selectNode = (item: TreeNodeItem): void => {
+  private readonly _selectNode = (item: TreeNodeItem): void => {
     const currentIModel = this.props.manager.currentIModel;
     const targetIModel = this.props.manager.targetIModel;
     const element: ChangedElementEntry | undefined = item.extendedData?.element;
@@ -1240,7 +1332,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
    * On click, select the element and zoom to it.
    * @param item Tree Node that was clicked.
    */
-  private _onNodeClick = async (item: TreeNodeItem): Promise<void> => {
+  private readonly _onNodeClick = async (item: TreeNodeItem): Promise<void> => {
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (item.extendedData?.isModel && visualizationManager) {
       // Handle zooming to 3d model nodes
@@ -1255,7 +1347,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     }
   };
 
-  private _onPropertyCompare = async (): Promise<void> => {
+  private readonly _onPropertyCompare = async (): Promise<void> => {
     this.saveState();
     await this.props.manager.initializePropertyComparison();
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.comparisonLegendWidgetInitializeInspect);
