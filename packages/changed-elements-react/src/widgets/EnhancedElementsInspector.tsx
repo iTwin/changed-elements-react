@@ -487,19 +487,35 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     // Doing it in the constructor ensures that the init state of the component will always equal previous loaded state if present.
     // It should be done here instead of component did mount because the init state should always be default or previous stored saved state.
     // This ensures that the component will always be in a consistent state fixing any issues when switching frontStages.
-    this.state = {
-      nodes: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.nodes : [],
-      selectedIds: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.selectedIds : new Set<string>(),
-      path: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.path : [],
-      searchPath: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.path : undefined,
-      search: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.search : undefined,
-      filteredNodes: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.filteredNodes : undefined,
-      filterOptions: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.filterOptions : defaultOptions,
-      loading: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.loading : false,
-      initialLoad: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.initialLoad : true,
-      mainViewState: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.mainViewState : IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
-      initialChangedElementsViewState: ChangedElementsListComponent._maintainedState ? ChangedElementsListComponent._maintainedState.initialChangedElementsViewState : undefined,
-    };
+    if (ChangedElementsListComponent._maintainedState) {
+      this.state = {
+        nodes: ChangedElementsListComponent._maintainedState.nodes,
+        selectedIds: ChangedElementsListComponent._maintainedState.selectedIds,
+        path: ChangedElementsListComponent._maintainedState.path,
+        searchPath: ChangedElementsListComponent._maintainedState.path,
+        search: ChangedElementsListComponent._maintainedState.search,
+        filteredNodes: ChangedElementsListComponent._maintainedState.filteredNodes,
+        filterOptions: ChangedElementsListComponent._maintainedState.filterOptions,
+        loading: ChangedElementsListComponent._maintainedState.loading,
+        initialLoad: ChangedElementsListComponent._maintainedState.initialLoad,
+        mainViewState: ChangedElementsListComponent._maintainedState.mainViewState,
+        initialChangedElementsViewState: ChangedElementsListComponent._maintainedState.initialChangedElementsViewState,
+      };
+    } else {
+      this.state = {
+        nodes: [],
+        selectedIds: new Set<string>(),
+        path: [],
+        searchPath: undefined,
+        search: undefined,
+        filteredNodes: undefined,
+        filterOptions: defaultOptions,
+        loading: false,
+        initialLoad: true,
+        mainViewState: IModelApp.viewManager.getFirstOpenView()?.view.clone() ?? undefined,
+        initialChangedElementsViewState: undefined,
+      };
+    }
   }
 
   public static cleanMaintainedState = (): void => {
