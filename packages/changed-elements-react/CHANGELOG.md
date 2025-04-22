@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.13
+
+### Patch Changes
+
+#### [0.14.13](https://github.com/iTwin/changed-elements-react/tree/v0.14.13/packages/changed-elements-react) - 2025-04-22
+
+- Filters now respect viewState when restoring default view
+- Filters now persist when switching frontstages
+
 ## 0.14.12
 
 ### Patch Changes
