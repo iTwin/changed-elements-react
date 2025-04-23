@@ -3,8 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { SvgInfo } from "@itwin/itwinui-icons-react";
-import { DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
+import { Divider, DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
 import type { ReactNode } from "react";
+import { Documentation } from "./Documentation.js";
 
 interface Props {
   "data-testid"?: string;
@@ -18,7 +19,7 @@ interface Props {
 function InfoButton(props: Props) {
   return (
     <DropdownMenu
-      style={{ width: 500 }}
+      style={{ width: 400 }}
       placement="bottom-end"
       menuItems={() => [
         <MenuExtraContent key={0}>

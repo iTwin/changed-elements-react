@@ -7,7 +7,7 @@ import {
   IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection, type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
-import { IconButton, ProgressRadial, Text, useToaster } from "@itwin/itwinui-react";
+import { Divider, IconButton, ProgressRadial, Text, useToaster } from "@itwin/itwinui-react";
 import { Component, type ReactElement, type ReactNode } from "react";
 
 import { namedVersionSelectorContext } from "../NamedVersionSelector/NamedVersionSelectorContext.js";
@@ -35,6 +35,7 @@ import {
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 import "./ChangedElementsWidget.scss";
+import { Documentation } from "./Documentation.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -59,6 +60,12 @@ export interface ChangedElementsWidgetProps {
    * @beta
    */
   useV2Widget?: boolean;
+
+  /**
+ * Optional. If set information button will show documentation link.
+ * @beta
+ */
+  documentationHref?: string;
 
   /**
  * Optional. Only true if the new named version selector is being used.
@@ -398,6 +405,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                         this.state.manager.wantReportGeneration ? this.openReportDialog : undefined
                       }
                       onInspect={this._handleInspect}
+                      documentationHref={this.props.documentationHref}
                     />
                   </WidgetComponent.Header.Actions>
                 </WidgetComponent.Header>
@@ -476,17 +484,18 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 let reportIsBeingGenerated = false;
 
 interface ChangedElementsHeaderButtonsProps {
-  loaded?: boolean | undefined;
-  useV2Widget?: boolean | undefined;
-  useNewNamedVersionSelector?: boolean | undefined;
-  onlyInfo?: boolean | undefined;
-  onOpenVersionSelector?: (() => void) | undefined;
+  loaded?: boolean;
+  useV2Widget?: boolean
+  useNewNamedVersionSelector?: boolean;
+  onlyInfo?: boolean;
+  onOpenVersionSelector?: (() => void);
   onStopComparison?: (() => void) | undefined;
-  onOpenReportDialog?: (() => void) | undefined;
-  onInspect?: (() => void) | undefined;
+  onOpenReportDialog?: (() => void);
+  onInspect?: (() => void);
+  documentationHref: string;
 }
 
-export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtonsProps): ReactElement {
+export function ChangedElementsHeaderButtons(props: Readonly<ChangedElementsHeaderButtonsProps>): ReactElement {
   const t = (key: string) => IModelApp.localization.getLocalizedString(key);
 
   const paragraphs = t("VersionCompare:versionCompare.versionCompareInfoV2").split("\n");
@@ -496,6 +505,12 @@ export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtons
         {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
       </Text>
       {paragraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+      {props.documentationHref && (
+        <>
+        <Divider />
+        <Documentation href={props.documentationHref} />
+      </>
+      )}
     </InfoButton>
   );
 

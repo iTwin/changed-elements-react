@@ -316,6 +316,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
               manager={VersionCompare.manager}
               manageVersions={<ManageNamedVersions />}
               feedbackUrl="https://example.com"
+              documentationHref="https://example.com"
             />
           ),
         },
@@ -323,11 +324,13 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     } else {
       return [{
         id: "ChangedElementsWidget",
-        content: <ChangedElementsWidget useV2Widget
+        content: <ChangedElementsWidget
+          useV2Widget
           feedbackUrl="https://example.com"
           iModelConnection={UiFramework.getIModelConnection()!}
           enableComparisonJobUpdateToasts
           manageNamedVersionsSlot={<ManageNamedVersions />}
+          documentationHref="https://example.com"
         />,
       }];
     }

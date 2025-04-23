@@ -45,6 +45,7 @@ interface NamedVersionSelectorWidgetProps {
   emptyState?: ReactNode;
   manageVersions?: ReactNode;
   feedbackUrl?: string;
+  documentationHref?: string;
 }
 
 /**
@@ -117,6 +118,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
               ? () => void widgetRef.current?.openReportDialog()
               : undefined
           }
+          documentationHref={props.documentationHref}
         />
       </Widget.Header>
       <namedVersionSelectorContext.Consumer>
@@ -202,6 +204,7 @@ interface NamedVersionSelectorProps {
   emptyState?: ReactNode;
   manageVersions?: ReactNode;
   feedbackUrl?: string;
+  documentationHref?: string;
 }
 
 function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): ReactElement {
@@ -271,7 +274,7 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
-        {currentNamedVersion && <ChangedElementsHeaderButtons onlyInfo />}
+        {currentNamedVersion && <ChangedElementsHeaderButtons documentationHref={props.documentationHref} onlyInfo />}
       </Widget.Header>
       {
         currentNamedVersion &&

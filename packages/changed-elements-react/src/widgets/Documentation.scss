@@ -1,0 +1,27 @@
+/* Container for the entire button content */
+.documentation-button-container {
+  margin-top: 4px;
+  color: var(--iui-color-text-accent);
+  cursor: pointer;
+  font-size: small;
+  font-weight: normal;
+  text-decoration: none;
+}
+
+.documentation-button-container:hover {
+  color: var(--iui-color-background-informational-hover);
+}
+
+/* Content inside the button (icon and text) */
+.documentation-button-content {
+  display: flex; /* Use flexbox layout */
+  flex-direction: row; /* Arrange children in a row */
+  gap: 2px; /* Add spacing between children */
+  align-items: center; /* Align children vertically in the center */
+  color: var(--iui-text-color-informational); /* Set text color to informational */
+}
+
+/* Text inside the button */
+.documentation-button-text {
+  color: var(--iui-color-background-informational); /* Set text color */
+}
