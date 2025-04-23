@@ -3,9 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { SvgInfo } from "@itwin/itwinui-icons-react";
-import { Divider, DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
+import { DropdownMenu, IconButton, MenuExtraContent } from "@itwin/itwinui-react";
 import type { ReactNode } from "react";
-import { Documentation } from "./Documentation.js";
 
 interface Props {
   "data-testid"?: string;

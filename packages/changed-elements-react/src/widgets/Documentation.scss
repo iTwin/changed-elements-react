@@ -1,4 +1,8 @@
-/* Container for the entire button content */
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
 .documentation-button-container {
   margin-top: 4px;
   color: var(--iui-color-text-accent);
@@ -12,16 +16,14 @@
   color: var(--iui-color-background-informational-hover);
 }
 
-/* Content inside the button (icon and text) */
 .documentation-button-content {
-  display: flex; /* Use flexbox layout */
-  flex-direction: row; /* Arrange children in a row */
-  gap: 2px; /* Add spacing between children */
-  align-items: center; /* Align children vertically in the center */
-  color: var(--iui-text-color-informational); /* Set text color to informational */
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  align-items: center;
+  color: var(--iui-text-color-informational);
 }
 
-/* Text inside the button */
 .documentation-button-text {
-  color: var(--iui-color-background-informational); /* Set text color */
+  color: var(--iui-color-background-informational);
 }

@@ -96,6 +96,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         emptyState={emptyState}
         manageVersions={manageVersions}
         feedbackUrl={feedbackUrl}
+        documentationHref = {props.documentationHref}
       />
     );
   }

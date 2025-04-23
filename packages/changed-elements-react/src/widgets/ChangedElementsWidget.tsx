@@ -492,7 +492,7 @@ interface ChangedElementsHeaderButtonsProps {
   onStopComparison?: (() => void) | undefined;
   onOpenReportDialog?: (() => void);
   onInspect?: (() => void);
-  documentationHref: string;
+  documentationHref?: string;
 }
 
 export function ChangedElementsHeaderButtons(props: Readonly<ChangedElementsHeaderButtonsProps>): ReactElement {
