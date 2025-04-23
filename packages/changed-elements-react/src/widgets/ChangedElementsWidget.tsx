@@ -485,7 +485,7 @@ let reportIsBeingGenerated = false;
 
 interface ChangedElementsHeaderButtonsProps {
   loaded?: boolean;
-  useV2Widget?: boolean
+  useV2Widget?: boolean;
   useNewNamedVersionSelector?: boolean;
   onlyInfo?: boolean;
   onOpenVersionSelector?: (() => void);
