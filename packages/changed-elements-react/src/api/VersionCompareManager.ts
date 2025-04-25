@@ -21,6 +21,11 @@ import { VisualizationHandler } from "./VisualizationHandler.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
+export type VersionCompareTaskWeight = "light" | "medium" | "heavy";
+export type VersionCompareTask = {
+  name: string;
+  weight: VersionCompareTaskWeight;
+}
 /**
  * Main orchestrator for version compare functionality and workflows. This class does the following:
  *
@@ -122,7 +127,7 @@ export class VersionCompareManager {
   public versionCompareStopped = new BeEvent<() => void>();
 
   /** Triggers during startup to show progress messages to any listener. */
-  public loadingProgressEvent = new BeEvent<(message: string) => void>();
+  public loadingProgressEvent = new BeEvent<(versionCompareTask: VersionCompareTask) => void>();
 
   /** Current Version for comparison. */
   public currentVersion: NamedVersion | undefined;
@@ -271,8 +276,10 @@ export class VersionCompareManager {
         throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
       }
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingCurrent"),
+        weight: "heavy",
+      },
       );
 
       // Open the target version IModel
@@ -287,8 +294,10 @@ export class VersionCompareManager {
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
+        weight: "medium",
+      },
       );
       const changedElements = await this.getChangedElements(
         this._currentIModel,
@@ -296,10 +305,10 @@ export class VersionCompareManager {
         targetVersion,
         changesetChunks,
       );
-
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
-      );
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
+        weight: "medium",
+      });
 
       let wantedModelClasses = [
         GeometricModel2dState.classFullName,
@@ -332,9 +341,10 @@ export class VersionCompareManager {
       );
 
       // Get the entries
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
-      );
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
+        weight: "medium",
+      });
       await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
 
       // Reset the select tool to allow external iModels to be located
@@ -405,8 +415,10 @@ export class VersionCompareManager {
         throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
       }
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingCurrent"),
+        weight: "heavy",
+      },
       );
 
       // Open the target version IModel
@@ -421,13 +433,17 @@ export class VersionCompareManager {
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
+        weight: "medium",
+      },
       );
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
-      );
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
+        weight: "medium",
+      });
+
 
       let wantedModelClasses = [
         GeometricModel2dState.classFullName,
@@ -463,9 +479,10 @@ export class VersionCompareManager {
       );
 
       // Get the entries
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
-      );
+      this.loadingProgressEvent.raiseEvent({
+        name: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
+        weight: "medium",
+      });
       await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
 
       // Reset the select tool to allow external iModels to be located
