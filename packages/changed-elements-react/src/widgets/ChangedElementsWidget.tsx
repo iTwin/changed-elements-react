@@ -489,7 +489,7 @@ interface ChangedElementsHeaderButtonsProps {
   useNewNamedVersionSelector?: boolean;
   onlyInfo?: boolean;
   onOpenVersionSelector?: (() => void);
-  onStopComparison?: (() => void) | undefined;
+  onStopComparison?: (() => void);
   onOpenReportDialog?: (() => void);
   onInspect?: (() => void);
   documentationHref?: string;
