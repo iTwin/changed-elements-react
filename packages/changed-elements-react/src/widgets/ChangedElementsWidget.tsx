@@ -506,7 +506,7 @@ export function ChangedElementsHeaderButtons(props: Readonly<ChangedElementsHead
       </Text>
       {paragraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
       {props.documentationHref && (
-        <>
+      <>
         <Divider />
         <Documentation href={props.documentationHref} />
       </>
