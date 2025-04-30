@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.15.0
+
+### Minor Changes
+
+#### [0.15.0](https://github.com/iTwin/changed-elements-react/tree/v0.15.0/packages/changed-elements-react) - 2025-04-30
+
+- Added ability to add custom documentation link to information pane.
+  Pass href into top level widget as prop.
+
 ## 0.14.13
 
 ### Patch Changes
