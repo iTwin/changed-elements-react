@@ -18,6 +18,7 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
+import { ProgressCoordinator, ProgressStage } from "../widgets/ProgressCoordinator.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
@@ -34,6 +35,8 @@ const LOGGER_CATEGORY = "Version-Compare";
 export class VersionCompareManager {
   /** Changed Elements Manager responsible for maintaining the elements obtained from the service */
   public changedElementsManager: ChangedElementsManager;
+
+  private progressCoordinator: ProgressCoordinator;
 
   private _visualizationHandler: VisualizationHandler | undefined;
   private _hasTypeOfChange = false;
@@ -59,6 +62,14 @@ export class VersionCompareManager {
       const tooltipProvider = new ChangesTooltipProvider(this);
       IModelApp.viewManager.addToolTipProvider(tooltipProvider);
     }
+
+    // define the weight for each stage of the progress
+    const weights: Record<ProgressStage, number> = {
+      [ProgressStage.OpenTargetImodel]: 80,
+      [ProgressStage.InitComparison]: 20,
+    };
+
+    this.progressCoordinator = new ProgressCoordinator(weights);
   }
 
   /** Create the proper visualization handler based on options */
@@ -151,6 +162,10 @@ export class VersionCompareManager {
   /** Returns true if version compare manager is currently engaged in comparison.*/
   public get isComparing(): boolean {
     return this._targetIModel !== undefined;
+  }
+
+  public get onOverallProgress() {
+    return this.progressCoordinator.onProgressChanged;
   }
 
   /**
@@ -409,6 +424,8 @@ export class VersionCompareManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
       );
 
+      this.progressCoordinator.update(ProgressStage.OpenTargetImodel, 0);
+
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
       this._targetIModel = await CheckpointConnection.openRemote(
@@ -416,6 +433,8 @@ export class VersionCompareManager {
         this._currentIModel.iModelId,
         IModelVersion.asOfChangeSet(changesetId),
       );
+
+      this.progressCoordinator.update(ProgressStage.OpenTargetImodel, 100);
 
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;

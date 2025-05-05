@@ -182,6 +182,11 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ message, loading: true, description: "" });
   };
 
+  // @naron: clean this up
+  // private _onOverallProgress = (pct: number, msg: string): void => {
+  //   console.log(`Overall progress: ${pct}%, message: ${msg}`);
+  // }
+
   private _refreshCheckboxesEvent = new BeEvent<() => void>();
 
   constructor(props: ChangedElementsWidgetProps) {
@@ -219,10 +224,11 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override componentDidMount() {
     const { manager } = this.state;
     this.addListeners([
-      { event: manager.versionCompareStarting, action: this._onComparisonStarting },
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting }, // @naron: is this actually redundant?
       { event: manager.versionCompareStarted, action: this._onComparisonStarted },
       { event: manager.loadingProgressEvent, action: this._onProgressEvent },
       { event: manager.versionCompareStopped, action: this._onComparisonStopped },
+      // { event: manager.onOverallProgress, action: this._onOverallProgress },   // @naron: clean this up
     ]);
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
