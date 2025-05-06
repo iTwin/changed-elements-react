@@ -142,7 +142,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({
       loading: true,
       loaded: false,
-      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
+      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"), //@naron: this is another starting point
       description: "",
     });
   };
@@ -182,10 +182,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ message, loading: true, description: "" });
   };
 
-  // @naron: clean this up
-  // private _onOverallProgress = (pct: number, msg: string): void => {
-  //   console.log(`Overall progress: ${pct}%, message: ${msg}`);
-  // }
+  private _onOverallProgress = (pct: number, msg: string): void => {
+    console.log(`Overall progress: ${pct}%, message: ${msg}`);
+  }
 
   private _refreshCheckboxesEvent = new BeEvent<() => void>();
 
@@ -224,16 +223,16 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override componentDidMount() {
     const { manager } = this.state;
     this.addListeners([
-      { event: manager.versionCompareStarting, action: this._onComparisonStarting }, // @naron: is this actually redundant?
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting }, // : is this actually redundant?
       { event: manager.versionCompareStarted, action: this._onComparisonStarted },
       { event: manager.loadingProgressEvent, action: this._onProgressEvent },
       { event: manager.versionCompareStopped, action: this._onComparisonStopped },
-      // { event: manager.onOverallProgress, action: this._onOverallProgress },   // @naron: clean this up
+      { event: manager.onOverallProgress, action: this._onOverallProgress },   // : clean this up
     ]);
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
       loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
-      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison")
+      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison") //: this is another starting point
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
     });
   }

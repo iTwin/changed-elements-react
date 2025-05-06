@@ -81,10 +81,6 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
           setIsComparisonStarted(false);
         }),
 
-        // @naron: i choose to not hook the listener at changed element widgeet level but here, this is breaking some level of consistency though
-        manager.onOverallProgress.addListener((pct: number, msg: string): void => {
-          console.log(`Overall progress: ${pct}%, message: ${msg}`);
-        }),
       ];
       return () => cleanup.forEach((cb) => cb());
     },

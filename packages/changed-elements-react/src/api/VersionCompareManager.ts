@@ -65,8 +65,13 @@ export class VersionCompareManager {
 
     // define the weight for each stage of the progress
     const weights: Record<ProgressStage, number> = {
-      [ProgressStage.OpenTargetImodel]: 80,
-      [ProgressStage.InitComparison]: 20,
+      [ProgressStage.OpenTargetImodel]: 10,
+      [ProgressStage.InitComparison]: 10,
+      [ProgressStage.ComputeChangedModels]: 10,
+      [ProgressStage.FindParents]: 10,
+      [ProgressStage.ObtainElementData]: 10,
+      [ProgressStage.FindChildren]: 10,
+      [ProgressStage.LoadIModelNodes]: 40,
     };
 
     this.progressCoordinator = new ProgressCoordinator(weights);
@@ -328,6 +333,7 @@ export class VersionCompareManager {
         this._currentIModel,
         this._targetIModel,
         changedElements,
+        this.progressCoordinator,
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
@@ -424,7 +430,7 @@ export class VersionCompareManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
       );
 
-      this.progressCoordinator.update(ProgressStage.OpenTargetImodel, 0);
+      this.progressCoordinator.updateProgress(ProgressStage.OpenTargetImodel);
 
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
@@ -434,19 +440,17 @@ export class VersionCompareManager {
         IModelVersion.asOfChangeSet(changesetId),
       );
 
-      this.progressCoordinator.update(ProgressStage.OpenTargetImodel, 100);
+      this.progressCoordinator.updateProgress(ProgressStage.OpenTargetImodel, 100);
 
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
 
       this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
-      );
-
-      this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
       );
+
+      this.progressCoordinator.updateProgress(ProgressStage.InitComparison);
 
       let wantedModelClasses = [
         GeometricModel2dState.classFullName,
@@ -459,10 +463,14 @@ export class VersionCompareManager {
       if (this.ignoredElementIds !== undefined) {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
+
+      this.progressCoordinator.updateProgress(ProgressStage.InitComparison, 100); //@naron: is the following initialize also part of init comparison? if so, we need to maintain hierarchy of progress stages
+
       await this.changedElementsManager.initialize(
         this._currentIModel,
         this._targetIModel,
         filteredChangedElements,
+        this.progressCoordinator,
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,

@@ -128,10 +128,10 @@ export const queryEntryDataBulk = async (
   iModel: IModelConnection,
   elementIds: string[],
   chunkSize = 1000,
-  updateFunc?: () => void,
+  updateFunc?: (pct: number) => void,
 ): Promise<ChangedElementQueryData[]> => {
   if (elementIds.length < chunkSize) {
-    return queryEntryData(iModel, elementIds);
+    return queryEntryData(iModel, elementIds); //@naron: not able to test on openPlant, always gets retuned here | change the chunk size to test
   }
 
   const final: ChangedElementQueryData[] = [];
@@ -142,7 +142,7 @@ export const queryEntryDataBulk = async (
     );
     final.push(...data);
     if (updateFunc) {
-      updateFunc();
+      updateFunc(Math.floor(i / elementIds.length * 100));
     }
   }
   return final;

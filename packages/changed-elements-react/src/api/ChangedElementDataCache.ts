@@ -20,7 +20,7 @@ export abstract class ChangedElementDataCache {
   /**
    * Called whenever a request is done in bulk mode, useful for UI update of progress
    */
-  public updateFunction?: () => void;
+  public updateFunction?: (pct: number) => void;
 
   constructor(protected _chunkSize: number = 500) {
     // No-op
@@ -50,7 +50,7 @@ export abstract class ChangedElementDataCache {
       const piece = await this._request(elements.slice(i, i + this._chunkSize));
       result.push(...piece);
       if (this.updateFunction) {
-        this.updateFunction();
+        this.updateFunction(Math.floor(i / elements.length * 100));
       }
     }
     return result;
@@ -111,7 +111,7 @@ export abstract class ChangedElementDataCache {
       return [];
     // If everything has been cached already, populate the data and return
     if (this._containedInCache(elements)) {
-      return this._populateEntries(elements);
+      return this._populateEntries(elements); //@naron: loading also doesnt get here for openPlant3
     }
 
     // Split the entries into the ones we have already cached and the ones we haven't

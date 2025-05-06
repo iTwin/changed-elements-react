@@ -3,13 +3,15 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent } from "@itwin/core-bentley";
-import { IModelApp } from "@itwin/core-frontend";
 
 export enum ProgressStage {
-  // OpenTargetIModel = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
-  // Init = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
-  OpenTargetImodel = "openingTarget",
-  InitComparison = "initializingComparison",
+  OpenTargetImodel = "mgs_openingTarget",
+  InitComparison = "mgs_initializingComparison",
+  ComputeChangedModels = "mgs_computingChangedModels", //@naron: there is no hiarchy for now, like computingChangeModels is actually part of initializing comparison, I could support that if needed
+  FindParents = "mgs_findingParents",
+  ObtainElementData = "mgs_obtainingElementData",
+  FindChildren = "mgs_findingChildren",
+  LoadIModelNodes = "loadingModelNodes",
 }
 
 export class ProgressCoordinator{
@@ -26,10 +28,10 @@ export class ProgressCoordinator{
     ) as Record<ProgressStage, number>;
   }
 
-  // @naron: if we want other operations to use this, probably shouldnt hardcode prefix
   public getStageMessage(stage: ProgressStage): string {
-    const prefix = "VersionCompare:versionCompare.msg_";
-    return IModelApp.localization.getLocalizedString(`${prefix}${stage}`);
+    // const prefix = "VersionCompare:versionCompare.";
+    // return IModelApp.localization.getLocalizedString(`${prefix}${stage}`); //@naron: change this to loading
+    return "loading comparison"
   }
 
   /**
@@ -37,8 +39,20 @@ export class ProgressCoordinator{
    * @param stage The stage to update.
    * @param progress The progress percentage for the specified stage (0-100).
    */
-  public update(stage: ProgressStage, progress: number): void {
+  public updateProgress(stage: ProgressStage, progress: number = 0): void {
     this.progress[stage] = progress;
+    const overallPercentage = this.getOverallPercentage();
+    const msg = this.getStageMessage(stage);
+    this.onProgressChanged.raiseEvent(overallPercentage, msg);
+  }
+
+  /**
+   * Increment the progress for a specific stage with overall percentage and raises the event.
+   * @param stage The stage to update.
+   * @param progress The progress percentage for the specified stage (0-100).
+   */
+  public addProgress(stage: ProgressStage, progress: number): void {
+    this.progress[stage] += progress;
     const overallPercentage = this.getOverallPercentage();
     const msg = this.getStageMessage(stage);
     this.onProgressChanged.raiseEvent(overallPercentage, msg);
@@ -56,5 +70,4 @@ export class ProgressCoordinator{
       return sum + (p / 100) * weight;
     }, 0);
   }
-
 }
