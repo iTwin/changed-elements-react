@@ -348,7 +348,7 @@ export class ReportGenerator extends ReportGeneratorBase {
     });
     ecsql = ecsql.substr(0, ecsql.length - 1) + ")";
     const elementIds = entries.map((entry: ChangedElementEntry) => entry.id);
-    for await (const row of iModel.query(ecsql, QueryBinder.from(elementIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(elementIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       this._nativeIdMap.set(row.id, row.identifier);

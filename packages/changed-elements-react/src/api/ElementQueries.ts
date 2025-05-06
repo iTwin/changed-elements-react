@@ -96,7 +96,7 @@ export const queryEntryData = async (
   queryString = queryString.substr(0, queryString.length - 1) + ")";
   elemECSQL = elemECSQL + queryString;
   const result: ChangedElementQueryData[] = [];
-  for await (const row of iModel.query(
+  for await (const row of iModel.createQueryReader(
     elemECSQL,
     QueryBinder.from(elementIds),
     {
