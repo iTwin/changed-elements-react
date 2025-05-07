@@ -183,7 +183,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _onOverallProgress = (pct: number, msg: string): void => {
-    console.log(`Overall progress: ${pct}%, message: ${msg}`);
+    const message = `${msg} progress: ${pct}%`;
+    console.log(message);
+    this.setState({ message, loading: true, description: "" });
   }
 
   private _refreshCheckboxesEvent = new BeEvent<() => void>();
@@ -223,16 +225,16 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override componentDidMount() {
     const { manager } = this.state;
     this.addListeners([
-      { event: manager.versionCompareStarting, action: this._onComparisonStarting }, // : is this actually redundant?
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting }, // @naron: is this actually redundant?
       { event: manager.versionCompareStarted, action: this._onComparisonStarted },
       { event: manager.loadingProgressEvent, action: this._onProgressEvent },
       { event: manager.versionCompareStopped, action: this._onComparisonStopped },
-      { event: manager.onOverallProgress, action: this._onOverallProgress },   // : clean this up
+      { event: manager.onOverallProgress, action: this._onOverallProgress },
     ]);
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
       loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
-      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison") //: this is another starting point
+      message: this.props.usingExperimentalSelector ? "loading comparison progress: 0%" // @naron: hardcode here? this should come from progressCoordinator
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
     });
   }

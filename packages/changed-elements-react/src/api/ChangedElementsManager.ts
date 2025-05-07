@@ -450,7 +450,7 @@ export class ChangedElementsManager {
   public async generateEntries(
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
-    progressCoordinator: ProgressCoordinator,
+    progressCoordinator?: ProgressCoordinator,
   ): Promise<void> {
     this._entryCache.initialize(
       currentIModel,
@@ -545,7 +545,7 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     forward: boolean,
-    progressCoordinator: ProgressCoordinator,
+    progressCoordinator?: ProgressCoordinator,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<Set<string>> {
     // If we have model ids in the data already, simply accumulate the models from it instead of querying
@@ -601,7 +601,7 @@ export class ChangedElementsManager {
         );
 
         // @naron: not sure how to trigger it here, its always has the model ids in the data already and return early
-        progressCoordinator.updateProgress(
+        progressCoordinator?.updateProgress(
           ProgressStage.ComputeChangedModels,
           Math.floor(((lastStep ?? 0) + currentStep) / (steps === 0 ? 1 : steps) * 100),
         );
@@ -1159,10 +1159,10 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     changedElements: ChangedElements[],
-    progressCoordinator: ProgressCoordinator, //@naron: can i just make it requried?
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,
+    progressCoordinator?: ProgressCoordinator, //@naron: can i just make it requried?
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;
@@ -1181,8 +1181,7 @@ export class ChangedElementsManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
       );
     }
-
-    progressCoordinator.updateProgress(ProgressStage.ComputeChangedModels);
+    progressCoordinator?.updateProgress(ProgressStage.ComputeChangedModels);
 
     // Find changed models
     this._changedModels = await this.findChangedModels(
@@ -1198,8 +1197,7 @@ export class ChangedElementsManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
       );
     }
-
-    progressCoordinator.updateProgress(ProgressStage.ComputeChangedModels, 100);
+    progressCoordinator?.updateProgress(ProgressStage.ComputeChangedModels, 100);
 
     // Find unchanged models
     this._unchangedModels = await this.findUnchangedModels(

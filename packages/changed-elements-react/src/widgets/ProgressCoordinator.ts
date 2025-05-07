@@ -17,18 +17,19 @@ export enum ProgressStage {
 export class ProgressCoordinator{
   private weights: Record<ProgressStage, number>;
   private progress: Record<ProgressStage, number>;
+  private stageOrder: ProgressStage[]; // added to prevent race condition when updating progress
   public readonly onProgressChanged = new BeEvent<(pct: number, message: string) => void>();
 
-  constructor(weights: Record<ProgressStage, number>){
+  constructor(weights: Record<ProgressStage, number>, stageOrder: ProgressStage[]) {
     this.weights = weights;
-
+    this.stageOrder = stageOrder;
     // init every stage as 0
     this.progress = Object.fromEntries(
       Object.keys(weights).map(stage => [stage, 0])
     ) as Record<ProgressStage, number>;
   }
 
-  public getStageMessage(stage: ProgressStage): string {
+  public getStageMessage(): string {
     // const prefix = "VersionCompare:versionCompare.";
     // return IModelApp.localization.getLocalizedString(`${prefix}${stage}`); //@naron: change this to loading
     return "loading comparison"
@@ -41,9 +42,12 @@ export class ProgressCoordinator{
    */
   public updateProgress(stage: ProgressStage, progress: number = 0): void {
     this.progress[stage] = progress;
-    const overallPercentage = this.getOverallPercentage();
-    const msg = this.getStageMessage(stage);
-    this.onProgressChanged.raiseEvent(overallPercentage, msg);
+    const overallPercentage = this.getOverallPercentage(); //@naron: there are race condition which this was returning 100% early
+    const cap = this.stageOrder
+      .slice(0, this.stageOrder.indexOf(stage) + 1)
+      .reduce((sum, s) => sum + this.weights[s], 0);
+    const msg = this.getStageMessage();
+    this.onProgressChanged.raiseEvent(Math.min(cap, overallPercentage), msg);
   }
 
   /**
@@ -53,9 +57,12 @@ export class ProgressCoordinator{
    */
   public addProgress(stage: ProgressStage, progress: number): void {
     this.progress[stage] += progress;
-    const overallPercentage = this.getOverallPercentage();
-    const msg = this.getStageMessage(stage);
-    this.onProgressChanged.raiseEvent(overallPercentage, msg);
+    const overallPercentage = this.getOverallPercentage(); //@naron: break this part into a private function
+    const cap = this.stageOrder
+      .slice(0, this.stageOrder.indexOf(stage) + 1)
+      .reduce((sum, s) => sum + this.weights[s], 0);
+    const msg = this.getStageMessage();
+    this.onProgressChanged.raiseEvent(Math.min(cap, overallPercentage), msg);
   }
 
   /**

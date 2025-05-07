@@ -63,7 +63,7 @@ export class VersionCompareManager {
       IModelApp.viewManager.addToolTipProvider(tooltipProvider);
     }
 
-    // define the weight for each stage of the progress
+    // define the weight for each stage of the progress @naron: just put the weights in ProgressCoordinator
     const weights: Record<ProgressStage, number> = {
       [ProgressStage.OpenTargetImodel]: 10,
       [ProgressStage.InitComparison]: 10,
@@ -74,7 +74,17 @@ export class VersionCompareManager {
       [ProgressStage.LoadIModelNodes]: 40,
     };
 
-    this.progressCoordinator = new ProgressCoordinator(weights);
+    const stageOrder: ProgressStage[] = [
+      ProgressStage.OpenTargetImodel,
+      ProgressStage.InitComparison,
+      ProgressStage.ComputeChangedModels,
+      ProgressStage.FindParents,
+      ProgressStage.ObtainElementData,
+      ProgressStage.FindChildren,
+      ProgressStage.LoadIModelNodes,
+    ]
+
+    this.progressCoordinator = new ProgressCoordinator(weights, stageOrder);
   }
 
   /** Create the proper visualization handler based on options */
@@ -138,7 +148,7 @@ export class VersionCompareManager {
   public versionCompareStopped = new BeEvent<() => void>();
 
   /** Triggers during startup to show progress messages to any listener. */
-  public loadingProgressEvent = new BeEvent<(message: string) => void>();
+  public loadingProgressEvent = new BeEvent<(message: string) => void>(); // @naron: should I remove this Or leave it for startComparisonV1?
 
   /** Current Version for comparison. */
   public currentVersion: NamedVersion | undefined;
@@ -333,10 +343,10 @@ export class VersionCompareManager {
         this._currentIModel,
         this._targetIModel,
         changedElements,
-        this.progressCoordinator,
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
+        undefined,
         this.loadingProgressEvent,
       );
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
@@ -426,10 +436,6 @@ export class VersionCompareManager {
         throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
       }
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
-      );
-
       this.progressCoordinator.updateProgress(ProgressStage.OpenTargetImodel);
 
       // Open the target version IModel
@@ -445,10 +451,6 @@ export class VersionCompareManager {
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
-
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
-      );
 
       this.progressCoordinator.updateProgress(ProgressStage.InitComparison);
 
@@ -470,11 +472,10 @@ export class VersionCompareManager {
         this._currentIModel,
         this._targetIModel,
         filteredChangedElements,
-        this.progressCoordinator,
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
-        this.loadingProgressEvent,
+        this.progressCoordinator,
       );
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
@@ -490,9 +491,6 @@ export class VersionCompareManager {
       );
 
       // Get the entries
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
-      );
       await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
 
       // Reset the select tool to allow external iModels to be located

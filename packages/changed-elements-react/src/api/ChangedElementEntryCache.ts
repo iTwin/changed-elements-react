@@ -134,7 +134,7 @@ export class ChangedElementEntryCache {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     elements: Map<string, ChangedElement>,
-    progressCoordinator: ProgressCoordinator,
+    progressCoordinator?: ProgressCoordinator,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ) {
     this._progressCoordinator = progressCoordinator;
