@@ -14,8 +14,8 @@ import {
 } from "./ElementQueries.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare } from "./VersionCompare.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
-import { ProgressCoordinator, ProgressStage } from "../widgets/ProgressCoordinator.js";
+import { VersionCompareManager, VersionCompareProgressStage } from "./VersionCompareManager.js";
+import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 /** Changed property for a changed element */
 export interface Checksums {
@@ -82,7 +82,7 @@ export class ChangedElementEntryCache {
   }
   private _currentIModel: IModelConnection | undefined;
   private _targetIModel: IModelConnection | undefined;
-  private _progressCoordinator: ProgressCoordinator | undefined;
+  private _progressCoordinator: ProgressCoordinator<VersionCompareProgressStage> | undefined;
   private _progressLoadingEvent?: BeEvent<(message: string) => void>;
   private _currentLoadingMessage = "";
   private _numSteps = 0;
@@ -134,7 +134,7 @@ export class ChangedElementEntryCache {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     elements: Map<string, ChangedElement>,
-    progressCoordinator?: ProgressCoordinator,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ) {
     this._progressCoordinator = progressCoordinator;
@@ -608,8 +608,8 @@ export class ChangedElementEntryCache {
       (currentEntryIds.length + targetEntryIds.length) /
       this._findTopParentChunkSize +
       1;
-    this._setCurrentLoadingMessage("msg_findingParents", numTopParentQueries);
-    this._progressCoordinator?.updateProgress(ProgressStage.FindParents);
+    this._setCurrentLoadingMessage("msg_findingParents", numTopParentQueries); //@naron: should we remove occurences for this. I left it for startComparisonV1
+    this._progressCoordinator?.updateProgress(VersionCompareProgressStage.FindParents);
     const currentTopParents = await this._findTopParents(
       this._currentIModel,
       currentEntryIds,
@@ -649,10 +649,10 @@ export class ChangedElementEntryCache {
       this._queryEntryChunkSize +
       1;
 
-    this._progressCoordinator?.addProgress(ProgressStage.FindParents, 100);
+    this._progressCoordinator?.updateProgress(VersionCompareProgressStage.FindParents, 100);
 
     this._setCurrentLoadingMessage("msg_obtainingElementData", numEntryQueries);
-    this._progressCoordinator?.updateProgress(ProgressStage.ObtainElementData);
+    this._progressCoordinator?.updateProgress(VersionCompareProgressStage.ObtainElementData);
 
     const currentParentEntries = await queryEntryDataBulk(
       this._currentIModel,
@@ -660,7 +660,7 @@ export class ChangedElementEntryCache {
         ? unchangedCurrentTopParents
         : currentTopParents,
       this._queryEntryChunkSize,
-      (pct) => this._progressCoordinator?.addProgress(ProgressStage.ObtainElementData, pct/2), // @naron: should we have different stage/msg
+      (pct) => this._progressCoordinator?.addProgress(VersionCompareProgressStage.ObtainElementData, pct/2), // @naron: hardcoded /2 cuz we call queryEntryDataBulk twice
     );
     const targetParentEntries = await queryEntryDataBulk(
       this._targetIModel,
@@ -668,7 +668,7 @@ export class ChangedElementEntryCache {
         ? unchangedTargetTopParents
         : targetTopParents,
       this._queryEntryChunkSize,
-      (pct) => this._progressCoordinator?.addProgress(ProgressStage.ObtainElementData, pct/2),
+      (pct) => this._progressCoordinator?.addProgress(VersionCompareProgressStage.ObtainElementData, pct/2),
     );
 
     // Put all data into arrays
@@ -711,14 +711,14 @@ export class ChangedElementEntryCache {
         }
       }
     }
-    this._progressCoordinator?.updateProgress(ProgressStage.ObtainElementData, 100);
+    this._progressCoordinator?.updateProgress(VersionCompareProgressStage.ObtainElementData, 100);
 
-    this._progressCoordinator?.updateProgress(ProgressStage.FindChildren, 0);
+    this._progressCoordinator?.updateProgress(VersionCompareProgressStage.FindChildren, 0);
     // Load child elements of the root nodes if we are not using fast parent loading
     if (this._childrenCache && !VersionCompare.manager?.wantFastParentLoad) {
       // Set update function for UI updates
       this._childrenCache.updateFunction = (pct: number) => {
-        this._progressCoordinator?.addProgress(ProgressStage.FindChildren, pct);
+        this._progressCoordinator?.addProgress(VersionCompareProgressStage.FindChildren, pct);
       }
       const numQueries = this._childrenCache.calculateNumberOfRequests(
         parentEntries.length,
@@ -729,7 +729,7 @@ export class ChangedElementEntryCache {
       // Clean-up usage of update function
       this._childrenCache.updateFunction = undefined;
     }
-    this._progressCoordinator?.updateProgress(ProgressStage.FindChildren, 100);
+    this._progressCoordinator?.updateProgress(VersionCompareProgressStage.FindChildren, 100);
 
     // Put together all entries
     const finalEntries: ChangedElementEntry[] = [];
@@ -759,16 +759,16 @@ export class ChangedElementEntryCache {
       this._setCurrentLoadingMessage("loadingModelNodes", 6);
       this._updateLoadingProgress();
 
-      this._progressCoordinator?.updateProgress(ProgressStage.LoadIModelNodes);
+      this._progressCoordinator?.updateProgress(VersionCompareProgressStage.LoadIModelNodes);
 
       this._uiDataProvider = new ChangesTreeDataProvider(this._manager);
       await this._uiDataProvider.loadChangedModelNodes(
         this._currentIModel,
         this._targetIModel,
-        () => this._progressCoordinator?.addProgress(ProgressStage.LoadIModelNodes, 25), // since updateFunc gets called 4 times
+        () => this._progressCoordinator?.addProgress(VersionCompareProgressStage.LoadIModelNodes, 25), // @naron: hardcoded since updateFunc gets called 4 times
       );
 
-      this._progressCoordinator?.updateProgress(ProgressStage.LoadIModelNodes, 100);
+      this._progressCoordinator?.updateProgress(VersionCompareProgressStage.LoadIModelNodes, 100);
     }
   };
 }

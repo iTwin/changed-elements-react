@@ -18,9 +18,19 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
-import { ProgressCoordinator, ProgressStage } from "../widgets/ProgressCoordinator.js";
+import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
+
+export enum VersionCompareProgressStage {
+  OpenTargetImodel,
+  InitComparison,
+  ComputeChangedModels,
+  FindParents,
+  ObtainElementData,
+  FindChildren,
+  LoadIModelNodes,
+}
 
 /**
  * Main orchestrator for version compare functionality and workflows. This class does the following:
@@ -36,12 +46,23 @@ export class VersionCompareManager {
   /** Changed Elements Manager responsible for maintaining the elements obtained from the service */
   public changedElementsManager: ChangedElementsManager;
 
-  private progressCoordinator: ProgressCoordinator;
+  private progressCoordinator: ProgressCoordinator<VersionCompareProgressStage>;
 
   private _visualizationHandler: VisualizationHandler | undefined;
   private _hasTypeOfChange = false;
   private _hasPropertiesForFiltering = false;
   private _hasParentIds = false;
+
+  // define stage and order
+  private progressStages = [
+    { stage: VersionCompareProgressStage.OpenTargetImodel,   weight: 10 },
+    { stage: VersionCompareProgressStage.InitComparison,     weight: 10 },
+    { stage: VersionCompareProgressStage.ComputeChangedModels,weight: 10 },
+    { stage: VersionCompareProgressStage.FindParents,         weight: 10 },
+    { stage: VersionCompareProgressStage.ObtainElementData,   weight: 10 },
+    { stage: VersionCompareProgressStage.FindChildren,        weight: 10 },
+    { stage: VersionCompareProgressStage.LoadIModelNodes,     weight: 40 },
+  ] as const;
 
   /** Version Compare ITwinLocalization Namespace */
   public static namespace = "VersionCompare";
@@ -63,28 +84,7 @@ export class VersionCompareManager {
       IModelApp.viewManager.addToolTipProvider(tooltipProvider);
     }
 
-    // define the weight for each stage of the progress @naron: just put the weights in ProgressCoordinator
-    const weights: Record<ProgressStage, number> = {
-      [ProgressStage.OpenTargetImodel]: 10,
-      [ProgressStage.InitComparison]: 10,
-      [ProgressStage.ComputeChangedModels]: 10,
-      [ProgressStage.FindParents]: 10,
-      [ProgressStage.ObtainElementData]: 10,
-      [ProgressStage.FindChildren]: 10,
-      [ProgressStage.LoadIModelNodes]: 40,
-    };
-
-    const stageOrder: ProgressStage[] = [
-      ProgressStage.OpenTargetImodel,
-      ProgressStage.InitComparison,
-      ProgressStage.ComputeChangedModels,
-      ProgressStage.FindParents,
-      ProgressStage.ObtainElementData,
-      ProgressStage.FindChildren,
-      ProgressStage.LoadIModelNodes,
-    ]
-
-    this.progressCoordinator = new ProgressCoordinator(weights, stageOrder);
+    this.progressCoordinator = new ProgressCoordinator(this.progressStages);
   }
 
   /** Create the proper visualization handler based on options */
@@ -436,7 +436,7 @@ export class VersionCompareManager {
         throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
       }
 
-      this.progressCoordinator.updateProgress(ProgressStage.OpenTargetImodel);
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel);
 
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
@@ -446,13 +446,13 @@ export class VersionCompareManager {
         IModelVersion.asOfChangeSet(changesetId),
       );
 
-      this.progressCoordinator.updateProgress(ProgressStage.OpenTargetImodel, 100);
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel, 100);
 
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
 
-      this.progressCoordinator.updateProgress(ProgressStage.InitComparison);
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison);
 
       let wantedModelClasses = [
         GeometricModel2dState.classFullName,
@@ -466,7 +466,7 @@ export class VersionCompareManager {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
 
-      this.progressCoordinator.updateProgress(ProgressStage.InitComparison, 100); //@naron: is the following initialize also part of init comparison? if so, we need to maintain hierarchy of progress stages
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison, 100); //@naron: is the following initialize also part of init comparison? if so, we need to maintain hierarchy of progress stages
 
       await this.changedElementsManager.initialize(
         this._currentIModel,
