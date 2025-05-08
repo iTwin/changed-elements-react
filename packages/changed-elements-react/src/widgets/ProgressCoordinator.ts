@@ -5,18 +5,18 @@
 import { BeEvent } from "@itwin/core-bentley";
 
 export class ProgressCoordinator<StageType extends number>{
-  private progress: Array<{ stage: StageType; currentProgress: number}>;
+  private progress: Array<{ stage: StageType; currentProgress: number;}>;
   private weights: Record<StageType, number>;
   public readonly onProgressChanged = new BeEvent<(pct: number) => void>();
 
-  constructor(progressStages: ReadonlyArray<{ stage: StageType; weight: number}>) {
+  constructor(progressStages: ReadonlyArray<{ stage: StageType; weight: number;}>) {
     this.progress = progressStages.map((stage) => ({
       stage: stage.stage,
       currentProgress: 0,
     }));
 
     this.weights = Object.fromEntries(
-      progressStages.map((stage) => [stage.stage, stage.weight])
+      progressStages.map((stage) => [stage.stage, stage.weight]),
     ) as Record<StageType, number>;
   }
 

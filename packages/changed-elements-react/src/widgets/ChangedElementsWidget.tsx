@@ -184,7 +184,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 
   private _onOverallProgress = (pct: number): void => {
     const message = `Loading results: ${pct}%`;
-    console.log(message); //@naron: delete this
+    // console.log(message); //@naron: delete this
     this.setState({ message, loading: true, description: "" });
   }
 
