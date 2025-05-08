@@ -600,7 +600,6 @@ export class ChangedElementsManager {
           steps,
         );
 
-        // @naron: not sure how to trigger it here, its always has the model ids in the data already and return early
         progressCoordinator?.updateProgress(
           VersionCompareProgressStage.ComputeChangedModels,
           Math.floor(((lastStep ?? 0) + currentStep) / (steps === 0 ? 1 : steps) * 100),
@@ -1162,7 +1161,7 @@ export class ChangedElementsManager {
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,
-    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>, //@naron: can i just make it requried?
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;

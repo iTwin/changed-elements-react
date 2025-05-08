@@ -111,7 +111,7 @@ export abstract class ChangedElementDataCache {
       return [];
     // If everything has been cached already, populate the data and return
     if (this._containedInCache(elements)) {
-      return this._populateEntries(elements); //@naron: loading also doesnt get here for openPlant3
+      return this._populateEntries(elements);
     }
 
     // Split the entries into the ones we have already cached and the ones we haven't

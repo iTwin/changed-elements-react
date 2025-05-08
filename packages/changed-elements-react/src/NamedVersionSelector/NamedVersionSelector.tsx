@@ -80,7 +80,6 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
           setIsComparing(false);
           setIsComparisonStarted(false);
         }),
-
       ];
       return () => cleanup.forEach((cb) => cb());
     },

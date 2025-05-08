@@ -142,7 +142,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({
       loading: true,
       loaded: false,
-      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"), //@naron: this is another starting point
+      message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison"),
       description: "",
     });
   };
@@ -225,7 +225,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   public override componentDidMount() {
     const { manager } = this.state;
     this.addListeners([
-      { event: manager.versionCompareStarting, action: this._onComparisonStarting }, // @naron: is this actually redundant?
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting },
       { event: manager.versionCompareStarted, action: this._onComparisonStarted },
       { event: manager.loadingProgressEvent, action: this._onProgressEvent },
       { event: manager.versionCompareStopped, action: this._onComparisonStopped },
@@ -234,7 +234,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
       loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
-      message: this.props.usingExperimentalSelector ? "Loading results: 0%" // @naron: hardcode here? this should come from progressCoordinator
+      message: this.props.usingExperimentalSelector ? "Loading results: 0%" // @naron: hardcode here?
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
     });
   }

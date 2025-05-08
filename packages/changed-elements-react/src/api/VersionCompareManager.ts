@@ -466,7 +466,7 @@ export class VersionCompareManager {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
 
-      this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison, 100); //@naron: is the following initialize also part of init comparison? if so, we need to maintain hierarchy of progress stages
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison, 100);
 
       await this.changedElementsManager.initialize(
         this._currentIModel,
