@@ -35,11 +35,20 @@
   },
   "pnpm": {
     "overrides": {
+      "@babel/runtime@<7.26.10": ">=7.26.10",
+      "@itwin/appui-abstract": "^5.0.0-dev.111",
+      "@itwin/core-quantity": "^5.0.0-dev.111",
+      "@itwin/core-backend": "^5.0.0-dev.111",
+      "@itwin/core-bentley": "^5.0.0-dev.111",
+      "@itwin/core-common": "^5.0.0-dev.111",
+      "@itwin/core-frontend": "^5.0.0-dev.111",
       "@itwin/core-geometry": "^5.0.0-dev.111",
+      "@itwin/core-react": "^5.1.0",
+      "@itwin/ecschema-metadata": "^5.0.0-dev.111",
+      "@itwin/presentation-common": "^5.0.0-dev.111"
       "dompurify@<3.2.4": ">=3.2.4",
       "esbuild@<=0.24.2": ">=0.25.0",
       "axios@<1.8.2": ">=1.8.2",
-      "@babel/runtime@<7.26.10": ">=7.26.10"
     }
   }
 }

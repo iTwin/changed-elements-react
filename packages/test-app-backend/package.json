@@ -16,7 +16,7 @@
     "@itwin/core-bentley": "^5.0.0-dev.111",
     "@itwin/core-common": "^5.0.0-dev.111",
     "@itwin/express-server": "^5.0.0-dev.111",
-    "@itwin/imodels-access-backend": "^5.3.0",
+    "@itwin/imodels-access-backend": "^5.2.3",
     "@itwin/imodels-client-authoring": "^5.9.0",
     "@itwin/presentation-backend": "^5.0.0-dev.111",
     "@itwin/presentation-common": "^5.0.0-dev.111",
