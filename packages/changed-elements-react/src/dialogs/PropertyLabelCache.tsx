@@ -124,7 +124,7 @@ export class PropertyLabelCache {
       ecsql += "?,";
     });
     ecsql = ecsql.substr(0, ecsql.length - 1) + ") AND DisplayLabel<>'NULL'";
-    for await (const row of iModelConnection.query(
+    for await (const row of iModelConnection.createQueryReader(
       ecsql,
       QueryBinder.from(properties.map((prop) => prop.propertyName)),
       {

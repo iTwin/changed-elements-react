@@ -462,7 +462,7 @@ export class ChangedElementsManager {
   private async _getGeometricElement3dClassId(iModel: IModelConnection): Promise<string | undefined> {
     const ecsql =
       "SELECT ECClassDef.ECInstanceId as geomId FROM meta.ECClassDef INNER JOIN meta.ECSchemaDef ON ECSchemaDef.ECInstanceId = ECClassDef.Schema.Id WHERE ECClassDef.Name = 'GeometricElement3d' AND ECSchemaDef.Name ='BisCore'";
-    for await (const row of iModel.query(ecsql, undefined, {
+    for await (const row of iModel.createQueryReader(ecsql, undefined, {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       return row.geomId;
@@ -596,7 +596,7 @@ export class ChangedElementsManager {
           steps,
         );
 
-        for await (const row of iModel.query(ecsql, QueryBinder.from(piece), {
+        for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(piece), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
         })) {
           modelIds.add(row.model.id);
@@ -644,7 +644,7 @@ export class ChangedElementsManager {
     const modelIds: string[] = [];
     for (const modelClass of modelClasses) {
       const ecsql = "SELECT ECInstanceId as modelId FROM " + modelClass;
-      for await (const row of iModel.query(ecsql, undefined, {
+      for await (const row of iModel.createQueryReader(ecsql, undefined, {
         rowFormat: QueryRowFormat.UseJsPropertyNames,
       })) {
         modelIds.push(row.modelId);
@@ -702,7 +702,7 @@ export class ChangedElementsManager {
       ecsql = ecsql + "?,";
     });
     ecsql = ecsql.substr(0, ecsql.length - 1) + ")";
-    for await (const row of iModel.query(ecsql, QueryBinder.from(elementIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(elementIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       const entry = this._changedElements.get(row.id);
@@ -865,7 +865,7 @@ export class ChangedElementsManager {
         "SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId = " +
         geom3dId;
       const validClassIds = new Set<string>();
-      for await (const row of currentIModel.query(ecsql, undefined, {
+      for await (const row of currentIModel.createQueryReader(ecsql, undefined, {
         rowFormat: QueryRowFormat.UseJsPropertyNames,
       })) {
         validClassIds.add(row.sourceId);
@@ -926,7 +926,7 @@ export class ChangedElementsManager {
 
     const subjectToModelMap = new Map<string, string>();
     const subjectToModelMapToQuery = new Map<string, string>();
-    for await (const row of iModel.query(ecsql, QueryBinder.from(subjectIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(subjectIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       const relatedModelId = subjectToModel.get(row.childId);
@@ -986,7 +986,7 @@ export class ChangedElementsManager {
 
     const subjectToModelMap = new Map<string, string>();
     const subjectToModelMapToQuery = new Map<string, string>();
-    for await (const row of iModel.query(ecsql, QueryBinder.from(ipeIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(ipeIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       const relatedModelId = ipeToModel.get(row.ipeId);
@@ -1063,7 +1063,7 @@ export class ChangedElementsManager {
     ecsql = ecsql.substring(0, ecsql.length - 1) + ")";
 
     const ipeToModel = new Map<string, string>();
-    for await (const row of iModel.query(ecsql, QueryBinder.from(modelIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(modelIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       // If we don't have specific Json Props, we have the proper model Id already

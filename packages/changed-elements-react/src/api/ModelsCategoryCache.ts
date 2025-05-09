@@ -38,7 +38,7 @@ const getElementModelsByIds = async (
       max = elementIds.length;
     }
     const current = elementIds.slice(i, max);
-    for await (const row of targetConnection.query(
+    for await (const row of targetConnection.createQueryReader(
       ecsql,
       QueryBinder.from(current),
       {
@@ -61,7 +61,7 @@ const getElementCategories = async (targetConnection: IModelConnection): Promise
   const categoryIds = new Set<string>();
   const ecsql =
     "SELECT DISTINCT Category.Id as catId FROM BisCore.GeometricElement3d";
-  for await (const row of targetConnection.query(ecsql, undefined, {
+  for await (const row of targetConnection.createQueryReader(ecsql, undefined, {
     rowFormat: QueryRowFormat.UseJsPropertyNames,
   })) {
     categoryIds.add(row.catId);

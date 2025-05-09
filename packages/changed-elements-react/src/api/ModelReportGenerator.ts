@@ -43,7 +43,7 @@ const getModelSources = async (
   try {
     const query = makeQuery(modelProps);
     const map = new Map<string, string>();
-    for await (const row of iModel.query(query, undefined, {
+    for await (const row of iModel.createQueryReader(query, undefined, {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       if (row.id !== undefined && row.jsonProps !== undefined) {

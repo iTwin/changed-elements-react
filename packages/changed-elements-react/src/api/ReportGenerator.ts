@@ -13,9 +13,9 @@ import { VersionCompareManager } from "./VersionCompareManager.js";
 
 export const downloadAsFile = (filename: string, data: string) => {
   const blob = new Blob(["\uFEFF", data], { type: "text/csv;charset=utf-18" });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
   if (undefined !== (window.navigator as any).msSaveOrOpenBlob) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
     (window.navigator as any).msSaveBlob(blob, filename);
   } else {
     const elem = window.document.createElement("a");
@@ -348,7 +348,7 @@ export class ReportGenerator extends ReportGeneratorBase {
     });
     ecsql = ecsql.substr(0, ecsql.length - 1) + ")";
     const elementIds = entries.map((entry: ChangedElementEntry) => entry.id);
-    for await (const row of iModel.query(ecsql, QueryBinder.from(elementIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(elementIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       this._nativeIdMap.set(row.id, row.identifier);
