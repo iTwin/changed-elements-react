@@ -182,9 +182,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ message, loading: true, description: "" });
   };
 
-  private _onOverallProgress = (pct: number): void => {
-    const message = `Loading results: ${pct}%`;
-    // console.log(message); //@naron: delete this
+  private _onOverallProgress = (percent: number): void => {
+    const message = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.LoadingResults", { percent: percent });
     this.setState({ message, loading: true, description: "" });
   }
 
@@ -234,7 +233,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
       loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
-      message: this.props.usingExperimentalSelector ? "Loading results: 0%" // @naron: hardcode here?
+      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.LoadingResults", { percent: 0 })
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
     });
   }

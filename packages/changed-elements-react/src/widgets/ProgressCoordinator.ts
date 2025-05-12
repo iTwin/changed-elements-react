@@ -9,15 +9,13 @@ export class ProgressCoordinator<StageType extends number>{
   private weights: Record<StageType, number>;
   public readonly onProgressChanged = new BeEvent<(pct: number) => void>();
 
-  constructor(progressStages: ReadonlyArray<{ stage: StageType; weight: number;}>) {
-    this.progress = progressStages.map((stage) => ({
-      stage: stage.stage,
-      currentProgress: 0,
-    }));
+  constructor(weights: Record<StageType, number>) {
+    this.weights = weights;
 
-    this.weights = Object.fromEntries(
-      progressStages.map((stage) => [stage.stage, stage.weight]),
-    ) as Record<StageType, number>;
+    this.progress = Object.keys(weights)
+      .map(key => Number(key) as StageType)
+      .sort((a, b) => a - b)
+      .map(stage => ({ stage, currentProgress: 0 }));
   }
 
   /**
@@ -26,7 +24,7 @@ export class ProgressCoordinator<StageType extends number>{
    * @param progress The progress percentage for the specified stage (0-100).
    */
   public updateProgress(stage: StageType, pct: number = 0): void {
-    this.modifyProgress(stage, () => pct);
+    this.modifyProgress(stage, () => Math.min(100, Math.max(0, pct)));
   }
 
   /**
@@ -35,7 +33,7 @@ export class ProgressCoordinator<StageType extends number>{
    * @param progress The progress percentage for the specified stage (0-100).
    */
   public addProgress(stage: StageType, pct: number): void {
-    this.modifyProgress(stage, curr => curr + pct);
+    this.modifyProgress(stage, curr => Math.min(100, Math.max(0, curr + pct)));
   }
 
   /**

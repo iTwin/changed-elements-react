@@ -654,13 +654,20 @@ export class ChangedElementEntryCache {
     this._setCurrentLoadingMessage("msg_obtainingElementData", numEntryQueries);
     this._progressCoordinator?.updateProgress(VersionCompareProgressStage.ObtainElementData);
 
+    const OnObtainDataProgress = (pct: number) => {
+      this._progressCoordinator?.addProgress(
+        VersionCompareProgressStage.ObtainElementData,
+        pct / 2, // hardcoded to 50% cuz once called on currentIModel and once on targetIModel
+      );
+    }
+
     const currentParentEntries = await queryEntryDataBulk(
       this._currentIModel,
       VersionCompare.manager?.wantFastParentLoad
         ? unchangedCurrentTopParents
         : currentTopParents,
       this._queryEntryChunkSize,
-      (pct) => this._progressCoordinator?.addProgress(VersionCompareProgressStage.ObtainElementData, pct/2),
+      OnObtainDataProgress,
     );
     const targetParentEntries = await queryEntryDataBulk(
       this._targetIModel,
@@ -668,7 +675,7 @@ export class ChangedElementEntryCache {
         ? unchangedTargetTopParents
         : targetTopParents,
       this._queryEntryChunkSize,
-      (pct) => this._progressCoordinator?.addProgress(VersionCompareProgressStage.ObtainElementData, pct/2),
+      OnObtainDataProgress,
     );
 
     // Put all data into arrays
@@ -765,7 +772,7 @@ export class ChangedElementEntryCache {
       await this._uiDataProvider.loadChangedModelNodes(
         this._currentIModel,
         this._targetIModel,
-        () => this._progressCoordinator?.addProgress(VersionCompareProgressStage.LoadIModelNodes, 25),
+        () => this._progressCoordinator?.addProgress(VersionCompareProgressStage.LoadIModelNodes, 25), // hardcoded 25% as its called 4 times in load
       );
 
       this._progressCoordinator?.updateProgress(VersionCompareProgressStage.LoadIModelNodes, 100);

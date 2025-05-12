@@ -22,6 +22,7 @@ import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
+// different progress stages in version compare, also implies ordering of those stages
 export enum VersionCompareProgressStage {
   OpenTargetImodel,
   InitComparison,
@@ -54,15 +55,15 @@ export class VersionCompareManager {
   private _hasParentIds = false;
 
   // define stage and order
-  private progressStages = [
-    { stage: VersionCompareProgressStage.OpenTargetImodel,   weight: 10 },
-    { stage: VersionCompareProgressStage.InitComparison,     weight: 10 },
-    { stage: VersionCompareProgressStage.ComputeChangedModels,weight: 10 },
-    { stage: VersionCompareProgressStage.FindParents,         weight: 10 },
-    { stage: VersionCompareProgressStage.ObtainElementData,   weight: 10 },
-    { stage: VersionCompareProgressStage.FindChildren,        weight: 10 },
-    { stage: VersionCompareProgressStage.LoadIModelNodes,     weight: 40 },
-  ] as const;
+  private weights: Record<VersionCompareProgressStage, number> = {
+    [VersionCompareProgressStage.OpenTargetImodel]:     10,
+    [VersionCompareProgressStage.InitComparison]:        5,
+    [VersionCompareProgressStage.ComputeChangedModels]: 17,
+    [VersionCompareProgressStage.FindParents]:          17,
+    [VersionCompareProgressStage.ObtainElementData]:    17,
+    [VersionCompareProgressStage.FindChildren]:         17,
+    [VersionCompareProgressStage.LoadIModelNodes]:      17,
+  }
 
   /** Version Compare ITwinLocalization Namespace */
   public static namespace = "VersionCompare";
@@ -84,7 +85,7 @@ export class VersionCompareManager {
       IModelApp.viewManager.addToolTipProvider(tooltipProvider);
     }
 
-    this.progressCoordinator = new ProgressCoordinator(this.progressStages);
+    this.progressCoordinator = new ProgressCoordinator(this.weights);
   }
 
   /** Create the proper visualization handler based on options */
@@ -148,7 +149,7 @@ export class VersionCompareManager {
   public versionCompareStopped = new BeEvent<() => void>();
 
   /** Triggers during startup to show progress messages to any listener. */
-  public loadingProgressEvent = new BeEvent<(message: string) => void>(); // @naron: should I remove this Or leave it for startComparisonV1?
+  public loadingProgressEvent = new BeEvent<(message: string) => void>();
 
   /** Current Version for comparison. */
   public currentVersion: NamedVersion | undefined;
