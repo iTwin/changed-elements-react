@@ -10,13 +10,13 @@ describe("ProgressCoordinator", () => {
     Stage1,
     Stage2,
     Stage3,
-  };
+  }
 
   const weights: Record<stages, number> = {
     [stages.Stage1]: 10,
     [stages.Stage2]: 20,
     [stages.Stage3]: 70,
-  };
+  }
 
   let progressCoordinator: ProgressCoordinator<stages>;
   let callback: ReturnType<typeof vi.fn>;
