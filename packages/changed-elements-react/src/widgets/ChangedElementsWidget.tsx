@@ -183,8 +183,12 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _onOverallProgress = (percent: number): void => {
-    const message = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.LoadingResults", { percent: percent });
-    this.setState({ message, loading: true, description: "" });
+    this._onProgressEvent(
+      IModelApp.localization.getLocalizedString(
+        "VersionCompare:versionCompare.LoadingResults",
+        { percent }
+      )
+    );
   }
 
   private _refreshCheckboxesEvent = new BeEvent<() => void>();

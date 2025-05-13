@@ -128,7 +128,7 @@ export const queryEntryDataBulk = async (
   iModel: IModelConnection,
   elementIds: string[],
   chunkSize = 1000,
-  updateFunc?: (pct: number) => void,
+  updateFunc?: (percent: number) => void,
 ): Promise<ChangedElementQueryData[]> => {
   if (elementIds.length < chunkSize) {
     return queryEntryData(iModel, elementIds);
@@ -143,8 +143,8 @@ export const queryEntryDataBulk = async (
     final.push(...data);
     if (updateFunc) {
       const processed = Math.min(i + chunkSize, elementIds.length);
-      const pct = Math.floor((processed / elementIds.length) * 100);
-      updateFunc(pct);
+      const percent = Math.floor((processed / elementIds.length) * 100);
+      updateFunc(percent);
     }
   }
   return final;

@@ -7,7 +7,7 @@ import { BeEvent } from "@itwin/core-bentley";
 export class ProgressCoordinator<StageType extends number>{
   private progress: Array<{ stage: StageType; currentProgress: number;}>;
   private weights: Record<StageType, number>;
-  public readonly onProgressChanged = new BeEvent<(pct: number) => void>();
+  public readonly onProgressChanged = new BeEvent<(percent: number) => void>();
 
   constructor(weights: Record<StageType, number>) {
     this.weights = weights;
@@ -23,8 +23,8 @@ export class ProgressCoordinator<StageType extends number>{
    * @param stage The stage to update.
    * @param progress The progress percentage for the specified stage (0-100).
    */
-  public updateProgress(stage: StageType, pct: number = 0): void {
-    this.modifyProgress(stage, () => Math.min(100, Math.max(0, pct)));
+  public updateProgress(stage: StageType, percent: number = 0): void {
+    this.modifyProgress(stage, () => Math.min(100, Math.max(0, percent)));
   }
 
   /**
@@ -32,8 +32,8 @@ export class ProgressCoordinator<StageType extends number>{
    * @param stage The stage to update.
    * @param progress The progress percentage for the specified stage (0-100).
    */
-  public addProgress(stage: StageType, pct: number): void {
-    this.modifyProgress(stage, curr => Math.min(100, Math.max(0, curr + pct)));
+  public addProgress(stage: StageType, percent: number): void {
+    this.modifyProgress(stage, curr => Math.min(100, Math.max(0, curr + percent)));
   }
 
   /**

@@ -654,10 +654,10 @@ export class ChangedElementEntryCache {
     this._setCurrentLoadingMessage("msg_obtainingElementData", numEntryQueries);
     this._progressCoordinator?.updateProgress(VersionCompareProgressStage.ObtainElementData);
 
-    const OnObtainDataProgress = (pct: number) => {
+    const OnObtainDataProgress = (percent: number) => {
       this._progressCoordinator?.addProgress(
         VersionCompareProgressStage.ObtainElementData,
-        pct / 2, // hardcoded to 50% cuz once called on currentIModel and once on targetIModel
+        percent / 2, // hardcoded to 50% cuz once called on currentIModel and once on targetIModel
       );
     }
 
@@ -724,8 +724,8 @@ export class ChangedElementEntryCache {
     // Load child elements of the root nodes if we are not using fast parent loading
     if (this._childrenCache && !VersionCompare.manager?.wantFastParentLoad) {
       // Set update function for UI updates
-      this._childrenCache.updateFunction = (pct: number) => {
-        this._progressCoordinator?.addProgress(VersionCompareProgressStage.FindChildren, pct);
+      this._childrenCache.updateFunction = (percent: number) => {
+        this._progressCoordinator?.addProgress(VersionCompareProgressStage.FindChildren, percent);
       }
       const numQueries = this._childrenCache.calculateNumberOfRequests(
         parentEntries.length,
@@ -768,11 +768,13 @@ export class ChangedElementEntryCache {
 
       this._progressCoordinator?.updateProgress(VersionCompareProgressStage.LoadIModelNodes);
 
+      const model_nodes_increment = 25; // 4 steps progress uin load changed model nodes
+
       this._uiDataProvider = new ChangesTreeDataProvider(this._manager);
       await this._uiDataProvider.loadChangedModelNodes(
         this._currentIModel,
         this._targetIModel,
-        () => this._progressCoordinator?.addProgress(VersionCompareProgressStage.LoadIModelNodes, 25), // hardcoded 25% as its called 4 times in load
+        () => this._progressCoordinator?.addProgress(VersionCompareProgressStage.LoadIModelNodes, model_nodes_increment),
       );
 
       this._progressCoordinator?.updateProgress(VersionCompareProgressStage.LoadIModelNodes, 100);

@@ -20,7 +20,7 @@ export abstract class ChangedElementDataCache {
   /**
    * Called whenever a request is done in bulk mode, useful for UI update of progress
    */
-  public updateFunction?: (pct: number) => void;
+  public updateFunction?: (percent: number) => void;
 
   constructor(protected _chunkSize: number = 500) {
     // No-op
