@@ -182,6 +182,15 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ message, loading: true, description: "" });
   };
 
+  private _onOverallProgress = (percent: number): void => {
+    this._onProgressEvent(
+      IModelApp.localization.getLocalizedString(
+        "VersionCompare:versionCompare.LoadingResults",
+        { percent },
+      ),
+    );
+  }
+
   private _refreshCheckboxesEvent = new BeEvent<() => void>();
 
   constructor(props: ChangedElementsWidgetProps) {
@@ -223,11 +232,12 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       { event: manager.versionCompareStarted, action: this._onComparisonStarted },
       { event: manager.loadingProgressEvent, action: this._onProgressEvent },
       { event: manager.versionCompareStopped, action: this._onComparisonStopped },
+      { event: manager.onOverallProgress, action: this._onOverallProgress },
     ]);
     this.setState({
       loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
       loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
-      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.loadingComparison")
+      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.LoadingResults", { percent: 0 })
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
     });
   }

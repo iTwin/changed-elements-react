@@ -25,6 +25,7 @@
     "loadingComparison": "Loading version comparison",
     "loadingNamedVersions": "Loading named versions",
     "comparisonNotActive": "No version comparison active.",
+    "LoadingResults": "Loading results: {{percent}}%",
     "cantHideDuringContext": "Cannot show/hide unchanged while emphasizing/isolating/hiding. Clear it first.",
     "comparisonGetStarted": "Click on the \"+\" comparison button to get started.",
     "showAll": "Show All",
