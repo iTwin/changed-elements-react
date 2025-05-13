@@ -186,8 +186,8 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this._onProgressEvent(
       IModelApp.localization.getLocalizedString(
         "VersionCompare:versionCompare.LoadingResults",
-        { percent }
-      )
+        { percent },
+      ),
     );
   }
 
