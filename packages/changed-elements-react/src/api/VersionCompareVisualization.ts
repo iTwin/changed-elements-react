@@ -44,6 +44,9 @@ export class VersionCompareVisualizationManager {
   public static colorModifiedRgb() {
     return new RgbColor(0, 139, 225);
   }
+  public static colorModifiedDrivenRgb() {
+    return new RgbColor(185, 139, 225);
+  }
   public static colorModifiedTargetRgb() {
     return new RgbColor(0, 200, 225);
   }

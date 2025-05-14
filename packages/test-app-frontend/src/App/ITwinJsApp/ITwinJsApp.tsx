@@ -49,40 +49,30 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
   type LoadingState = "opening-imodel" | "opening-viewstate" | "creating-viewstate" | "loaded";
   const [loadingState, setLoadingState] = useState<LoadingState>("opening-imodel");
   const iModel = useIModel(props.iTwinId, props.iModelId, props.authorizationClient);
-  useEffect(
-    () => {
-      if (!iModel) {
-        return;
+  useEffect(() => {
+    if (!iModel) {
+      return;
+    }
+
+    let disposed = false;
+    void (async () => {
+      await VersionCompare.manager?.stopComparison();
+
+      setLoadingState("creating-viewstate");
+      const viewCreator = new ViewCreator3d(iModel);
+      const viewState = await viewCreator.createDefaultView();
+      if (!disposed) {
+        setLoadingState("loaded");
+        UiFramework.setIModelConnection(iModel);
+        UiFramework.setDefaultViewState(viewState);
+        UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
+        await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
       }
-
-      let disposed = false;
-      void (async () => {
-        await VersionCompare.manager?.stopComparison();
-
-        setLoadingState("opening-viewstate");
-        let viewState = await getStoredViewState(iModel);
-        if (disposed) {
-          return;
-        }
-
-        if (!viewState) {
-          setLoadingState("creating-viewstate");
-          const viewCreator = new ViewCreator3d(iModel);
-          viewState = await viewCreator.createDefaultView();
-        }
-
-        if (!disposed) {
-          setLoadingState("loaded");
-          UiFramework.setIModelConnection(iModel);
-          UiFramework.setDefaultViewState(viewState);
-          UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
-          await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
-        }
-      })();
-      return () => { disposed = true; };
-    },
-    [iModel],
-  );
+    })();
+    return () => {
+      disposed = true;
+    };
+  }, [iModel]);
 
   const iModelsClient = useMemo(
     () => {
@@ -177,11 +167,10 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ]);
 
 
-  const blah = async (startChangedset: ChangesetIdWithIndex,endChangedset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
+  const changesetProcessor = async (startChangedset: ChangesetIdWithIndex, endChangedset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
     const client = ChangesetGroupRPCInterface.getClient();
     return client.getChangesetGroup(iModelConnection.getRpcProps(), startChangedset, endChangedset, await authorizationClient.getAccessToken());
   }
-
 
   VersionCompare.initialize({
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
@@ -193,7 +182,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
     featureTracking: featureTrackingTesterFunctions,
-    changesetProcessor: blah,
+    changesetProcessor,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);

@@ -1248,6 +1248,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   private _onNodeClick = async (item: TreeNodeItem): Promise<void> => {
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (item.extendedData?.isModel && visualizationManager) {
+      // TODO: Remove log
+      console.log("Model Selected on List: ", item.extendedData?.modelProps)
       // Handle zooming to 3d model nodes
       if (!item.extendedData.is2d) {
         await visualizationManager.zoomToModel(item.id);

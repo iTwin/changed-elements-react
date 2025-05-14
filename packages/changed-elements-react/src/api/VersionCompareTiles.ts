@@ -388,10 +388,26 @@ export class Provider
           ? true
           : undefined,
     });
+    const driven = FeatureAppearance.fromJSON({
+      rgb: VersionCompareVisualizationManager.colorModifiedDrivenRgb(),
+      transparency: this._currentTransparency,
+      emphasized:
+        this._options !== undefined &&
+          this._options.emphasized !== undefined &&
+          this._options.emphasized
+          ? true
+          : undefined,
+    });
     for (const elem of updatedElems) {
       // Check if user is emphasizing some elements, and if so, only override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.override({ elementId: elem.id, appearance: elem.indirect ? updatedIndirectly : updated });
+        // TODO: Appropriate type of change enum
+        const appearance = (elem.type & 64) !== 0
+          ? driven
+          : elem.indirect
+            ? updatedIndirectly
+            : updated;
+        overrides.override({ elementId: elem.id, appearance: appearance });
       }
     }
   }

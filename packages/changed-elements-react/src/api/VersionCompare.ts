@@ -91,14 +91,22 @@ export interface VersionCompareOptions {
 
   getAccessToken?: () => Promise<AccessToken>;
   createVisualizationHandler: (manager: VersionCompareManager) => VisualizationHandler;
-  changesetProcessor: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements>;
+
+  /**
+   * If provided, this function will be called to process the changeset data instead of using changed elements API
+   * @param startChangeset Start changeset to compare (oldest)
+   * @param endChangeset End changeset to compare (newest)
+   * @param iModelConnection iModel connection to use
+   * @returns
+   */
+  changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements>;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
-  private static _changesetProcessor: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements>;
+  private static _changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements>;
   public static get changesetProcessor() {
     return VersionCompare._changesetProcessor;
   }
@@ -141,7 +149,7 @@ export class VersionCompare {
   public static initialize(options: VersionCompareOptions): void {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
-    VersionCompare._changesetProcessor= options.changesetProcessor;
+    VersionCompare._changesetProcessor = options.changesetProcessor;
     // get the access token
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 

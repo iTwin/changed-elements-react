@@ -1,13 +1,11 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 import { Logger } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
 import { VersionCompare } from "../../../api/VersionCompare.js";
-import type {
-  ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient
-} from "../../../clients/IComparisonJobClient.js";
+import type { ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient } from "../../../clients/IComparisonJobClient.js";
 import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient.js";
 import type { ComparisonJobUpdateType } from "../components/VersionCompareDialogProvider.js";
 import type { JobAndNamedVersions, JobStatusAndJobProgress } from "../models/ComparisonJobModels.js";
@@ -41,20 +39,30 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   if (args.runOnJobUpdate) {
     void args.runOnJobUpdate("ComparisonVisualizationStarting", jobAndNamedVersion);
   }
-  // VersionCompare.manager?.startDirectComparison(
-  //   args.iModelConnection,
-  //   args.currentVersion,
-  //   await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient)).catch((e) => {
-  //      Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-  //    });
-   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
-    VersionCompare.manager?.startComparisonV2(
+
+  const manager = VersionCompare.manager;
+  if (!manager) {
+    Logger.logError("VersionCompare", "VersionCompare manager is not initialized");
+    return;
+  }
+
+  try {
+    const targetVersion = await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient);
+    if (VersionCompare.changesetProcessor) {
+      await manager.startDirectComparison(args.iModelConnection, args.currentVersion, targetVersion);
+      return;
+    }
+
+    const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
+    await manager.startComparisonV2(
       args.iModelConnection,
       args.currentVersion,
       await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
-      [changedElements.changedElements]).catch((e) => {
-        Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
-      });
+      [changedElements.changedElements],
+    );
+  } catch (error) {
+    Logger.logError("VersionCompare", `Error starting comparison: ${error}`);
+  }
 };
 
 const updateTargetVersion = async (iModelConnection: IModelConnection, targetVersion: NamedVersion, iModelsClient: IModelsClient) => {

@@ -77,7 +77,7 @@ export class VersionCompareManager {
   }
 
   public get filterSpatial(): boolean {
-    return this.options.filterSpatial ?? true;
+    return this.options.filterSpatial ?? this.options.changesetProcessor === undefined;
   }
 
   public get skipParentChildRelationships(): boolean {
@@ -381,7 +381,13 @@ export class VersionCompareManager {
     return success;
   }
 
-
+  /**
+   * Uses the changeset processor to get the changed elements between two versions.
+   * @param currentIModel
+   * @param currentVersion
+   * @param targetVersion
+   * @returns
+   */
   public async startDirectComparison(
     currentIModel: IModelConnection,
     currentVersion: NamedVersion,
@@ -391,6 +397,11 @@ export class VersionCompareManager {
     this._skipParentChildRelationships = true;
     const startTime = new Date();
     try {
+      const changesetProcessor = VersionCompare.changesetProcessor;
+      if (!changesetProcessor) {
+        throw new Error("Cannot do direct comparison without a changeset processor");
+      }
+
       // Setup visualization handler
       this._initializeVisualizationHandler();
       // Raise event that comparison is starting
@@ -411,7 +422,7 @@ export class VersionCompareManager {
         this._currentIModel.iModelId,
         IModelVersion.asOfChangeSet(changesetId!),
       );
-      const changedElements = [await VersionCompare.changesetProcessor(
+      const changedElements = [await changesetProcessor(
         { id: targetVersion.changesetId ?? "", index: targetVersion.changesetIndex ?? 0 },
         {
           id: currentVersion.changesetId ?? "", index: currentVersion.changesetIndex ?? 0,
