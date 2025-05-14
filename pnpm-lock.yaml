@@ -7,8 +7,10 @@ settings:
 overrides:
   '@babel/runtime@<7.26.10': '>=7.26.10'
   '@itwin/appui-abstract': ^5.0.0-dev.111
-  '@itwin/core-quantity': ^5.0.0-dev.111
   '@itwin/core-bentley': ^5.0.0-dev.111
+  '@itwin/core-common': ^5.0.0-dev.111
+  '@itwin/core-frontend': ^5.0.0-dev.111
+  '@itwin/core-quantity': ^5.0.0-dev.111
   '@itwin/core-react': ^5.4.0
   axios@<1.8.2: '>=1.8.2'
   dompurify@<3.2.4: '>=3.2.4'
@@ -20,7 +22,7 @@ importers:
     dependencies:
       '@changesets/cli':
         specifier: ^2.27.11
-        version: 2.29.3
+        version: 2.29.4
       '@changesets/types':
         specifier: 6.0.0
         version: 6.0.0
@@ -156,7 +158,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.18
-        version: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+        version: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@18.19.100)(happy-dom@15.11.7)
@@ -309,13 +311,13 @@ importers:
         version: 4.2.1
       sass:
         specifier: ^1.62.1
-        version: 1.87.0
+        version: 1.88.0
       typescript:
         specifier: ~5.5.4
         version: 5.5.4
       vite:
         specifier: ^5.4.18
-        version: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+        version: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
       vite-plugin-static-copy:
         specifier: ^1.0.6
         version: 1.0.6(vite@5.4.19)
@@ -440,7 +442,7 @@ packages:
     resolution: {integrity: sha512-gT4H8mTaSXRz7eGTuQyq1aIJnJqeXzpOe9Ay7Z3FrCouer14CbV3VzjnJrNrQfbBpGBLO9oy8BmrY75A0p53cA==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      fast-xml-parser: 5.2.2
+      fast-xml-parser: 5.2.3
       tslib: 2.8.1
     dev: false
 
@@ -545,8 +547,8 @@ packages:
       semver: 7.7.1
     dev: false
 
-  /@changesets/assemble-release-plan@6.0.7:
-    resolution: {integrity: sha512-vS5J92Rm7ZUcrvtu6WvggGWIdohv8s1/3ypRYQX8FsPO+KPDx6JaNC3YwSfh2umY/faGGfNnq42A7PRT0aZPFw==}
+  /@changesets/assemble-release-plan@6.0.8:
+    resolution: {integrity: sha512-y8+8LvZCkKJdbUlpXFuqcavpzJR80PN0OIfn8HZdwK7Sh6MgLXm4hKY5vu6/NDoKp8lAlM4ERZCqRMLxP4m+MQ==}
     dependencies:
       '@changesets/errors': 0.2.0
       '@changesets/get-dependents-graph': 2.1.3
@@ -562,17 +564,17 @@ packages:
       '@changesets/types': 6.1.0
     dev: false
 
-  /@changesets/cli@2.29.3:
-    resolution: {integrity: sha512-TNhKr6Loc7I0CSD9LpAyVNSxWBHElXVmmvQYIZQvaMan5jddmL7geo3+08Wi7ImgHFVNB0Nhju/LzXqlrkoOxg==}
+  /@changesets/cli@2.29.4:
+    resolution: {integrity: sha512-VW30x9oiFp/un/80+5jLeWgEU6Btj8IqOgI+X/zAYu4usVOWXjPIK5jSSlt5jsCU7/6Z7AxEkarxBxGUqkAmNg==}
     hasBin: true
     dependencies:
       '@changesets/apply-release-plan': 7.0.12
-      '@changesets/assemble-release-plan': 6.0.7
+      '@changesets/assemble-release-plan': 6.0.8
       '@changesets/changelog-git': 0.2.1
       '@changesets/config': 3.1.1
       '@changesets/errors': 0.2.0
       '@changesets/get-dependents-graph': 2.1.3
-      '@changesets/get-release-plan': 4.0.11
+      '@changesets/get-release-plan': 4.0.12
       '@changesets/git': 3.0.4
       '@changesets/logger': 0.1.1
       '@changesets/pre': 2.0.2
@@ -623,10 +625,10 @@ packages:
       semver: 7.7.1
     dev: false
 
-  /@changesets/get-release-plan@4.0.11:
-    resolution: {integrity: sha512-4DZpsewsc/1m5TArVg5h1c0U94am+cJBnu3izAM3yYIZr8+zZwa3AXYdEyCNURzjx0wWr80u/TWoxshbwdZXOA==}
+  /@changesets/get-release-plan@4.0.12:
+    resolution: {integrity: sha512-KukdEgaafnyGryUwpHG2kZ7xJquOmWWWk5mmoeQaSvZTWH1DC5D/Sw6ClgGFYtQnOMSQhgoEbDxAbpIIayKH1g==}
     dependencies:
-      '@changesets/assemble-release-plan': 6.0.7
+      '@changesets/assemble-release-plan': 6.0.8
       '@changesets/config': 3.1.1
       '@changesets/pre': 2.0.2
       '@changesets/read': 0.6.5
@@ -1092,8 +1094,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': 5.5.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^4.0.0 || ^5.0.0
-      '@itwin/core-frontend': ^4.0.0 || ^5.0.0
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
       '@itwin/core-geometry': ^4.0.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
@@ -1215,7 +1217,7 @@ packages:
     engines: {node: ^20.0.0 || ^22.0.0}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': 5.0.0-dev.112
+      '@itwin/core-common': ^5.0.0-dev.111
       '@itwin/core-geometry': 5.0.0-dev.112
       '@itwin/ecschema-metadata': 5.0.0-dev.112
       '@opentelemetry/api': ^1.0.4
@@ -1267,7 +1269,7 @@ packages:
     peerDependencies:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': 5.0.0-dev.112
+      '@itwin/core-common': ^5.0.0-dev.111
       '@itwin/core-geometry': 5.0.0-dev.112
       '@itwin/core-orbitgt': 5.0.0-dev.112
       '@itwin/core-quantity': ^5.0.0-dev.111
@@ -1381,8 +1383,8 @@ packages:
     resolution: {integrity: sha512-7oAn2V7z20i8Twm+yCL0rbKxozrApahD8bqmrlDT76fbQbA59F2IzWy/Bmx2C5N6I7MDbTE6XVqTpV8EYUrtzw==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': 5.0.0-dev.112
-      '@itwin/core-geometry': ^5.0.0-dev.111
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-geometry': 5.0.0-dev.112
       '@itwin/ecschema-metadata': 5.0.0-dev.112
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.112
@@ -1395,7 +1397,7 @@ packages:
     engines: {node: ^20.0.0 || ^22.0.0}
     peerDependencies:
       '@itwin/core-backend': 5.0.0-dev.112
-      '@itwin/core-common': 5.0.0-dev.112
+      '@itwin/core-common': ^5.0.0-dev.111
     dependencies:
       '@itwin/core-backend': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-common@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)(@itwin/ecschema-metadata@5.0.0-dev.112)
       '@itwin/core-common': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)
@@ -1413,8 +1415,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': 5.5.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^4.0.0 || ^5.0.0
-      '@itwin/core-frontend': ^4.0.0 || ^5.0.0
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
       '@itwin/core-geometry': ^4.0.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
@@ -1444,8 +1446,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': 5.5.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^4.0.0 || ^5.0.0
-      '@itwin/core-frontend': ^4.0.0 || ^5.0.0
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
       '@itwin/core-geometry': ^4.0.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
@@ -1474,7 +1476,7 @@ packages:
     peerDependencies:
       '@itwin/core-backend': ^5.0.0-dev.104
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.104
+      '@itwin/core-common': ^5.0.0-dev.111
     dependencies:
       '@azure/abort-controller': 1.1.0
       '@itwin/core-backend': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-common@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)(@itwin/ecschema-metadata@5.0.0-dev.112)
@@ -1495,7 +1497,7 @@ packages:
     resolution: {integrity: sha512-odP+02J4Ki5hAUt26KQkwJD0cMPv8kMeLCDoxKxHh8HWB/wDM8YbPUeBPmeuqz7xKiV4wA9uRSdPbVz98lUQpQ==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.104
+      '@itwin/core-common': ^5.0.0-dev.111
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.112
       '@itwin/core-common': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)
@@ -1512,8 +1514,8 @@ packages:
     resolution: {integrity: sha512-GOcHMfXNp017dRNVjJ43ByCzbakea9aTCgNlEF12rQwTsYJGxdYcm4255eTVDCNS1BLeoQHv2Q00Nz3MO56Vkw==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.104
-      '@itwin/core-frontend': ^5.0.0-dev.104
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.112
       '@itwin/core-common': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)
@@ -1730,7 +1732,7 @@ packages:
     peerDependencies:
       '@itwin/core-backend': 5.0.0-dev.112
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': 5.0.0-dev.112
+      '@itwin/core-common': ^5.0.0-dev.111
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': 5.0.0-dev.112
       '@itwin/presentation-common': 5.0.0-dev.112
@@ -1751,7 +1753,7 @@ packages:
     resolution: {integrity: sha512-1jzTm25MuUTttAzLcgLkWA6slfbArIGjWgzp+AxLnrS03kW+BVSZbXDVTU48q9E9FHBnJX5rCtsmVlcbtrOzuQ==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': 5.0.0-dev.112
+      '@itwin/core-common': ^5.0.0-dev.111
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': 5.0.0-dev.112
     dependencies:
@@ -1766,8 +1768,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': ^4.9.0 || ^5.0.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^4.4.0 || ^5.0.0
-      '@itwin/core-frontend': ^4.4.0 || ^5.0.0
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
       '@itwin/ecschema-metadata': ^4.4.0 || ^5.0.0
@@ -1817,8 +1819,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': ^4.9.0 || ^5.0.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^4.4.0 || ^5.0.0
-      '@itwin/core-frontend': ^4.4.0 || ^5.0.0
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
       '@itwin/ecschema-metadata': ^4.4.0 || ^5.0.0
@@ -1866,7 +1868,7 @@ packages:
     resolution: {integrity: sha512-5b/jqdrIa3946Fte2wKTyHqnd5Thys7SzBnOC9aP9km9zK0TmZBayot5Z9Y+qRwWepQmIM1lJ/lIXYt+9wAnBw==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^4.1.0 || ^5.0.0
+      '@itwin/core-common': ^5.0.0-dev.111
       '@itwin/core-geometry': ^4.1.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': ^4.1.0 || ^5.0.0
@@ -1883,8 +1885,8 @@ packages:
     resolution: {integrity: sha512-LDD3SndKFuTMT5dk0NVnSDO0t8sywL7HYFalcK9hNpdC7vqjNTzHs/iZ0cbrjMgwoGS1EtdRH/GBi5SnfrO9rQ==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': 5.0.0-dev.112
-      '@itwin/core-frontend': 5.0.0-dev.112
+      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-frontend': ^5.0.0-dev.111
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': 5.0.0-dev.112
       '@itwin/presentation-common': 5.0.0-dev.112
@@ -2751,7 +2753,7 @@ packages:
       vite: ^4 || ^5 || ^6
     dependencies:
       '@swc/core': 1.11.24
-      vite: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+      vite: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
     transitivePeerDependencies:
       - '@swc/helpers'
 
@@ -2804,7 +2806,7 @@ packages:
       '@vitest/spy': 2.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.17
-      vite: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+      vite: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
     dev: true
 
   /@vitest/pretty-format@2.1.9:
@@ -3981,8 +3983,8 @@ packages:
   /fast-sort@3.4.1:
     resolution: {integrity: sha512-76uvGPsF6So53sZAqenP9UVT3p5l7cyTHkLWVCMinh41Y8NDrK1IYXJgaBMfc1gk7nJiSRZp676kddFG2Aa5+A==}
 
-  /fast-xml-parser@5.2.2:
-    resolution: {integrity: sha512-ZaCmslH75Jkfowo/x44Uq8KT5SutC5BFxHmY61nmTXPccw11PVuIXKUqC2hembMkJ3nPwTkQESXiUlsKutCbMg==}
+  /fast-xml-parser@5.2.3:
+    resolution: {integrity: sha512-OdCYfRqfpuLUFonTNjvd30rCBZUneHpSQkCqfaeWQ9qrKcl6XlWeDBNVwGb+INAIxRshuN2jF+BE0L6gbBO2mw==}
     hasBin: true
     dependencies:
       strnum: 2.1.0
@@ -5787,8 +5789,8 @@ packages:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
     dev: false
 
-  /sass@1.87.0:
-    resolution: {integrity: sha512-d0NoFH4v6SjEK7BoX810Jsrhj7IQSYHAHLi/iSpgqKc7LaIDshFRlSg5LOymf9FqQhxEHs2W5ZQXlvy0KD45Uw==}
+  /sass@1.88.0:
+    resolution: {integrity: sha512-sF6TWQqjFvr4JILXzG4ucGOLELkESHL+I5QJhh7CNaE+Yge0SI+ehCatsXhJ7ymU1hAFcIS3/PBpjdIbXoyVbg==}
     engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
@@ -6497,7 +6499,7 @@ packages:
       debug: 4.4.0
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+      vite: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6520,7 +6522,7 @@ packages:
       fast-glob: 3.3.3
       fs-extra: 11.3.0
       picocolors: 1.1.1
-      vite: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+      vite: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
     dev: false
 
   /vite-tsconfig-paths@5.1.4(typescript@5.5.4)(vite@5.4.19):
@@ -6534,13 +6536,13 @@ packages:
       debug: 4.4.0
       globrex: 0.1.2
       tsconfck: 3.1.5(typescript@5.5.4)
-      vite: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+      vite: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
     transitivePeerDependencies:
       - supports-color
       - typescript
     dev: false
 
-  /vite@5.4.19(@types/node@18.19.100)(sass@1.87.0):
+  /vite@5.4.19(@types/node@18.19.100)(sass@1.88.0):
     resolution: {integrity: sha512-qO3aKv3HoQC8QKiNSTuUM1l9o/XX3+c+VTgLHbJWHZGeTPVAg2XwazI9UWzoxjIJCGCV2zU60uqMzjeLZuULqA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -6575,7 +6577,7 @@ packages:
       esbuild: 0.25.4
       postcss: 8.5.3
       rollup: 4.40.2
-      sass: 1.87.0
+      sass: 1.88.0
     optionalDependencies:
       fsevents: 2.3.3
 
@@ -6623,7 +6625,7 @@ packages:
       tinyexec: 0.3.2
       tinypool: 1.0.2
       tinyrainbow: 1.2.0
-      vite: 5.4.19(@types/node@18.19.100)(sass@1.87.0)
+      vite: 5.4.19(@types/node@18.19.100)(sass@1.88.0)
       vite-node: 2.1.9(@types/node@18.19.100)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
