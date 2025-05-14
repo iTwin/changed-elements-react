@@ -3,53 +3,24 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AnyDb,
-  BriefcaseDb,
   BriefcaseManager,
   ChangedECInstance,
-  ChangeMetaData,
   ChangesetECAdaptor,
   IModelDb,
   IModelHost,
   PartialECChangeUnifier,
-  RequestNewBriefcaseArg,
-  SqliteChangeOp,
   SqliteChangesetReader,
 } from "@itwin/core-backend";
-import { DbOpcode, Id64String, OpenMode, OrderedId64Iterable } from "@itwin/core-bentley";
 import {
-  BentleyCloudRpcManager,
-  BriefcaseIdValue,
-  ChangedElements,
   ChangesetFileProps,
   ChangesetIdWithIndex,
   IModelRpcProps,
-  IModelVersion,
-  QueryBinder,
-  TypeOfChange,
 } from "@itwin/core-common";
-import { AuthClient } from "./RPC/ChangesetGroupRPCInterface";
-import { ComparisonProcessor } from "./OpenSiteComparisonHandler.js";
+import { AuthClient, ChangesetGroupResult } from "./RPC/ChangesetGroupRPCInterface";
+import { ComparisonProcessor } from "./OpenSiteComparisonHandler";
 
 export enum ExtendedTypeOfChange {
   Driven = 64,
-}
-
-/**
- * Representation of a Changed Element during ChangesetGroup processing.
- *
- * Including extra {@link meta metadata} from the {@link PartialECChangeUnifier}'s {@link ChangedECInstance instances}
- */
-export interface ChangesetGroupChangedElement {
-  id: Id64String;
-  classId: Id64String;
-  modelId: Id64String;
-  parentId: Id64String;
-  parentRelClassId: Id64String;
-  operation: SqliteChangeOp | string;
-  properties: Set<string>;
-  type: number;
-  meta?: ChangeMetaData; // TODO: Only keep what we need. We can remove properties not used during processing to decrease memory usage.
 }
 
 /**
@@ -102,7 +73,7 @@ export class ChangesetGroup {
     startChangesetIdWithIndex: ChangesetIdWithIndex,
     endChangesetIdWithIndex: ChangesetIdWithIndex,
     authToken: string,
-  ): Promise<ChangedElements> {
+  ): Promise<ChangesetGroupResult> {
     const iModelId = iModelToken.iModelId!;
 
     const changesetPaths = await this._downloadChangesetFiles(
@@ -118,18 +89,7 @@ export class ChangesetGroup {
       db,
     );
 
-    const changedElements =
-      await this.transformToAPIChangedElements(db, changedECInstances);
-
-    // Do any extra processing of the changed elements if a processor is provided
-    if (this._processingOpts?.processor) {
-      return this._processingOpts.processor.processChangedElements(
-        db,
-        changedElements,
-      );
-    }
-
-    return changedElements;
+    return { changedInstances: changedECInstances };
   }
 
   /**
@@ -167,97 +127,9 @@ export class ChangesetGroup {
     // Use any passed processor to process the instances
     const comparisonProcessor = this._processingOpts?.processor;
     if (comparisonProcessor) {
-      await comparisonProcessor.processChangedInstances(db, instances);
+      return await comparisonProcessor.processChangedInstances(db, instances);
     }
 
     return instances;
   }
-
-  /**
-   * Returns a map of the elements to models they belong to
-   * @param db
-   * @param changedElements
-   * @returns
-   */
-  private async _getModelIds(db: IModelDb, instances: ChangedECInstance[]): Promise<Map<Id64String, Id64String>> {
-    const query = "SELECT ECInstanceId, Model.Id FROM Bis.Element WHERE InVirtualSet(?, ECInstanceId)";
-    const elemToModel = new Map<Id64String, Id64String>();
-    const queryBinder = new QueryBinder();
-
-    const instanceIds = instances
-        .filter((elem) => elem.SourceECInstanceId === undefined)
-        .map((elem) => elem.ECInstanceId);
-
-    queryBinder.bindIdSet(1, OrderedId64Iterable.sortArray(instanceIds));
-    for await (const row of db.createQueryReader(query, queryBinder)) {
-      elemToModel.set(row[0], row[1]);
-    }
-    return elemToModel;
-  }
-
-  /**
-   * Transforms temporary array of elements to Changed Elements result format
-   * TODO: This should be done in the frontend, not the backend.
-   * @param changedElements
-   * @returns
-   */
-  private async transformToAPIChangedElements(
-    db: IModelDb,
-    changedElements: ChangedECInstance[],
-  ): Promise<ChangedElements> {
-    const ce: ChangedElements = this.createEmptyChangedElements();
-    const ceMap: Map<string, ChangedECInstance> = new Map<
-      string,
-      ChangedECInstance
-    >();
-    changedElements.forEach((elem) => {
-      if (!ceMap.has(`${elem.ECInstanceId}:${elem.ECClassId}`)) {
-        ceMap.set(`${elem.ECInstanceId}:${elem.ECClassId}`, elem);
-      }
-    });
-    // const map = await this._getModelIds(db, changedElements)
-    for (const elem of ceMap.values()) {
-      ce.elements.push(elem.ECInstanceId);
-      ce.classIds.push(elem.ECClassId ?? "");
-      ce.opcodes.push(this.stringToOpcode(elem.$meta?.op ?? ""));
-      ce.type.push(TypeOfChange.NoChange);
-      // ce.modelIds?.push(map.get(elem.ECInstanceId) ?? "0x1");
-      // TODO: Do we need checksums anymore? If doing parallel processing, maybe...
-    }
-    return ce;
-  }
-
-  /**
-   * Convert {@link SqliteChangeOp} string to {@link DbOpcode} number.
-   *
-   * Throws error if not a valid {@link SqliteChangeOp} string.
-   */
-  private stringToOpcode(operation: SqliteChangeOp | string): DbOpcode {
-    switch (operation) {
-      case "Inserted":
-        return DbOpcode.Insert;
-      case "Updated":
-        return DbOpcode.Update;
-      case "Deleted":
-        return DbOpcode.Delete;
-      default:
-        throw new Error("Unknown opcode string");
-    }
-  }
-
-  /**
-   * @returns Empty ChangedElements object
-   */
-  private createEmptyChangedElements = (): ChangedElements => {
-    return {
-      elements: [],
-      classIds: [],
-      modelIds: [],
-      opcodes: [],
-      type: [],
-      properties: [],
-      parentIds: [],
-      parentClassIds: [],
-    };
-  };
 }

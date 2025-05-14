@@ -1,6 +1,6 @@
-import { ChangedElements, ChangesetIdWithIndex, IModelRpcProps, RpcInterface } from "@itwin/core-common";
-import { ChangesetGroupRPCInterface } from "./ChangesetGroupRPCInterface";
-import { ChangesetGroup } from "../ChangedElementsGroupHelperr";
+import { ChangesetIdWithIndex, IModelRpcProps, RpcInterface } from "@itwin/core-common";
+import { ChangesetGroupResult, ChangesetGroupRPCInterface } from "./ChangesetGroupRPCInterface";
+import { ChangesetGroup } from "../ChangedElementsGroupHelper";
 import { OpenSiteProcessor } from "../OpenSiteComparisonHandler";
 
 /**
@@ -15,7 +15,7 @@ export class ChangesetGroupRPCImpl extends RpcInterface implements ChangesetGrou
    * @param authToken
    * @returns
    */
-  public async getChangesetGroup(iModelToken: IModelRpcProps, startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, authToken: string): Promise<ChangedElements> {
+  public async getChangesetGroup(iModelToken: IModelRpcProps, startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, authToken: string): Promise<ChangesetGroupResult> {
     // Create instance
     const changesetGroup = new ChangesetGroup({ processor: new OpenSiteProcessor()});
     // Run changeset group comparison

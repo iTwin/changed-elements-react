@@ -18,6 +18,7 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
+import { transformToAPIChangedElements } from "../utils/utils.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
@@ -422,11 +423,12 @@ export class VersionCompareManager {
         this._currentIModel.iModelId,
         IModelVersion.asOfChangeSet(changesetId!),
       );
-      const changedElements = [await changesetProcessor(
+      const processorResults = await changesetProcessor(
         { id: targetVersion.changesetId ?? "", index: targetVersion.changesetIndex ?? 0 },
         {
           id: currentVersion.changesetId ?? "", index: currentVersion.changesetIndex ?? 0,
-        }, currentIModel)];
+        }, currentIModel);
+      const changedElements = [await transformToAPIChangedElements(processorResults.changedInstances)];
       if (!targetVersion.changesetId) {
         throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
       }

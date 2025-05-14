@@ -4,8 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import { getClassName } from "@itwin/appui-abstract";
 import type { AccessToken } from "@itwin/core-bentley";
-import type { ModelProps, ChangedElements, ChangesetIdWithIndex } from "@itwin/core-common";
+import type { ModelProps, ChangesetIdWithIndex } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
+import { ChangedECInstance } from "@itwin/core-backend";
 import { KeySet } from "@itwin/presentation-common";
 
 import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
@@ -99,14 +100,14 @@ export interface VersionCompareOptions {
    * @param iModelConnection iModel connection to use
    * @returns
    */
-  changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements>;
+  changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
-  private static _changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangedElements>;
+  private static _changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
   public static get changesetProcessor() {
     return VersionCompare._changesetProcessor;
   }

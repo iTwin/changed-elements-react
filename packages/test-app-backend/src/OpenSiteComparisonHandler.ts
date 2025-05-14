@@ -2,10 +2,10 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { ChangedECInstance, Element, ElementDrivesElement, IModelDb, IModelHost } from "@itwin/core-backend";
-import { DbOpcode, Id64String } from "@itwin/core-bentley";
+import { ChangedECInstance, ElementDrivesElement, IModelDb } from "@itwin/core-backend";
+import { Id64String } from "@itwin/core-bentley";
 import { ChangedElements, QueryBinder, TypeOfChange } from "@itwin/core-common";
-import { ExtendedTypeOfChange } from "./ChangedElementsGroupHelperr";
+import { ExtendedTypeOfChange } from "./ChangedElementsGroupHelper";
 
 export interface InstanceKey {
   className: string;
@@ -82,9 +82,7 @@ const getInheritedClassIds = async (db: IModelDb, className: string, reverse?: b
 
 export interface ComparisonProcessor {
   /** Called after all changes are put together with partial unifier */
-  processChangedInstances: (db: IModelDb, instances: ChangedECInstance[]) => Promise<void>;
-  /** Called after the changed instances are transformed in changed elements, this is where you can enrich the version compare input */
-  processChangedElements: (db: IModelDb, changedElements: ChangedElements) => Promise<ChangedElements>;
+  processChangedInstances: (db: IModelDb, instances: ChangedECInstance[]) => Promise<ChangedECInstance[]>;
 }
 
 /**
@@ -119,12 +117,29 @@ export class OpenSiteProcessor implements ComparisonProcessor {
     return relClassIds;
   }
 
+  private extractTypeOfChange(instance: ChangedECInstance): number {
+    let typeOfChange = 0;
+
+    // TODO: This is incomplete / wrong, fix
+    for (const prop in instance) {
+      if (prop.includes("Geometry")) {
+        typeOfChange |= TypeOfChange.Geometry;
+      } else if (prop.includes("Origin") || prop.includes("BBox")) {
+        typeOfChange |= TypeOfChange.Placement;
+      } else if (!prop.includes("$meta") && !prop.includes("ECClassId") && !prop.includes("ECInstanceId") && !prop.includes("SourceECInstanceId") && !prop.includes("TargetECInstanceId")) {
+        typeOfChange |= TypeOfChange.Property;
+      }
+    }
+
+    return typeOfChange;
+  }
+
   /**
    * Finds all relevant driven class elements
    * @param db
    * @param instances
    */
-  public async processChangedInstances(db: IModelDb, instances: ChangedECInstance[]): Promise<void> {
+  public async processChangedInstances(db: IModelDb, instances: ChangedECInstance[]): Promise<ChangedECInstance[]> {
     const driveMap = new Map<string, string>();
     const drivenElements = new Set<string>();
 
@@ -143,47 +158,22 @@ export class OpenSiteProcessor implements ComparisonProcessor {
 
     this._drivenInstances = instances.filter((instance) => drivenElements.has(`${instance.ECInstanceId}`));
     this._nonDrivenInstances = instances.filter((instance) => !drivenElements.has(`${instance.ECInstanceId}`));
-  }
 
-  /**
-   * Finds the elements that were driven by changes based on ElementDrivesElement relationship
-   * @param changedElements
-   * @returns List of indices of the changed elements that were marked deleted as part of the driving element's update
-   */
-  private markDrivenElementsAsUpdates(changedElements: ChangedElements): number[] {
-    const drivenInstances = new Set(this._drivenInstances.map((instance) => instance.ECInstanceId));
-
-    // Indices of the changed elements result to remove for any insert + delete elements that were triggered by element drives element relationship
-    const indicesToClean = new Set<number>();
-    for (let i = 0; i < changedElements.elements.length; i++) {
-      const elementId = changedElements.elements[i];
-      if (drivenInstances.has(elementId)) {
-        changedElements.type[i] |= ExtendedTypeOfChange.Driven | TypeOfChange.Indirect | TypeOfChange.Geometry | TypeOfChange.Property;
-        if (changedElements.opcodes[i] === DbOpcode.Insert) {
-          changedElements.opcodes[i] = DbOpcode.Update;
-        } else {
-          indicesToClean.add(i);
+    // Enrich data with type of change
+    for (const instance of instances) {
+      instance["$comparison"] = {};
+      if (this._drivenInstances.includes(instance)) {
+        instance["$comparison"].type |= ExtendedTypeOfChange.Driven | TypeOfChange.Indirect | this.extractTypeOfChange(instance);
+        if (instance.$meta) {
+          instance.$meta.op = "Updated";
+        }
+      } else {
+        if (instance.$meta?.op === "Updated") {
+          instance["$comparison"].type |= this.extractTypeOfChange(instance);
         }
       }
     }
 
-    return Array.from(indicesToClean);
-  }
-
-  /**
-   * Uses driven cache to find all driven elements and mark them as such
-   * TODO: This implementation should change to return a non-changed elements-specific representation
-   * @param db
-   * @param changedElements
-   * @returns
-   */
-  public async processChangedElements(db: IModelDb, changedElements: ChangedElements): Promise<ChangedElements> {
-    // Indices of the changed elements result to remove for any insert + delete elements that were triggered by element drives element relationship
-    const deletedDrivenIndices = this.markDrivenElementsAsUpdates(changedElements);
-    // Clean-up elements that are not driven
-    // TODO: This should be handled in the frontend, either by affecting the changed elements or adding more handling for the delete/insert cases.
-    removeChangedElementsIndices(changedElements, deletedDrivenIndices);
-
-    return changedElements;
+    return instances;
   }
 }

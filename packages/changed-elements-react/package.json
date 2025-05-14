@@ -47,6 +47,7 @@
     "@itwin/core-bentley": "^4.10.6",
     "@itwin/core-common": "^4.10.6",
     "@itwin/core-frontend": "^4.10.6",
+    "@itwin/core-backend": "^4.10.6",
     "@itwin/core-geometry": "^4.10.6",
     "@itwin/core-react": "^5.0.5",
     "@itwin/presentation-common": "^4.10.6",
