@@ -492,7 +492,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         nodes: ChangedElementsListComponent._maintainedState.nodes,
         selectedIds: ChangedElementsListComponent._maintainedState.selectedIds,
         path: ChangedElementsListComponent._maintainedState.path,
-        searchPath: ChangedElementsListComponent._maintainedState.path,
+        searchPath: ChangedElementsListComponent._maintainedState.searchPath,
         search: ChangedElementsListComponent._maintainedState.search,
         filteredNodes: ChangedElementsListComponent._maintainedState.filteredNodes,
         filterOptions: ChangedElementsListComponent._maintainedState.filterOptions,
