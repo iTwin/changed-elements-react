@@ -38,6 +38,9 @@ export interface ExpandableSearchBarProps {
 
   /** On search text change handler. */
   onChange?: (searchText: string) => void;
+
+  /** searched text preserved when switching to front stage */
+  searchedText?: string;
 }
 
 /**
@@ -62,9 +65,10 @@ export function ExpandableSearchBar({
   valueChangedDelay,
   onChange,
   setFocus = false,
+  searchedText = "",
 }: ExpandableSearchBarProps): ReactElement {
   const [expanded, setExpanded] = useState(false);
-  const [searchText, setSearchText] = useState<string>();
+  const [searchText, setSearchText] = useState<string>(searchedText);
   const [timeoutId, setTimeoutId] = useState(0);
   const inputElement = useRef<HTMLInputElement>(null);
 
