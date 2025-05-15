@@ -8,8 +8,6 @@ overrides:
   '@babel/runtime@<7.26.10': '>=7.26.10'
   '@itwin/appui-abstract': ^5.0.0-dev.111
   '@itwin/core-bentley': ^5.0.0-dev.111
-  '@itwin/core-common': ^5.0.0-dev.111
-  '@itwin/core-frontend': ^5.0.0-dev.111
   '@itwin/core-quantity': ^5.0.0-dev.111
   '@itwin/core-react': ^5.4.0
   axios@<1.8.2: '>=1.8.2'
@@ -1094,8 +1092,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': 5.5.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': ^4.0.0 || ^5.0.0
+      '@itwin/core-frontend': ^4.0.0 || ^5.0.0
       '@itwin/core-geometry': ^4.0.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
@@ -1217,7 +1215,7 @@ packages:
     engines: {node: ^20.0.0 || ^22.0.0}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': 5.0.0-dev.112
       '@itwin/core-geometry': 5.0.0-dev.112
       '@itwin/ecschema-metadata': 5.0.0-dev.112
       '@opentelemetry/api': ^1.0.4
@@ -1269,7 +1267,7 @@ packages:
     peerDependencies:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': 5.0.0-dev.112
       '@itwin/core-geometry': 5.0.0-dev.112
       '@itwin/core-orbitgt': 5.0.0-dev.112
       '@itwin/core-quantity': ^5.0.0-dev.111
@@ -1397,7 +1395,7 @@ packages:
     engines: {node: ^20.0.0 || ^22.0.0}
     peerDependencies:
       '@itwin/core-backend': 5.0.0-dev.112
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': 5.0.0-dev.112
     dependencies:
       '@itwin/core-backend': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-common@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)(@itwin/ecschema-metadata@5.0.0-dev.112)
       '@itwin/core-common': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)
@@ -1415,8 +1413,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': 5.5.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': ^4.0.0 || ^5.0.0
+      '@itwin/core-frontend': ^4.0.0 || ^5.0.0
       '@itwin/core-geometry': ^4.0.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
@@ -1446,8 +1444,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': 5.5.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': ^4.0.0 || ^5.0.0
+      '@itwin/core-frontend': ^4.0.0 || ^5.0.0
       '@itwin/core-geometry': ^4.0.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
@@ -1476,7 +1474,7 @@ packages:
     peerDependencies:
       '@itwin/core-backend': ^5.0.0-dev.104
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': ^5.0.0-dev.104
     dependencies:
       '@azure/abort-controller': 1.1.0
       '@itwin/core-backend': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-common@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)(@itwin/ecschema-metadata@5.0.0-dev.112)
@@ -1497,7 +1495,7 @@ packages:
     resolution: {integrity: sha512-odP+02J4Ki5hAUt26KQkwJD0cMPv8kMeLCDoxKxHh8HWB/wDM8YbPUeBPmeuqz7xKiV4wA9uRSdPbVz98lUQpQ==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': ^5.0.0-dev.104
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.112
       '@itwin/core-common': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)
@@ -1514,8 +1512,8 @@ packages:
     resolution: {integrity: sha512-GOcHMfXNp017dRNVjJ43ByCzbakea9aTCgNlEF12rQwTsYJGxdYcm4255eTVDCNS1BLeoQHv2Q00Nz3MO56Vkw==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': ^5.0.0-dev.104
+      '@itwin/core-frontend': ^5.0.0-dev.104
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.112
       '@itwin/core-common': 5.0.0-dev.112(@itwin/core-bentley@5.0.0-dev.112)(@itwin/core-geometry@5.0.0-dev.112)
@@ -1732,7 +1730,7 @@ packages:
     peerDependencies:
       '@itwin/core-backend': 5.0.0-dev.112
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': 5.0.0-dev.112
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': 5.0.0-dev.112
       '@itwin/presentation-common': 5.0.0-dev.112
@@ -1753,7 +1751,7 @@ packages:
     resolution: {integrity: sha512-1jzTm25MuUTttAzLcgLkWA6slfbArIGjWgzp+AxLnrS03kW+BVSZbXDVTU48q9E9FHBnJX5rCtsmVlcbtrOzuQ==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': 5.0.0-dev.112
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': 5.0.0-dev.112
     dependencies:
@@ -1768,8 +1766,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': ^4.9.0 || ^5.0.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': ^4.4.0 || ^5.0.0
+      '@itwin/core-frontend': ^4.4.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
       '@itwin/ecschema-metadata': ^4.4.0 || ^5.0.0
@@ -1819,8 +1817,8 @@ packages:
       '@itwin/appui-abstract': ^5.0.0-dev.111
       '@itwin/components-react': ^4.9.0 || ^5.0.0
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': ^4.4.0 || ^5.0.0
+      '@itwin/core-frontend': ^4.4.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/core-react': ^5.4.0
       '@itwin/ecschema-metadata': ^4.4.0 || ^5.0.0
@@ -1868,7 +1866,7 @@ packages:
     resolution: {integrity: sha512-5b/jqdrIa3946Fte2wKTyHqnd5Thys7SzBnOC9aP9km9zK0TmZBayot5Z9Y+qRwWepQmIM1lJ/lIXYt+9wAnBw==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
+      '@itwin/core-common': ^4.1.0 || ^5.0.0
       '@itwin/core-geometry': ^4.1.0 || ^5.0.0
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': ^4.1.0 || ^5.0.0
@@ -1885,8 +1883,8 @@ packages:
     resolution: {integrity: sha512-LDD3SndKFuTMT5dk0NVnSDO0t8sywL7HYFalcK9hNpdC7vqjNTzHs/iZ0cbrjMgwoGS1EtdRH/GBi5SnfrO9rQ==}
     peerDependencies:
       '@itwin/core-bentley': ^5.0.0-dev.111
-      '@itwin/core-common': ^5.0.0-dev.111
-      '@itwin/core-frontend': ^5.0.0-dev.111
+      '@itwin/core-common': 5.0.0-dev.112
+      '@itwin/core-frontend': 5.0.0-dev.112
       '@itwin/core-quantity': ^5.0.0-dev.111
       '@itwin/ecschema-metadata': 5.0.0-dev.112
       '@itwin/presentation-common': 5.0.0-dev.112
