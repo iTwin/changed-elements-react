@@ -35,7 +35,7 @@ To begin using this package in your application, you will need to:
     });
     ```
 
-4. `<ChangedElementsWidget />` React component lets users inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility. The following code has example of widget use but does not show off all props for widget.
+4. The `<ChangedElementsWidget />` React component lets users inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility. The following code shows an example widget initialization (does not show off all props).
 
     ```ts
     import { ChangedElementsWidget } from "@itwin/changed-elements-react";
@@ -49,7 +49,7 @@ To begin using this package in your application, you will need to:
         />,
     ```
 
-5. `<NamedVersionSelectorWidget />` **Experimental** React component lets users inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility. The following code has example of widget use but does not show off all props for widget.
+5. The `<NamedVersionSelectorWidget />` is an **experimental** React component that lets users inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility. The following code shows an example widget initialization (does not show off all props).
 
     ```ts
     import { NamedVersionSelectorWidget } from "@itwin/changed-elements-react";
@@ -62,7 +62,7 @@ To begin using this package in your application, you will need to:
       />
     ```
 
-6. `<PropertyComparisonTable />` React component lists properties of a selected element and displays how they changed between two versions.
+6. The `<PropertyComparisonTable />` React component lists properties of a selected element and displays how they changed between two versions.
 
     ```ts
     import { PropertyComparisonTable } from "@itwin/changed-elements-react";
