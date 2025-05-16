@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.2
+
+### Patch Changes
+
+#### [0.15.2](https://github.com/iTwin/changed-elements-react/tree/v0.15.2/packages/changed-elements-react) - 2025-05-16
+
+bug fix for search showing returning from version compare frontstage
+
 ## 0.15.1
 
 ### Patch Changes
