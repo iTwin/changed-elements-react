@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.15.1
+
+### Patch Changes
+
+#### [0.15.1](https://github.com/iTwin/changed-elements-react/tree/v0.15.1/packages/changed-elements-react) - 2025-05-16
+
+Update itwin/core packages to version 5.0.0-dev.111
+
+#### [0.15.1](https://github.com/iTwin/changed-elements-react/tree/v0.15.1/packages/changed-elements-react) - 2025-05-16
+
+bug on filter pill missing after switching page
+
 ## 0.15.0
 
 ### Minor Changes
