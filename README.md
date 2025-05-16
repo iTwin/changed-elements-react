@@ -32,7 +32,7 @@ We welcome contributions to make this package better. You can submit feature req
 This repository uses [Changesets](https://github.com/changesets/changesets) to manage package versioning and changelogs. When making changes that affect the public API or behavior, please add a changeset by running:
 
 ```shell
-npx changeset
+pnpm changeset
 ```
 
 Follow the prompts to describe your changes and select the appropriate version bump (major, minor, or patch). Versioning should follow [semver](https://semver.org/) conventions. If no version bump is required (such as for documentation-only changes), use `npx changeset --empty`.
