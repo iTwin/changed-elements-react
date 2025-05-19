@@ -6,6 +6,7 @@ import { ChangedECInstance, ElementDrivesElement, IModelDb } from "@itwin/core-b
 import { Id64String } from "@itwin/core-bentley";
 import { ChangedElements, QueryBinder, TypeOfChange } from "@itwin/core-common";
 import { ExtendedTypeOfChange } from "./ChangedElementsGroupHelper";
+import { getTypeOfChange } from "./TypeOfChange";
 
 export interface InstanceKey {
   className: string;
@@ -117,21 +118,9 @@ export class OpenSiteProcessor implements ComparisonProcessor {
     return relClassIds;
   }
 
+  /** TODO: Should become a separate utility function / not dependent on this "comparison processor" */
   private extractTypeOfChange(instance: ChangedECInstance): number {
-    let typeOfChange = 0;
-
-    // TODO: This is incomplete / wrong, fix
-    for (const prop in instance) {
-      if (prop.includes("Geometry")) {
-        typeOfChange |= TypeOfChange.Geometry;
-      } else if (prop.includes("Origin") || prop.includes("BBox")) {
-        typeOfChange |= TypeOfChange.Placement;
-      } else if (!prop.includes("$meta") && !prop.includes("ECClassId") && !prop.includes("ECInstanceId") && !prop.includes("SourceECInstanceId") && !prop.includes("TargetECInstanceId")) {
-        typeOfChange |= TypeOfChange.Property;
-      }
-    }
-
-    return typeOfChange;
+    return getTypeOfChange(Object.keys(instance));
   }
 
   /**
@@ -140,7 +129,8 @@ export class OpenSiteProcessor implements ComparisonProcessor {
    * @param instances
    */
   public async processChangedInstances(db: IModelDb, instances: ChangedECInstance[]): Promise<ChangedECInstance[]> {
-    const driveMap = new Map<string, string>();
+    const driveForwardMap = new Map<string, string[]>();
+    const driveBackwardMap = new Map<string, string[]>();
     const drivenElements = new Set<string>();
 
     // Find all class ids that inherit from ElementDrivesElement
@@ -151,8 +141,24 @@ export class OpenSiteProcessor implements ComparisonProcessor {
       if (instance.ECClassId && elementDrivesElementClasses.has(instance.ECClassId)) {
         const source = instance.SourceECInstanceId;
         const target = instance.TargetECInstanceId;
+        // TODO: Do we care about class ids here
+        // const sourceClassId = instance.SourceECClassId;
+        // const targetClassId = instance.TargetECClassId;
         drivenElements.add(target);
-        driveMap.set(source, target);
+        const driveBackwardEntry = driveBackwardMap.get(`${target}`);
+        if (driveBackwardEntry) {
+          driveBackwardEntry.push(`${source}`);
+        } else {
+          driveBackwardMap.set(`${target}`, [`${source}`]);
+        }
+
+        const driveForwardEntry = driveForwardMap.get(`${source}`);
+        if (driveForwardEntry) {
+          driveForwardEntry.push(`${target}`);
+        }
+        else {
+          driveForwardMap.set(`${source}`, [`${target}`]);
+        }
       }
     }
 
@@ -162,15 +168,20 @@ export class OpenSiteProcessor implements ComparisonProcessor {
     // Enrich data with type of change
     for (const instance of instances) {
       instance["$comparison"] = {};
-      if (this._drivenInstances.includes(instance)) {
-        instance["$comparison"].type |= ExtendedTypeOfChange.Driven | TypeOfChange.Indirect | this.extractTypeOfChange(instance);
+      if (instance.$meta?.op === "Updated") {
+        instance["$comparison"].type |= this.extractTypeOfChange(instance);
+      }
+      const backwards = driveBackwardMap.get(`${instance.ECInstanceId}`);
+      if (backwards) {
+        instance["$comparison"].type = ExtendedTypeOfChange.Driven;
+        instance["$comparison"].drivenBy = backwards;
         if (instance.$meta) {
           instance.$meta.op = "Updated";
         }
-      } else {
-        if (instance.$meta?.op === "Updated") {
-          instance["$comparison"].type |= this.extractTypeOfChange(instance);
-        }
+      }
+      const forwards = driveForwardMap.get(`${instance.ECInstanceId}`);
+      if (forwards) {
+        instance["$comparison"].drives = forwards;
       }
     }
 

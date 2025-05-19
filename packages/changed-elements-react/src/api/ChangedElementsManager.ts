@@ -6,7 +6,7 @@ import { BeEvent, DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat, TypeOfChange, type ChangedElements } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ModelState } from "@itwin/core-frontend";
 
-import { ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
+import { ChangedElementEntry, ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
@@ -379,6 +379,16 @@ export class ChangedElementsManager {
 
   public modelToParentModelMap: Map<string, string> | undefined;
 
+  public elementToDrivenElement: Map<string, string[]> = new Map<string, string[]>();
+  public setElementToDrivenElementMap(_map: Map<string, string[]>) {
+    this.elementToDrivenElement = _map;
+  }
+
+  public elementDrivesElement: Map<string, string[]> = new Map<string, string[]>();
+  public setElementDrivesElementMap(_map: Map<string, string[]>) {
+    this.elementDrivesElement = _map;
+  }
+
   /**
    *
    * @returns Set of parent model ids used to parent elements in UI tree
@@ -532,6 +542,54 @@ export class ChangedElementsManager {
     }
     return models;
   };
+
+  private _getDirectlyDrivenElements = (entries: ChangedElementEntry[]): ChangedElementEntry[] => {
+    const relevantChangedElements = [];
+    for (const entry of entries) {
+      const key = `${entry.id}`;
+      // const drivenElements = this.elementToDrivenElement.get(key);
+      const drivenElements = this.elementDrivesElement.get(key);
+      if (drivenElements) {
+        // TODO: Seems like everything is using instance id without class id, that seems wrong...
+        for (const instanceId of drivenElements) {
+          const changedElement = this._entryCache.changedElementEntries.get(instanceId);
+          if (changedElement) {
+            relevantChangedElements.push(changedElement);
+          }
+        }
+      }
+    }
+    return relevantChangedElements;
+  }
+
+  /**
+   * Returns any elements (recursively) that were changed by direct changes of the given instances with multiple jumps
+   * @param entries
+   * @returns
+   */
+  public getDrivenElementsRecursive = (entries: ChangedElementEntry[]): ChangedElementEntry[] => {
+    const relevantChangedElements = [];
+    let currentElements = entries;
+    while (currentElements.length > 0) {
+      const drivenElements = this._getDirectlyDrivenElements(currentElements);
+      if (drivenElements.length === 0) {
+        break;
+      }
+      currentElements = drivenElements;
+      relevantChangedElements.push(...drivenElements);
+    }
+
+    return relevantChangedElements;
+  }
+
+  /**
+   * Returns any elements that were changed by direct changes of the given instances with multiple jumps
+   * @param entries
+   * @returns
+   */
+  public getDrivenElements = (entries: ChangedElementEntry[]): ChangedElementEntry[] => {
+    return this._getDirectlyDrivenElements(entries);
+  }
 
   /**
    * Get props for all elements and get changed models. Later on this data will be provided in the Changed Elements Service

@@ -14,6 +14,7 @@ import { getTypeOfChangeTooltip } from "../api/ChangesTooltipProvider.js";
 import { VersionCompare } from "../api/VersionCompare.js";
 
 import "./ChangedElementsInspector.scss";
+import { ExtendedTypeOfChange } from "./EnhancedElementsInspector.js";
 
 export interface ElementListNodeProps {
   id: string;
@@ -69,6 +70,10 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
       return "";
     }
 
+    if (((this.props.type ?? 0) & ExtendedTypeOfChange.Driven) !== 0) {
+      return "change-square-driven";
+    }
+
     switch (this.props.opcode) {
       case DbOpcode.Insert:
         return "change-square-added";
@@ -96,6 +101,9 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
   /** Tooltip for change square */
   private _getChangeSquareTooltip = () => {
     if (this.props.isModel) {
+      if (((this.props.type ?? 0) & ExtendedTypeOfChange.Driven) == this.props.type) {
+        return IModelApp.localization.getLocalizedString("VersionCompare:typeOfChange.modelHasDrivenChanges");
+      }
       return IModelApp.localization.getLocalizedString("VersionCompare:typeOfChange.modelHasChanges");
     }
 
@@ -111,6 +119,10 @@ export class ElementNodeComponent extends React.Component<ElementListNodeProps> 
     // Shouldn't happen
     if (this.props.opcode === undefined) {
       return "";
+    }
+
+    if (((this.props.type ?? 0) & ExtendedTypeOfChange.Driven) !== 0) {
+      return IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.driven");
     }
 
     switch (this.props.opcode) {

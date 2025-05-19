@@ -19,6 +19,7 @@ import {
 import { AuthClient, ChangesetGroupResult } from "./RPC/ChangesetGroupRPCInterface";
 import { ComparisonProcessor } from "./OpenSiteComparisonHandler";
 
+// Need a copy for the frontend until we have a common package
 export enum ExtendedTypeOfChange {
   Driven = 64,
 }
@@ -123,6 +124,13 @@ export class ChangesetGroup {
     }
 
     const instances = Array.from(ecChangeUnifier.instances);
+
+    // Remove geometry streams, no need to return them
+    for (const instance of instances) {
+      if (instance["GeometryStream"]) {
+        instance["GeometryStream"] = "Changed";
+      }
+    }
 
     // Use any passed processor to process the instances
     const comparisonProcessor = this._processingOpts?.processor;

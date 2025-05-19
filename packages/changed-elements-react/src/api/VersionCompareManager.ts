@@ -18,7 +18,7 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
-import { transformToAPIChangedElements } from "../utils/utils.js";
+import { extractDrivenByInstances, extractDrivesInstances, transformToAPIChangedElements } from "../utils/utils.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
@@ -465,6 +465,9 @@ export class VersionCompareManager {
         this.filterSpatial,
         this.loadingProgressEvent,
       );
+      // Add source of changes for driven and domain specific element changes
+      this.changedElementsManager.setElementToDrivenElementMap(extractDrivenByInstances(processorResults.changedInstances));
+      this.changedElementsManager.setElementDrivesElementMap(extractDrivesInstances(processorResults.changedInstances));
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
       // We have parent Ids available if any entries contain undefined parent data

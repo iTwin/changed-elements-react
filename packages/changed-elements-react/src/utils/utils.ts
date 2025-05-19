@@ -152,3 +152,34 @@ export const transformToAPIChangedElements = (instances: ChangedECInstance[]): C
 
   return ce;
 };
+
+/**
+ * Returns a map of ECInstanceId:ECClassId of the element that is driven by another element
+ * e.g. Target -> Source
+ * @param instances
+ * @returns
+ */
+export const extractDrivenByInstances = (instances: ChangedECInstance[]): Map<string, string[]> => {
+  const elementDrivenByElementMap = new Map<string, string[]>();
+  instances.forEach((elem) => {
+    if (elem.$comparison?.drivenBy) {
+      elementDrivenByElementMap.set(`${elem.ECInstanceId}`, elem.$comparison.drivenBy);
+    }
+  });
+  return elementDrivenByElementMap;
+}
+
+/**
+ * Returns a map of ECInstanceId:ECClassId of the element that drives another element
+ * @param instances
+ * @returns
+ */
+export const extractDrivesInstances = (instances: ChangedECInstance[]): Map<string, string[]> => {
+  const elementDrivesElementMap = new Map<string, string[]>();
+  instances.forEach((elem) => {
+    if (elem.$comparison?.drives) {
+      elementDrivesElementMap.set(`${elem.ECInstanceId}`, elem.$comparison.drives);
+    }
+  });
+  return elementDrivesElementMap;
+}

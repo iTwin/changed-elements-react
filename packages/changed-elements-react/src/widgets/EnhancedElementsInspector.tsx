@@ -31,6 +31,11 @@ import { ElementsList } from "./ElementsList.js";
 import "./ChangedElementsInspector.scss";
 import { TextEx } from "../NamedVersionSelector/TextEx.js";
 
+// Need a copy for the frontend until we have a common package
+export enum ExtendedTypeOfChange {
+  Driven = 64,
+}
+
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
   onFilterChange?: (options: FilterOptions) => void;
@@ -138,7 +143,8 @@ const typeOfChangeAll = (): number => {
     TypeOfChange.Hidden |
     TypeOfChange.Indirect |
     TypeOfChange.Placement |
-    TypeOfChange.Property
+    TypeOfChange.Property |
+    ExtendedTypeOfChange.Driven
   );
 };
 
@@ -353,6 +359,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
         {makeContextMenuItem("geometry", TypeOfChange.Geometry)}
         {makeContextMenuItem("placement", TypeOfChange.Placement)}
         {makeContextMenuItem("property", TypeOfChange.Property | TypeOfChange.Indirect)}
+        {makeContextMenuItem("driven", ExtendedTypeOfChange.Driven)}
         {makeContextMenuItem("hiddenProperty", TypeOfChange.Hidden)}
         {props.wantPropertyFiltering && <div className="vc-context-menu-separator" />}
         {
@@ -799,8 +806,15 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       ? (entry: ChangedElementEntry) => this._filterEntryWithGivenOptions(entry, options)
       : this._filterEntryWithOptions;
     const modelIds = new Set(nodes.map((value) => value.id));
+    const allEntries = this.props.dataProvider.getEntriesWithModelIds(modelIds, (_) => true);
     const entries = this.props.dataProvider.getEntriesWithModelIds(modelIds, filter);
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+
+    // TODO: Driven elements should be treated appropriately for special highlighting
+    const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(allEntries);
+    const filteredDrivenElements = drivenElements.filter(filter);
+    entries.push(...filteredDrivenElements);
+
     await visualizationManager?.setFocusedElements(entries);
   };
 
@@ -833,6 +847,10 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const filterFunc = options
       ? (entry: ChangedElementEntry) => this._filterEntryWithGivenOptions(entry, options)
       : this._filterEntryWithOptions;
+
+    // TODO: Driven elements should be treated appropriately for special highlighting
+    const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(entries);
+    entries.push(...drivenElements);
 
     // Visualize the filtered elements and focus
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
