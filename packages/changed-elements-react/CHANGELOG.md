@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.3
+
+### Patch Changes
+
+#### [0.15.3](https://github.com/iTwin/changed-elements-react/tree/v0.15.3/packages/changed-elements-react) - 2025-05-20
+
+- swap stage progress with overall loading progress during version comparison
+
 ## 0.15.2
 
 ### Patch Changes
