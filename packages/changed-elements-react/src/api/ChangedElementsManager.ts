@@ -9,7 +9,8 @@ import { IModelApp, IModelConnection, ModelState } from "@itwin/core-frontend";
 import { ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VersionCompareManager, VersionCompareProgressStage } from "./VersionCompareManager.js";
+import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 /** Properties that are not shown but still found by the agent */
 const ignoredProperties = ["Checksum", "Version"];
@@ -449,11 +450,13 @@ export class ChangedElementsManager {
   public async generateEntries(
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
   ): Promise<void> {
     this._entryCache.initialize(
       currentIModel,
       targetIModel,
       this._changedElements,
+      progressCoordinator,
       this._progressLoadingEvent,
     );
   }
@@ -542,6 +545,7 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     forward: boolean,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<Set<string>> {
     // If we have model ids in the data already, simply accumulate the models from it instead of querying
@@ -594,6 +598,16 @@ export class ChangedElementsManager {
         outputProgressMessage(
           lastStep ? lastStep + currentStep : currentStep,
           steps,
+        );
+
+        progressCoordinator?.updateProgress(
+          VersionCompareProgressStage.ComputeChangedModels,
+          Math.floor(((lastStep ?? 0) + currentStep) / (steps === 0 ? 1 : steps) * 100),
+        );
+
+        progressCoordinator?.updateProgress(
+          VersionCompareProgressStage.ComputeChangedModels,
+          Math.floor(((lastStep ?? 0) + currentStep) / (steps === 0 ? 1 : steps) * 100),
         );
 
         for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(piece), {
@@ -1143,6 +1157,7 @@ export class ChangedElementsManager {
    * @param forward Whether we are comparing to a newer iModel or an older one (normally the older)
    * @param filterSpatial Whether to filter out non-spatial elements from the results
    * @param progressLoadingEvent Event raised every time the processing continues to provide UI messages to the user
+   * @param onOverallProgress Event raised every time the processing continues to provide UI messages to the user
    */
   public async initialize(
     currentIModel: IModelConnection,
@@ -1151,6 +1166,7 @@ export class ChangedElementsManager {
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;
@@ -1169,12 +1185,14 @@ export class ChangedElementsManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
       );
     }
+    progressCoordinator?.updateProgress(VersionCompareProgressStage.ComputeChangedModels);
 
     // Find changed models
     this._changedModels = await this.findChangedModels(
       currentIModel,
       targetIModel,
       forward ?? false,
+      progressCoordinator,
       progressLoadingEvent,
     );
 
@@ -1183,6 +1201,7 @@ export class ChangedElementsManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
       );
     }
+    progressCoordinator?.updateProgress(VersionCompareProgressStage.ComputeChangedModels, 100);
 
     // Find unchanged models
     this._unchangedModels = await this.findUnchangedModels(
@@ -1190,7 +1209,7 @@ export class ChangedElementsManager {
       this._changedModels,
     );
 
-    await this.generateEntries(currentIModel, targetIModel);
+    await this.generateEntries(currentIModel, targetIModel, progressCoordinator);
   }
 }
 

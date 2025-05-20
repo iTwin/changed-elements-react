@@ -121,14 +121,14 @@ export const queryEntryData = async (
  * @param iModel IModel to query
  * @param elementIds Ids of element to query for
  * @param chunkSize Chunk size for each query. Defaults to 1000
- * @param updateFunc [optional] called each time we process a chunk
+ * @param updateFunc [optional] called after each processed chunk with cumulative percent complete (0–100)
  * @returns Array of query data
  */
 export const queryEntryDataBulk = async (
   iModel: IModelConnection,
   elementIds: string[],
   chunkSize = 1000,
-  updateFunc?: () => void,
+  updateFunc?: (percent: number) => void,
 ): Promise<ChangedElementQueryData[]> => {
   if (elementIds.length < chunkSize) {
     return queryEntryData(iModel, elementIds);
@@ -142,7 +142,9 @@ export const queryEntryDataBulk = async (
     );
     final.push(...data);
     if (updateFunc) {
-      updateFunc();
+      const processed = Math.min(i + chunkSize, elementIds.length);
+      const percent = Math.floor((processed / elementIds.length) * 100);
+      updateFunc(percent);
     }
   }
   return final;
