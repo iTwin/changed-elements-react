@@ -18,7 +18,7 @@
   "engines": {
     "pnpm": ">=8",
     "npm": "<0",
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "@changesets/cli": "^2.27.11",
@@ -35,10 +35,14 @@
   },
   "pnpm": {
     "overrides": {
-      "dompurify@<3.2.4": ">=3.2.4",
-      "esbuild@<=0.24.2": ">=0.25.0",
+      "@babel/runtime@<7.26.10": ">=7.26.10",
+      "@itwin/appui-abstract": "^5.0.0-dev.111",
+      "@itwin/core-bentley": "^5.0.0-dev.111",
+      "@itwin/core-quantity": "^5.0.0-dev.111",
+      "@itwin/core-react": "^5.4.0",
       "axios@<1.8.2": ">=1.8.2",
-      "@babel/runtime@<7.26.10": ">=7.26.10"
+      "dompurify@<3.2.4": ">=3.2.4",
+      "esbuild@<=0.24.2": ">=0.25.0"
     }
   }
 }

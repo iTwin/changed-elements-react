@@ -49,6 +49,7 @@ describe("Test ChangedElementsChildrenCache", () => {
       const module = await vi.importActual<typeof import("@itwin/core-frontend")>("@itwin/core-frontend");
       const BlankConnection = {
         create: () => ({
+          createQueryReader: iModelMocks.queryMatcherFuncMockGenerator([queryMocker]),
           query: iModelMocks.queryMatcherFuncMockGenerator([queryMocker]),
           changeset: { id: "unknown" },
         }),

@@ -195,6 +195,7 @@ interface FilterHeaderProps {
   wantPropertyFiltering?: boolean;
   iModelConnection: IModelConnection | undefined;
   onSearchChanged?: (newFilter: string) => void;
+  searchedText: string | undefined;
 }
 
 function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
@@ -407,6 +408,7 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
         setFocus={true}
         valueChangedDelay={500}
         onChange={props.onSearchChanged}
+        searchedText={props.searchedText}
       >
         <IconButton
           size="small"
@@ -492,7 +494,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         nodes: ChangedElementsListComponent._maintainedState.nodes,
         selectedIds: ChangedElementsListComponent._maintainedState.selectedIds,
         path: ChangedElementsListComponent._maintainedState.path,
-        searchPath: ChangedElementsListComponent._maintainedState.path,
+        searchPath: ChangedElementsListComponent._maintainedState.searchPath,
         search: ChangedElementsListComponent._maintainedState.search,
         filteredNodes: ChangedElementsListComponent._maintainedState.filteredNodes,
         filterOptions: ChangedElementsListComponent._maintainedState.filterOptions,
@@ -1411,6 +1413,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
           onShowAll={this.onHandleShowAll}
           onHideAll={this.onHandleHideAll}
           onInvert={this.onInvert}
+          searchedText={this.state.search}
         />
         <ChangedElementsBreadCrumb
           rootLabel={IModelApp.localization.getLocalizedString(
