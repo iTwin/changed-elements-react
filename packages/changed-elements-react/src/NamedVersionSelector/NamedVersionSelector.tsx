@@ -110,17 +110,19 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
-        <ChangedElementsHeaderButtons
-          useNewNamedVersionSelector
-          loaded
-          onInspect={() => manager.initializePropertyComparison()}
-          onOpenReportDialog={
-            manager.wantReportGeneration
-              ? () => void widgetRef.current?.openReportDialog()
-              : undefined
-          }
-          documentationHref={props.documentationHref}
-        />
+        <div className="_cer_v1_version-selector-header-buttons">
+          <ChangedElementsHeaderButtons
+            useNewNamedVersionSelector
+            loaded
+            onInspect={() => manager.initializePropertyComparison()}
+            onOpenReportDialog={
+              manager.wantReportGeneration
+                ? () => void widgetRef.current?.openReportDialog()
+                : undefined
+            }
+            documentationHref={props.documentationHref}
+          />
+        </div>
       </Widget.Header>
       <namedVersionSelectorContext.Consumer>
         {(value) => (
