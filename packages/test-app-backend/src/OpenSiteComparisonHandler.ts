@@ -182,6 +182,8 @@ export class OpenSiteProcessor implements ComparisonProcessor {
       const forwards = driveForwardMap.get(`${instance.ECInstanceId}`);
       if (forwards) {
         instance["$comparison"].drives = forwards;
+        // TODO: Use some other mechanism to ensure that relationship sources are marked changed instead of cleaning their Indirect type
+        instance["$comparison"].type ^= TypeOfChange.Indirect;
       }
     }
 

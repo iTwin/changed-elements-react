@@ -1236,8 +1236,18 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
    * @param directSelection Whether to do the selection directly in the iModel instead of the presentation layer.
    */
   private _selectEntry = (iModel: IModelConnection, entry: ChangedElementEntry): void => {
+    iModel.selectionSet.emptyAll();
+    iModel.selectionSet.add(entry.id);
     Presentation.selection
       .replaceSelectionWithScope("ChangedElementsWidget", iModel, entry.id, "element")
+      .catch(() => { });
+  };
+
+  private _selectEntries = (iModel: IModelConnection, entries: ChangedElementEntry[]): void => {
+    iModel.selectionSet.emptyAll();
+    iModel.selectionSet.add(entries.map(entry => entry.id));
+    Presentation.selection
+      .replaceSelectionWithScope("ChangedElementsWidget", iModel, entries.map(entry => entry.id), "assembly")
       .catch(() => { });
   };
 
@@ -1260,6 +1270,41 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /**
+   * Handle selecting any elements that are driven by this tree node
+   * @param item
+   * @returns
+   */
+  private _handleDrivenElementsSelection = (item: TreeNodeItem, drivenElementIds: string[]): void => {
+    const currentIModel = this.props.manager.currentIModel;
+    const element: ChangedElementEntry | undefined = item.extendedData?.element;
+    if (element === undefined || currentIModel === undefined) {
+      return;
+    }
+
+    const drivenEntries = this.props.manager.changedElementsManager.entryCache.getEntries(new Set([...drivenElementIds, element.id]));
+    this._selectEntries(currentIModel, drivenEntries);
+  };
+
+  /**
+   * Handles selection logic for a changed element tree node
+   * @param item
+   */
+  private _handleElementSelection = async (item: TreeNodeItem) => {
+      const instanceId = item.id;
+      const drivenElements = this.props.manager.changedElementsManager.elementDrivesElement.get(instanceId);
+      const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+      if (drivenElements !== undefined && drivenElements.length > 0) {
+        // Handle selection and zoom
+        this._handleDrivenElementsSelection(item, drivenElements);
+        visualizationManager?.zoomToElements(drivenElements)
+      } else {
+        // Handle zooming to specific element
+        this._selectNode(item);
+        await visualizationManager?.zoomToEntry(item.extendedData?.element);
+      }
+  };
+
+  /**
    * On click, select the element and zoom to it.
    * @param item Tree Node that was clicked.
    */
@@ -1273,10 +1318,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         await visualizationManager.zoomToModel(item.id);
       }
     } else if (item.extendedData?.element && visualizationManager) {
-      // Select the element
-      this._selectNode(item);
-      // Handle zooming to specific element
-      await visualizationManager.zoomToEntry(item.extendedData.element);
+      await this._handleElementSelection(item);
     }
   };
 

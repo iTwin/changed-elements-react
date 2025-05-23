@@ -599,6 +599,48 @@ export class VersionCompareVisualizationManager {
     viewport.synchWithView();
   };
 
+  /**
+   * Zooms to multiple entries
+   * @param iModel
+   * @param entries
+   * @returns
+   */
+  private _zoomToElements = async (iModel: IModelConnection, elementIds: Id64String[]) => {
+    const viewport = IModelApp.viewManager.selectedView;
+    if (viewport === undefined) {
+      return;
+    }
+
+    // Get the 3d view state to adjust for
+    const viewState: ViewState3d = viewport.view as ViewState3d;
+    // Find the range of the combined elements
+    const range = await this._findElementsVolume(iModel, viewState, elementIds);
+    if (range === undefined) {
+      return;
+    }
+    // Do zoom operation with a 10% margin
+    viewport.view.lookAtVolume(range, viewport.viewRect.aspect, {
+      marginPercent: new MarginPercent(0.1, 0.1, 0.1, 0.1),
+    });
+    viewport.synchWithView();
+  };
+
+  /**
+   * Zooms to the merged volume of many elements
+   * @param elementIds
+   */
+  public zoomToElements = async (elementIds: Id64String[]) => {
+    const currentIModel = this._viewport.iModel;
+    // TODO: Appropriately zoom to target and current
+    const targetIModel = this._targetIModel;
+    await this._zoomToElements(
+      currentIModel,
+      elementIds
+    );
+
+    VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.changedElementsTreeElementClicked);
+  }
+
   /** Handles zooming to element and selecting elements */
   public zoomToEntry = async (entry: ChangedElementEntry) => {
     const currentIModel = this._viewport.iModel;
