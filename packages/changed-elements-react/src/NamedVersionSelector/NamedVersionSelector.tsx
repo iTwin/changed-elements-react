@@ -110,7 +110,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
-        <div className="_cer_v1_version-selector-header-buttons">
+        <div>
           <ChangedElementsHeaderButtons
             useNewNamedVersionSelector
             loaded
