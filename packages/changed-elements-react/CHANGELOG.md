@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.4
+
+### Patch Changes
+
+#### [0.15.4](https://github.com/iTwin/changed-elements-react/tree/v0.15.4/packages/changed-elements-react) - 2025-06-06
+
+fix alignment in header of version comapre
+
 ## 0.15.3
 
 ### Patch Changes
