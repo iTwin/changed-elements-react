@@ -449,7 +449,7 @@ export class VersionCompareManager {
 
       this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel, 100);
 
-      // Keep metadata around for UI uses and other queries
+      // // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
       this.targetVersion = targetVersion;
 

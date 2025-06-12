@@ -63,6 +63,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
 
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
+
   useEffect(
     () => {
       const cleanup = [
@@ -86,20 +87,66 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     [manager],
   );
 
+  // @naron: does this cuz rerendering when changed element widget is mounted?
+  const { iModelsClient, comparisonJobClient } = useVersionCompare();
+  if (!comparisonJobClient) {
+    throw new Error("V2 Client is not initialized in given context.");
+  }
+
+  const iTwinId = iModel.iTwinId as string;
+  const iModelId = iModel.iModelId as string;
+  const currentChangesetId = iModel.changeset.id;
+
+  const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
+    iTwinId,
+    iModelId,
+    currentChangesetId,
+  });
+
   const widgetRef = useRef<ChangedElementsWidget>(null);
 
-  if (!isComparing) {
-    return (
-      <NamedVersionSelector
-        iModel={iModel}
-        manager={manager}
-        emptyState={emptyState}
-        manageVersions={manageVersions}
-        feedbackUrl={feedbackUrl}
-        documentationHref = {props.documentationHref}
-      />
-    );
-  }
+  const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
+    // manager.targetVersion = targetVersion?.namedVersion;
+    if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
+      return;
+    }
+
+    await runManagerStartComparisonV2({
+      comparisonJob: {
+        comparisonJob: {
+          status: "Completed",
+          jobId: targetVersion.job.jobId,
+          iTwinId,
+          iModelId,
+          startChangesetId: currentChangesetId,
+          endChangesetId: targetVersion.namedVersion.targetChangesetId ?? "",
+          comparison: {
+            href: targetVersion.job.comparisonUrl,
+          },
+        },
+      },
+      comparisonJobClient,
+      iModelConnection: iModel,
+      targetVersion: targetVersion.namedVersion,
+      currentVersion: currentNamedVersion,
+      getToastsEnabled: () => true,
+      iModelsClient,
+    });
+    // manager.versionCompareStopped.addOnce(() => {}); @naron: need to test on versionCompareStopped
+  };
+
+  // if (!isComparing) {
+  //   return (
+  //     <NamedVersionSelector
+  //       iModel={iModel}
+  //       manager={manager}
+  //       emptyState={emptyState}
+  //       manageVersions={manageVersions}
+  //       feedbackUrl={feedbackUrl}
+  //       documentationHref = {props.documentationHref}
+  //     />
+  //   );
+  // }
 
   return (
     <Widget>
@@ -110,6 +157,14 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
+
+        {
+          // @naron: what does this do??
+          !isComparing && manager.currentVersion &&
+          <ChangedElementsHeaderButtons documentationHref={props.documentationHref} onlyInfo />
+        }
+
+        {isComparing &&
         <div>
           <ChangedElementsHeaderButtons
             useNewNamedVersionSelector
@@ -122,22 +177,47 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
             }
             documentationHref={props.documentationHref}
           />
-        </div>
+        </div>}
+
       </Widget.Header>
-      <namedVersionSelectorContext.Consumer>
-        {(value) => (
-          <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
-            {props.manager?.currentVersion && isComparisonStarted &&
-              <ActiveVersionsBox current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
-            <ChangedElementsWidget
-              ref={widgetRef}
-              iModelConnection={iModel}
-              manager={manager}
-              usingExperimentalSelector
-            />
-          </namedVersionSelectorContext.Provider>
-        )}
-      </namedVersionSelectorContext.Consumer>
+      {
+        currentNamedVersion &&
+        <ActiveVersionsBox current={currentNamedVersion} selected={manager.targetVersion}></ActiveVersionsBox>
+      }
+
+      {
+        !isComparing &&
+        <NamedVersionSelector
+          iModel={iModel}
+          manager={manager}
+          isLoading={isLoading}
+          currentNamedVersion={currentNamedVersion}
+          entries={entries}
+          updateJobStatus={updateJobStatus}
+          onNamedVersionOpened={onNamedVersionOpened}
+          emptyState={emptyState}
+          manageVersions={manageVersions}
+          feedbackUrl={feedbackUrl}
+          documentationHref = {props.documentationHref}
+        />
+      }
+
+      {
+        isComparing &&
+        <namedVersionSelectorContext.Consumer>
+          {(value) => (
+            <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
+              <ChangedElementsWidget
+                ref={widgetRef}
+                iModelConnection={iModel}
+                manager={manager}
+                usingExperimentalSelector
+              />
+            </namedVersionSelectorContext.Provider>
+          )}
+        </namedVersionSelectorContext.Consumer>
+      }
+
     </Widget>
   );
 }
@@ -171,6 +251,7 @@ function LoadedState(props: Readonly<LoadedStateProps>): ReactElement {
   );
 }
 
+// @naron: is all of these needed?
 type NamedVersionSelectorContentProps = {
   isLoading: boolean;
   entries: NamedVersionEntry[];
@@ -204,6 +285,11 @@ function NamedVersionSelectorContent(
 interface NamedVersionSelectorProps {
   iModel: IModelConnection;
   manager: VersionCompareManager;
+  isLoading: boolean;
+  currentNamedVersion: NamedVersion | undefined;
+  entries: NamedVersionEntry[];
+  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
+  onNamedVersionOpened: (version: NamedVersionEntry) => void;
   emptyState?: ReactNode;
   manageVersions?: ReactNode;
   feedbackUrl?: string;
@@ -211,53 +297,38 @@ interface NamedVersionSelectorProps {
 }
 
 function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): ReactElement {
-  const { iModelsClient, comparisonJobClient } = useVersionCompare();
-  if (!comparisonJobClient) {
-    throw new Error("V2 Client is not initialized in given context.");
-  }
 
-  const { iModel, manager, emptyState, manageVersions, feedbackUrl } = props;
+  const {
+    iModel,
+    isLoading,
+    currentNamedVersion,
+    entries,
+    updateJobStatus,
+    onNamedVersionOpened,
+    emptyState,
+    manageVersions,
+    feedbackUrl } = props;
 
+  //@naron: this is repeated also
   const iTwinId = iModel.iTwinId as string;
   const iModelId = iModel.iModelId as string;
-  const currentChangesetId = iModel.changeset.id;
 
-  const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
-    iTwinId,
-    iModelId,
-    currentChangesetId,
-  });
+  // const [currentSillyVersion, setCurrentSillyVersion] = useState<NamedVersion>({
+  //   id: "",
+  //   displayName: "",
+  //   description: "",
+  //   changesetId: currentChangesetId,
+  //   changesetIndex: 0,
+  //   description: "",
+  //   createdDateTime: "",
+  //   });
 
-  const [openedVersion, setOpenedVersion] = useState(manager.targetVersion);
-  const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
-    setOpenedVersion(targetVersion?.namedVersion);
-    if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
-      return;
-    }
+  // useEffect(() => {
+  //   if (currentNamedVersion){
+  //     setCurrentSillyVersion(currentNamedVersion)
+  //   }
+  // },[currentNamedVersion])
 
-    await runManagerStartComparisonV2({
-      comparisonJob: {
-        comparisonJob: {
-          status: "Completed",
-          jobId: targetVersion.job.jobId,
-          iTwinId,
-          iModelId,
-          startChangesetId: currentChangesetId,
-          endChangesetId: targetVersion.namedVersion.targetChangesetId ?? "",
-          comparison: {
-            href: targetVersion.job.comparisonUrl,
-          },
-        },
-      },
-      comparisonJobClient,
-      iModelConnection: iModel,
-      targetVersion: targetVersion.namedVersion,
-      currentVersion: currentNamedVersion,
-      getToastsEnabled: () => true,
-      iModelsClient,
-    });
-    manager.versionCompareStopped.addOnce(() => setOpenedVersion(undefined));
-  };
 
   const namedVersionSelectorProps: Readonly<NamedVersionSelectorContentProps> = {
     isLoading,
@@ -272,22 +343,12 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
   };
 
   return (
-    <Widget>
-      <Widget.Header>
-        <TextEx variant="title">
-          {t("VersionCompare:versionCompare.versionPickerTitle")}
-        </TextEx>
-        {currentNamedVersion && <ChangedElementsHeaderButtons documentationHref={props.documentationHref} onlyInfo />}
-      </Widget.Header>
-      {
-        currentNamedVersion &&
-        <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
-      }
+    <>
       <NamedVersionSelectorContent {...namedVersionSelectorProps} />
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
       </div>
-    </Widget>
+    </>
   );
 }
 
