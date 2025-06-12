@@ -5,6 +5,7 @@
 import { createContext } from "react";
 
 import type { NamedVersionEntry } from "./useNamedVersionsList.js";
+import { NamedVersionSelectorContentProps } from "./NamedVersionSelector.js";
 
 export interface NamedVersionSelectorContextValue {
   /** Invoked when users request Named Version processinig. */
@@ -42,3 +43,7 @@ export const namedVersionSelectorContext = createContext<NamedVersionSelectorCon
   checkStatus: () => ({ cancel: () => { } }),
   contextExists: false,
 });
+
+export const NamedVersionSelectorContentContext = createContext<NamedVersionSelectorContentProps>(
+  {} as NamedVersionSelectorContentProps
+)

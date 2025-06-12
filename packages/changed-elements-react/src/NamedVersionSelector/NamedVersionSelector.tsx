@@ -26,7 +26,7 @@ import {
   runManagerStartComparisonV2
 } from "../widgets/comparisonJobWidget/common/versionCompareV2WidgetUtils.js";
 import { IconEx } from "./IconEx.js";
-import { namedVersionSelectorContext } from "./NamedVersionSelectorContext.js";
+import { NamedVersionSelectorContentContext, namedVersionSelectorContext } from "./NamedVersionSelectorContext.js";
 import { Sticky } from "./Sticky.js";
 import { TextEx } from "./TextEx.js";
 import { useComparisonJobs } from "./useComparisonJobs.js";
@@ -87,7 +87,6 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     [manager],
   );
 
-  // @naron: does this cuz rerendering when changed element widget is mounted?
   const { iModelsClient, comparisonJobClient } = useVersionCompare();
   if (!comparisonJobClient) {
     throw new Error("V2 Client is not initialized in given context.");
@@ -133,7 +132,6 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
       getToastsEnabled: () => true,
       iModelsClient,
     });
-    // manager.versionCompareStopped.addOnce(() => {}); @naron: need to test on versionCompareStopped
   };
 
   return (
@@ -175,7 +173,8 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
       {
         !isComparing &&
         <NamedVersionSelector
-          iModel={iModel}
+          iTwinId={iTwinId}
+          iModelId={iModelId}
           manager={manager}
           isLoading={isLoading}
           currentNamedVersion={currentNamedVersion}
@@ -227,19 +226,7 @@ function LoadingState(): ReactElement {
   );
 }
 
-
-type LoadedStateProps = Omit<NamedVersionSelectorContentProps, "isLoading" | "currentNamedVersion"> & { currentNamedVersion: NamedVersion; };
-
-function LoadedState(props: Readonly<LoadedStateProps>): ReactElement {
-  return (
-    <NamedVersionSelectorLoaded
-      {...props}
-    />
-  );
-}
-
-// @naron: is all of these needed?
-type NamedVersionSelectorContentProps = {
+export type NamedVersionSelectorContentProps = {
   isLoading: boolean;
   entries: NamedVersionEntry[];
   currentNamedVersion: NamedVersion | undefined;
@@ -251,9 +238,8 @@ type NamedVersionSelectorContentProps = {
   manageVersions?: ReactNode;
 };
 
-function NamedVersionSelectorContent(
-  props: Readonly<NamedVersionSelectorContentProps>,
-): ReactElement {
+function NamedVersionSelectorContent(): ReactElement {
+  const props = useContext(NamedVersionSelectorContentContext);
   if (!props.isLoading && props.entries.length === 0) {
     return <EmptyState />;
   }
@@ -263,14 +249,13 @@ function NamedVersionSelectorContent(
   }
 
   return (
-    <LoadedState
-      {...{ ...props, currentNamedVersion: props.currentNamedVersion }}
-    />
+    <NamedVersionSelectorLoaded />
   );
 }
 
 interface NamedVersionSelectorProps {
-  iModel: IModelConnection;
+  iTwinId: string;
+  iModelId: string;
   manager: VersionCompareManager;
   isLoading: boolean;
   currentNamedVersion: NamedVersion | undefined;
@@ -284,21 +269,16 @@ interface NamedVersionSelectorProps {
 }
 
 function NamedVersionSelector({
-  iModel: { iTwinId, iModelId },
   feedbackUrl,
   ...rest
 }: Readonly<NamedVersionSelectorProps>): ReactElement {
   return (
-    <>
-      <NamedVersionSelectorContent
-        {...rest} // @naron: i could use useContext passing down props?
-        iTwinId={iTwinId as string}
-        iModelId={iModelId as string}
-      />
+    <NamedVersionSelectorContentContext.Provider value={rest}>
+      <NamedVersionSelectorContent/>
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
       </div>
-    </>
+    </NamedVersionSelectorContentContext.Provider>
   );
 }
 
@@ -405,18 +385,7 @@ function PlaceholderNamedVersionInfo(): ReactElement {
   );
 }
 
-interface NamedVersionSelectorLoadedProps {
-  iTwinId: string;
-  iModelId: string;
-  currentNamedVersion: NamedVersion;
-  entries: NamedVersionEntry[];
-  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
-  onNamedVersionOpened: (version: NamedVersionEntry) => void;
-  emptyState?: ReactNode;
-  manageVersions?: ReactNode;
-}
-
-function NamedVersionSelectorLoaded(props: Readonly<NamedVersionSelectorLoadedProps>): ReactElement {
+function NamedVersionSelectorLoaded(): ReactElement {
   const {
     iTwinId,
     iModelId,
@@ -425,7 +394,12 @@ function NamedVersionSelectorLoaded(props: Readonly<NamedVersionSelectorLoadedPr
     updateJobStatus,
     onNamedVersionOpened,
     manageVersions,
-  } = props;
+  } = useContext(NamedVersionSelectorContentContext);
+
+  // @naron: this is a bit of a hack, this will never be null at this stage. Not sure whats a better way to handle this
+  if (!currentNamedVersion) {
+    return <LoadingState />;
+  }
 
   const { queryJobStatus, startJob } = useComparisonJobs({
     iTwinId,
@@ -529,7 +503,7 @@ function NamedVersionSelectorLoaded(props: Readonly<NamedVersionSelectorLoadedPr
         value={{ processResults, viewResults, initialLoad, checkStatus }}
       >
         {
-          props.entries.map((entry) => (
+          entries.map((entry) => (
             <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
           ))
         }
