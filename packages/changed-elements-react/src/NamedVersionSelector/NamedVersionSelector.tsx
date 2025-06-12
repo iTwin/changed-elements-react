@@ -103,10 +103,11 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     currentChangesetId,
   });
 
+  manager.currentVersion = currentNamedVersion
   const widgetRef = useRef<ChangedElementsWidget>(null);
 
   const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
-    // manager.targetVersion = targetVersion?.namedVersion;
+    manager.targetVersion = targetVersion?.namedVersion;
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
     }
@@ -135,19 +136,6 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     // manager.versionCompareStopped.addOnce(() => {}); @naron: need to test on versionCompareStopped
   };
 
-  // if (!isComparing) {
-  //   return (
-  //     <NamedVersionSelector
-  //       iModel={iModel}
-  //       manager={manager}
-  //       emptyState={emptyState}
-  //       manageVersions={manageVersions}
-  //       feedbackUrl={feedbackUrl}
-  //       documentationHref = {props.documentationHref}
-  //     />
-  //   );
-  // }
-
   return (
     <Widget>
       <Widget.Header>
@@ -159,12 +147,11 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         </TextEx>
 
         {
-          // @naron: what does this do??
-          !isComparing && manager.currentVersion &&
+          !isComparisonStarted &&
           <ChangedElementsHeaderButtons documentationHref={props.documentationHref} onlyInfo />
         }
 
-        {isComparing &&
+        {isComparisonStarted &&
         <div>
           <ChangedElementsHeaderButtons
             useNewNamedVersionSelector
@@ -195,7 +182,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
           entries={entries}
           updateJobStatus={updateJobStatus}
           onNamedVersionOpened={onNamedVersionOpened}
-          emptyState={emptyState}
+          emptyState={emptyState} // @naron: this is never used
           manageVersions={manageVersions}
           feedbackUrl={feedbackUrl}
           documentationHref = {props.documentationHref}
@@ -296,55 +283,18 @@ interface NamedVersionSelectorProps {
   documentationHref?: string;
 }
 
-function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): ReactElement {
-
-  const {
-    iModel,
-    isLoading,
-    currentNamedVersion,
-    entries,
-    updateJobStatus,
-    onNamedVersionOpened,
-    emptyState,
-    manageVersions,
-    feedbackUrl } = props;
-
-  //@naron: this is repeated also
-  const iTwinId = iModel.iTwinId as string;
-  const iModelId = iModel.iModelId as string;
-
-  // const [currentSillyVersion, setCurrentSillyVersion] = useState<NamedVersion>({
-  //   id: "",
-  //   displayName: "",
-  //   description: "",
-  //   changesetId: currentChangesetId,
-  //   changesetIndex: 0,
-  //   description: "",
-  //   createdDateTime: "",
-  //   });
-
-  // useEffect(() => {
-  //   if (currentNamedVersion){
-  //     setCurrentSillyVersion(currentNamedVersion)
-  //   }
-  // },[currentNamedVersion])
-
-
-  const namedVersionSelectorProps: Readonly<NamedVersionSelectorContentProps> = {
-    isLoading,
-    currentNamedVersion,
-    entries,
-    iTwinId,
-    iModelId,
-    onNamedVersionOpened,
-    updateJobStatus,
-    emptyState,
-    manageVersions,
-  };
-
+function NamedVersionSelector({
+  iModel: { iTwinId, iModelId },
+  feedbackUrl,
+  ...rest
+}: Readonly<NamedVersionSelectorProps>): ReactElement {
   return (
     <>
-      <NamedVersionSelectorContent {...namedVersionSelectorProps} />
+      <NamedVersionSelectorContent
+        {...rest} // @naron: i could use useContext passing down props?
+        iTwinId={iTwinId as string}
+        iModelId={iModelId as string}
+      />
       <div className="_cer_v1_feedback_btn_container">
         {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
       </div>

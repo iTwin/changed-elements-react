@@ -417,7 +417,6 @@ export class VersionCompareManager {
    */
   public async startComparisonV2(
     currentIModel: IModelConnection,
-    currentVersion: NamedVersion,
     targetVersion: NamedVersion,
     changedElements: ChangedElements[],
   ): Promise<boolean> {
@@ -448,11 +447,6 @@ export class VersionCompareManager {
       );
 
       this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel, 100);
-
-      // // Keep metadata around for UI uses and other queries
-      this.currentVersion = currentVersion;
-      this.targetVersion = targetVersion;
-
       this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison);
 
       let wantedModelClasses = [
