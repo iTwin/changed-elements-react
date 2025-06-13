@@ -57,7 +57,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   const manager = props.manager ?? VersionCompare.manager;
   if (!manager) {
     throw new Error("VersionCompare is not initialized.");
-  }
+  };
 
   const { iModel, emptyState, manageVersions, feedbackUrl } = props;
 
