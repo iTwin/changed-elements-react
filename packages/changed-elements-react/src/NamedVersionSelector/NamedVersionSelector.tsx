@@ -102,7 +102,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     currentChangesetId,
   });
 
-  manager.currentVersion = currentNamedVersion
+  manager.currentVersion = currentNamedVersion;
   const widgetRef = useRef<ChangedElementsWidget>(null);
 
   const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
@@ -172,20 +172,24 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
 
       {
         !isComparing &&
-        <NamedVersionSelector
-          iTwinId={iTwinId}
-          iModelId={iModelId}
-          manager={manager}
-          isLoading={isLoading}
-          currentNamedVersion={currentNamedVersion}
-          entries={entries}
-          updateJobStatus={updateJobStatus}
-          onNamedVersionOpened={onNamedVersionOpened}
-          emptyState={emptyState} // @naron: this is never used
-          manageVersions={manageVersions}
-          feedbackUrl={feedbackUrl}
-          documentationHref = {props.documentationHref}
-        />
+        <NamedVersionSelectorContentContext.Provider
+          value={{
+            iTwinId,
+            iModelId,
+            isLoading,
+            currentNamedVersion,
+            entries,
+            updateJobStatus,
+            onNamedVersionOpened,
+            emptyState,
+            manageVersions,
+          }}
+        >
+            <NamedVersionSelectorContent />
+            <div className="_cer_v1_feedback_btn_container">
+              {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
+            </div>
+        </NamedVersionSelectorContentContext.Provider>
       }
 
       {
@@ -227,51 +231,20 @@ function LoadingState(): ReactElement {
 }
 
 function NamedVersionSelectorContent(): ReactElement {
-  const ctx = useContext(NamedVersionSelectorContentContext);
-  if (!ctx.isLoading && ctx.entries.length === 0) {
+  const { isLoading, currentNamedVersion, ...restProps } = useContext(NamedVersionSelectorContentContext);
+  if (isLoading && restProps.entries.length === 0) {
     return <EmptyState />;
   }
 
-  if (!ctx.currentNamedVersion || (ctx.isLoading && ctx.entries.length === 0)) {
+  if (!currentNamedVersion || (isLoading && restProps.entries.length === 0)) {
     return <LoadingState />;
   }
-
-  const { isLoading, currentNamedVersion, ...restProps } = ctx;
 
   return (
    <NamedVersionSelectorLoaded
     {...restProps}
     currentNamedVersion={currentNamedVersion}
     />
-  );
-}
-
-interface NamedVersionSelectorProps {
-  iTwinId: string;
-  iModelId: string;
-  manager: VersionCompareManager;
-  isLoading: boolean;
-  currentNamedVersion: NamedVersion | undefined;
-  entries: NamedVersionEntry[];
-  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
-  onNamedVersionOpened: (version: NamedVersionEntry) => void;
-  emptyState?: ReactNode;
-  manageVersions?: ReactNode;
-  feedbackUrl?: string;
-  documentationHref?: string;
-}
-
-function NamedVersionSelector({
-  feedbackUrl,
-  ...rest
-}: Readonly<NamedVersionSelectorProps>): ReactElement {
-  return (
-    <NamedVersionSelectorContentContext.Provider value={rest}>
-      <NamedVersionSelectorContent/>
-      <div className="_cer_v1_feedback_btn_container">
-        {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
-      </div>
-    </NamedVersionSelectorContentContext.Provider>
   );
 }
 
