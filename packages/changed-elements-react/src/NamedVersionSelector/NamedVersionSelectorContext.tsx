@@ -57,5 +57,5 @@ export type NamedVersionSelectorContentProps = {
 };
 
 export const NamedVersionSelectorContentContext = createContext<NamedVersionSelectorContentProps>(
-  {} as NamedVersionSelectorContentProps
+  {} as NamedVersionSelectorContentProps,
 )
