@@ -232,7 +232,7 @@ function LoadingState(): ReactElement {
 
 function NamedVersionSelectorContent(): ReactElement {
   const { isLoading, currentNamedVersion, ...restProps } = useContext(NamedVersionSelectorContentContext);
-  if (isLoading && restProps.entries.length === 0) {
+  if (!isLoading && restProps.entries.length === 0) {
     return <EmptyState />;
   }
 
