@@ -226,18 +226,6 @@ function LoadingState(): ReactElement {
   );
 }
 
-export type NamedVersionSelectorContentProps = {
-  isLoading: boolean;
-  entries: NamedVersionEntry[];
-  currentNamedVersion: NamedVersion | undefined;
-  iTwinId: string;
-  iModelId: string;
-  onNamedVersionOpened: (version: NamedVersionEntry) => void;
-  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
-  emptyState?: ReactNode;
-  manageVersions?: ReactNode;
-};
-
 function NamedVersionSelectorContent(): ReactElement {
   const props = useContext(NamedVersionSelectorContentContext);
   if (!props.isLoading && props.entries.length === 0) {
