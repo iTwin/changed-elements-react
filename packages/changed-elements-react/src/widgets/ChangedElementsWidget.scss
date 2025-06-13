@@ -9,3 +9,8 @@
   text-align: center;
   padding: var(--iui-size-xs);
 }
+
+.header-buttons {
+  display: flex;
+  gap: var(--iui-size-xs);
+}
