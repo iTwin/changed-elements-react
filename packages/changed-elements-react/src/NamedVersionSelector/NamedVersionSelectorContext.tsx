@@ -2,9 +2,10 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { createContext } from "react";
+import { createContext, ReactNode } from "react";
 
-import type { NamedVersionEntry } from "./useNamedVersionsList.js";
+import type { NamedVersionEntry, useNamedVersionsList } from "./useNamedVersionsList.js";
+import { NamedVersion } from "../clients/iModelsClient.js";
 
 export interface NamedVersionSelectorContextValue {
   /** Invoked when users request Named Version processinig. */
@@ -42,3 +43,19 @@ export const namedVersionSelectorContext = createContext<NamedVersionSelectorCon
   checkStatus: () => ({ cancel: () => { } }),
   contextExists: false,
 });
+
+export type NamedVersionSelectorContentProps = {
+  isLoading: boolean;
+  entries: NamedVersionEntry[];
+  currentNamedVersion: NamedVersion | undefined;
+  iTwinId: string;
+  iModelId: string;
+  onNamedVersionOpened: (version: NamedVersionEntry) => void;
+  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
+};
+
+export const NamedVersionSelectorContentContext = createContext<NamedVersionSelectorContentProps>(
+  {} as NamedVersionSelectorContentProps,
+)
