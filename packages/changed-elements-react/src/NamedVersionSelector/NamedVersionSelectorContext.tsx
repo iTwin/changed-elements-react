@@ -44,7 +44,7 @@ export const namedVersionSelectorContext = createContext<NamedVersionSelectorCon
   contextExists: false,
 });
 
-type NamedVersionSelectorContentProps = {
+export type NamedVersionSelectorContentProps = {
   isLoading: boolean;
   entries: NamedVersionEntry[];
   currentNamedVersion: NamedVersion | undefined;

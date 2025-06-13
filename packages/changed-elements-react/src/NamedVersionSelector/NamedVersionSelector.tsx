@@ -26,7 +26,7 @@ import {
   runManagerStartComparisonV2
 } from "../widgets/comparisonJobWidget/common/versionCompareV2WidgetUtils.js";
 import { IconEx } from "./IconEx.js";
-import { NamedVersionSelectorContentContext, namedVersionSelectorContext } from "./NamedVersionSelectorContext.js";
+import { NamedVersionSelectorContentContext, NamedVersionSelectorContentProps, namedVersionSelectorContext } from "./NamedVersionSelectorContext.js";
 import { Sticky } from "./Sticky.js";
 import { TextEx } from "./TextEx.js";
 import { useComparisonJobs } from "./useComparisonJobs.js";
@@ -227,17 +227,22 @@ function LoadingState(): ReactElement {
 }
 
 function NamedVersionSelectorContent(): ReactElement {
-  const props = useContext(NamedVersionSelectorContentContext);
-  if (!props.isLoading && props.entries.length === 0) {
+  const ctx = useContext(NamedVersionSelectorContentContext);
+  if (!ctx.isLoading && ctx.entries.length === 0) {
     return <EmptyState />;
   }
 
-  if (!props.currentNamedVersion || (props.isLoading && props.entries.length === 0)) {
+  if (!ctx.currentNamedVersion || (ctx.isLoading && ctx.entries.length === 0)) {
     return <LoadingState />;
   }
 
+  const { isLoading, currentNamedVersion, ...restProps } = ctx;
+
   return (
-    <NamedVersionSelectorLoaded />
+   <NamedVersionSelectorLoaded
+    {...restProps}
+    currentNamedVersion={currentNamedVersion}
+    />
   );
 }
 
@@ -373,7 +378,9 @@ function PlaceholderNamedVersionInfo(): ReactElement {
   );
 }
 
-function NamedVersionSelectorLoaded(): ReactElement {
+type LoadedStateProps = Omit<NamedVersionSelectorContentProps, "isLoading" | "currentNamedVersion"> & { currentNamedVersion: NamedVersion; };
+
+function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   const {
     iTwinId,
     iModelId,
@@ -382,12 +389,7 @@ function NamedVersionSelectorLoaded(): ReactElement {
     updateJobStatus,
     onNamedVersionOpened,
     manageVersions,
-  } = useContext(NamedVersionSelectorContentContext);
-
-  // @naron: this is a bit of a hack, this will never be null at this stage. Not sure whats a better way to handle this
-  if (!currentNamedVersion) {
-    return <LoadingState />;
-  }
+  } = props;
 
   const { queryJobStatus, startJob } = useComparisonJobs({
     iTwinId,
