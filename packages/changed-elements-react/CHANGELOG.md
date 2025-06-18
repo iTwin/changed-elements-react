@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.5
+
+### Patch Changes
+
+#### [0.15.5](https://github.com/iTwin/changed-elements-react/tree/v0.15.5/packages/changed-elements-react) - 2025-06-18
+
+spacing around che ele header buttons
+
 ## 0.15.4
 
 ### Patch Changes
