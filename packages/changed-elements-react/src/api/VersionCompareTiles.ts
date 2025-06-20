@@ -40,6 +40,7 @@ export interface VersionDisplayOptions {
   hideUnchanged: boolean;
   hideRemoved: boolean;
   hideModified: boolean;
+  hideAdded: boolean;
   wantModified?: boolean;
   neverDrawn?: Set<string>;
   changedModels?: Set<string>;
@@ -338,6 +339,9 @@ export class Provider
     return this._options && this._options.hideModified;
   }
 
+  private _wantHideAdded() {
+    return this._options && this._options?.hideAdded;
+  }
   /**
    * The overrides applied to the *primary* IModelConnection, to hilite inserted/updated elements.
    * This also takes into account never drawn elements passed via display options to the provider
@@ -360,10 +364,11 @@ export class Provider
           ? true
           : undefined,
     });
+
     for (const elem of insertedElems) {
       // Check if user is emphasizing some elements, and if so, override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.override({ elementId: elem.id, appearance: inserted });
+        overrides.override({ elementId: elem.id, appearance: this._wantHideAdded() ? hiddenAppearance : inserted });
       }
     }
 
@@ -391,7 +396,14 @@ export class Provider
     for (const elem of updatedElems) {
       // Check if user is emphasizing some elements, and if so, only override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.override({ elementId: elem.id, appearance: elem.indirect ? updatedIndirectly : updated });
+        overrides.override({
+          elementId: elem.id,
+          appearance: this._wantHideModified()
+            ? hiddenAppearance
+            : elem.indirect
+              ? updatedIndirectly
+              : updated
+         });
       }
     }
   }
@@ -471,23 +483,23 @@ export class Provider
       );
     }
 
-    // Handle modified elements that are in secondary iModel
-    if (this._options?.wantModified && !this._wantHideModified()) {
-      const modifiedElemIds = new Set(
-        this.changedElems
-          .filter(
-            (entry: ChangedElement) =>
-              entry.opcode === DbOpcode.Update && !neverDrawn.has(entry.id),
-          )
-          .map((entry: ChangedElement) => entry.id),
-      );
-      // Set override for the modified element ids with the given color
-      this._overrideSecondaryIModelElements(
-        ovrs,
-        modifiedElemIds,
-        VersionCompareVisualizationManager.colorModifiedTargetRgb(),
-      );
-    }
+    // // Handle modified elements that are in secondary iModel
+    // if (this._options?.wantModified && !this._wantHideModified()) {
+    //   const modifiedElemIds = new Set(
+    //     this.changedElems
+    //       .filter(
+    //         (entry: ChangedElement) =>
+    //           entry.opcode === DbOpcode.Update && !neverDrawn.has(entry.id),
+    //       )
+    //       .map((entry: ChangedElement) => entry.id),
+    //   );
+    //   // Set override for the modified element ids with the given color
+    //   this._overrideSecondaryIModelElements(
+    //     ovrs,
+    //     modifiedElemIds,
+    //     VersionCompareVisualizationManager.colorModifiedTargetRgb(),
+    //   );
+    // }
 
     return ovrs;
   }

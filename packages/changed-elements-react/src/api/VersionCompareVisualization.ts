@@ -18,6 +18,7 @@ import {
   isVersionComparisonDisplayEnabled, Provider as VersionCompareProvider, updateVersionCompareDisplayEntries,
   updateVersionComparisonDisplayOptions, type VersionDisplayOptions
 } from "./VersionCompareTiles.js";
+import { FilterOptions } from "../SavedFiltersManager.js";
 
 /**
  * Handles version compare visualization by using the VersionCompareTiles' provider
@@ -86,6 +87,7 @@ export class VersionCompareVisualizationManager {
       hideUnchanged: false,
       hideRemoved: false,
       hideModified: false,
+      hideAdded: false,
       wantModified: _wantSecondaryModified,
       emphasized: true,
     };
@@ -98,6 +100,19 @@ export class VersionCompareVisualizationManager {
     this._viewport.view.forEachModel((model: GeometricModelState) => {
       this._modelsAtStart.push(model.id);
     });
+  }
+
+  public updateDisplayOptions = (options: FilterOptions) => {
+    if (options.wantAdded !== undefined) {
+      this.displayOptions.hideAdded = !options.wantAdded;
+    }
+
+    if (options.wantModified !== undefined) {
+      this.displayOptions.hideModified = !options.wantModified;
+    }
+
+    this.displayOptions.hideUnchanged =
+      options.wantUnchanged !== undefined ? !options.wantUnchanged  : !this.displayOptions.hideUnchanged;
   }
 
   /**
@@ -150,6 +165,7 @@ export class VersionCompareVisualizationManager {
       hideUnchanged: false,
       hideRemoved: false,
       hideModified: false,
+      hideAdded: false,
     };
 
     await disableVersionComparisonDisplay(this._viewport);
@@ -285,9 +301,7 @@ export class VersionCompareVisualizationManager {
   }
 
   /** Toggles the visibility of unchanged elements during comparison */
-  public async toggleUnchangedVisibility(hide?: boolean): Promise<boolean> {
-    this.displayOptions.hideUnchanged =
-      hide !== undefined ? hide : !this.displayOptions.hideUnchanged;
+  public async toggleUnchangedVisibility(): Promise<boolean> {
     this.displayOptions.changedModels = this._changedModels;
     this.displayOptions.emphasized = true;
 

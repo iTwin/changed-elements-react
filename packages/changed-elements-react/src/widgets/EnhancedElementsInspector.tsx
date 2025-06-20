@@ -580,7 +580,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       // Handle unchanged visibility
       const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
       if (visualizationManager) {
-        await visualizationManager.toggleUnchangedVisibility(!mState.filterOptions.wantUnchanged);
+        // visualizationManager.updateDisplayOptions(mState.filterOptions);
+        await visualizationManager.toggleUnchangedVisibility();
       }
 
       this.clearSavedState();
@@ -820,12 +821,27 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return this._wantShowEntry(entry, opts);
   };
 
+  private _filterRemovedEntryWithGivenOptions = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
+    if (entry.opcode === DbOpcode.Delete){
+      return opts.wantDeleted;
+    }
+    if (entry.opcode === DbOpcode.Update) {
+      return this._modifiedEntryMatchesFilters(entry, opts); // @naron: is this needed?
+    }
+    return true;
+  }
+
+  private _filterRemovedEntryWithOptions = (entry: ChangedElementEntry): boolean => {
+    // If the entry is deleted, we want to show it only if the filter options want deleted elements
+    return this._filterRemovedEntryWithGivenOptions(entry, this.state.filterOptions);
+  }
+
   /** Obtains the children nodes of the models, creates their entries, and visualizes them. */
   private _visualizeModelNodes = async (nodes: TreeNodeItem[], options?: FilterOptions): Promise<void> => {
     // Handle model nodes: Get the children entries they already have into an array
     const filter = options
-      ? (entry: ChangedElementEntry) => this._filterEntryWithGivenOptions(entry, options)
-      : this._filterEntryWithOptions;
+      ? (entry: ChangedElementEntry) => this._filterRemovedEntryWithGivenOptions(entry, options)
+      : this._filterRemovedEntryWithOptions;
     const modelIds = new Set(nodes.map((value) => value.id));
     const entries = this.props.dataProvider.getEntriesWithModelIds(modelIds, filter);
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
@@ -895,7 +911,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     if (this._areModelNodes(nodes)) {
       // Visualize all model nodes given
       await this._visualizeModelNodes(nodes, options);
-    } else if (targetNode !== undefined && this._areModelNodes([targetNode])) {
+    } else if (targetNode !== undefined && this._areModelNodes([targetNode])) { //@naron: when is this getting triggered?
       // Visualize all elements in the given target model
       await this._visualizeModelNodes([targetNode], options);
     } else {
@@ -1100,7 +1116,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     // Handle unchanged visibility
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (visualizationManager) {
-      await visualizationManager.toggleUnchangedVisibility(!options.wantUnchanged);
+      visualizationManager.updateDisplayOptions(options);
+      await visualizationManager.toggleUnchangedVisibility();
     }
 
     // Bubble up filter options
@@ -1112,7 +1129,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     this.setState({ filteredNodes, filterOptions: options });
     // Nodes updated event
     this._nodesUpdated.raiseEvent();
-    // Bubble up the filter options
+    // Bubble up the filter options //@naron: is this redundant?
     if (this.props.onFilterChange) {
       this.props.onFilterChange(options);
     }
