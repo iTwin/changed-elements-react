@@ -13,3 +13,4 @@ pnpm-debug.log*
 .env.*
 
 packages/test-app-frontend/dist/
+.DS_Store
