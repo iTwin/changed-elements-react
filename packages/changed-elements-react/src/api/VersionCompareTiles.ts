@@ -398,11 +398,11 @@ export class Provider
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         overrides.override({
           elementId: elem.id,
-          appearance: this._wantHideModified()
+          appearance: this._wantHideModified() || elem.isTypeOfChangeFiltered
             ? hiddenAppearance
             : elem.indirect
               ? updatedIndirectly
-              : updated
+              : updated,
          });
       }
     }
@@ -483,23 +483,23 @@ export class Provider
       );
     }
 
-    // // Handle modified elements that are in secondary iModel
-    // if (this._options?.wantModified && !this._wantHideModified()) {
-    //   const modifiedElemIds = new Set(
-    //     this.changedElems
-    //       .filter(
-    //         (entry: ChangedElement) =>
-    //           entry.opcode === DbOpcode.Update && !neverDrawn.has(entry.id),
-    //       )
-    //       .map((entry: ChangedElement) => entry.id),
-    //   );
-    //   // Set override for the modified element ids with the given color
-    //   this._overrideSecondaryIModelElements(
-    //     ovrs,
-    //     modifiedElemIds,
-    //     VersionCompareVisualizationManager.colorModifiedTargetRgb(),
-    //   );
-    // }
+    // Handle modified elements that are in secondary iModel
+    if (this._options?.wantModified && !this._wantHideModified()) {
+      const modifiedElemIds = new Set(
+        this.changedElems
+          .filter(
+            (entry: ChangedElement) =>
+              entry.opcode === DbOpcode.Update && !neverDrawn.has(entry.id),
+          )
+          .map((entry: ChangedElement) => entry.id),
+      );
+      // Set override for the modified element ids with the given color
+      this._overrideSecondaryIModelElements(
+        ovrs,
+        modifiedElemIds,
+        VersionCompareVisualizationManager.colorModifiedTargetRgb(),
+      );
+    }
 
     return ovrs;
   }
