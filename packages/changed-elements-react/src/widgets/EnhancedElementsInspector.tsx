@@ -906,7 +906,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     if (this._areModelNodes(nodes)) {
       // Visualize all model nodes given
       await this._visualizeModelNodes(nodes, options);
-    } else if (targetNode !== undefined && this._areModelNodes([targetNode])) { //@naron: when is this getting triggered?
+    } else if (targetNode !== undefined && this._areModelNodes([targetNode])) {
       // Visualize all elements in the given target model
       await this._visualizeModelNodes([targetNode], options);
     } else {
@@ -1124,7 +1124,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     this.setState({ filteredNodes, filterOptions: options });
     // Nodes updated event
     this._nodesUpdated.raiseEvent();
-    // Bubble up the filter options //@naron: is this redundant?
+    // Bubble up the filter optionsnpx @changesets/cli
     if (this.props.onFilterChange) {
       this.props.onFilterChange(options);
     }
