@@ -61,6 +61,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
 
   const { iModel, emptyState, manageVersions, feedbackUrl } = props;
 
+  const [targetgVersion, setTargetVersion] = useState<NamedVersion>();
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
 
@@ -102,11 +103,10 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     currentChangesetId,
   });
 
-  manager.currentVersion = currentNamedVersion;
   const widgetRef = useRef<ChangedElementsWidget>(null);
 
   const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
-    manager.targetVersion = targetVersion?.namedVersion;
+    setTargetVersion(targetVersion?.namedVersion);
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
     }
@@ -167,7 +167,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
       </Widget.Header>
       {
         currentNamedVersion &&
-        <ActiveVersionsBox current={currentNamedVersion} selected={manager.targetVersion}></ActiveVersionsBox>
+        <ActiveVersionsBox current={currentNamedVersion} selected={targetgVersion}></ActiveVersionsBox>
       }
 
       {

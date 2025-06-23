@@ -44,6 +44,7 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
   VersionCompare.manager?.startComparisonV2(
     args.iModelConnection,
+    args.currentVersion,
     await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
     [changedElements.changedElements]).catch((e) => {
       Logger.logError(VersionCompare.logCategory, "Could not start version comparison: " + e);
