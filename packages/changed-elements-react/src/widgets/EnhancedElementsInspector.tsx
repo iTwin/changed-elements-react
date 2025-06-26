@@ -811,17 +811,22 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return this.props.dataProvider.getEntriesFromIds(ids);
   };
 
+  private _entryModifiedFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
+    if (entry.opcode === DbOpcode.Update) {
+      if (!this._modifiedEntryMatchesFilters(entry, opts)){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private _entryModifiedFilterWithOptions = (entry: ChangedElementEntry): boolean => {
+    return this._entryModifiedFilter(entry, this.state.filterOptions);
+  }
 
   private _entryPassesFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
     if (entry.opcode === DbOpcode.Delete){
       return opts.wantDeleted;
-    }
-    if (entry.opcode === DbOpcode.Update) {
-      if (!this._modifiedEntryMatchesFilters(entry, opts)){
-        entry.isTypeOfChangeFiltered = true;
-      } else {
-        entry.isTypeOfChangeFiltered = false;
-      }
     }
     return true;
   }
@@ -839,8 +844,12 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       : this._entryPassesFilterWithOptions;
     const modelIds = new Set(nodes.map((value) => value.id));
     const entries = this.props.dataProvider.getEntriesWithModelIds(modelIds, filter);
+    const modifiedFilter = options
+      ? (entry: ChangedElementEntry) => this._entryModifiedFilter(entry, options)
+      : this._entryModifiedFilterWithOptions;
+    const hiddenEntries = this.props.dataProvider.getEntriesWithModelIds(modelIds, modifiedFilter);
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries);
+    await visualizationManager?.setFocusedElements(entries, hiddenEntries);
   };
 
   /**
@@ -1124,7 +1133,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     this.setState({ filteredNodes, filterOptions: options });
     // Nodes updated event
     this._nodesUpdated.raiseEvent();
-    // Bubble up the filter optionsnpx @changesets/cli
+    // Bubble up the filter options
     if (this.props.onFilterChange) {
       this.props.onFilterChange(options);
     }

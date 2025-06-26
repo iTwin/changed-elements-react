@@ -118,14 +118,16 @@ export class VersionCompareVisualizationManager {
   /**
    * Used to emphasize and focus on a list of elements instead of all changed elements in comparison
    * @param elements Elements to focus during visualization
+   * @param hiddenElements Optional list of elements that should not be shown in the visualization
    */
-  public setFocusedElements = async (elements: ChangedElementEntry[] | undefined) => {
+  public setFocusedElements = async (elements: ChangedElementEntry[] | undefined, hiddenElements?: ChangedElementEntry[]) => {
     this._focusedElements = elements;
     updateVersionCompareDisplayEntries(
       this._viewport,
       this._focusedElements !== undefined
         ? this._focusedElements
         : this._changedElements,
+      hiddenElements,
     );
   };
 

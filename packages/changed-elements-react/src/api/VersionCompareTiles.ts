@@ -118,6 +118,7 @@ export class Provider
   public readonly iModel: IModelConnection;
   public secondaryIModelOverrides: FeatureSymbology.Overrides;
   public changedElems: ChangedElementEntry[];
+  public hiddenChangedElems: ChangedElementEntry[];
   public readonly viewport: Viewport;
   private readonly _removals: Array<() => void> = [];
   private _options: VersionDisplayOptions | undefined;
@@ -136,9 +137,11 @@ export class Provider
     options?: VersionDisplayOptions,
     targetIModelModels?: Set<string>,
     targetIModelCategories?: Set<string>,
+    hiddenElems?: ChangedElementEntry[],
   ) {
     this.iModel = iModel;
     this.changedElems = elems;
+    this.hiddenChangedElems = hiddenElems || [];
     this.viewport = vp;
     this._options = options;
 
@@ -225,9 +228,11 @@ export class Provider
   /**
    * Set changed element entries to visualize
    * @param elems Changed elements
+   * @param hiddenElems Optional hidden changed elements to override display
    */
-  public setChangedElems(elems: ChangedElementEntry[]) {
+  public setChangedElems(elems: ChangedElementEntry[], hiddenElems: ChangedElementEntry[] | undefined) {
     this.changedElems = elems;
+    this.hiddenChangedElems = hiddenElems || [];
     this.viewport.invalidateScene();
     this.viewport.setFeatureOverrideProviderChanged();
     refreshEvent.raiseEvent();
@@ -398,12 +403,21 @@ export class Provider
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         overrides.override({
           elementId: elem.id,
-          appearance: this._wantHideModified() || elem.isTypeOfChangeFiltered
+          appearance: this._wantHideModified()
             ? hiddenAppearance
             : elem.indirect
               ? updatedIndirectly
               : updated,
          });
+      }
+      for (const elem of this.hiddenChangedElems){
+        // If the user has hidden elements, we have to override them with the hidden appearance
+        if (this._internalNeverDrawn.size === 0 || this._internalNeverDrawn.has(elem.id)) {
+          overrides.override({
+            elementId: elem.id,
+            appearance: hiddenAppearance,
+          });
+        }
       }
     }
   }
@@ -939,10 +953,11 @@ export function isVersionComparisonDisplayUsingContextTools(vp: Viewport): boole
 export function updateVersionCompareDisplayEntries(
   vp: Viewport,
   entries: ChangedElementEntry[],
+  hiddenEntries: ChangedElementEntry[] | undefined,
 ): boolean {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    existing.setChangedElems(entries);
+    existing.setChangedElems(entries, hiddenEntries);
     return true;
   }
 
