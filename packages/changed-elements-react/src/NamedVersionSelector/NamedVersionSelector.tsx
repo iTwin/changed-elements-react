@@ -218,9 +218,9 @@ function NamedVersionSelector(props: Readonly<NamedVersionSelectorProps>): React
 
   const { iModel, manager, emptyState, manageVersions, feedbackUrl } = props;
 
-  const iTwinId = iModel.iTwinId as string;
-  const iModelId = iModel.iModelId as string;
-  const currentChangesetId = iModel.changeset.id;
+  const iTwinId = iModel.iTwinId ?? "";
+  const iModelId = iModel.iModelId ?? "";
+  const currentChangesetId = iModel.changeset.id ?? "";
 
   const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
     iTwinId,
