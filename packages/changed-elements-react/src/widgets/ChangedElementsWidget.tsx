@@ -529,7 +529,7 @@ export function ChangedElementsHeaderButtons(props: Readonly<ChangedElementsHead
   }
 
   return (
-    <>
+    <div className="header-buttons">
       {
         !props.useNewNamedVersionSelector &&
         <IconButton
@@ -589,7 +589,7 @@ export function ChangedElementsHeaderButtons(props: Readonly<ChangedElementsHead
           <SvgCompare />
         </IconButton>
       }
-    </>
+    </div>
   );
 }
 

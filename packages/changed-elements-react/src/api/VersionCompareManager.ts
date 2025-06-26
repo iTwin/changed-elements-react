@@ -439,6 +439,10 @@ export class VersionCompareManager {
 
       this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel);
 
+      // Keep metadata around for UI uses and other queries
+      this.currentVersion = currentVersion;
+      this.targetVersion = targetVersion;
+
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
       this._targetIModel = await CheckpointConnection.openRemote(
@@ -448,11 +452,6 @@ export class VersionCompareManager {
       );
 
       this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel, 100);
-
-      // Keep metadata around for UI uses and other queries
-      this.currentVersion = currentVersion;
-      this.targetVersion = targetVersion;
-
       this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison);
 
       let wantedModelClasses = [
