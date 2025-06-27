@@ -810,6 +810,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return this.props.dataProvider.getEntriesFromIds(ids);
   };
 
+  /** return true for entries we want to hide */
   private _hideFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
     if (entry.opcode === DbOpcode.Update) {
       // hide when the filter options do not want modified elements
@@ -829,7 +830,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return false;
   }
 
-  private _entryPassesFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
+  /** return true for entries we want to include */
+  private _includeFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
     if (entry.opcode === DbOpcode.Delete){
       return opts.wantDeleted;
     }
@@ -842,7 +844,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const modelIds = new Set(nodes.map((value) => value.id));
     const opts = options ?? this.state.filterOptions;
 
-    const includeFilter = (e: ChangedElementEntry) => e.opcode !== DbOpcode.Delete || opts.wantDeleted;
+    const includeFilter = (e: ChangedElementEntry) => this._includeFilter(e, opts);
     const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
 
     const { visible, hidden } =
@@ -879,36 +881,12 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const opts = options ?? this.state.filterOptions;
 
     // Filter function for matching to the given filter options
-    const includeFilter = (e: ChangedElementEntry) => this._entryPassesFilter(e, opts);
+    const includeFilter = (e: ChangedElementEntry) => this._includeFilter(e, opts) && !this._hideFilter(e, opts);
     const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
 
     // Visualize the filtered elements and focus
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries);
-    // const opts = options ?? this.state.filterOptions;
-    // const includeFilter = (e: ChangedElementEntry) =>
-    //   e.opcode !== DbOpcode.Delete || opts.wantDeleted;
-    // const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
-
-    // const entriesToVis = targetNode
-    //   ? this._getEntriesToVisualize(targetNode)
-    //   : directChildNodes.map(nodeToEntry);
-
-    // const visible: ChangedElementEntry[] = [];
-    // const hidden:  ChangedElementEntry[] = [];
-
-    // for (const e of entriesToVis) {
-    //   if (hideFilter(e)) {
-    //     hidden.push(e);
-    //   } else if (includeFilter(e)) {
-    //     visible.push(e);
-    //   }
-    // }
-
-    // await this.props.manager.visualization
-    //   ?.getSingleViewVisualizationManager()
-    //   ?.setFocusedElements(visible, hidden);
-
+    await visualizationManager?.setFocusedElements(entries.filter(includeFilter), entries.filter(hideFilter));
   };
 
   /** Sets viewport visualization based on the given nodes and target/parent node. */

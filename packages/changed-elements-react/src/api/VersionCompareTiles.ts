@@ -408,7 +408,7 @@ export class Provider
 
     for (const elem of this.hiddenChangedElems){
       // If the user has hidden elements, we have to override them with the hidden appearance
-      if (this._internalNeverDrawn.size === 0 || this._internalNeverDrawn.has(elem.id)) {
+      if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         overrides.override({
           elementId: elem.id,
           appearance: hiddenAppearance,
