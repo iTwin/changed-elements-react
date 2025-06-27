@@ -18,7 +18,6 @@ import {
   isVersionComparisonDisplayEnabled, Provider as VersionCompareProvider, updateVersionCompareDisplayEntries,
   updateVersionComparisonDisplayOptions, type VersionDisplayOptions
 } from "./VersionCompareTiles.js";
-import { FilterOptions } from "../SavedFiltersManager.js";
 
 /**
  * Handles version compare visualization by using the VersionCompareTiles' provider
