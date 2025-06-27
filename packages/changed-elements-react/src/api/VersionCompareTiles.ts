@@ -40,7 +40,6 @@ export interface VersionDisplayOptions {
   hideUnchanged: boolean;
   hideRemoved: boolean;
   hideModified: boolean;
-  hideAdded: boolean;
   wantModified?: boolean;
   neverDrawn?: Set<string>;
   changedModels?: Set<string>;
@@ -344,9 +343,6 @@ export class Provider
     return this._options && this._options.hideModified;
   }
 
-  private _wantHideAdded() {
-    return this._options && this._options?.hideAdded;
-  }
   /**
    * The overrides applied to the *primary* IModelConnection, to hilite inserted/updated elements.
    * This also takes into account never drawn elements passed via display options to the provider
@@ -373,7 +369,7 @@ export class Provider
     for (const elem of insertedElems) {
       // Check if user is emphasizing some elements, and if so, override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.override({ elementId: elem.id, appearance: this._wantHideAdded() ? hiddenAppearance : inserted });
+        overrides.override({ elementId: elem.id, appearance: inserted });
       }
     }
 
@@ -403,21 +399,20 @@ export class Provider
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         overrides.override({
           elementId: elem.id,
-          appearance: this._wantHideModified()
-            ? hiddenAppearance
-            : elem.indirect
+          appearance: elem.indirect
               ? updatedIndirectly
               : updated,
          });
       }
-      for (const elem of this.hiddenChangedElems){
-        // If the user has hidden elements, we have to override them with the hidden appearance
-        if (this._internalNeverDrawn.size === 0 || this._internalNeverDrawn.has(elem.id)) {
-          overrides.override({
-            elementId: elem.id,
-            appearance: hiddenAppearance,
-          });
-        }
+    }
+
+    for (const elem of this.hiddenChangedElems){
+      // If the user has hidden elements, we have to override them with the hidden appearance
+      if (this._internalNeverDrawn.size === 0 || this._internalNeverDrawn.has(elem.id)) {
+        overrides.override({
+          elementId: elem.id,
+          appearance: hiddenAppearance,
+        });
       }
     }
   }
@@ -952,12 +947,12 @@ export function isVersionComparisonDisplayUsingContextTools(vp: Viewport): boole
 
 export function updateVersionCompareDisplayEntries(
   vp: Viewport,
-  entries: ChangedElementEntry[],
+  visibleEntries: ChangedElementEntry[],
   hiddenEntries: ChangedElementEntry[] | undefined,
 ): boolean {
   const existing = vp.findFeatureOverrideProviderOfType(Provider);
   if (undefined !== existing && existing instanceof Provider) {
-    existing.setChangedElems(entries, hiddenEntries);
+    existing.setChangedElems(visibleEntries, hiddenEntries);
     return true;
   }
 

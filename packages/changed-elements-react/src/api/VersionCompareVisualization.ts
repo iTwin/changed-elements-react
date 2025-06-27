@@ -87,7 +87,6 @@ export class VersionCompareVisualizationManager {
       hideUnchanged: false,
       hideRemoved: false,
       hideModified: false,
-      hideAdded: false,
       wantModified: _wantSecondaryModified,
       emphasized: true,
     };
@@ -102,26 +101,13 @@ export class VersionCompareVisualizationManager {
     });
   }
 
-  public updateDisplayOptions = (options: FilterOptions) => {
-    if (options.wantAdded !== undefined) {
-      this.displayOptions.hideAdded = !options.wantAdded;
-    }
-
-    if (options.wantModified !== undefined) {
-      this.displayOptions.hideModified = !options.wantModified;
-    }
-
-    this.displayOptions.hideUnchanged =
-      options.wantUnchanged !== undefined ? !options.wantUnchanged  : !this.displayOptions.hideUnchanged;
-  }
-
   /**
    * Used to emphasize and focus on a list of elements instead of all changed elements in comparison
-   * @param elements Elements to focus during visualization
+   * @param visible Elements to focus during visualization
    * @param hiddenElements Optional list of elements that should not be shown in the visualization
    */
-  public setFocusedElements = async (elements: ChangedElementEntry[] | undefined, hiddenElements?: ChangedElementEntry[]) => {
-    this._focusedElements = elements;
+  public setFocusedElements = async (visible: ChangedElementEntry[] | undefined, hiddenElements?: ChangedElementEntry[]) => {
+    this._focusedElements = visible;
     updateVersionCompareDisplayEntries(
       this._viewport,
       this._focusedElements !== undefined
@@ -167,7 +153,6 @@ export class VersionCompareVisualizationManager {
       hideUnchanged: false,
       hideRemoved: false,
       hideModified: false,
-      hideAdded: false,
     };
 
     await disableVersionComparisonDisplay(this._viewport);
@@ -303,7 +288,10 @@ export class VersionCompareVisualizationManager {
   }
 
   /** Toggles the visibility of unchanged elements during comparison */
-  public async toggleUnchangedVisibility(): Promise<boolean> {
+  public async toggleUnchangedVisibility(options: FilterOptions): Promise<boolean> {
+    this.displayOptions.hideUnchanged =
+      options.wantUnchanged !== undefined ? !options.wantUnchanged  : !this.displayOptions.hideUnchanged;
+
     this.displayOptions.changedModels = this._changedModels;
     this.displayOptions.emphasized = true;
 

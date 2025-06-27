@@ -580,8 +580,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       // Handle unchanged visibility
       const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
       if (visualizationManager) {
-        visualizationManager.updateDisplayOptions(mState.filterOptions);
-        await visualizationManager.toggleUnchangedVisibility();
+        await visualizationManager.toggleUnchangedVisibility(mState.filterOptions);
       }
 
       this.clearSavedState();
@@ -811,17 +810,23 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return this.props.dataProvider.getEntriesFromIds(ids);
   };
 
-  private _entryModifiedFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
+  private _hideFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
     if (entry.opcode === DbOpcode.Update) {
+      // hide when the filter options do not want modified elements
+      if (!opts.wantModified) {
+        return true;
+      }
+      // hide when type of change filtering or advanced filtering is matched
       if (!this._modifiedEntryMatchesFilters(entry, opts)){
         return true;
       }
     }
-    return false;
-  }
 
-  private _entryModifiedFilterWithOptions = (entry: ChangedElementEntry): boolean => {
-    return this._entryModifiedFilter(entry, this.state.filterOptions);
+    // hide when the filter options do not want added elements
+    if (entry.opcode === DbOpcode.Insert && !opts.wantAdded) {
+      return true;
+    }
+    return false;
   }
 
   private _entryPassesFilter = (entry: ChangedElementEntry, opts: FilterOptions): boolean => {
@@ -831,25 +836,20 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     return true;
   }
 
-  private _entryPassesFilterWithOptions = (entry: ChangedElementEntry): boolean => {
-    // If the entry is deleted, we want to show it only if the filter options want deleted elements
-    return this._entryPassesFilter(entry, this.state.filterOptions);
-  }
-
   /** Obtains the children nodes of the models, creates their entries, and visualizes them. */
   private _visualizeModelNodes = async (nodes: TreeNodeItem[], options?: FilterOptions): Promise<void> => {
     // Handle model nodes: Get the children entries they already have into an array
-    const filter = options
-      ? (entry: ChangedElementEntry) => this._entryPassesFilter(entry, options)
-      : this._entryPassesFilterWithOptions;
     const modelIds = new Set(nodes.map((value) => value.id));
-    const entries = this.props.dataProvider.getEntriesWithModelIds(modelIds, filter);
-    const modifiedFilter = options
-      ? (entry: ChangedElementEntry) => this._entryModifiedFilter(entry, options)
-      : this._entryModifiedFilterWithOptions;
-    const hiddenEntries = this.props.dataProvider.getEntriesWithModelIds(modelIds, modifiedFilter);
+    const opts = options ?? this.state.filterOptions;
+
+    const includeFilter = (e: ChangedElementEntry) => e.opcode !== DbOpcode.Delete || opts.wantDeleted;
+    const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
+
+    const { visible, hidden } =
+      this.props.dataProvider.partitionByModelAndFilters(modelIds, includeFilter, hideFilter);
+
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries, hiddenEntries);
+    await visualizationManager?.setFocusedElements(visible, hidden);
   };
 
   /**
@@ -876,15 +876,39 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   ): Promise<void> => {
     // Get entries to visualize containing the relevant children entries as well
     const entries = targetNode ? this._getEntriesToVisualize(targetNode) : directChildNodes.map(nodeToEntry);
+    const opts = options ?? this.state.filterOptions;
 
     // Filter function for matching to the given filter options
-    const filter = options
-      ? (entry: ChangedElementEntry) => this._entryPassesFilter(entry, options)
-      : this._entryPassesFilterWithOptions;
+    const includeFilter = (e: ChangedElementEntry) => this._entryPassesFilter(e, opts);
+    const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
 
     // Visualize the filtered elements and focus
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries.filter(filter));
+    await visualizationManager?.setFocusedElements(entries);
+    // const opts = options ?? this.state.filterOptions;
+    // const includeFilter = (e: ChangedElementEntry) =>
+    //   e.opcode !== DbOpcode.Delete || opts.wantDeleted;
+    // const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
+
+    // const entriesToVis = targetNode
+    //   ? this._getEntriesToVisualize(targetNode)
+    //   : directChildNodes.map(nodeToEntry);
+
+    // const visible: ChangedElementEntry[] = [];
+    // const hidden:  ChangedElementEntry[] = [];
+
+    // for (const e of entriesToVis) {
+    //   if (hideFilter(e)) {
+    //     hidden.push(e);
+    //   } else if (includeFilter(e)) {
+    //     visible.push(e);
+    //   }
+    // }
+
+    // await this.props.manager.visualization
+    //   ?.getSingleViewVisualizationManager()
+    //   ?.setFocusedElements(visible, hidden);
+
   };
 
   /** Sets viewport visualization based on the given nodes and target/parent node. */
@@ -1120,8 +1144,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     // Handle unchanged visibility
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (visualizationManager) {
-      visualizationManager.updateDisplayOptions(options);
-      await visualizationManager.toggleUnchangedVisibility();
+      await visualizationManager.toggleUnchangedVisibility(options);
     }
 
     // Bubble up filter options
