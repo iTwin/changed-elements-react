@@ -288,9 +288,9 @@ export class VersionCompareVisualizationManager {
   }
 
   /** Toggles the visibility of unchanged elements during comparison */
-  public async toggleUnchangedVisibility(options: FilterOptions): Promise<boolean> {
+  public async toggleUnchangedVisibility(hide?: boolean): Promise<boolean> {
     this.displayOptions.hideUnchanged =
-      options.wantUnchanged !== undefined ? !options.wantUnchanged  : !this.displayOptions.hideUnchanged;
+      hide !== undefined ? hide : !this.displayOptions.hideUnchanged;
 
     this.displayOptions.changedModels = this._changedModels;
     this.displayOptions.emphasized = true;

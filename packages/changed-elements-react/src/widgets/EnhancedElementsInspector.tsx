@@ -580,7 +580,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       // Handle unchanged visibility
       const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
       if (visualizationManager) {
-        await visualizationManager.toggleUnchangedVisibility(mState.filterOptions);
+        await visualizationManager.toggleUnchangedVisibility(!mState.filterOptions.wantUnchanged);
       }
 
       this.clearSavedState();
@@ -848,7 +848,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
 
     const { visible, hidden } =
-      this.props.dataProvider.partitionByModelAndFilters(modelIds, includeFilter, hideFilter);
+      this.props.dataProvider.GetEntriesByModelIdsAndFilters(modelIds, includeFilter, hideFilter);
 
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     await visualizationManager?.setFocusedElements(visible, hidden);
@@ -1122,7 +1122,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     // Handle unchanged visibility
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (visualizationManager) {
-      await visualizationManager.toggleUnchangedVisibility(options);
+      await visualizationManager.toggleUnchangedVisibility(!options.wantUnchanged);
     }
 
     // Bubble up filter options

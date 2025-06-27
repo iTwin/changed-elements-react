@@ -1086,7 +1086,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
    * @param includeFilter Function to filter entries that should be visible
    * @param hideFilter Function to filter entries that should be hidden
    */
-  public partitionByModelAndFilters(
+  public GetEntriesByModelIdsAndFilters(
     modelIds: Set<string>,
     includeFilter: (entry: ChangedElementEntry) => boolean,
     hideFilter: (entry: ChangedElementEntry) => boolean,

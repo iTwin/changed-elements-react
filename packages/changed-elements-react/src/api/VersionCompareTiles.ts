@@ -116,7 +116,7 @@ export class Provider
   private _treeRef2d: Reference | undefined;
   public readonly iModel: IModelConnection;
   public secondaryIModelOverrides: FeatureSymbology.Overrides;
-  public changedElems: ChangedElementEntry[];
+  public visibleChangedElems: ChangedElementEntry[];
   public hiddenChangedElems: ChangedElementEntry[];
   public readonly viewport: Viewport;
   private readonly _removals: Array<() => void> = [];
@@ -139,7 +139,7 @@ export class Provider
     hiddenElems?: ChangedElementEntry[],
   ) {
     this.iModel = iModel;
-    this.changedElems = elems;
+    this.visibleChangedElems = elems;
     this.hiddenChangedElems = hiddenElems || [];
     this.viewport = vp;
     this._options = options;
@@ -230,7 +230,7 @@ export class Provider
    * @param hiddenElems Optional hidden changed elements to override display
    */
   public setChangedElems(elems: ChangedElementEntry[], hiddenElems: ChangedElementEntry[] | undefined) {
-    this.changedElems = elems;
+    this.visibleChangedElems = elems;
     this.hiddenChangedElems = hiddenElems || [];
     this.viewport.invalidateScene();
     this.viewport.setFeatureOverrideProviderChanged();
@@ -352,8 +352,8 @@ export class Provider
       this._wantHideUnchanged() ? hiddenAppearance : unchangedAppearance,
     );
 
-    const insertedElems = this.changedElems.filter((entry: ChangedElement) => entry.opcode === DbOpcode.Insert);
-    const updatedElems = this.changedElems.filter((entry: ChangedElement) => entry.opcode === DbOpcode.Update);
+    const insertedElems = this.visibleChangedElems.filter((entry: ChangedElement) => entry.opcode === DbOpcode.Insert);
+    const updatedElems = this.visibleChangedElems.filter((entry: ChangedElement) => entry.opcode === DbOpcode.Update);
 
     const inserted = FeatureAppearance.fromJSON({
       rgb: VersionCompareVisualizationManager.colorInsertedRgb(),
@@ -475,7 +475,7 @@ export class Provider
     // Handle removed elements that are in secondary iModel
     if (!this._wantHideRemoved()) {
       const deletedElemIds = new Set(
-        this.changedElems
+        this.visibleChangedElems
           .filter(
             (entry: ChangedElement) =>
               entry.opcode === DbOpcode.Delete &&
@@ -495,7 +495,7 @@ export class Provider
     // Handle modified elements that are in secondary iModel
     if (this._options?.wantModified && !this._wantHideModified()) {
       const modifiedElemIds = new Set(
-        this.changedElems
+        this.visibleChangedElems
           .filter(
             (entry: ChangedElement) =>
               entry.opcode === DbOpcode.Update && !neverDrawn.has(entry.id),
@@ -766,7 +766,7 @@ export class Provider
 
   public toJSON(): ProviderProps {
     return {
-      changedElems: this.changedElems,
+      changedElems: this.visibleChangedElems,
       options: this._options,
       internalAlwaysDrawn: this._internalAlwaysDrawn,
       internalNeverDrawn: this._internalNeverDrawn,
@@ -783,7 +783,7 @@ export class Provider
   }
 
   public fromJSON(props: ProviderProps) {
-    this.changedElems = props.changedElems;
+    this.visibleChangedElems = props.changedElems;
     this._internalAlwaysDrawn = props.internalAlwaysDrawn;
     this._internalNeverDrawn = props.internalNeverDrawn;
     this._exclusive = props.exclusive;

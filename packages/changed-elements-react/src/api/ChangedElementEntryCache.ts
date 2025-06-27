@@ -54,7 +54,6 @@ export interface ChangedElementEntry extends ChangedElement {
   directChildren?: string[];
   loaded: boolean;
   indirect?: boolean;
-  isTypeOfChangeFiltered?: boolean;
 }
 
 /** Cache for changed element entries that are maintained and populated with labels as we load labels with the cache */
