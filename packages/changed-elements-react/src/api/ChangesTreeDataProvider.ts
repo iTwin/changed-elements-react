@@ -31,6 +31,11 @@ export interface ModelElementChanges {
   typeOfChange: number;
 }
 
+export interface EntryPartition {
+  visible: ChangedElementEntry[];
+  hidden: ChangedElementEntry[];
+}
+
 export function isModelElementChanges(input: unknown): input is ModelElementChanges {
   return !!input
     && typeof input === "object"
@@ -1077,19 +1082,30 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
     return entries;
   }
 
-  /** Get entries with model ids based on a filter function. */
-  public getEntriesWithModelIds(
+  /** Get entries with model ids based on a filter function.
+   * @param includeFilter Function to filter entries that should be visible
+   * @param hideFilter Function to filter entries that should be hidden
+   */
+  public GetEntriesByModelIdsAndFilters(
     modelIds: Set<string>,
-    filterFunc: (entry: ChangedElementEntry) => boolean,
-  ): ChangedElementEntry[] {
-    const entries = [];
-    for (const pair of this._elements) {
-      if (pair[1].modelId !== undefined && modelIds.has(pair[1].modelId) && filterFunc(pair[1])) {
-        entries.push(pair[1]);
+    includeFilter: (entry: ChangedElementEntry) => boolean,
+    hideFilter: (entry: ChangedElementEntry) => boolean,
+  ): EntryPartition {
+    const visible: ChangedElementEntry[] = [];
+    const hidden:  ChangedElementEntry[] = [];
+
+    for (const [, entry] of this._elements) {
+      if (!entry.modelId || !modelIds.has(entry.modelId)) continue;
+
+      if (hideFilter(entry)){
+        hidden.push(entry);
+      }
+      else if (includeFilter(entry)) {
+        visible.push(entry);
       }
     }
 
-    return entries;
+    return { visible, hidden };
   }
 
   public getModelAllChildElementEntries(modelId: string): ChangedElementEntry[] {
