@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.6
+
+### Patch Changes
+
+#### [0.15.6](https://github.com/iTwin/changed-elements-react/tree/v0.15.6/packages/changed-elements-react) - 2025-07-07
+
+bug fix- Turning off all properties on Advanced Filtering dialog hides elements incorrectly
+
 ## 0.15.5
 
 ### Patch Changes
