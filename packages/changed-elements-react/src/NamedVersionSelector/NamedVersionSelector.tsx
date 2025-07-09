@@ -93,9 +93,13 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     throw new Error("V2 Client is not initialized in given context.");
   }
 
-  const iTwinId = iModel.iTwinId ?? "";
-  const iModelId = iModel.iModelId ?? "";
-  const currentChangesetId = iModel.changeset.id ?? "";
+  if (!iModel.iTwinId || !iModel.iModelId || !iModel.changeset.id) {
+    return <NoNamedVersionsState />;
+  }
+
+  const iTwinId = iModel.iTwinId;
+  const iModelId = iModel.iModelId;
+  const currentChangesetId = iModel.changeset.id;
 
   const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
     iTwinId,
@@ -216,6 +220,14 @@ function EmptyState(): ReactElement {
   return (
     <Text className="_cer_v1_empty-state" isMuted>
       {t("VersionCompare:versionCompare.noPastNamedVersions")}
+    </Text>
+  );
+}
+
+function NoNamedVersionsState(): ReactElement {
+  return (
+    <Text className="_cer_v1_empty-state" isMuted>
+      {t("VersionCompare:versionCompare.noNamedVersions")}
     </Text>
   );
 }
