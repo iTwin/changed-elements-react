@@ -93,8 +93,12 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     throw new Error("V2 Client is not initialized in given context.");
   }
 
-  const iTwinId = iModel.iTwinId as string;
-  const iModelId = iModel.iModelId as string;
+  if (!iModel.iTwinId || !iModel.iModelId || !iModel.changeset.id) {
+    throw new Error("Empty IModel Connection")
+  }
+
+  const iTwinId = iModel.iTwinId;
+  const iModelId = iModel.iModelId;
   const currentChangesetId = iModel.changeset.id;
 
   const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
