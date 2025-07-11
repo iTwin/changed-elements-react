@@ -94,7 +94,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   }
 
   if (!iModel.iTwinId || !iModel.iModelId || !iModel.changeset.id) {
-    return <NoNamedVersionsState />;
+    throw new Error("Empty IModel Connection")
   }
 
   const iTwinId = iModel.iTwinId;
@@ -220,14 +220,6 @@ function EmptyState(): ReactElement {
   return (
     <Text className="_cer_v1_empty-state" isMuted>
       {t("VersionCompare:versionCompare.noPastNamedVersions")}
-    </Text>
-  );
-}
-
-function NoNamedVersionsState(): ReactElement {
-  return (
-    <Text className="_cer_v1_empty-state" isMuted>
-      {t("VersionCompare:versionCompare.noNamedVersions")}
     </Text>
   );
 }
