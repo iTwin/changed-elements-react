@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.7
+
+### Patch Changes
+
+#### [0.15.7](https://github.com/iTwin/changed-elements-react/tree/v0.15.7/packages/changed-elements-react) - 2025-07-11
+
+Changed elements gets hidden when toggling filters
+
 ## 0.15.6
 
 ### Patch Changes
