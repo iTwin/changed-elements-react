@@ -9,7 +9,7 @@ import { forwardRef, useCallback, useEffect, useRef, type ReactElement } from "r
 import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
-import { AutoSizer } from "../AutoSizer.js";
+import { ResizeObserverWrapper } from "../ResizeObserver.js";
 import { mergeRefs } from "../common.js";
 import { ElementNodeComponent } from "./ElementNodeComponent.js";
 
@@ -175,7 +175,7 @@ export const ElementsList = forwardRef<HTMLDivElement, ElementsListProps>(
     }
 
     return (
-      <AutoSizer ref={ref} className="element-list">
+      <ResizeObserverWrapper ref={ref} className="element-list">
         {(size) => {
           return (
             <InfiniteLoader
@@ -209,7 +209,7 @@ export const ElementsList = forwardRef<HTMLDivElement, ElementsListProps>(
             </InfiniteLoader>
           );
         }}
-      </AutoSizer>
+      </ResizeObserverWrapper >
     );
   },
 );

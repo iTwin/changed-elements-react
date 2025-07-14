@@ -46,6 +46,7 @@ describe("Models Category Cache Tests", () => {
         create: () => {
           const load = vi.fn();
           return {
+            createQueryReader: queryMockGenerator("_mocked"),
             query: queryMockGenerator("_mocked"),
             models: { load },
             changeset: { id: "unknown" },

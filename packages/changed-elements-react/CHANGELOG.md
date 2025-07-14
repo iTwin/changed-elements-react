@@ -1,5 +1,103 @@
 # Changelog
 
+## 0.15.7
+
+### Patch Changes
+
+#### [0.15.7](https://github.com/iTwin/changed-elements-react/tree/v0.15.7/packages/changed-elements-react) - 2025-07-11
+
+Changed elements gets hidden when toggling filters
+
+## 0.15.6
+
+### Patch Changes
+
+#### [0.15.6](https://github.com/iTwin/changed-elements-react/tree/v0.15.6/packages/changed-elements-react) - 2025-07-07
+
+bug fix- Turning off all properties on Advanced Filtering dialog hides elements incorrectly
+
+## 0.15.5
+
+### Patch Changes
+
+#### [0.15.5](https://github.com/iTwin/changed-elements-react/tree/v0.15.5/packages/changed-elements-react) - 2025-06-26
+
+Nvtable persists when loading comparison
+
+#### [0.15.5](https://github.com/iTwin/changed-elements-react/tree/v0.15.5/packages/changed-elements-react) - 2025-06-26
+
+spacing around che ele header buttons
+
+## 0.15.4
+
+### Patch Changes
+
+#### [0.15.4](https://github.com/iTwin/changed-elements-react/tree/v0.15.4/packages/changed-elements-react) - 2025-06-06
+
+fix alignment in header of version comapre
+
+## 0.15.3
+
+### Patch Changes
+
+#### [0.15.3](https://github.com/iTwin/changed-elements-react/tree/v0.15.3/packages/changed-elements-react) - 2025-05-20
+
+- swap stage progress with overall loading progress during version comparison
+
+## 0.15.2
+
+### Patch Changes
+
+#### [0.15.2](https://github.com/iTwin/changed-elements-react/tree/v0.15.2/packages/changed-elements-react) - 2025-05-16
+
+bug fix for search showing returning from version compare frontstage
+
+## 0.15.1
+
+### Patch Changes
+
+#### [0.15.1](https://github.com/iTwin/changed-elements-react/tree/v0.15.1/packages/changed-elements-react) - 2025-05-16
+
+Update itwin/core packages to version 5.0.0-dev.111
+
+#### [0.15.1](https://github.com/iTwin/changed-elements-react/tree/v0.15.1/packages/changed-elements-react) - 2025-05-16
+
+bug on filter pill missing after switching page
+
+## 0.15.0
+
+### Minor Changes
+
+#### [0.15.0](https://github.com/iTwin/changed-elements-react/tree/v0.15.0/packages/changed-elements-react) - 2025-04-30
+
+- Added ability to add custom documentation link to information pane.
+  Pass href into top level widget as prop.
+
+## 0.14.13
+
+### Patch Changes
+
+#### [0.14.13](https://github.com/iTwin/changed-elements-react/tree/v0.14.13/packages/changed-elements-react) - 2025-04-22
+
+- Filters now respect viewState when restoring default view
+- Filters now persist when switching frontstages
+
+## 0.14.12
+
+### Patch Changes
+
+#### [0.14.12](https://github.com/iTwin/changed-elements-react/tree/v0.14.12/packages/changed-elements-react) - 2025-04-09
+
+- Added responsive design for experimental widget. When widget is smaller size we display a minimal design.
+
+## 0.14.11
+
+### Patch Changes
+
+#### [0.14.11](https://github.com/iTwin/changed-elements-react/tree/v0.14.11/packages/changed-elements-react) - 2025-04-02
+
+- Fixed Changed Elements React issue where backing out of loading stage sometimes causes crashes. This is fixed by removing ability to backout of loading in experimental widget. This is in parity with how loading operates in the v2 widget.
+
 ## 0.14.10
 
 ### Patch Changes

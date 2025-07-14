@@ -18,7 +18,7 @@ interface Props {
 function InfoButton(props: Props) {
   return (
     <DropdownMenu
-      style={{ width: 500 }}
+      style={{ width: 400 }}
       placement="bottom-end"
       menuItems={() => [
         <MenuExtraContent key={0}>

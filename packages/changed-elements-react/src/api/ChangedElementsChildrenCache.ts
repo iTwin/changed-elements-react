@@ -131,7 +131,7 @@ export class ChangedElementsChildrenCache extends ChangedElementDataCache {
     childElemsECSQL = childElemsECSQL + queryString;
 
     let childrenIds: string[] = [];
-    for await (const result of iModel.query(
+    for await (const result of iModel.createQueryReader(
       childElemsECSQL,
       QueryBinder.from(elementIds),
       {

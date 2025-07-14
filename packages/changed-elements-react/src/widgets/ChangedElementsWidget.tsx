@@ -7,7 +7,7 @@ import {
   IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection, type ScreenViewport
 } from "@itwin/core-frontend";
 import { SvgAdd, SvgCompare, SvgExport, SvgStop } from "@itwin/itwinui-icons-react";
-import { IconButton, ProgressRadial, Text, useToaster } from "@itwin/itwinui-react";
+import { Divider, IconButton, ProgressRadial, Text, useToaster } from "@itwin/itwinui-react";
 import { Component, type ReactElement, type ReactNode } from "react";
 
 import { namedVersionSelectorContext } from "../NamedVersionSelector/NamedVersionSelectorContext.js";
@@ -35,6 +35,7 @@ import {
 import { JobAndNamedVersions } from "./comparisonJobWidget/models/ComparisonJobModels.js";
 
 import "./ChangedElementsWidget.scss";
+import { Documentation } from "./Documentation.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
@@ -59,6 +60,12 @@ export interface ChangedElementsWidgetProps {
    * @beta
    */
   useV2Widget?: boolean;
+
+  /**
+ * Optional. If set information button will show documentation link.
+ * @beta
+ */
+  documentationHref?: string;
 
   /**
  * Optional. Only true if the new named version selector is being used.
@@ -96,6 +103,7 @@ export interface ChangedElementsWidgetProps {
 
   /** Optional prop for a user supplied component to handle managing named versions. */
   manageNamedVersionsSlot?: ReactNode | undefined;
+
 }
 
 export interface ChangedElementsWidgetState {
@@ -114,6 +122,13 @@ export interface ChangedElementsWidgetState {
   reportProperties: ReportProperty[] | undefined;
 }
 
+
+type EventActionTuple = {
+  event: BeEvent<() => void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  action: (...args: any[]) => void;
+};
+
 /**
  * Widget to display changed elements and inspect them further. This widget contains
  * functionality to hide/show type of change. Filter based on properties, inspect
@@ -121,6 +136,7 @@ export interface ChangedElementsWidgetState {
  */
 export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps, ChangedElementsWidgetState> {
   public static readonly widgetId = "ChangedElementsWidget";
+  private readonly eventListeners: EventActionTuple[] = [];
 
   private _onComparisonStarting = (): void => {
     this.setState({
@@ -166,6 +182,15 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
     this.setState({ message, loading: true, description: "" });
   };
 
+  private _onOverallProgress = (percent: number): void => {
+    this._onProgressEvent(
+      IModelApp.localization.getLocalizedString(
+        "VersionCompare:versionCompare.LoadingResults",
+        { percent },
+      ),
+    );
+  }
+
   private _refreshCheckboxesEvent = new BeEvent<() => void>();
 
   constructor(props: ChangedElementsWidgetProps) {
@@ -181,15 +206,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
         "Cannot create ChangedElementsWidget without a properly initialized or passed VersionCompareManager",
       );
     }
-
-    manager.versionCompareStarting.addListener(this._onComparisonStarting);
-    manager.versionCompareStarted.addListener(this._onComparisonStarted);
-    manager.loadingProgressEvent.addListener(this._onProgressEvent);
-    manager.versionCompareStopped.addListener(this._onComparisonStopped);
-    const initWidgetState: ChangedElementsWidgetState = {
+    this.state = {
       manager,
-      loading: manager.isComparing,
-      loaded: manager.isComparing,
+      loading: false,
+      loaded: false,
       menuOpened: false,
       elements: manager.changedElementsManager.entryCache.getAll(),
       currentIModel: manager.currentIModel,
@@ -203,25 +223,43 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       reportDialogVisible: false,
       reportProperties: undefined,
     };
-    // todo this prop should be removed after experimental selector is fully implemented, This is bad as child component should not know about parent component.
-    if (props.usingExperimentalSelector) {
-      if (manager.isComparisonReady) {
-        this.state = { ... initWidgetState, loading: !manager.isComparisonReady, loaded: manager.isComparisonReady,
-        };
-      } else {
-        this.state = { ... initWidgetState, loading: true, loaded: false };
-      }
-    } else {
-      this.state = initWidgetState;
-    }
   }
 
+  public override componentDidMount() {
+    const { manager } = this.state;
+    this.addListeners([
+      { event: manager.versionCompareStarting, action: this._onComparisonStarting },
+      { event: manager.versionCompareStarted, action: this._onComparisonStarted },
+      { event: manager.loadingProgressEvent, action: this._onProgressEvent },
+      { event: manager.versionCompareStopped, action: this._onComparisonStopped },
+      { event: manager.onOverallProgress, action: this._onOverallProgress },
+    ]);
+    this.setState({
+      loading: this.props.usingExperimentalSelector ? !manager.isComparisonReady : manager.isComparing,
+      loaded: this.props.usingExperimentalSelector ? manager.isComparisonReady : manager.isComparing,
+      message: this.props.usingExperimentalSelector ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.LoadingResults", { percent: 0 })
+        : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
+    });
+  }
+
+
   public override componentWillUnmount(): void {
-    this.state.manager.versionCompareStarting.removeListener(this._onComparisonStarting);
-    this.state.manager.versionCompareStarted.removeListener(this._onComparisonStarted);
-    this.state.manager.loadingProgressEvent.removeListener(this._onProgressEvent);
-    this.state.manager.versionCompareStopped.removeListener(this._onComparisonStopped);
+    this.removeListeners();
     reportIsBeingGenerated = false;
+  }
+
+  private addListeners(eventActionTuples: EventActionTuple[]): void {
+    eventActionTuples.forEach((tuple) => {
+      tuple.event.addListener(tuple.action);
+      this.eventListeners.push(tuple);
+    });
+  }
+
+  private removeListeners(): void {
+    this.eventListeners.forEach((tuple) => {
+      tuple.event.removeListener(tuple.action);
+    });
+    this.eventListeners.length = 0;
   }
 
   private _currentFilterOptions: FilterOptions | undefined;
@@ -377,6 +415,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                         this.state.manager.wantReportGeneration ? this.openReportDialog : undefined
                       }
                       onInspect={this._handleInspect}
+                      documentationHref={this.props.documentationHref}
                     />
                   </WidgetComponent.Header.Actions>
                 </WidgetComponent.Header>
@@ -455,17 +494,18 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
 let reportIsBeingGenerated = false;
 
 interface ChangedElementsHeaderButtonsProps {
-  loaded?: boolean | undefined;
-  useV2Widget?: boolean | undefined;
-  useNewNamedVersionSelector?: boolean | undefined;
-  onlyInfo?: boolean | undefined;
-  onOpenVersionSelector?: (() => void) | undefined;
-  onStopComparison?: (() => void) | undefined;
-  onOpenReportDialog?: (() => void) | undefined;
-  onInspect?: (() => void) | undefined;
+  loaded?: boolean;
+  useV2Widget?: boolean;
+  useNewNamedVersionSelector?: boolean;
+  onlyInfo?: boolean;
+  onOpenVersionSelector?: (() => void);
+  onStopComparison?: (() => void);
+  onOpenReportDialog?: (() => void);
+  onInspect?: (() => void);
+  documentationHref?: string;
 }
 
-export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtonsProps): ReactElement {
+export function ChangedElementsHeaderButtons(props: Readonly<ChangedElementsHeaderButtonsProps>): ReactElement {
   const t = (key: string) => IModelApp.localization.getLocalizedString(key);
 
   const paragraphs = t("VersionCompare:versionCompare.versionCompareInfoV2").split("\n");
@@ -475,6 +515,12 @@ export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtons
         {IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompare")}
       </Text>
       {paragraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+      {props.documentationHref && (
+      <>
+        <Divider />
+        <Documentation href={props.documentationHref} />
+      </>
+      )}
     </InfoButton>
   );
 
@@ -483,7 +529,7 @@ export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtons
   }
 
   return (
-    <>
+    <div className="header-buttons">
       {
         !props.useNewNamedVersionSelector &&
         <IconButton
@@ -543,7 +589,7 @@ export function ChangedElementsHeaderButtons(props: ChangedElementsHeaderButtons
           <SvgCompare />
         </IconButton>
       }
-    </>
+    </div>
   );
 }
 

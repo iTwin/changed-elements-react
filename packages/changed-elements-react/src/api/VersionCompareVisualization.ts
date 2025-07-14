@@ -105,15 +105,17 @@ export class VersionCompareVisualizationManager {
 
   /**
    * Used to emphasize and focus on a list of elements instead of all changed elements in comparison
-   * @param elements Elements to focus during visualization
+   * @param visible Elements to focus during visualization
+   * @param hiddenElements Optional list of elements that should not be shown in the visualization
    */
-  public setFocusedElements = async (elements: ChangedElementEntry[] | undefined) => {
-    this._focusedElements = elements;
+  public setFocusedElements = async (visible: ChangedElementEntry[] | undefined, hiddenElements?: ChangedElementEntry[]) => {
+    this._focusedElements = visible;
     updateVersionCompareDisplayEntries(
       this._viewport,
       this._focusedElements !== undefined
         ? this._focusedElements
         : this._changedElements,
+      hiddenElements,
     );
   };
 
@@ -291,6 +293,7 @@ export class VersionCompareVisualizationManager {
   public async toggleUnchangedVisibility(hide?: boolean): Promise<boolean> {
     this.displayOptions.hideUnchanged =
       hide !== undefined ? hide : !this.displayOptions.hideUnchanged;
+
     this.displayOptions.changedModels = this._changedModels;
     this.displayOptions.emphasized = true;
 

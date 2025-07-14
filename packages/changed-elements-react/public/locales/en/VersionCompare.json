@@ -25,6 +25,7 @@
     "loadingComparison": "Loading version comparison",
     "loadingNamedVersions": "Loading named versions",
     "comparisonNotActive": "No version comparison active.",
+    "LoadingResults": "Loading results: {{percent}}%",
     "cantHideDuringContext": "Cannot show/hide unchanged while emphasizing/isolating/hiding. Clear it first.",
     "comparisonGetStarted": "Click on the \"+\" comparison button to get started.",
     "showAll": "Show All",
@@ -115,6 +116,7 @@
     "previousVersion": "Previous version",
     "previousVersions": "Previous versions",
     "processResults": "Process Results",
+    "process": "Process",
     "retry": "Retry",
     "selectVersionToCompare": "Select a version to compare",
     "error_versionCompareNotEnabledForIModel": "Version Comparison is not enabled for this iModel.",
@@ -141,7 +143,8 @@
     "currentChangeset": "Current Changeset",
     "latestChangeset": "Latest Changeset",
     "versionsList": "Versions list",
-    "viewResults": "View results"
+    "viewResults": "View results",
+    "view": "View"
   },
   "typeOfChange": {
     "title": "Element changes: ",

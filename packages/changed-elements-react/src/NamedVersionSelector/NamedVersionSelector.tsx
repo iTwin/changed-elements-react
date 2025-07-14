@@ -10,7 +10,7 @@ import {
   Button, Divider, Flex, List, ListItem, ProgressRadial, Text, ThemeProvider
 } from "@itwin/itwinui-react";
 import {
-  forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
+  useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
   type ReactNode
 } from "react";
 
@@ -26,7 +26,7 @@ import {
   runManagerStartComparisonV2
 } from "../widgets/comparisonJobWidget/common/versionCompareV2WidgetUtils.js";
 import { IconEx } from "./IconEx.js";
-import { namedVersionSelectorContext } from "./NamedVersionSelectorContext.js";
+import { NamedVersionSelectorContentContext, NamedVersionSelectorContentProps, namedVersionSelectorContext } from "./NamedVersionSelectorContext.js";
 import { Sticky } from "./Sticky.js";
 import { TextEx } from "./TextEx.js";
 import { useComparisonJobs } from "./useComparisonJobs.js";
@@ -37,13 +37,15 @@ import { useQueue } from "./useQueue.js";
 
 import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
+import { useResizeObserver } from "../ResizeObserver.js";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
-  manager?: VersionCompareManager | undefined;
-  emptyState?: ReactNode | undefined;
-  manageVersions?: ReactNode | undefined;
-  feedbackUrl?: string | undefined;
+  manager?: VersionCompareManager;
+  emptyState?: ReactNode;
+  manageVersions?: ReactNode;
+  feedbackUrl?: string;
+  documentationHref?: string;
 }
 
 /**
@@ -51,14 +53,15 @@ interface NamedVersionSelectorWidgetProps {
  * is actively comparing versions, presents the comparison results.
  * @alpha feature is experimental and may change in future releases.
  */
-export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProps): ReactElement {
+export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorWidgetProps>): ReactElement {
   const manager = props.manager ?? VersionCompare.manager;
   if (!manager) {
     throw new Error("VersionCompare is not initialized.");
   }
 
-  const { iModel, emptyState, manageVersions , feedbackUrl } = props;
+  const { iModel, emptyState, manageVersions, feedbackUrl } = props;
 
+  const [targetgVersion, setTargetVersion] = useState<NamedVersion>();
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
 
@@ -75,84 +78,27 @@ export function NamedVersionSelectorWidget(props: NamedVersionSelectorWidgetProp
         manager.versionCompareStarted.addListener(() => {
           setIsComparisonStarted(true);
         }),
+        manager.versionCompareStartFailed.addListener(() => {
+          setIsComparing(false);
+          setIsComparisonStarted(false);
+        }),
       ];
       return () => cleanup.forEach((cb) => cb());
     },
     [manager],
   );
 
-  const widgetRef = useRef<ChangedElementsWidget>(null);
-
-  if (!isComparing) {
-    return (
-        <NamedVersionSelector
-          iModel={iModel}
-          manager={manager}
-          emptyState={emptyState}
-          manageVersions={manageVersions}
-          feedbackUrl={feedbackUrl}
-        />
-    );
-  }
-
-  return (
-    <Widget>
-      <Widget.Header>
-        <NavigationButton backward onClick={() => manager.stopComparison()}>
-          {t("VersionCompare:versionCompare.versionsList")}
-        </NavigationButton>
-        <TextEx variant="title">
-          {t("VersionCompare:versionCompare.versionPickerTitle")}
-        </TextEx>
-        <div>
-          <ChangedElementsHeaderButtons
-            useNewNamedVersionSelector
-            loaded
-            onInspect={() => manager.initializePropertyComparison()}
-            onOpenReportDialog={
-              manager.wantReportGeneration
-                ? () => void widgetRef.current?.openReportDialog()
-                : undefined
-            }
-          />
-        </div>
-      </Widget.Header>
-      <namedVersionSelectorContext.Consumer>
-        {(value) => (
-          <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
-            {props.manager?.currentVersion && isComparisonStarted &&
-              <ActiveVersionsBox current={props.manager?.currentVersion} selected={props.manager?.targetVersion}></ActiveVersionsBox>}
-            <ChangedElementsWidget
-              ref={widgetRef}
-              iModelConnection={iModel}
-              manager={manager}
-              usingExperimentalSelector
-            />
-          </namedVersionSelectorContext.Provider>
-        )}
-      </namedVersionSelectorContext.Consumer>
-    </Widget>
-  );
-}
-
-interface NamedVersionSelectorProps {
-  iModel: IModelConnection;
-  manager: VersionCompareManager;
-  emptyState?: ReactNode | undefined;
-  manageVersions?: ReactNode | undefined;
-  feedbackUrl?: string | undefined;
-}
-
-function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
   const { iModelsClient, comparisonJobClient } = useVersionCompare();
   if (!comparisonJobClient) {
     throw new Error("V2 Client is not initialized in given context.");
   }
 
-  const { iModel, manager, emptyState, manageVersions, feedbackUrl } = props;
+  if (!iModel.iTwinId || !iModel.iModelId || !iModel.changeset.id) {
+    throw new Error("Empty IModel Connection")
+  }
 
-  const iTwinId = iModel.iTwinId as string;
-  const iModelId = iModel.iModelId as string;
+  const iTwinId = iModel.iTwinId;
+  const iModelId = iModel.iModelId;
   const currentChangesetId = iModel.changeset.id;
 
   const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
@@ -161,9 +107,10 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
     currentChangesetId,
   });
 
-  const [openedVersion, setOpenedVersion] = useState(manager.targetVersion);
-  const handleVersionOpened = async (targetVersion: NamedVersionEntry | undefined) => {
-    setOpenedVersion(targetVersion?.namedVersion);
+  const widgetRef = useRef<ChangedElementsWidget>(null);
+
+  const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
+    setTargetVersion(targetVersion?.namedVersion);
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
     }
@@ -189,58 +136,124 @@ function NamedVersionSelector(props: NamedVersionSelectorProps): ReactElement {
       getToastsEnabled: () => true,
       iModelsClient,
     });
-    manager.versionCompareStopped.addOnce(() => setOpenedVersion(undefined));
   };
 
   return (
     <Widget>
       <Widget.Header>
+        {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
+          {t("VersionCompare:versionCompare.versionsList")}
+        </NavigationButton>}
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
         </TextEx>
-        {currentNamedVersion && <ChangedElementsHeaderButtons onlyInfo />}
+
+        {
+          !isComparisonStarted &&
+          <ChangedElementsHeaderButtons documentationHref={props.documentationHref} onlyInfo />
+        }
+
+        {isComparisonStarted &&
+        <div>
+          <ChangedElementsHeaderButtons
+            useNewNamedVersionSelector
+            loaded
+            onInspect={() => manager.initializePropertyComparison()}
+            onOpenReportDialog={
+              manager.wantReportGeneration
+                ? () => void widgetRef.current?.openReportDialog()
+                : undefined
+            }
+            documentationHref={props.documentationHref}
+          />
+        </div>}
+
       </Widget.Header>
       {
         currentNamedVersion &&
-        <ActiveVersionsBox current={currentNamedVersion} selected={openedVersion} />
+        <ActiveVersionsBox current={currentNamedVersion} selected={targetgVersion}></ActiveVersionsBox>
       }
+
       {
-        (!isLoading && entries.length === 0)?
-          <Text className="_cer_v1_empty-state" isMuted>
-            {t("VersionCompare:versionCompare.noPastNamedVersions")}
-          </Text>
-          :
-        (!currentNamedVersion || (isLoading && entries.length === 0))
-          ? (
-            <LoadingContent>
-              <Text>
-                {t("VersionCompare:versionCompare.loadingNamedVersions")}
-              </Text>
-            </LoadingContent>
-          )
-          : (
-            <NamedVersionSelectorLoaded
-              iTwinId={iTwinId}
-              iModelId={iModelId}
-              currentNamedVersion={currentNamedVersion}
-              isLoading={isLoading}
-              entries={entries}
-              onNamedVersionOpened={handleVersionOpened}
-              updateJobStatus={updateJobStatus}
-              emptyState={emptyState}
-              manageVersions={manageVersions}
-            />
-          )
+        !isComparing &&
+        <NamedVersionSelectorContentContext.Provider
+          value={{
+            iTwinId,
+            iModelId,
+            isLoading,
+            currentNamedVersion,
+            entries,
+            updateJobStatus,
+            onNamedVersionOpened,
+            emptyState,
+            manageVersions,
+          }}
+        >
+            <NamedVersionSelectorContent />
+            <div className="_cer_v1_feedback_btn_container">
+              {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
+            </div>
+        </NamedVersionSelectorContentContext.Provider>
       }
-      <div className="_cer_v1_feedback_btn_container">
-        {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
-      </div>
+
+      {
+        isComparing &&
+        <namedVersionSelectorContext.Consumer>
+          {(value) => (
+            <namedVersionSelectorContext.Provider value={{ ...value, contextExists: true }}>
+              <ChangedElementsWidget
+                ref={widgetRef}
+                iModelConnection={iModel}
+                manager={manager}
+                usingExperimentalSelector
+              />
+            </namedVersionSelectorContext.Provider>
+          )}
+        </namedVersionSelectorContext.Consumer>
+      }
+
     </Widget>
   );
 }
 
+function EmptyState(): ReactElement {
+  return (
+    <Text className="_cer_v1_empty-state" isMuted>
+      {t("VersionCompare:versionCompare.noPastNamedVersions")}
+    </Text>
+  );
+}
+
+function LoadingState(): ReactElement {
+  return (
+    <LoadingContent>
+      <Text>
+        {t("VersionCompare:versionCompare.loadingNamedVersions")}
+      </Text>
+    </LoadingContent>
+  );
+}
+
+function NamedVersionSelectorContent(): ReactElement {
+  const { isLoading, currentNamedVersion, ...restProps } = useContext(NamedVersionSelectorContentContext);
+  if (!isLoading && restProps.entries.length === 0) {
+    return <EmptyState />;
+  }
+
+  if (!currentNamedVersion || (isLoading && restProps.entries.length === 0)) {
+    return <LoadingState />;
+  }
+
+  return (
+   <NamedVersionSelectorLoaded
+    {...restProps}
+    currentNamedVersion={currentNamedVersion}
+    />
+  );
+}
+
 interface WidgetProps {
-  children?: ReactNode | undefined;
+  children?: ReactNode;
 }
 
 const Widget = Object.assign(
@@ -250,7 +263,7 @@ const Widget = Object.assign(
   },
 );
 
-function WidgetMain(props: WidgetProps): ReactElement {
+function WidgetMain(props: Readonly<WidgetProps>): ReactElement {
   return (
     <ThemeProvider style={{ height: "100%" }}>
       <Flex
@@ -266,10 +279,10 @@ function WidgetMain(props: WidgetProps): ReactElement {
 }
 
 interface WidgetHeaderProps {
-  children?: ReactNode | undefined;
+  children?: ReactNode;
 }
 
-function WidgetHeader(props: WidgetHeaderProps): ReactElement {
+function WidgetHeader(props: Readonly<WidgetHeaderProps>): ReactElement {
   return (
     <div className="_cer_v1_version-selector-header">
       {props.children}
@@ -279,17 +292,20 @@ function WidgetHeader(props: WidgetHeaderProps): ReactElement {
 
 interface ActiveVersionsBoxProps {
   current: NamedVersion;
-  selected?: NamedVersion | undefined;
+  selected?: NamedVersion;
 }
 
-function ActiveVersionsBox(props: ActiveVersionsBoxProps): ReactElement {
+function ActiveVersionsBox(props: Readonly<ActiveVersionsBoxProps>): ReactElement {
+  const ref = useRef<HTMLDivElement>(null);
+  const dimensions = useResizeObserver(ref);
+  const widthBreakpointInPx = 368;
   return (
-    <div className="_cer_v1_active-versions-box">
+    <div ref={ref} className={dimensions.width < widthBreakpointInPx ? "_cer_v1_active-versions-box-vertical" : "_cer_v1_active-versions-box-horizontal"}>
       <NamedVersionInfo
         annotation={t("VersionCompare:versionCompare.currentVersionAnnotation")}
         namedVersion={props.current}
       />
-      <Divider className="_cer_v1_vertical-divider" orientation="vertical" />
+      <Divider className={dimensions.width < widthBreakpointInPx ? "_cer_v1_horizontal-divider" : "_cer_v1_vertical-divider"} orientation="horizontal" />
       {
         !props.selected
           ? <PlaceholderNamedVersionInfo />
@@ -309,7 +325,7 @@ interface NamedVersionInfoProps {
   namedVersion: NamedVersion;
 }
 
-function NamedVersionInfo(props: NamedVersionInfoProps): ReactElement {
+function NamedVersionInfo(props: Readonly<NamedVersionInfoProps>): ReactElement {
   const dateString = useMemo(
     () => props.namedVersion.createdDateTime === "" ? "" : new Date(props.namedVersion.createdDateTime).toLocaleDateString(),
     [props.namedVersion.createdDateTime],
@@ -339,19 +355,9 @@ function PlaceholderNamedVersionInfo(): ReactElement {
   );
 }
 
-interface NamedVersionSelectorLoadedProps {
-  iTwinId: string;
-  iModelId: string;
-  currentNamedVersion: NamedVersion;
-  isLoading: boolean;
-  entries: NamedVersionEntry[];
-  updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
-  onNamedVersionOpened: (version: NamedVersionEntry) => void;
-  emptyState?: ReactNode | undefined;
-  manageVersions?: ReactNode | undefined;
-}
+type LoadedStateProps = Omit<NamedVersionSelectorContentProps, "isLoading" | "currentNamedVersion"> & { currentNamedVersion: NamedVersion; };
 
-function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): ReactElement {
+function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   const {
     iTwinId,
     iModelId,
@@ -453,23 +459,23 @@ function NamedVersionSelectorLoaded(props: NamedVersionSelectorLoadedProps): Rea
   );
 
   return (
-      <List className="_cer_v1_named-version-list">
-        <Sticky className="_cer_v1_named-version-list-header">
-          <TextEx variant="small">
-            {t("VersionCompare:versionCompare.previousVersions")}
-          </TextEx>
-          {manageVersions}
-        </Sticky>
-        <namedVersionSelectorContext.Provider
-          value={{ processResults, viewResults, initialLoad, checkStatus }}
-        >
-          {
-            props.entries.map((entry) => (
-              <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
-            ))
-          }
-        </namedVersionSelectorContext.Provider>
-      </List>
+    <List className="_cer_v1_named-version-list">
+      <Sticky className="_cer_v1_named-version-list-header">
+        <TextEx variant="small">
+          {t("VersionCompare:versionCompare.previousVersions")}
+        </TextEx>
+        {manageVersions}
+      </Sticky>
+      <namedVersionSelectorContext.Provider
+        value={{ processResults, viewResults, initialLoad, checkStatus }}
+      >
+        {
+          entries.map((entry) => (
+            <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
+          ))
+        }
+      </namedVersionSelectorContext.Provider>
+    </List>
   );
 }
 
@@ -477,124 +483,129 @@ interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
 }
 
-const NamedVersionListEntry = forwardRef<HTMLDivElement, NamedVersionEntryProps>(
-  function NamedVersionListEntry(props, ref): ReactElement {
-    const { processResults, viewResults } = useContext(namedVersionSelectorContext);
-    const { namedVersion, job } = props.entry;
+function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
+  const { processResults, viewResults } = useContext(namedVersionSelectorContext);
+  const { namedVersion, job } = props.entry;
+  const ref = useRef<HTMLDivElement>(null);
+  const dimensions = useResizeObserver(ref);
+  const widthBreakpointInPx = 400;
+  const dateString = useMemo(
+    () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
+    [namedVersion.createdDateTime],
+  );
 
-    let stateInfo: { status: ReactNode; action: ReactNode; };
-    switch (job?.status) {
-      case undefined:
-        stateInfo = {
-          status: <LoadingEntryStatus entry={props.entry} />,
-          action: undefined,
-        };
-        break;
+  let stateInfo: { status: ReactNode; action: ReactNode; };
+  switch (job?.status) {
+    case undefined:
+      stateInfo = {
+        status: <LoadingEntryStatus entry={props.entry} />,
+        action: undefined,
+      };
+      break;
 
-      case "NotStarted":
-        stateInfo = {
-          status: (
-            <Flex>
-              <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
-                <svg viewBox="0 0 16 16">
-                  <circle cx="8" cy="8" r="8" />
-                </svg>
-              </IconEx>
-              <TextEx weight="normal" variant="body">
-                {t("VersionCompare:versionCompare.notProcessed")}
-              </TextEx>
-            </Flex>
-          ),
-          action: (
-            <NavigationButton onClick={() => processResults(props.entry)}>
-              {t("VersionCompare:versionCompare.processResults")}
-            </NavigationButton>
-          ),
-        };
-        break;
+    case "NotStarted":
+      stateInfo = {
+        status: (
+          <Flex>
+            <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
+              <svg viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="8" />
+              </svg>
+            </IconEx>
+            {dimensions.width >= widthBreakpointInPx && <TextEx weight="normal" variant="body">
+              {t("VersionCompare:versionCompare.notProcessed")}
+            </TextEx>}
+          </Flex>
+        ),
+        action: (
+          <NavigationButton onClick={() => processResults(props.entry)}>
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.processResults") : t("VersionCompare:versionCompare.process")}
+          </NavigationButton>
+        ),
+      };
+      break;
 
-      case "Queued":
-      case "Started":
-        {
-          stateInfo = {
-            status: <ProcessingEntryStatus entry={props.entry} />,
-            action: <NavigationButton disabled>
-              {t("VersionCompare:versionCompare.viewResults")}
-            </NavigationButton>,
-          };
-        }
-        break;
+    case "Queued":
+    case "Started":
+      stateInfo = {
+        status: <ProcessingEntryStatus displayMin={dimensions.width <= widthBreakpointInPx} entry={props.entry} />,
+        action: (
+          <NavigationButton disabled>
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
+          </NavigationButton>
+        ),
+      };
+      break;
 
-      case "Completed":
-        stateInfo = {
-          status: (
-            <Flex>
-              <IconEx size="m" fill="positive">
-                <SvgStatusSuccess />
-              </IconEx>
-              <TextEx variant="body">
-                {t("VersionCompare:versionCompare.available")}
-              </TextEx>
-            </Flex>
-          ),
-          action: (
-            <NavigationButton onClick={() => viewResults(props.entry)}>
-              {t("VersionCompare:versionCompare.viewResults")}
-            </NavigationButton>
-          ),
-        };
-        break;
+    case "Completed":
+      stateInfo = {
+        status: (
+          <Flex>
+            <IconEx size="m" fill="positive">
+              <SvgStatusSuccess />
+            </IconEx>
+            {dimensions.width >= widthBreakpointInPx && <TextEx variant="body">
+              {t("VersionCompare:versionCompare.available")}
+            </TextEx>}
+          </Flex>
+        ),
+        action: (
+          <NavigationButton onClick={() => viewResults(props.entry)}>
+            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
+          </NavigationButton>
+        ),
+      };
+      break;
 
-      case "Failed":
-      default:
-        stateInfo = {
-          status: (
-            <Flex>
-              <IconEx size="m" fill="negative" >
-                <SvgStatusError />
-              </IconEx>
+    case "Failed":
+    default:
+      stateInfo = {
+        status: (
+          <Flex>
+            <IconEx size="m" fill="negative">
+              <SvgStatusError />
+            </IconEx>
+            {dimensions.width >= widthBreakpointInPx &&
               <TextEx weight="normal" variant="body">
                 {t("VersionCompare:versionCompare.error")}
-              </TextEx>
-            </Flex>
-          ),
-          action: (
-            <NavigationButton onClick={() => processResults(props.entry)}>
-              {t("VersionCompare:versionCompare.retry")}
-            </NavigationButton>
-          ),
-        };
-        break;
-    }
+              </TextEx>}
+          </Flex>
+        ),
+        action: (
+          <NavigationButton onClick={() => processResults(props.entry)}>
+            {t("VersionCompare:versionCompare.retry")}
+          </NavigationButton>
+        ),
+      };
+      break;
+  }
 
-    const dateString = useMemo(
-      () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
-      [namedVersion.createdDateTime],
-    );
-
-    return (
-      <ListItem ref={ref} className="_cer_v1_named-version-entry">
-        <div>
-          <div style={{ display: "grid", gap: "1px" }}>
-            <TextEx variant="small" overflow="nowrap" oblique>{dateString}</TextEx>
-            <TextEx variant="body" weight="semibold" overflow="ellipsis">
-              {namedVersion.displayName}
-            </TextEx>
-            <TextEx variant="small" overflow="ellipsis">{namedVersion.description ?? ""}</TextEx>
-          </div>
+  return (
+    <ListItem ref={ref} className="_cer_v1_named-version-entry">
+      <div>
+        <div style={{ display: "grid", gap: "1px" }}>
+          <TextEx variant="small" overflow="nowrap" oblique>
+            {dateString}
+          </TextEx>
+          <TextEx variant="body" weight="semibold" overflow="ellipsis">
+            {namedVersion.displayName}
+          </TextEx>
+          <TextEx variant="small" overflow="ellipsis">
+            {namedVersion.description ?? ""}
+          </TextEx>
         </div>
-        {stateInfo.status}
-        {stateInfo.action}
-      </ListItem>
-    );
-  },
-);
+      </div>
+      {stateInfo.status}
+      {stateInfo.action}
+    </ListItem>
+  );
+}
 
 interface LoadingEntryStatusProps {
   entry: NamedVersionEntry;
 }
 
-function LoadingEntryStatus(props: LoadingEntryStatusProps): ReactElement {
+function LoadingEntryStatus(props: Readonly<LoadingEntryStatusProps>): ReactElement {
   const { initialLoad } = useContext(namedVersionSelectorContext);
   useEffect(
     () => {
@@ -614,9 +625,10 @@ function LoadingEntryStatus(props: LoadingEntryStatusProps): ReactElement {
 
 interface ProcessingEntryStatusProps {
   entry: NamedVersionEntry;
+  displayMin?: boolean;
 }
 
-function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement {
+function ProcessingEntryStatus(props: Readonly<ProcessingEntryStatusProps>): ReactElement {
   const { job } = props.entry;
   const progress = job?.status === "Started"
     ? Math.floor(100.0 * job.progress.current / (job.progress.max || 1))
@@ -631,9 +643,15 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
     [checkStatus, props.entry],
   );
 
+  if (props.displayMin) {
+    return (<Flex>
+      <ProgressRadial size="x-small" data-progress={progress} value={progress} >
+      </ProgressRadial>
+    </Flex>);
+  }
   return (
     <Flex>
-      <ProgressRadial data-progress={progress} value={progress} />
+      <ProgressRadial size="x-small" data-progress={progress} value={progress} />
       {
         progress === undefined
           ? <Text>{t("VersionCompare:versionCompare.processing")}</Text>
@@ -644,13 +662,13 @@ function ProcessingEntryStatus(props: ProcessingEntryStatusProps): ReactElement 
 }
 
 interface ActionButtonProps {
-  backward?: boolean | undefined;
-  disabled?: boolean | undefined;
-  onClick?: (() => void) | undefined;
+  backward?: boolean;
+  disabled?: boolean;
+  onClick?: (() => void);
   children: string;
 }
 
-function NavigationButton(props: ActionButtonProps): ReactElement {
+function NavigationButton(props: Readonly<ActionButtonProps>): ReactElement {
   return (
     <Button
       className="_cer_v1_action-button"

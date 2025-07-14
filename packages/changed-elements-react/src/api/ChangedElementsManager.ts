@@ -9,7 +9,8 @@ import { IModelApp, IModelConnection, ModelState } from "@itwin/core-frontend";
 import { ChangedElementEntry, ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
-import { VersionCompareManager } from "./VersionCompareManager.js";
+import { VersionCompareManager, VersionCompareProgressStage } from "./VersionCompareManager.js";
+import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 /** Properties that are not shown but still found by the agent */
 const ignoredProperties = ["Checksum", "Version"];
@@ -461,11 +462,13 @@ export class ChangedElementsManager {
   public async generateEntries(
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
   ): Promise<void> {
     this._entryCache.initialize(
       currentIModel,
       targetIModel,
       this._changedElements,
+      progressCoordinator,
       this._progressLoadingEvent,
     );
   }
@@ -474,7 +477,7 @@ export class ChangedElementsManager {
   private async _getGeometricElement3dClassId(iModel: IModelConnection): Promise<string | undefined> {
     const ecsql =
       "SELECT ECClassDef.ECInstanceId as geomId FROM meta.ECClassDef INNER JOIN meta.ECSchemaDef ON ECSchemaDef.ECInstanceId = ECClassDef.Schema.Id WHERE ECClassDef.Name = 'GeometricElement3d' AND ECSchemaDef.Name ='BisCore'";
-    for await (const row of iModel.query(ecsql, undefined, {
+    for await (const row of iModel.createQueryReader(ecsql, undefined, {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       return row.geomId;
@@ -602,6 +605,7 @@ export class ChangedElementsManager {
     currentIModel: IModelConnection,
     targetIModel: IModelConnection,
     forward: boolean,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<Set<string>> {
     // If we have model ids in the data already, simply accumulate the models from it instead of querying
@@ -656,7 +660,17 @@ export class ChangedElementsManager {
           steps,
         );
 
-        for await (const row of iModel.query(ecsql, QueryBinder.from(piece), {
+        progressCoordinator?.updateProgress(
+          VersionCompareProgressStage.ComputeChangedModels,
+          Math.floor(((lastStep ?? 0) + currentStep) / (steps === 0 ? 1 : steps) * 100),
+        );
+
+        progressCoordinator?.updateProgress(
+          VersionCompareProgressStage.ComputeChangedModels,
+          Math.floor(((lastStep ?? 0) + currentStep) / (steps === 0 ? 1 : steps) * 100),
+        );
+
+        for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(piece), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
         })) {
           modelIds.add(row.model.id);
@@ -704,7 +718,7 @@ export class ChangedElementsManager {
     const modelIds: string[] = [];
     for (const modelClass of modelClasses) {
       const ecsql = "SELECT ECInstanceId as modelId FROM " + modelClass;
-      for await (const row of iModel.query(ecsql, undefined, {
+      for await (const row of iModel.createQueryReader(ecsql, undefined, {
         rowFormat: QueryRowFormat.UseJsPropertyNames,
       })) {
         modelIds.push(row.modelId);
@@ -762,7 +776,7 @@ export class ChangedElementsManager {
       ecsql = ecsql + "?,";
     });
     ecsql = ecsql.substr(0, ecsql.length - 1) + ")";
-    for await (const row of iModel.query(ecsql, QueryBinder.from(elementIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(elementIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       const entry = this._changedElements.get(row.id);
@@ -928,7 +942,7 @@ export class ChangedElementsManager {
         "SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId = " +
         geom3dId;
       const validClassIds = new Set<string>();
-      for await (const row of currentIModel.query(ecsql, undefined, {
+      for await (const row of currentIModel.createQueryReader(ecsql, undefined, {
         rowFormat: QueryRowFormat.UseJsPropertyNames,
       })) {
         validClassIds.add(row.sourceId);
@@ -991,7 +1005,7 @@ export class ChangedElementsManager {
 
     const subjectToModelMap = new Map<string, string>();
     const subjectToModelMapToQuery = new Map<string, string>();
-    for await (const row of iModel.query(ecsql, QueryBinder.from(subjectIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(subjectIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       const relatedModelId = subjectToModel.get(row.childId);
@@ -1051,7 +1065,7 @@ export class ChangedElementsManager {
 
     const subjectToModelMap = new Map<string, string>();
     const subjectToModelMapToQuery = new Map<string, string>();
-    for await (const row of iModel.query(ecsql, QueryBinder.from(ipeIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(ipeIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       const relatedModelId = ipeToModel.get(row.ipeId);
@@ -1128,7 +1142,7 @@ export class ChangedElementsManager {
     ecsql = ecsql.substring(0, ecsql.length - 1) + ")";
 
     const ipeToModel = new Map<string, string>();
-    for await (const row of iModel.query(ecsql, QueryBinder.from(modelIds), {
+    for await (const row of iModel.createQueryReader(ecsql, QueryBinder.from(modelIds), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
     })) {
       // If we don't have specific Json Props, we have the proper model Id already
@@ -1208,6 +1222,7 @@ export class ChangedElementsManager {
    * @param forward Whether we are comparing to a newer iModel or an older one (normally the older)
    * @param filterSpatial Whether to filter out non-spatial elements from the results
    * @param progressLoadingEvent Event raised every time the processing continues to provide UI messages to the user
+   * @param onOverallProgress Event raised every time the processing continues to provide UI messages to the user
    */
   public async initialize(
     currentIModel: IModelConnection,
@@ -1216,6 +1231,7 @@ export class ChangedElementsManager {
     wantedModelClasses?: string[],
     forward?: boolean,
     filterSpatial?: boolean,
+    progressCoordinator?: ProgressCoordinator<VersionCompareProgressStage>,
     progressLoadingEvent?: BeEvent<(message: string) => void>,
   ): Promise<void> {
     this._progressLoadingEvent = progressLoadingEvent;
@@ -1235,29 +1251,16 @@ export class ChangedElementsManager {
       );
     }
     if (!this._manager.skipParentChildRelationships) {
-      // Find changed models
-      this._changedModels = await this.findChangedModels(
-        currentIModel,
-        targetIModel,
-        forward ?? false,
-        progressLoadingEvent,
-      );
+      progressCoordinator?.updateProgress(VersionCompareProgressStage.ComputeChangedModels);
 
-      if (progressLoadingEvent) {
-        progressLoadingEvent.raiseEvent(
-          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
-        );
-      }
+      // Find changed models
+      this._changedModels = await this.findChangedModels(currentIModel, targetIModel, forward ?? false, progressCoordinator, progressLoadingEvent);
 
       // Find unchanged models
-      this._unchangedModels = await this.findUnchangedModels(
-        currentIModel,
-        this._changedModels,
-      );
-
+      this._unchangedModels = await this.findUnchangedModels(currentIModel, this._changedModels);
     }
 
-    await this.generateEntries(currentIModel, targetIModel);
+    await this.generateEntries(currentIModel, targetIModel, progressCoordinator);
   }
 }
 

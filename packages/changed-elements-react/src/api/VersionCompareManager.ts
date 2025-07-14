@@ -19,8 +19,20 @@ import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMes
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
 import { extractDrivenByInstances, extractDrivesInstances, transformToAPIChangedElements } from "../utils/utils.js";
+import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
+
+// different progress stages in version compare, also implies ordering of those stages
+export enum VersionCompareProgressStage {
+  OpenTargetImodel,
+  InitComparison,
+  ComputeChangedModels,
+  FindParents,
+  ObtainElementData,
+  FindChildren,
+  LoadIModelNodes,
+}
 
 /**
  * Main orchestrator for version compare functionality and workflows. This class does the following:
@@ -36,11 +48,24 @@ export class VersionCompareManager {
   /** Changed Elements Manager responsible for maintaining the elements obtained from the service */
   public changedElementsManager: ChangedElementsManager;
 
+  private progressCoordinator: ProgressCoordinator<VersionCompareProgressStage>;
+
   private _visualizationHandler: VisualizationHandler | undefined;
   private _hasTypeOfChange = false;
   private _hasPropertiesForFiltering = false;
   private _hasParentIds = false;
   private _skipParentChildRelationships = false;
+
+  // define stage and order
+  private weights: Record<VersionCompareProgressStage, number> = {
+    [VersionCompareProgressStage.OpenTargetImodel]:     10,
+    [VersionCompareProgressStage.InitComparison]:        5,
+    [VersionCompareProgressStage.ComputeChangedModels]: 17,
+    [VersionCompareProgressStage.FindParents]:          17,
+    [VersionCompareProgressStage.ObtainElementData]:    17,
+    [VersionCompareProgressStage.FindChildren]:         17,
+    [VersionCompareProgressStage.LoadIModelNodes]:      17,
+  }
 
   /** Version Compare ITwinLocalization Namespace */
   public static namespace = "VersionCompare";
@@ -61,6 +86,8 @@ export class VersionCompareManager {
       const tooltipProvider = new ChangesTooltipProvider(this);
       IModelApp.viewManager.addToolTipProvider(tooltipProvider);
     }
+
+    this.progressCoordinator = new ProgressCoordinator(this.weights);
   }
 
   /** Create the proper visualization handler based on options */
@@ -157,6 +184,10 @@ export class VersionCompareManager {
   /** Returns true if version compare manager is currently engaged in comparison.*/
   public get isComparing(): boolean {
     return this._targetIModel !== undefined;
+  }
+
+  public get onOverallProgress() {
+    return this.progressCoordinator.onProgressChanged;
   }
 
   /**
@@ -322,6 +353,7 @@ export class VersionCompareManager {
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
+        undefined,
         this.loadingProgressEvent,
       );
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
@@ -463,6 +495,7 @@ export class VersionCompareManager {
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
+        undefined,
         this.loadingProgressEvent,
       );
       // Add source of changes for driven and domain specific element changes
@@ -560,9 +593,11 @@ export class VersionCompareManager {
         throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
       }
 
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
-      );
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel);
+
+      // Keep metadata around for UI uses and other queries
+      this.currentVersion = currentVersion;
+      this.targetVersion = targetVersion;
 
       // Open the target version IModel
       const changesetId = targetVersion.changesetId;
@@ -572,17 +607,8 @@ export class VersionCompareManager {
         IModelVersion.asOfChangeSet(changesetId),
       );
 
-      // Keep metadata around for UI uses and other queries
-      this.currentVersion = currentVersion;
-      this.targetVersion = targetVersion;
-
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
-      );
-
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
-      );
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.OpenTargetImodel, 100);
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison);
 
       let wantedModelClasses = [
         GeometricModel2dState.classFullName,
@@ -595,6 +621,9 @@ export class VersionCompareManager {
       if (this.ignoredElementIds !== undefined) {
         filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
       }
+
+      this.progressCoordinator.updateProgress(VersionCompareProgressStage.InitComparison, 100);
+
       await this.changedElementsManager.initialize(
         this._currentIModel,
         this._targetIModel,
@@ -602,7 +631,7 @@ export class VersionCompareManager {
         this.wantAllModels ? undefined : wantedModelClasses,
         false,
         this.filterSpatial,
-        this.loadingProgressEvent,
+        this.progressCoordinator,
       );
       const changedElementEntries = this.changedElementsManager.entryCache.getAll();
 
@@ -618,9 +647,6 @@ export class VersionCompareManager {
       );
 
       // Get the entries
-      this.loadingProgressEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
-      );
       await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id));
 
       // Reset the select tool to allow external iModels to be located

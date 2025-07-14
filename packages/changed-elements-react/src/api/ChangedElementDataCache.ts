@@ -20,7 +20,7 @@ export abstract class ChangedElementDataCache {
   /**
    * Called whenever a request is done in bulk mode, useful for UI update of progress
    */
-  public updateFunction?: () => void;
+  public updateFunction?: (percent: number) => void;
 
   constructor(protected _chunkSize: number = 500) {
     // No-op
@@ -50,7 +50,7 @@ export abstract class ChangedElementDataCache {
       const piece = await this._request(elements.slice(i, i + this._chunkSize));
       result.push(...piece);
       if (this.updateFunction) {
-        this.updateFunction();
+        this.updateFunction(Math.floor(i / elements.length * 100));
       }
     }
     return result;
