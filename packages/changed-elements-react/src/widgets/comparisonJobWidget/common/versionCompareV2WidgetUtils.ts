@@ -48,7 +48,7 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
 
   try {
     const targetVersion = await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient);
-    if (VersionCompare.changesetProcessor) {
+    if (VersionCompare.changesProvider) {
       await manager.startDirectComparison(args.iModelConnection, args.currentVersion, targetVersion);
       return;
     }

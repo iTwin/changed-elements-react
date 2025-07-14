@@ -37,6 +37,13 @@ interface IVersionCompareClientFactory {
   createChangedElementsClient: () => ChangedElementsClientBase;
 }
 
+/**
+ * Expected output of a changeset processor function.
+ */
+export interface ChangesProviderOutput {
+  changedInstances: ChangedECInstance[];
+}
+
 export interface VersionCompareOptions {
   /**
    * Base URL for iTwin Platform Changed Elements API.
@@ -94,22 +101,23 @@ export interface VersionCompareOptions {
   createVisualizationHandler: (manager: VersionCompareManager) => VisualizationHandler;
 
   /**
-   * If provided, this function will be called to process the changeset data instead of using changed elements API
+   * If provided, this function will be called to obtain the changeset data instead of using changed elements API
+   * This allows a consumer application to use its own changeset processing logic.
    * @param startChangeset Start changeset to compare (oldest)
    * @param endChangeset End changeset to compare (newest)
    * @param iModelConnection iModel connection to use
-   * @returns
+   * @returns a promise that should resolve to an object containing an array of ChangedECInstance
    */
-  changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
+  changesProvider?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangesProviderOutput>;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
-  private static _changesetProcessor?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
-  public static get changesetProcessor() {
-    return VersionCompare._changesetProcessor;
+  private static _changesProvider?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
+  public static get changesProvider() {
+    return VersionCompare._changesProvider;
   }
   public static get logCategory(): string {
     return "VersionCompare";
@@ -150,8 +158,9 @@ export class VersionCompare {
   public static initialize(options: VersionCompareOptions): void {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
-    VersionCompare._changesetProcessor = options.changesetProcessor;
-    // get the access token
+
+    // Store options
+    VersionCompare._changesProvider = options.changesProvider;
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 
     if (options.changedElementsApiBaseUrl) {

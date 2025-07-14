@@ -12,14 +12,16 @@ import {
   SqliteChangesetReader,
 } from "@itwin/core-backend";
 import {
+  AuthorizationClient,
   ChangesetFileProps,
   ChangesetIdWithIndex,
   IModelRpcProps,
 } from "@itwin/core-common";
-import { AuthClient, ChangesetGroupResult } from "./RPC/ChangesetGroupRPCInterface";
-import { ComparisonProcessor } from "./OpenSiteComparisonHandler";
+import { ChangedInstancesResult } from "./RPC/ChangesRpcInterface";
+import { ChangesEnricher } from "./ChangesEnricher";
 
 // Need a copy for the frontend until we have a common package
+// TODO: Eliminate the need for using type of change for this functionality in favor of something else
 export enum ExtendedTypeOfChange {
   Driven = 64,
 }
@@ -28,10 +30,10 @@ export enum ExtendedTypeOfChange {
  * Options for processing handlers for domain-specific logic
  */
 export interface ProcessingOptions {
-  processor: ComparisonProcessor;
+  enricher: ChangesEnricher;
 }
 
-export class ChangesetGroup {
+export class ChangedInstancesProcessor {
   /**
    *
    * @param _processingOpts Any special processing options
@@ -44,7 +46,7 @@ export class ChangesetGroup {
     iModelId: string,
     authToken: string,
   ): Promise<ChangesetFileProps[]> {
-    const authClient: AuthClient = {
+    const authClient: AuthorizationClient = {
       getAccessToken: function (): Promise<string> {
         return Promise.resolve(authToken);
       },
@@ -67,30 +69,6 @@ export class ChangesetGroup {
     } catch (e: unknown) {
       return [];
     }
-  }
-
-  public async runGroupComparison(
-    iModelToken: IModelRpcProps,
-    startChangesetIdWithIndex: ChangesetIdWithIndex,
-    endChangesetIdWithIndex: ChangesetIdWithIndex,
-    authToken: string,
-  ): Promise<ChangesetGroupResult> {
-    const iModelId = iModelToken.iModelId!;
-
-    const changesetPaths = await this._downloadChangesetFiles(
-      startChangesetIdWithIndex,
-      endChangesetIdWithIndex,
-      iModelId,
-      authToken,
-    );
-
-    const db = IModelDb.findByKey(iModelToken.key);
-    const changedECInstances = await this._getGroupedChangesetChanges(
-      changesetPaths,
-      db,
-    );
-
-    return { changedInstances: changedECInstances };
   }
 
   /**
@@ -133,11 +111,45 @@ export class ChangesetGroup {
     }
 
     // Use any passed processor to process the instances
-    const comparisonProcessor = this._processingOpts?.processor;
+    const comparisonProcessor = this._processingOpts?.enricher;
     if (comparisonProcessor) {
       return await comparisonProcessor.processChangedInstances(db, instances);
     }
 
     return instances;
   }
+
+  /**
+   * Returns the changed ec instances from the range of changesets.
+   * This results in downloading all changeset files in the range and processing them.
+   * @param iModelToken
+   * @param startChangesetIdWithIndex
+   * @param endChangesetIdWithIndex
+   * @param authToken
+   * @returns
+   */
+  public async getChangedInstances(
+    iModelToken: IModelRpcProps,
+    startChangesetIdWithIndex: ChangesetIdWithIndex,
+    endChangesetIdWithIndex: ChangesetIdWithIndex,
+    authToken: string,
+  ): Promise<ChangedInstancesResult> {
+    const iModelId = iModelToken.iModelId!;
+
+    const changesetPaths = await this._downloadChangesetFiles(
+      startChangesetIdWithIndex,
+      endChangesetIdWithIndex,
+      iModelId,
+      authToken,
+    );
+
+    const db = IModelDb.findByKey(iModelToken.key);
+    const changedECInstances = await this._getGroupedChangesetChanges(
+      changesetPaths,
+      db,
+    );
+
+    return { changedInstances: changedECInstances };
+  }
+
 }

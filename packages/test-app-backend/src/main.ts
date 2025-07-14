@@ -12,8 +12,8 @@ import { IModelsClient } from "@itwin/imodels-client-authoring";
 import { Presentation } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { config } from "dotenv-flow";
-import { ChangesetGroupRPCInterface } from "./RPC/ChangesetGroupRPCInterface";
-import { ChangesetGroupRPCImpl } from "./RPC/ChangesetGroupRPCImpl";
+import { ChangesRpcInterface } from "./RPC/ChangesRpcInterface";
+import { ChangesRpcImpl } from "./RPC/ChangesRpcImpl";
 
 config({ path: "../test-app-frontend" });
 
@@ -29,10 +29,10 @@ void (async () => {
     ),
   });
   Presentation.initialize();
-  RpcManager.registerImpl(ChangesetGroupRPCInterface, ChangesetGroupRPCImpl);
+  RpcManager.registerImpl(ChangesRpcInterface, ChangesRpcImpl);
   const rpcConfig = BentleyCloudRpcManager.initializeImpl(
     { info: { title: "test-app-backend", version: "v1.0" } },
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesetGroupRPCInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface],
   );
   const app = express();
   const server = new IModelJsExpressServer(rpcConfig.protocol);

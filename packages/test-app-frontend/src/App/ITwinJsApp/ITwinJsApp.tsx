@@ -31,7 +31,7 @@ import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { ChangesetGroupRPCInterface } from "../../../../test-app-backend/src/RPC/ChangesetGroupRPCInterface.js"
+import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js"
 import { applyUrlPrefix, localBackendPort, runExperimental, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
@@ -157,7 +157,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesetGroupRPCInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface],
   );
 
   await Promise.all([
@@ -167,9 +167,14 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ]);
 
 
-  const changesetProcessor = async (startChangedset: ChangesetIdWithIndex, endChangedset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
-    const client = ChangesetGroupRPCInterface.getClient();
-    return client.getChangesetGroup(iModelConnection.getRpcProps(), startChangedset, endChangedset, await authorizationClient.getAccessToken());
+  const changesProvider = async (startChangedset: ChangesetIdWithIndex, endChangedset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
+    const client = ChangesRpcInterface.getClient();
+    // Relationships we want for categorizing changes driven by relationships
+    const relationships: RelationshipClassWithDirection[] = [
+      { className: "ElementDrivesElement", reverse: false },
+      { className: "SpatialOrganizerHoldsSpatialElements", reverse: false },
+    ];
+    return client.getChangedInstances(iModelConnection.getRpcProps(), startChangedset, endChangedset, relationships, await authorizationClient.getAccessToken());
   }
 
   VersionCompare.initialize({
@@ -182,7 +187,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
     featureTracking: featureTrackingTesterFunctions,
-    changesetProcessor,
+    changesProvider: changesProvider,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);

@@ -131,6 +131,7 @@ const stringToOpcode = (operation: SqliteChangeOp | string): DbOpcode => {
 
 /**
  * Transforms ChangedECInstance array to ChangedElements object
+ * TODO: This needs to be refactored and potentially passed by the consuming application
  * @param changedElements
  * @returns
  */
@@ -156,6 +157,7 @@ export const transformToAPIChangedElements = (instances: ChangedECInstance[]): C
 /**
  * Returns a map of ECInstanceId:ECClassId of the element that is driven by another element
  * e.g. Target -> Source
+ * TODO: This needs to be refactored and passed by the consuming application
  * @param instances
  * @returns
  */
@@ -163,7 +165,8 @@ export const extractDrivenByInstances = (instances: ChangedECInstance[]): Map<st
   const elementDrivenByElementMap = new Map<string, string[]>();
   instances.forEach((elem) => {
     if (elem.$comparison?.drivenBy) {
-      elementDrivenByElementMap.set(`${elem.ECInstanceId}`, elem.$comparison.drivenBy);
+      const ids = elem.$comparison.drivenBy.map((idWithRelationship: any) => idWithRelationship.id);
+      elementDrivenByElementMap.set(`${elem.ECInstanceId}`, ids);
     }
   });
   return elementDrivenByElementMap;
@@ -171,6 +174,7 @@ export const extractDrivenByInstances = (instances: ChangedECInstance[]): Map<st
 
 /**
  * Returns a map of ECInstanceId:ECClassId of the element that drives another element
+ * TODO: This needs to be refactored and passed by the consuming application
  * @param instances
  * @returns
  */
@@ -178,7 +182,8 @@ export const extractDrivesInstances = (instances: ChangedECInstance[]): Map<stri
   const elementDrivesElementMap = new Map<string, string[]>();
   instances.forEach((elem) => {
     if (elem.$comparison?.drives) {
-      elementDrivesElementMap.set(`${elem.ECInstanceId}`, elem.$comparison.drives);
+      const ids = elem.$comparison.drives.map((idWithRelationship: any) => idWithRelationship.id);
+      elementDrivesElementMap.set(`${elem.ECInstanceId}`, ids);
     }
   });
   return elementDrivesElementMap;

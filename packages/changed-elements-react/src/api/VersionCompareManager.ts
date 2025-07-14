@@ -78,7 +78,7 @@ export class VersionCompareManager {
   }
 
   public get filterSpatial(): boolean {
-    return this.options.filterSpatial ?? this.options.changesetProcessor === undefined;
+    return this.options.filterSpatial ?? this.options.changesProvider === undefined;
   }
 
   public get skipParentChildRelationships(): boolean {
@@ -398,7 +398,7 @@ export class VersionCompareManager {
     this._skipParentChildRelationships = true;
     const startTime = new Date();
     try {
-      const changesetProcessor = VersionCompare.changesetProcessor;
+      const changesetProcessor = VersionCompare.changesProvider;
       if (!changesetProcessor) {
         throw new Error("Cannot do direct comparison without a changeset processor");
       }
@@ -483,7 +483,7 @@ export class VersionCompareManager {
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
       );
-      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id), true);
+      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id)); //, true);
 
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();

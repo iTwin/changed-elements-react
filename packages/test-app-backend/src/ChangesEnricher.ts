@@ -2,20 +2,16 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { ChangedECInstance, ElementDrivesElement, IModelDb } from "@itwin/core-backend";
+import { ChangedECInstance, IModelDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
-import { ChangedElements, QueryBinder, TypeOfChange } from "@itwin/core-common";
-import { ExtendedTypeOfChange } from "./ChangedElementsGroupHelper";
+import { QueryBinder, TypeOfChange } from "@itwin/core-common";
+import { ExtendedTypeOfChange } from "./ChangedInstancesProcessor";
 import { getTypeOfChange } from "./TypeOfChange";
+import { RelationshipClassWithDirection } from "./RPC/ChangesRpcInterface";
 
 export interface InstanceKey {
   className: string;
   id: string;
-}
-
-export interface RelationshipClassWithDirection {
-  className: string;
-  reverse: boolean;
 }
 
 /**
@@ -48,28 +44,6 @@ const getInheritedClassIdsOfMany = async (db: IModelDb, classIds: string[], reve
 };
 
 /**
- * Removes changed elements in the given indices from the changed elements
- * @param changedElements
- * @param indices
- */
-const removeChangedElementsIndices = (changedElements: ChangedElements, indices: number[]) => {
-  // Remove indices in reverse order to avoid index shifting
-  const indicesArray = indices.sort((a, b) => b - a);
-  for (const index of indicesArray) {
-    changedElements.elements.splice(index, 1);
-    changedElements.type.splice(index, 1);
-    changedElements.opcodes.splice(index, 1);
-    changedElements.classIds.splice(index, 1);
-    changedElements.parentClassIds?.splice(index, 1);
-    changedElements.parentIds?.splice(index, 1);
-    changedElements.modelIds?.splice(index, 1);
-    changedElements.newChecksums?.splice(index, 1);
-    changedElements.oldChecksums?.splice(index, 1);
-    changedElements.properties?.splice(index, 1);
-  }
-};
-
-/**
  * Returns all inherited classes of a given class recursively
  * @param db
  * @param className
@@ -81,26 +55,42 @@ const getInheritedClassIds = async (db: IModelDb, className: string, reverse?: b
   return new Set([classId, ...inheritedClassIds]);
 };
 
-export interface ComparisonProcessor {
+export interface ChangesEnricher {
   /** Called after all changes are put together with partial unifier */
   processChangedInstances: (db: IModelDb, instances: ChangedECInstance[]) => Promise<ChangedECInstance[]>;
 }
 
 /**
- * Processor for OpenSite specific changes
- * 1. Marks elements that are driven by other elements as driven
- * 2. Marks those driven elements as Updates instead of Delete + Insert
- * 3. Marks the spatial containment of the driven elements as driven based on the OpenSite schema
+ * Options for the RelatedChangesInspector
  */
-export class OpenSiteProcessor implements ComparisonProcessor {
-  private _drivenInstances: ChangedECInstance[] = [];
-  private _nonDrivenInstances: ChangedECInstance[] = [];
+export interface RelatedChangesInspectorOptions {
+  relationships?: RelationshipClassWithDirection[];
+}
 
-  private getDrivenRelationshipClassNamesForDomain(): RelationshipClassWithDirection[] {
-    return [
-      { className: ElementDrivesElement.className, reverse: false },
-      { className: "SpatialOrganizerHoldsSpatialElements", reverse: false },
-    ];
+interface IdWithRelationship {
+  id: Id64String;
+  relationship: RelationshipClassWithDirection;
+}
+
+interface RelatedClassIds {
+  relationship: RelationshipClassWithDirection;
+  relatedClassIds: Id64String[];
+}
+
+/**
+ * Processor for enriching ChangedECInstances with additional information
+ * This processor does the following:
+ * 1. Finds all relationships that may be relevant to the consumer
+ * 2. Marks those related elements as Updates instead of Delete + Insert
+ */
+export class RelatedChangesEnricher implements ChangesEnricher {
+  private _relationships: RelationshipClassWithDirection[] = [];
+
+  public constructor(opts?: RelatedChangesInspectorOptions) {
+    // If relationships are provided, they can be used to filter driven elements
+    if (opts?.relationships) {
+      this._relationships = opts.relationships;
+    }
   }
 
   /**
@@ -108,14 +98,19 @@ export class OpenSiteProcessor implements ComparisonProcessor {
    * @param db
    * @returns
    */
-  private async getDrivenTargetClassIds(db: IModelDb): Promise<Set<Id64String>> {
-    const drivenClassNames = this.getDrivenRelationshipClassNamesForDomain();
-    const relClassIds = new Set<Id64String>();
+  private async getDrivenTargetClassIds(db: IModelDb): Promise<RelatedClassIds[]> {
+    const drivenClassNames = this._relationships;
+    const relatedClassIds: RelatedClassIds[] = [];
     for (const relClass of drivenClassNames) {
+      const relClassIds = new Set<Id64String>();
       const currentClassIds = await getInheritedClassIds(db, relClass.className, relClass.reverse);
       currentClassIds.forEach((classId) => relClassIds.add(classId));
+      relatedClassIds.push({
+        relationship: relClass,
+        relatedClassIds: Array.from(relClassIds),
+      });
     }
-    return relClassIds;
+    return relatedClassIds;
   }
 
   /** TODO: Should become a separate utility function / not dependent on this "comparison processor" */
@@ -124,48 +119,65 @@ export class OpenSiteProcessor implements ComparisonProcessor {
   }
 
   /**
-   * Finds all relevant driven class elements
+   * Return the relevant related class ids to the instance
+   * @param relatedClassIds
+   * @param instance
+   * @returns
+   */
+  private getRelatedClassIdsToInstance(relatedClassIds: RelatedClassIds[], instance: ChangedECInstance): RelatedClassIds | undefined {
+    for (const relatedClass of relatedClassIds) {
+      if (relatedClass.relatedClassIds.includes(instance.ECClassId!)) {
+        return relatedClass;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Enriches the ChangedECInstances with additional information regarding relationships that drive changes.
    * @param db
    * @param instances
    */
   public async processChangedInstances(db: IModelDb, instances: ChangedECInstance[]): Promise<ChangedECInstance[]> {
-    const driveForwardMap = new Map<string, string[]>();
-    const driveBackwardMap = new Map<string, string[]>();
+    const driveForwardMap = new Map<string, IdWithRelationship[]>();
+    const driveBackwardMap = new Map<string, IdWithRelationship[]>();
     const drivenElements = new Set<string>();
 
     // Find all class ids that inherit from ElementDrivesElement
-    const elementDrivesElementClasses = await this.getDrivenTargetClassIds(db);
+    const relatedClassIds = await this.getDrivenTargetClassIds(db);
 
-    // Find driven elements
+    // Find relevant relationships that the consumer is interested in
     for (const instance of instances) {
-      if (instance.ECClassId && elementDrivesElementClasses.has(instance.ECClassId)) {
-        const source = instance.SourceECInstanceId;
-        const target = instance.TargetECInstanceId;
-        // TODO: Do we care about class ids here
-        // const sourceClassId = instance.SourceECClassId;
-        // const targetClassId = instance.TargetECClassId;
-        drivenElements.add(target);
-        const driveBackwardEntry = driveBackwardMap.get(`${target}`);
-        if (driveBackwardEntry) {
-          driveBackwardEntry.push(`${source}`);
-        } else {
-          driveBackwardMap.set(`${target}`, [`${source}`]);
-        }
+      const relatedClass = this.getRelatedClassIdsToInstance(relatedClassIds, instance);
+      if (!relatedClass) {
+        // Skip if no related class is found
+        continue;
+      }
 
-        const driveForwardEntry = driveForwardMap.get(`${source}`);
-        if (driveForwardEntry) {
-          driveForwardEntry.push(`${target}`);
-        }
-        else {
-          driveForwardMap.set(`${source}`, [`${target}`]);
-        }
+      // If the instance is a relationship, we need to find the source and target elements
+      const source = instance.SourceECInstanceId;
+      const target = instance.TargetECInstanceId;
+      // TODO: Do we care about class ids here
+      // const sourceClassId = instance.SourceECClassId;
+      // const targetClassId = instance.TargetECClassId;
+      drivenElements.add(target);
+      const driveBackwardEntry = driveBackwardMap.get(`${target}`);
+      if (driveBackwardEntry) {
+        driveBackwardEntry.push({ id: source, relationship: relatedClass.relationship });
+      } else {
+        driveBackwardMap.set(`${target}`, [{ id: source, relationship: relatedClass.relationship }]);
+      }
+
+      const driveForwardEntry = driveForwardMap.get(`${source}`);
+      if (driveForwardEntry) {
+        driveForwardEntry.push({ id: target, relationship: relatedClass.relationship });
+      }
+      else {
+        driveForwardMap.set(`${source}`, [{ id: target, relationship: relatedClass.relationship }]);
       }
     }
 
-    this._drivenInstances = instances.filter((instance) => drivenElements.has(`${instance.ECInstanceId}`));
-    this._nonDrivenInstances = instances.filter((instance) => !drivenElements.has(`${instance.ECInstanceId}`));
-
-    // Enrich data with type of change
+    // Enrich data
     for (const instance of instances) {
       instance["$comparison"] = {};
       if (instance.$meta?.op === "Updated") {
@@ -175,6 +187,7 @@ export class OpenSiteProcessor implements ComparisonProcessor {
       if (backwards) {
         instance["$comparison"].type = ExtendedTypeOfChange.Driven;
         instance["$comparison"].drivenBy = backwards;
+        // TODO: This opcode transformation should happen in the app, not in this interface
         if (instance.$meta) {
           instance.$meta.op = "Updated";
         }
