@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.8
+
+### Patch Changes
+
+#### [0.15.8](https://github.com/iTwin/changed-elements-react/tree/v0.15.8/packages/changed-elements-react) - 2025-07-15
+
+fix on advance filter
+
 ## 0.15.7
 
 ### Patch Changes
