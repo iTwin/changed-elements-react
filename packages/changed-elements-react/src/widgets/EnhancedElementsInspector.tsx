@@ -856,6 +856,16 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const { visible, hidden } =
       this.props.dataProvider.GetEntriesByModelIdsAndFilters(modelIds, includeFilter, hideFilter);
 
+    // TODO: Driven elements should be treated appropriately for special highlighting
+    // Add driven elements to visible entries
+    const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(visible);
+    visible.push(...drivenElements);
+
+    // Add hidden driven elements to hidden entries
+    const hiddenDrivenElements = this.props.manager.changedElementsManager.getDrivenElements(hidden);
+    hidden.push(...hiddenDrivenElements);
+
+
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     await visualizationManager?.setFocusedElements(visible, hidden);
   };
@@ -892,11 +902,21 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
 
     // TODO: Driven elements should be treated appropriately for special highlighting
     const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(entries);
-    entries.push(...drivenElements);
+
+    const visibleEntries = entries.filter(includeFilter);
+    visibleEntries.push(...drivenElements);
+
+    const hiddenEntries = entries.filter(hideFilter);
+    // Remove driven elements from hidden entries
+    for (const entry of hiddenEntries) {
+      if (drivenElements.some((d) => d.id === entry.id)) {
+        hiddenEntries.splice(hiddenEntries.indexOf(entry), 1);
+      }
+    }
 
     // Visualize the filtered elements and focus
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries.filter(includeFilter), entries.filter(hideFilter));
+    await visualizationManager?.setFocusedElements(visibleEntries, entries.filter(hideFilter));
   };
 
   /** Sets viewport visualization based on the given nodes and target/parent node. */

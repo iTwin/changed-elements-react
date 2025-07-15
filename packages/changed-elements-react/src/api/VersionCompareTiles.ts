@@ -408,7 +408,8 @@ export class Provider
       // Check if user is emphasizing some elements, and if so, only override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         // TODO: Appropriate type of change enum
-        const appearance = (elem.type & 64) !== 0
+        const isDriven = (elem.type & 64) !== 0; // 64 is the "driven" bit
+        const appearance = isDriven
           ? driven
           : elem.indirect
             ? updatedIndirectly
