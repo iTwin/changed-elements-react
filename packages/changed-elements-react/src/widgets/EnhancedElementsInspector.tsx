@@ -1028,15 +1028,16 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       return true;
     }
 
-    // Type of change filtering matches, and we have no properties to check, so entry matches filter
-    if ((entry.type & (TypeOfChange.Property | TypeOfChange.Indirect)) === 0) {
+    // keep the entry if user has typeOfChange filtering other than properties & indrect checked and matches
+    if (
+      (entry.type &
+        options.wantedTypeOfChange &
+        ~(TypeOfChange.Property | TypeOfChange.Indirect)
+      ) !== 0
+    ) {
       return true;
     }
 
-    // keep the entry if user has typeOfChange filtering other than properties checked and matches
-    if (((entry.type & ~TypeOfChange.Property) & (options.wantedTypeOfChange)) !== 0) {
-      return true;
-    }
 
     // Only thing left to do is to check that the entry's properties are visible in filters
     return this._anyEntryPropertiesVisible(entry, options);
