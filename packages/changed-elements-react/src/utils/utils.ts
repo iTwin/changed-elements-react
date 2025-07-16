@@ -2,10 +2,9 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
-import { ChangedECInstance, SqliteChangeOp } from "@itwin/core-backend";
 import { DbOpcode } from "@itwin/core-bentley";
 import { ChangedElements, TypeOfChange } from "@itwin/core-common";
+import { ChangedECInstance } from "../api/VersionCompare.js";
 
 export async function* splitBeforeEach<T, U>(iterable: AsyncIterable<T>, selector: (value: T) => U, markers: U[]): AsyncGenerator<T[]> {
   let accumulator: T[] = [];
@@ -116,7 +115,7 @@ const createEmptyChangedElements = (): ChangedElements => {
  *
  * Throws error if not a valid {@link SqliteChangeOp} string.
  */
-const stringToOpcode = (operation: SqliteChangeOp | string): DbOpcode => {
+const stringToOpcode = (operation: string): DbOpcode => {
   switch (operation) {
     case "Inserted":
       return DbOpcode.Insert;
@@ -148,7 +147,7 @@ export const transformToAPIChangedElements = (instances: ChangedECInstance[]): C
     ce.elements.push(elem.ECInstanceId);
     ce.classIds.push(elem.ECClassId ?? "");
     ce.opcodes.push(stringToOpcode(elem.$meta?.op ?? ""));
-    ce.type.push(elem.$comparison.type ?? TypeOfChange.NoChange);
+    ce.type.push(elem.$comparison?.type ?? TypeOfChange.NoChange);
   }
 
   return ce;

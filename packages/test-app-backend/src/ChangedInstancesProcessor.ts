@@ -49,7 +49,7 @@ export class ChangedInstancesProcessor {
     try {
       const csFileProps = [];
       // TODO: should the first changeset in a reverse sync really be included even though its 'initialized branch provenance'? The answer is no, its a bug that needs to be fixed.
-      const fileProps = await IModelHost.hubAccess.downloadChangesets({
+      const fileProps = await BriefcaseManager.downloadChangesets({
         iModelId: iModelId,
         targetDir: BriefcaseManager.getChangeSetsPath(iModelId),
         range: {

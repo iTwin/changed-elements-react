@@ -8,12 +8,13 @@ import { Logger, LogLevel } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager, HttpServerRequest, HttpServerResponse, IModelReadRpcInterface, IModelTileRpcInterface, RpcManager } from "@itwin/core-common";
 import { IModelJsExpressServer } from "@itwin/express-server";
 import { BackendIModelsAccess } from "@itwin/imodels-access-backend";
-import { IModelsClient } from "@itwin/imodels-client-authoring";
+import { IModelsClientOptions } from "@itwin/imodels-client-authoring";
 import { Presentation } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { config } from "dotenv-flow";
 import { ChangesRpcInterface } from "./RPC/ChangesRpcInterface";
 import { ChangesRpcImpl } from "./RPC/ChangesRpcImpl";
+import { AzureClientStorage, BlockBlobClientWrapperFactory } from "@itwin/object-storage-azure";
 
 config({ path: "../test-app-frontend" });
 
@@ -22,11 +23,16 @@ const port = Number.parseInt(process.env.VITE_LOCAL_BACKEND_PORT ?? "", 10);
 void (async () => {
   Logger.initializeToConsole();
   Logger.setLevelDefault(LogLevel.Info);
+  const opts: IModelsClientOptions = {
+    cloudStorage: new AzureClientStorage(new BlockBlobClientWrapperFactory()),
+    api: {
+      baseUrl: `https://${process.env.VITE_URL_PREFIX}api.bentley.com/imodels`,
+      version: "itwin-platform.v2",
+    },
+  };
   await IModelHost.startup({
     cacheDir: `./.cache_${port}`,
-    hubAccess: new BackendIModelsAccess(
-      new IModelsClient({ api: { baseUrl: `https://${process.env.VITE_URL_PREFIX}api.bentley.com/imodels` } }),
-    ),
+    hubAccess: new BackendIModelsAccess(opts),
   });
   Presentation.initialize();
   RpcManager.registerImpl(ChangesRpcInterface, ChangesRpcImpl);

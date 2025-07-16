@@ -29,11 +29,11 @@ export abstract class ChangesRpcInterface extends RpcInterface {
   }
 
   public async getChangedInstances(
-    iModelToken: IModelRpcProps,
-    startChangeset: ChangesetIdWithIndex,
-    endChangeset: ChangesetIdWithIndex,
-    relationships: RelationshipClassWithDirection[],
-    authToken: string,
+    _iModelToken: IModelRpcProps,
+    _startChangeset: ChangesetIdWithIndex,
+    _endChangeset: ChangesetIdWithIndex,
+    _relationships: RelationshipClassWithDirection[],
+    _authToken: string,
   ): Promise<ChangedInstancesResult> {
     return this.forward(arguments);
   }
