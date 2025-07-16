@@ -5,7 +5,7 @@
 import { BeEvent, DbOpcode, type Id64String } from "@itwin/core-bentley";
 import { ColorDef, EmphasizeElementsProps, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
 import {
-  EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, ViewState3d } from "@itwin/core-frontend";
+  EmphasizeElements, FeatureSymbology, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, ViewState3d } from "@itwin/core-frontend";
 import { Range3d, Transform } from "@itwin/core-geometry";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSetProvider } from "@itwin/presentation-frontend";
@@ -81,6 +81,7 @@ export class VersionCompareVisualizationManager {
     private _unchangedModels?: Set<string>,
     private _onViewChanged?: BeEvent<(args: unknown) => void>,
     _wantSecondaryModified?: boolean,
+    _colorOverrideProvider?: (visibleInstances: ChangedElementEntry[], hiddenInstances: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void,
   ) {
     if (_onViewChanged !== undefined) {
       _onViewChanged.addListener(this.onViewChangedHandler);
@@ -91,6 +92,7 @@ export class VersionCompareVisualizationManager {
       hideModified: false,
       wantModified: _wantSecondaryModified,
       emphasized: true,
+      colorOverrideProvider: _colorOverrideProvider,
     };
     this._currentHiliteSetProvider = HiliteSetProvider.create({
       imodel: this._viewport.iModel,

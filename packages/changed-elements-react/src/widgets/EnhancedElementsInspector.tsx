@@ -31,11 +31,6 @@ import { ElementsList } from "./ElementsList.js";
 import "./ChangedElementsInspector.scss";
 import { TextEx } from "../NamedVersionSelector/TextEx.js";
 
-// Need a copy for the frontend until we have a common package
-export enum ExtendedTypeOfChange {
-  Driven = 64,
-}
-
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
   onFilterChange?: (options: FilterOptions) => void;
@@ -143,8 +138,7 @@ const typeOfChangeAll = (): number => {
     TypeOfChange.Hidden |
     TypeOfChange.Indirect |
     TypeOfChange.Placement |
-    TypeOfChange.Property |
-    ExtendedTypeOfChange.Driven
+    TypeOfChange.Property
   );
 };
 
@@ -360,7 +354,6 @@ function ChangeTypeFilterHeader(props: FilterHeaderProps): ReactElement {
         {makeContextMenuItem("geometry", TypeOfChange.Geometry)}
         {makeContextMenuItem("placement", TypeOfChange.Placement)}
         {makeContextMenuItem("property", TypeOfChange.Property | TypeOfChange.Indirect)}
-        {makeContextMenuItem("driven", ExtendedTypeOfChange.Driven)}
         {makeContextMenuItem("hiddenProperty", TypeOfChange.Hidden)}
         {props.wantPropertyFiltering && <div className="vc-context-menu-separator" />}
         {
@@ -616,6 +609,20 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   private _selectionChangedHandler = (args: SelectionChangeEventArgs): void => {
     let ids: string[] = [];
     args.keys.instanceKeys.forEach((keys) => { ids = [...ids, ...keys]; });
+
+    // Callback for changed instance selections
+    const onSelectionCallback = this.props.manager.options.onInstancesSelected;
+    if (onSelectionCallback) {
+      const cache = this.props.manager.changedECInstanceCache;
+      const entries = this.props.manager.changedElementsManager.entryCache.getCached(ids);
+      const changedInstances = entries
+        .map((entry) => cache.getFromEntry(entry))
+        .filter((instance) => instance !== undefined);
+
+      // Don't await selection callback to avoid blocking the UI
+      onSelectionCallback(changedInstances).catch();
+    }
+
     this.setState({ selectedIds: new Set(ids) });
   };
 

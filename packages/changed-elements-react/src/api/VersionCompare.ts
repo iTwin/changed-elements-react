@@ -3,10 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { getClassName } from "@itwin/appui-abstract";
-import type { AccessToken } from "@itwin/core-bentley";
+import type { AccessToken, Id64String } from "@itwin/core-bentley";
 import type { ModelProps, ChangesetIdWithIndex } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
-import { ChangedECInstance } from "@itwin/core-backend";
+import { FeatureSymbology, IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 
 import { ChangedElementsApiClient } from "./ChangedElementsApiClient.js";
@@ -35,6 +34,22 @@ export interface VersionCompareFeatureTracking {
 interface IVersionCompareClientFactory {
   /** Return a changed elements client that will give the processed change data. */
   createChangedElementsClient: () => ChangedElementsClientBase;
+}
+
+/**
+ * TODO: This should be moved to common package instead of maintained in core-backend?
+ */
+export interface ChangedECInstance {
+    ECInstanceId: Id64String;
+    ECClassId?: Id64String;
+    $meta?: any;
+    // Added by enricher
+    $comparison?: {
+      drivenBy?: { id: Id64String, relationship: { className: string, direction: "forward" | "backward" } }[];
+      drives?: { id: Id64String, relationship: { className: string, direction: "forward" | "backward" } }[];
+      type?: number;
+    }
+    [key: string]: any;
 }
 
 /**
@@ -109,16 +124,58 @@ export interface VersionCompareOptions {
    * @returns a promise that should resolve to an object containing an array of ChangedECInstance
    */
   changesProvider?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<ChangesProviderOutput>;
+
+  /**
+   * Allows the application to provide a color override for changed ec instances.
+   * This is called each time the viewport is updated with new changed elements to be visualized.
+   * (e.g. when the user toggles filters, inspects a model or an element's children, etc.)
+   *
+   * Example:
+   *
+   * ```typescript
+   * (instances, overrides) => {
+   *  for (const instance of instances) {
+   *   // The ChangedECInstance will contain everything that was provided by `changesProvider` function in the callback
+   *   if (instance.type === "Update") {
+   *     // Override color for updated elements to a light blue color
+   *     overrides.setFeatureOverride(instance.id, new FeatureAppearance({ color: ColorDef.from(155, 155, 255) }));
+   *    }
+   *  }
+   * ```
+   *
+   * This is called *after* the `colorOverrideProvider` from `VersionCompareTiles` is called, so it can be used to override
+   * default version compare behavior / coloring.
+   *
+   * Note: The way version compare achieves coloring unchanged elements is by using `FeatureSymbology.Overrides` and `setDefaultOverrides`
+   * Clearing the overrides when received from this function may result in the emphasis of unchanged elements to be lost
+   * It is recommended to only override colors for changed instances, and not clear all the overrides.
+   *
+   * @param visibleInstances ChangedECInstances to override colors for, will match the instances provided by `changesProvider`. Contains only the instances that are visible due to filters in the UI
+   * @param hiddenInstances ChangedECInstances to override colors for, will match the instances provided by `changesProvider`. Contains only the instances that are not visible due to filters in the UI
+   * @param overrides FeatureSymbology.Overrides to apply the color overrides to.
+   */
+  colorOverrideProvider?: (visibleInstances: ChangedECInstance[], hiddenInstances: ChangedECInstance[], overrides: FeatureSymbology.Overrides) => void;
+
+  /**
+   * Handler called when the user selects a changed instance (or multiple) in the changed elements widget.
+   * This is used to allow the application to perform some custom action when the user selects an instance that contains changes.
+   * This call won't be awaited by the UI.
+   * @param instance
+   * @returns
+   */
+  onInstancesSelected?: (instances: ChangedECInstance[]) => Promise<void>;
 }
 
 /** Maintains all version compare related data for the applications. */
 export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
+
   private static _changesProvider?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
   public static get changesProvider() {
     return VersionCompare._changesProvider;
   }
+
   public static get logCategory(): string {
     return "VersionCompare";
   }
@@ -159,7 +216,7 @@ export class VersionCompare {
     // Initialize manager
     VersionCompare._manager = new VersionCompareManager(options);
 
-    // Store options
+    // Store options / callbacks
     VersionCompare._changesProvider = options.changesProvider;
     VersionCompare._getAccessToken = options.getAccessToken ?? IModelApp.getAccessToken;
 

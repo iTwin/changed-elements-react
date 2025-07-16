@@ -9,7 +9,6 @@ import { HitDetail, IModelApp, type ToolTipProvider } from "@itwin/core-frontend
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { VersionCompare } from "./VersionCompare.js";
 import { VersionCompareManager } from "./VersionCompareManager.js";
-import { ExtendedTypeOfChange } from "../widgets/EnhancedElementsInspector.js";
 
 /**
  * Appends the proper localized string that matches the given type of change
@@ -68,12 +67,6 @@ const appendChangeTypes = (message: string, typeOfChange: number) => {
     TypeOfChange.Hidden,
     "hiddenProperty",
   );
-  message = appendChangeType(
-    message,
-    typeOfChange,
-    ExtendedTypeOfChange.Driven,
-    "driven",
-  )
   return message.substring(0, message.length - 2);
 };
 

@@ -5,7 +5,7 @@
 import { BeEvent, Logger } from "@itwin/core-bentley";
 import { IModelVersion, type ChangedElements } from "@itwin/core-common";
 import {
-  CheckpointConnection, GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, NotifyMessageDetails,
+  CheckpointConnection, FeatureSymbology, GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, NotifyMessageDetails,
   OutputMessagePriority
 } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
@@ -20,6 +20,7 @@ import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompare
 import { VisualizationHandler } from "./VisualizationHandler.js";
 import { extractDrivenByInstances, extractDrivesInstances, transformToAPIChangedElements } from "../utils/utils.js";
 import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
+import { ChangedECInstanceCache } from "./ChangedECInstanceCache.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
@@ -47,6 +48,8 @@ export enum VersionCompareProgressStage {
 export class VersionCompareManager {
   /** Changed Elements Manager responsible for maintaining the elements obtained from the service */
   public changedElementsManager: ChangedElementsManager;
+  /** ChangedECInstance cache only used when using changesProvider options */
+  public changedECInstanceCache: ChangedECInstanceCache;
 
   private progressCoordinator: ProgressCoordinator<VersionCompareProgressStage>;
 
@@ -80,6 +83,8 @@ export class VersionCompareManager {
     void IModelApp.localization.registerNamespace(VersionCompareManager.namespace);
 
     this.changedElementsManager = new ChangedElementsManager(this);
+
+    this.changedECInstanceCache = new ChangedECInstanceCache();
 
     // Tooltip provider for type of change
     if (options.wantTooltipAugment) {
@@ -243,6 +248,24 @@ export class VersionCompareManager {
 
     return filteredResults;
   };
+
+  /**
+   * Helper function that will use the provided `colorOverrideProvider` initialization option
+   * @returns
+   */
+  public getColorOverrideProvider = (): ((visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void) | undefined => {
+    const customProvider = this.options.colorOverrideProvider;
+    if (!customProvider) {
+      return undefined;
+    }
+
+    // Wrap the option function to provide the visible and hidden ChangedECInstance arrays instead of changed-elements-react specific ChangedElementEntry[]
+    return (visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => {
+      const visibleInstances = this.changedECInstanceCache.mapFromEntries(visibleEntries);
+      const hiddenInstances = this.changedECInstanceCache.mapFromEntries(hiddenEntries);
+      customProvider(visibleInstances, hiddenInstances, overrides);
+    };
+  }
 
   /**
    * Request changed elements between two versions given from the Changed Elements Service.
@@ -464,6 +487,9 @@ export class VersionCompareManager {
       if (!targetVersion.changesetId) {
         throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
       }
+
+      // Initialize ChangedECInstance cache for correlating entries
+      this.changedECInstanceCache.initialize(processorResults.changedInstances);
 
       // Keep metadata around for UI uses and other queries
       this.currentVersion = currentVersion;
@@ -722,6 +748,7 @@ export class VersionCompareManager {
       }
 
       this.changedElementsManager.cleanup();
+      this.changedECInstanceCache.clear();
 
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();

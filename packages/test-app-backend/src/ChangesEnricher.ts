@@ -5,7 +5,6 @@
 import { ChangedECInstance, IModelDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { QueryBinder, TypeOfChange } from "@itwin/core-common";
-import { ExtendedTypeOfChange } from "./ChangedInstancesProcessor";
 import { getTypeOfChange } from "./TypeOfChange";
 import { RelationshipClassWithDirection } from "./RPC/ChangesRpcInterface";
 
@@ -180,17 +179,12 @@ export class RelatedChangesEnricher implements ChangesEnricher {
     // Enrich data
     for (const instance of instances) {
       instance["$comparison"] = {};
-      if (instance.$meta?.op === "Updated") {
-        instance["$comparison"].type |= this.extractTypeOfChange(instance);
-      }
+      instance["$comparison"].type |= this.extractTypeOfChange(instance);
+
       const backwards = driveBackwardMap.get(`${instance.ECInstanceId}`);
       if (backwards) {
-        instance["$comparison"].type = ExtendedTypeOfChange.Driven;
+        instance["$comparison"].type = TypeOfChange.Indirect; // TODO
         instance["$comparison"].drivenBy = backwards;
-        // TODO: This opcode transformation should happen in the app, not in this interface
-        if (instance.$meta) {
-          instance.$meta.op = "Updated";
-        }
       }
       const forwards = driveForwardMap.get(`${instance.ECInstanceId}`);
       if (forwards) {

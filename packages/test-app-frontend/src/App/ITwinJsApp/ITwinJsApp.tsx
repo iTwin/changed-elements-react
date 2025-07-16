@@ -12,14 +12,16 @@ import {
   ChangedElementsWidget,
   ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
   VersionCompareFeatureTracking,
-  NamedVersionSelectorWidget
+  NamedVersionSelectorWidget,
+  ChangedECInstance
 } from "@itwin/changed-elements-react";
 import { Id64 } from "@itwin/core-bentley";
 import {
-  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, IModelReadRpcInterface, IModelTileRpcInterface
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, FeatureAppearance, IModelReadRpcInterface, IModelTileRpcInterface,
+  TypeOfChange
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d,
+  CheckpointConnection, FeatureSymbology, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d,
   type ViewState
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
@@ -167,15 +169,54 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   ]);
 
 
-  const changesProvider = async (startChangedset: ChangesetIdWithIndex, endChangedset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
+  // Example changes provider that uses ChangesRpcInterface to get changes from backend instead of service
+  const changesProvider = async (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
     const client = ChangesRpcInterface.getClient();
     // Relationships we want for categorizing changes driven by relationships
     const relationships: RelationshipClassWithDirection[] = [
       { className: "ElementDrivesElement", reverse: false },
       { className: "SpatialOrganizerHoldsSpatialElements", reverse: false },
     ];
-    return client.getChangedInstances(iModelConnection.getRpcProps(), startChangedset, endChangedset, relationships, await authorizationClient.getAccessToken());
+    const instances = await client.getChangedInstances(iModelConnection.getRpcProps(), startChangeset, endChangeset, relationships, await authorizationClient.getAccessToken());
+
+    // Change the driven by elements that are inserted or deleted as "updated"
+    for (const instance of instances.changedInstances) {
+      if (instance.$comparison.drivenBy !== undefined && (instance.$meta?.op === "Inserted" || instance.$meta?.op === "Deleted")) {
+        // If the instance is inserted+deleted due to the domain logic, we mark it as updated
+        instance.$meta.op = "Updated";
+        // Add type of change as indirect
+        instance.$comparison.type = instance.$comparison.type | TypeOfChange.Indirect;
+        // TODO: Currently we maintain all changed instances in this example, but this will include the duplicate Insert and the Delete as separate entries. They should be consolidated
+      }
+    }
+
+    return instances;
   }
+
+  // Example color override provider for direct comparison changes
+  const colorOverrideProvider = (visibleInstances: ChangedECInstance[], _hiddenInstances: ChangedECInstance[], overrides: FeatureSymbology.Overrides) => {
+    // Override color for driven elements
+    const drivenAppearance = FeatureAppearance.fromJSON({
+      rgb: { r: 180, g: 120, b: 200 },
+      emphasized: true,
+    });
+    // Colorize driven elements that are visible due to filters in the UI
+    for (const change of visibleInstances) {
+      if (change.$comparison?.drivenBy) {
+        overrides.override({
+          elementId: change.ECInstanceId,
+          appearance: drivenAppearance,
+        });
+        overrides.setAlwaysDrawn(change.ECInstanceId);
+      }
+    }
+  };
+
+  // Example onInstancesSelected handler that can be used to perform custom actions when instances are selected in the UI
+  const onInstancesSelected = async (instances: ChangedECInstance[]) => {
+    console.log("Selected instances:", instances);
+    // Here you can implement any custom logic when instances are selected in the UI
+  };
 
   VersionCompare.initialize({
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
@@ -188,6 +229,8 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     ),
     featureTracking: featureTrackingTesterFunctions,
     changesProvider: changesProvider,
+    colorOverrideProvider: colorOverrideProvider,
+    onInstancesSelected: onInstancesSelected,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);

@@ -20,12 +20,6 @@ import {
 import { ChangedInstancesResult } from "./RPC/ChangesRpcInterface";
 import { ChangesEnricher } from "./ChangesEnricher";
 
-// Need a copy for the frontend until we have a common package
-// TODO: Eliminate the need for using type of change for this functionality in favor of something else
-export enum ExtendedTypeOfChange {
-  Driven = 64,
-}
-
 /**
  * Options for processing handlers for domain-specific logic
  */

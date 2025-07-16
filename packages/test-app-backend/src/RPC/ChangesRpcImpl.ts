@@ -18,8 +18,8 @@ export class ChangesRpcImpl extends RpcInterface implements ChangesRpcInterface 
    */
   public async getChangedInstances(iModelToken: IModelRpcProps, startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, relationships: RelationshipClassWithDirection[], authToken: string): Promise<ChangedInstancesResult> {
     // Create instance
-    const changesetGroup = new ChangedInstancesProcessor({ enricher: new RelatedChangesEnricher({ relationships })});
+    const processor = new ChangedInstancesProcessor({ enricher: new RelatedChangesEnricher({ relationships })});
     // Run changeset group comparison
-    return changesetGroup.getChangedInstances(iModelToken, startChangeset, endChangeset, authToken);
+    return processor.getChangedInstances(iModelToken, startChangeset, endChangeset, authToken);
   }
 }
