@@ -22,7 +22,7 @@ jobs:
     - name: Install pnpm
       uses: pnpm/action-setup@v2
       with:
-        version: 8
+        version: 10.12.4
         run_install: false
 
     - name: Use Node.js 20
