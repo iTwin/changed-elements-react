@@ -34,7 +34,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js"
-import { applyUrlPrefix, localBackendPort, runExperimental, usingLocalBackend } from "../../environment.js";
+import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
@@ -168,7 +168,6 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     UiFramework.initialize(undefined),
   ]);
 
-
   // Example changes provider that uses ChangesRpcInterface to get changes from backend instead of service
   const changesProvider = async (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
     const client = ChangesRpcInterface.getClient();
@@ -228,9 +227,9 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
     featureTracking: featureTrackingTesterFunctions,
-    changesProvider: changesProvider,
-    colorOverrideProvider: colorOverrideProvider,
-    onInstancesSelected: onInstancesSelected,
+    changesProvider: useDirectComparison ? changesProvider : undefined,
+    colorOverrideProvider: useDirectComparison ? colorOverrideProvider : undefined,
+    onInstancesSelected: useDirectComparison ? onInstancesSelected : undefined,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
