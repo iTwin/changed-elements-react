@@ -907,19 +907,10 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const includeFilter = (e: ChangedElementEntry) => this._includeFilter(e, opts) && !this._hideFilter(e, opts);
     const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
 
-    // TODO: Driven elements should be treated appropriately for special highlighting
     const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(entries);
 
     const visibleEntries = entries.filter(includeFilter);
     visibleEntries.push(...drivenElements);
-
-    const hiddenEntries = entries.filter(hideFilter);
-    // Remove driven elements from hidden entries
-    for (const entry of hiddenEntries) {
-      if (drivenElements.some((d) => d.id === entry.id)) {
-        hiddenEntries.splice(hiddenEntries.indexOf(entry), 1);
-      }
-    }
 
     // Visualize the filtered elements and focus
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
