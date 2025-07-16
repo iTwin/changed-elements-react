@@ -23,6 +23,7 @@
     "@itwin/imodels-client-authoring": "^6.0.0-dev.1",
     "@itwin/presentation-backend": "^5.0.0-dev.111",
     "@itwin/presentation-common": "^5.0.0-dev.111",
+    "@itwin/object-storage-azure": "^3.0.1",
     "@types/dotenv-flow": "^3.2.0",
     "@types/node": "^18.0.0",
     "dotenv-flow": "^3.2.0",

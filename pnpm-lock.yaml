@@ -185,6 +185,9 @@ importers:
       '@itwin/imodels-client-authoring':
         specifier: ^6.0.0-dev.1
         version: 6.0.1(inversify@6.0.3)(reflect-metadata@0.1.14)
+      '@itwin/object-storage-azure':
+        specifier: ^3.0.1
+        version: 3.0.1(inversify@6.0.3)(reflect-metadata@0.1.14)
       '@itwin/presentation-backend':
         specifier: ^5.0.0-dev.111
         version: 5.0.4(@itwin/core-backend@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-common@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-geometry@5.0.4))(@itwin/core-geometry@5.0.4)(@itwin/ecschema-metadata@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-quantity@5.0.4(@itwin/core-bentley@5.0.4))))(@itwin/core-bentley@5.0.4)(@itwin/core-common@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-geometry@5.0.4))(@itwin/core-quantity@5.0.4(@itwin/core-bentley@5.0.4))(@itwin/ecschema-metadata@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-quantity@5.0.4(@itwin/core-bentley@5.0.4)))(@itwin/presentation-common@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-common@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-geometry@5.0.4))(@itwin/core-quantity@5.0.4(@itwin/core-bentley@5.0.4))(@itwin/ecschema-metadata@5.0.4(@itwin/core-bentley@5.0.4)(@itwin/core-quantity@5.0.4(@itwin/core-bentley@5.0.4))))
