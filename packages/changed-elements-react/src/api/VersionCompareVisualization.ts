@@ -640,7 +640,7 @@ export class VersionCompareVisualizationManager {
     // const targetIModel = this._targetIModel;
     await this._zoomToElements(
       currentIModel,
-      elementIds
+      elementIds,
     );
 
     VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.changedElementsTreeElementClicked);

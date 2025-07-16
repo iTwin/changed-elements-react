@@ -15,14 +15,12 @@ import {
   NamedVersionSelectorWidget,
   ChangedECInstance
 } from "@itwin/changed-elements-react";
-import { Id64 } from "@itwin/core-bentley";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, FeatureAppearance, IModelReadRpcInterface, IModelTileRpcInterface,
   TypeOfChange
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, FeatureSymbology, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d,
-  type ViewState
+  CheckpointConnection, FeatureSymbology, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
@@ -283,16 +281,6 @@ function useIModel(
 function displayIModelError(message: string, error: unknown, toaster: Toaster): void {
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
   toaster.negative(<>{message}<br /> {errorMessage}</>);
-}
-
-async function getStoredViewState(iModel: IModelConnection): Promise<ViewState | undefined> {
-  let viewId: string | undefined = await iModel.views.queryDefaultViewId();
-  if (viewId === Id64.invalid) {
-    const viewDefinitionProps = await iModel.views.queryProps({ wantPrivate: false, limit: 1 });
-    viewId = viewDefinitionProps[0]?.id;
-  }
-
-  return viewId ? iModel.views.load(viewId) : undefined;
 }
 
 class MainFrontstageProvider extends StandardFrontstageProvider {

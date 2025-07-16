@@ -60,8 +60,10 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
       await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
       [changedElements.changedElements],
     );
-  } catch (error) {
-    Logger.logError("VersionCompare", `Error starting comparison: ${error}`);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      Logger.logError("VersionCompare", `Error starting comparison: ${error.message}`);
+    }
   }
 };
 

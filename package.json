@@ -8,7 +8,7 @@
     "test:components": "npm test --prefix packages/changed-elements-react",
     "cover": "run-p --silent cover:*",
     "cover:components": "npm run test:cover --prefix packages/changed-elements-react",
-    "lint": "eslint '**/*.{ts,tsx}'",
+    "lint": "eslint ./packages/**/src/**/*.{ts,tsx}",
     "typecheck": "run-p --silent typecheck:*",
     "typecheck:components": "npm run typecheck --prefix packages/changed-elements-react",
     "typecheck:backend": "npm run typecheck --prefix packages/test-app-backend",
@@ -16,7 +16,7 @@
     "check": "changeset status"
   },
   "engines": {
-    "pnpm": ">=8",
+    "pnpm": ">=10",
     "npm": "<0",
     "node": ">=20"
   },
@@ -51,5 +51,8 @@
       "esbuild",
       "protobufjs"
     ]
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.5"
   }
 }

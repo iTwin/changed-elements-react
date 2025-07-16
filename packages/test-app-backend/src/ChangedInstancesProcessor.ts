@@ -9,13 +9,13 @@ import {
   IModelDb,
   IModelHost,
   PartialECChangeUnifier,
-  SqliteChangesetReader,
+  SqliteChangesetReader
 } from "@itwin/core-backend";
 import {
   AuthorizationClient,
   ChangesetFileProps,
   ChangesetIdWithIndex,
-  IModelRpcProps,
+  IModelRpcProps
 } from "@itwin/core-common";
 import { ChangedInstancesResult } from "./RPC/ChangesRpcInterface";
 import { ChangesEnricher } from "./ChangesEnricher";
@@ -107,7 +107,7 @@ export class ChangedInstancesProcessor {
     // Use any passed processor to process the instances
     const comparisonProcessor = this._processingOpts?.enricher;
     if (comparisonProcessor) {
-      return await comparisonProcessor.processChangedInstances(db, instances);
+      return comparisonProcessor.processChangedInstances(db, instances);
     }
 
     return instances;

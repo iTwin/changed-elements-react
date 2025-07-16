@@ -87,7 +87,6 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
         job,
         watchJob: async function* (pollingIntervalMs: number, signal?: AbortSignal) {
           signal?.throwIfAborted();
-          const startTime = new Date();
           while (job.status === "Queued" || job.status === "Started") {
             await new Promise((resolve) => setTimeout(resolve, pollingIntervalMs));
             const comparisonJob = await getComparisonJob({
@@ -98,12 +97,6 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
               signal,
             });
             job = comparisonJobToStatus(comparisonJob ?? job.jobId, namedVersion);
-            if (job.status === "Completed" || job.status === "Failed") {
-              const endTime = new Date();
-              console.log(`Job Processing start time: ${startTime.toISOString()}`);
-              console.log(`Job Processing end time: ${endTime.toISOString()}`);
-              console.log(`Job Processing time for front end: ${endTime.getTime() - startTime.getTime()} milliseconds`);
-            }
             yield job;
           }
         },

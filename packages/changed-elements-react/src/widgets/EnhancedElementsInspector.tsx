@@ -620,7 +620,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         .filter((instance) => instance !== undefined);
 
       // Don't await selection callback to avoid blocking the UI
-      onSelectionCallback(changedInstances).catch();
+      void onSelectionCallback(changedInstances);
     }
 
     this.setState({ selectedIds: new Set(ids) });
@@ -1272,13 +1272,8 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   private readonly _loadNodes = async (nodes: TreeNodeItem[]): Promise<void> => {
-    const startTime = new Date();
     await this.props.dataProvider.load(nodes);
     await this._reloadNodes();
-    const endTime = new Date();
-    console.log(`First entries loaded in tree at: ${startTime.toISOString()}`);
-    console.log(`First entries loaded in tree ended at: ${endTime.toISOString()}`);
-    console.log(`First entries loaded in tree duration: ${endTime.getTime() - startTime.getTime()} milliseconds`);
   };
 
   private readonly _isNodeLoaded = (node: TreeNodeItem): boolean => {
@@ -1437,7 +1432,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
       if (drivenElements !== undefined && drivenElements.length > 0) {
         // Handle selection and zoom
         this._handleDrivenElementsSelection(item, drivenElements);
-        visualizationManager?.zoomToElements(drivenElements)
+        await visualizationManager?.zoomToElements(drivenElements);
       } else {
         // Handle zooming to specific element
         this._selectNode(item);
@@ -1452,8 +1447,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   private readonly _onNodeClick = async (item: TreeNodeItem): Promise<void> => {
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     if (item.extendedData?.isModel && visualizationManager) {
-      // TODO: Remove log
-      console.log("Model Selected on List: ", item.extendedData?.modelProps)
       // Handle zooming to 3d model nodes
       if (!item.extendedData.is2d) {
         await visualizationManager.zoomToModel(item.id);

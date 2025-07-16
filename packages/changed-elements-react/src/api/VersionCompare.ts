@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { getClassName } from "@itwin/appui-abstract";
 import type { AccessToken, Id64String } from "@itwin/core-bentley";
-import type { ModelProps, ChangesetIdWithIndex } from "@itwin/core-common";
+import type { ModelProps, ChangesetIdWithIndex, TypeOfChange } from "@itwin/core-common";
 import { FeatureSymbology, IModelApp, IModelConnection, ViewState } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 
@@ -36,19 +36,33 @@ interface IVersionCompareClientFactory {
   createChangedElementsClient: () => ChangedElementsClientBase;
 }
 
+export interface RelationshipClassWithDirection {
+  className: string;
+  direction: "forward" | "backward";
+}
+
+export interface ElementWithRelationship {
+  id: Id64String;
+  relationship: RelationshipClassWithDirection;
+}
+
+export interface ComparisonMetadata {
+  drivenBy?: ElementWithRelationship[];
+  drives?: ElementWithRelationship[];
+  type?: TypeOfChange;
+}
+
 /**
  * TODO: This should be moved to common package instead of maintained in core-backend?
  */
 export interface ChangedECInstance {
     ECInstanceId: Id64String;
     ECClassId?: Id64String;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     $meta?: any;
     // Added by enricher
-    $comparison?: {
-      drivenBy?: { id: Id64String, relationship: { className: string, direction: "forward" | "backward" } }[];
-      drives?: { id: Id64String, relationship: { className: string, direction: "forward" | "backward" } }[];
-      type?: number;
-    }
+    $comparison?: ComparisonMetadata;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -171,7 +185,7 @@ export class VersionCompare {
   private static _manager: VersionCompareManager | undefined;
   private static _getAccessToken?: () => Promise<AccessToken>;
 
-  private static _changesProvider?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[] }>;
+  private static _changesProvider?: (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => Promise<{ changedInstances: ChangedECInstance[]; }>;
   public static get changesProvider() {
     return VersionCompare._changesProvider;
   }

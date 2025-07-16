@@ -164,7 +164,7 @@ export const extractDrivenByInstances = (instances: ChangedECInstance[]): Map<st
   const elementDrivenByElementMap = new Map<string, string[]>();
   instances.forEach((elem) => {
     if (elem.$comparison?.drivenBy) {
-      const ids = elem.$comparison.drivenBy.map((idWithRelationship: any) => idWithRelationship.id);
+      const ids = elem.$comparison.drivenBy.map((idWithRelationship: { id: string; }) => idWithRelationship.id);
       elementDrivenByElementMap.set(`${elem.ECInstanceId}`, ids);
     }
   });
@@ -181,7 +181,7 @@ export const extractDrivesInstances = (instances: ChangedECInstance[]): Map<stri
   const elementDrivesElementMap = new Map<string, string[]>();
   instances.forEach((elem) => {
     if (elem.$comparison?.drives) {
-      const ids = elem.$comparison.drives.map((idWithRelationship: any) => idWithRelationship.id);
+      const ids = elem.$comparison.drives.map((idWithRelationship: { id: string; }) => idWithRelationship.id);
       elementDrivesElementMap.set(`${elem.ECInstanceId}`, ids);
     }
   });

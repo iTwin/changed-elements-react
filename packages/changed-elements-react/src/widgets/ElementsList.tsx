@@ -70,9 +70,6 @@ export const ElementsList = forwardRef<HTMLDivElement, ElementsListProps>(
           // Add selection set of elements that presentation added
           const allIds = new Set([...ids, ...args.imodel.selectionSet.elements]);
 
-          // TODO: Remove log
-          console.log("Element Selection changed", args.keys.instanceKeys);
-
           const findNodeToFocus = () => {
             for (const node of props.nodes) {
               if (allIds.has(node.id)) {
