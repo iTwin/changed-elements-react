@@ -569,17 +569,15 @@ export class VersionCompareManager {
       IModelApp.notifications.outputMessage(
         new NotifyMessageDetails(OutputMessagePriority.Error, briefError, `${detailed}: ${errorMessage}`),
       );
-      try {
-        this.versionCompareStartFailed.raiseEvent();
-      } finally {
-        this._currentIModel = undefined;
-        this._targetIModel = undefined;
-        success = false;
-        this._skipParentChildRelationships = false;
-        VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
 
-        await this.stopComparison();
-      }
+      this.versionCompareStartFailed.raiseEvent();
+      this._currentIModel = undefined;
+      this._targetIModel = undefined;
+      success = false;
+      this._skipParentChildRelationships = false;
+      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+
+      await this.stopComparison();
     }
 
     return success;
