@@ -550,7 +550,6 @@ export class ChangedElementsManager {
     const relevantChangedElements = [];
     for (const entry of entries) {
       const key = `${entry.id}`;
-      // const drivenElements = this.elementToDrivenElement.get(key);
       const drivenElements = this.elementDrivesElement.get(key);
       if (drivenElements) {
         // TODO: Seems like everything is using instance id without class id, that seems wrong...
