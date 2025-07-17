@@ -53,7 +53,7 @@ export interface ComparisonMetadata {
 }
 
 /**
- * TODO: This should be moved to common package instead of maintained in core-backend?
+ * TODO: This should be moved to common package
  */
 export interface ChangedECInstance {
     ECInstanceId: Id64String;

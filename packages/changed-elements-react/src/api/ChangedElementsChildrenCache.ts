@@ -116,7 +116,6 @@ export class ChangedElementsChildrenCache extends ChangedElementDataCache {
     map: Map<string, ChangedElementQueryData[]>,
     elementIds: string[],
   ) => {
-    //todo make manager prop from skipping parent,children relationship
     if (elementIds.length === 0 || VersionCompare.manager?.skipParentChildRelationships) {
       return;
     }

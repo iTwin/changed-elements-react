@@ -863,7 +863,6 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const { visible, hidden } =
       this.props.dataProvider.GetEntriesByModelIdsAndFilters(modelIds, includeFilter, hideFilter);
 
-    // TODO: Driven elements should be treated appropriately for special highlighting
     // Add driven elements to visible entries
     const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(visible);
     visible.push(...drivenElements);

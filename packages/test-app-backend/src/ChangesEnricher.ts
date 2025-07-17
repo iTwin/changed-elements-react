@@ -112,11 +112,6 @@ export class RelatedChangesEnricher implements ChangesEnricher {
     return relatedClassIds;
   }
 
-  /** TODO: Should become a separate utility function / not dependent on this "comparison processor" */
-  private extractTypeOfChange(instance: ChangedECInstance): number {
-    return getTypeOfChange(Object.keys(instance));
-  }
-
   /**
    * Return the relevant related class ids to the instance
    * @param relatedClassIds
@@ -156,9 +151,7 @@ export class RelatedChangesEnricher implements ChangesEnricher {
       // If the instance is a relationship, we need to find the source and target elements
       const source = instance.SourceECInstanceId;
       const target = instance.TargetECInstanceId;
-      // TODO: Do we care about class ids here
-      // const sourceClassId = instance.SourceECClassId;
-      // const targetClassId = instance.TargetECClassId;
+      // TODO: After gathering feedback from OS+, revisit maintaining class ids
       drivenElements.add(target);
       const driveBackwardEntry = driveBackwardMap.get(`${target}`);
       if (driveBackwardEntry) {
@@ -179,17 +172,16 @@ export class RelatedChangesEnricher implements ChangesEnricher {
     // Enrich data
     for (const instance of instances) {
       instance["$comparison"] = {};
-      instance["$comparison"].type |= this.extractTypeOfChange(instance);
+      instance["$comparison"].type |= getTypeOfChange(Object.keys(instance));
 
       const backwards = driveBackwardMap.get(`${instance.ECInstanceId}`);
       if (backwards) {
-        instance["$comparison"].type = TypeOfChange.Indirect; // TODO
+        instance["$comparison"].type = TypeOfChange.Indirect;
         instance["$comparison"].drivenBy = backwards;
       }
       const forwards = driveForwardMap.get(`${instance.ECInstanceId}`);
       if (forwards) {
         instance["$comparison"].drives = forwards;
-        // TODO: Use some other mechanism to ensure that relationship sources are marked changed instead of cleaning their Indirect type
         instance["$comparison"].type ^= TypeOfChange.Indirect;
       }
     }

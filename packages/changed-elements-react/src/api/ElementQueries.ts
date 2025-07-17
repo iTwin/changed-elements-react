@@ -59,7 +59,7 @@ export const generateEntryFromQueryData = (
       existingEntry && existingEntry.opcode
         ? existingEntry.opcode
         : DbOpcode.Update,
-    type: existingEntry?.type ?? 0, // TODO: Do we need to mark these as indirect ?
+    type: existingEntry?.type ?? 0,
     indirect: existingEntry === undefined,
     foundInCurrent,
     loaded: false,

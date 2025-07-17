@@ -129,10 +129,9 @@ const stringToOpcode = (operation: string): DbOpcode => {
 };
 
 /**
- * Transforms ChangedECInstance array to ChangedElements object
- * TODO: This needs to be refactored and potentially passed by the consuming application
- * @param changedElements
- * @returns
+ * Transforms ChangedECInstance array to ChangedElements object for direct comparison
+ * @param instances Array of ChangedECInstance objects
+ * @returns ChangedElements object representing all changed elements
  */
 export const transformToAPIChangedElements = (instances: ChangedECInstance[]): ChangedElements => {
   const ce: ChangedElements = createEmptyChangedElements();
