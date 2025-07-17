@@ -48,13 +48,19 @@ export class ChangedInstancesProcessor {
     IModelHost.authorizationClient = authClient;
     try {
       const csFileProps = [];
-      // TODO: should the first changeset in a reverse sync really be included even though its 'initialized branch provenance'? The answer is no, its a bug that needs to be fixed.
+      const startIndex = startChangesetIdWithIndex.index;
+      const endIndex = endChangesetIdWithIndex.index;
+
+      if (startIndex === undefined || endIndex === undefined) {
+        throw new Error("Invalid changeset indices provided");
+      }
+
       const fileProps = await BriefcaseManager.downloadChangesets({
         iModelId: iModelId,
         targetDir: BriefcaseManager.getChangeSetsPath(iModelId),
         range: {
-          first: startChangesetIdWithIndex.index!,
-          end: endChangesetIdWithIndex.index!,
+          first: startIndex,
+          end: endIndex,
         },
         accessToken: authToken,
       });
