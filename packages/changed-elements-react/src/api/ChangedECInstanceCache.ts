@@ -17,10 +17,20 @@ export class ChangedECInstanceCache {
     this._cache = new Map<Id64String, ChangedECInstance>();
   }
 
-  private _getKey(instance: ChangedECInstance): string{
+  /**
+   * Creates a key for the ChangedECInstance based on its Id and Class Id
+   * @param instance ChangedECInstance to create a key for
+   * @returns Key string for the ChangedECInstance in the cache, formatted as "instanceId:classId"
+   */
+  private _getKey(instance: ChangedECInstance): string {
     return `${instance.ECInstanceId}:${instance.ECClassId}`;
   }
 
+  /**
+   * Initializes the cache with the given ChangedECInstances
+   * The cache will be cleared before adding the instances
+   * @param instances
+   */
   public initialize(instances: ChangedECInstance[]): void {
     this._cache.clear();
     for (const instance of instances) {
@@ -28,20 +38,41 @@ export class ChangedECInstanceCache {
     }
   }
 
+  /**
+   * Add instance to the cache
+   * @param instance ChangedECInstance to add to the cache
+   */
   public add(instance: ChangedECInstance): void {
     this._cache.set(this._getKey(instance), instance);
   }
 
+  /**
+   * Gets the ChangedECInstance from the cache based on the instanceId and classId
+   * @param instanceId Id of the instance to get
+   * @param classId Class Id of the instance to get
+   * @returns ChangedECInstance if found, undefined otherwise
+   */
   public get(instanceId: Id64String, classId: Id64String): ChangedECInstance | undefined {
     const key = `${instanceId}:${classId}`;
     return this._cache.get(key);
   }
 
+  /**
+   * Returns whether the cache contains the ChangedECInstance with the given instanceId and classId
+   * @param instanceId Id of the instance to check
+   * @param classId Class Id of the instance to check
+   * @returns true if the cache contains the instance, false otherwise
+   */
   public has(instanceId: Id64String, classId: Id64String): boolean {
     const key = `${instanceId}:${classId}`;
     return this._cache.has(key);
   }
 
+  /**
+   * Similar to get, but uses the ChangedElementEntry to find the instance
+   * @param entry ChangedElementEntry to use for finding the instance
+   * @returns ChangedECInstance if found, undefined otherwise
+   */
   public getFromEntry(entry: ChangedElementEntry): ChangedECInstance | undefined {
     return this.get(entry.id, entry.classId);
   }
@@ -62,6 +93,9 @@ export class ChangedECInstanceCache {
     return instances;
   }
 
+  /**
+   * Clears the cache of all ChangedECInstances
+   */
   public clear(): void {
     this._cache.clear();
   }
