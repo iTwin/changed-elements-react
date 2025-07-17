@@ -322,14 +322,14 @@ export class VersionCompareManager {
         throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
       }
 
+      if (!this._currentIModel.iModelId || !this._currentIModel.iTwinId) {
+        throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
+      }
+
       // Setup visualization handler
       this._initializeVisualizationHandler();
       // Raise event that comparison is starting
       this.versionCompareStarting.raiseEvent();
-
-      if (!this._currentIModel.iModelId || !this._currentIModel.iTwinId) {
-        throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
-      }
 
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
