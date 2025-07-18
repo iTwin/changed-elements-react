@@ -12,15 +12,15 @@ import {
   ChangedElementsWidget,
   ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
   VersionCompareFeatureTracking,
-  NamedVersionSelectorWidget
+  NamedVersionSelectorWidget,
+  ChangedECInstance
 } from "@itwin/changed-elements-react";
-import { Id64 } from "@itwin/core-bentley";
 import {
-  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, IModelReadRpcInterface, IModelTileRpcInterface
+  AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, FeatureAppearance, IModelReadRpcInterface, IModelTileRpcInterface,
+  TypeOfChange
 } from "@itwin/core-common";
 import {
-  CheckpointConnection, IModelApp, QuantityFormatter, ViewCreator3d, type IModelConnection,
-  type ViewState
+  CheckpointConnection, FeatureSymbology, IModelApp, IModelConnection, QuantityFormatter, ViewCreator3d
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
@@ -31,8 +31,8 @@ import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-
-import { applyUrlPrefix, localBackendPort, runExperimental, usingLocalBackend } from "../../environment.js";
+import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js"
+import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
@@ -49,40 +49,30 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
   type LoadingState = "opening-imodel" | "opening-viewstate" | "creating-viewstate" | "loaded";
   const [loadingState, setLoadingState] = useState<LoadingState>("opening-imodel");
   const iModel = useIModel(props.iTwinId, props.iModelId, props.authorizationClient);
-  useEffect(
-    () => {
-      if (!iModel) {
-        return;
+  useEffect(() => {
+    if (!iModel) {
+      return;
+    }
+
+    let disposed = false;
+    void (async () => {
+      await VersionCompare.manager?.stopComparison();
+
+      setLoadingState("creating-viewstate");
+      const viewCreator = new ViewCreator3d(iModel);
+      const viewState = await viewCreator.createDefaultView();
+      if (!disposed) {
+        setLoadingState("loaded");
+        UiFramework.setIModelConnection(iModel);
+        UiFramework.setDefaultViewState(viewState);
+        UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
+        await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
       }
-
-      let disposed = false;
-      void (async () => {
-        await VersionCompare.manager?.stopComparison();
-
-        setLoadingState("opening-viewstate");
-        let viewState = await getStoredViewState(iModel);
-        if (disposed) {
-          return;
-        }
-
-        if (!viewState) {
-          setLoadingState("creating-viewstate");
-          const viewCreator = new ViewCreator3d(iModel);
-          viewState = await viewCreator.createDefaultView();
-        }
-
-        if (!disposed) {
-          setLoadingState("loaded");
-          UiFramework.setIModelConnection(iModel);
-          UiFramework.setDefaultViewState(viewState);
-          UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
-          await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
-        }
-      })();
-      return () => { disposed = true; };
-    },
-    [iModel],
-  );
+    })();
+    return () => {
+      disposed = true;
+    };
+  }, [iModel]);
 
   const iModelsClient = useMemo(
     () => {
@@ -167,7 +157,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface],
   );
 
   await Promise.all([
@@ -176,6 +166,54 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     UiFramework.initialize(undefined),
   ]);
 
+  // Example changes provider that uses ChangesRpcInterface to get changes from backend instead of service
+  const changesProvider = async (startChangeset: ChangesetIdWithIndex, endChangeset: ChangesetIdWithIndex, iModelConnection: IModelConnection) => {
+    const client = ChangesRpcInterface.getClient();
+    // Relationships we want for categorizing changes driven by relationships
+    const relationships: RelationshipClassWithDirection[] = [
+      { className: "ElementDrivesElement", reverse: false },
+      { className: "SpatialOrganizerHoldsSpatialElements", reverse: false },
+    ];
+    const instances = await client.getChangedInstances(iModelConnection.getRpcProps(), startChangeset, endChangeset, relationships, await authorizationClient.getAccessToken());
+
+    // Change the driven by elements that are inserted or deleted as "updated"
+    for (const instance of instances.changedInstances) {
+      if (instance.$comparison.drivenBy !== undefined && (instance.$meta?.op === "Inserted" || instance.$meta?.op === "Deleted")) {
+        // If the instance is inserted+deleted due to the domain logic, we mark it as updated
+        instance.$meta.op = "Updated";
+        // Add type of change as indirect
+        instance.$comparison.type = instance.$comparison.type | TypeOfChange.Indirect;
+        // TODO: Currently we maintain all changed instances in this example, but this will include the duplicate Insert and the Delete as separate entries. They should be consolidated
+      }
+    }
+
+    return instances;
+  }
+
+  // Example color override provider for direct comparison changes
+  const colorOverrideProvider = (visibleInstances: ChangedECInstance[], _hiddenInstances: ChangedECInstance[], overrides: FeatureSymbology.Overrides) => {
+    // Override color for driven elements
+    const drivenAppearance = FeatureAppearance.fromJSON({
+      rgb: { r: 180, g: 120, b: 200 },
+      emphasized: true,
+    });
+    // Colorize driven elements that are visible due to filters in the UI
+    for (const change of visibleInstances) {
+      if (change.$comparison?.drivenBy) {
+        overrides.override({
+          elementId: change.ECInstanceId,
+          appearance: drivenAppearance,
+        });
+        overrides.setAlwaysDrawn(change.ECInstanceId);
+      }
+    }
+  };
+
+  // Example onInstancesSelected handler that can be used to perform custom actions when instances are selected in the UI
+  const onInstancesSelected = async (instances: ChangedECInstance[]) => {
+    console.log("Selected instances:", instances);
+    // Here you can implement any custom logic when instances are selected in the UI
+  };
 
   VersionCompare.initialize({
     changedElementsApiBaseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
@@ -187,10 +225,13 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       { frontstageIds: [MainFrontstageProvider.name] },
     ),
     featureTracking: featureTrackingTesterFunctions,
+    changesProvider: useDirectComparison ? changesProvider : undefined,
+    colorOverrideProvider: useDirectComparison ? colorOverrideProvider : undefined,
+    onInstancesSelected: useDirectComparison ? onInstancesSelected : undefined,
   });
 
   ReducerRegistryInstance.registerReducer("versionCompareState", VersionCompareReducer);
-}
+  }
 
 export type Toaster = ReturnType<typeof useToaster>;
 function useIModel(
@@ -240,16 +281,6 @@ function useIModel(
 function displayIModelError(message: string, error: unknown, toaster: Toaster): void {
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
   toaster.negative(<>{message}<br /> {errorMessage}</>);
-}
-
-async function getStoredViewState(iModel: IModelConnection): Promise<ViewState | undefined> {
-  let viewId: string | undefined = await iModel.views.queryDefaultViewId();
-  if (viewId === Id64.invalid) {
-    const viewDefinitionProps = await iModel.views.queryProps({ wantPrivate: false, limit: 1 });
-    viewId = viewDefinitionProps[0]?.id;
-  }
-
-  return viewId ? iModel.views.load(viewId) : undefined;
 }
 
 class MainFrontstageProvider extends StandardFrontstageProvider {

@@ -15,16 +15,16 @@ jobs:
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
 
-    - name: Install pnpm
+    - name: Install pnpm@10.12.4
       uses: pnpm/action-setup@v2
       with:
-        version: 8
+        version: 10.12.4
         run_install: false
 
-    - name: Use Node.js 20
+    - name: Use Node.js 20.16.0
       uses: actions/setup-node@v3
       with:
-        node-version: 20
+        node-version: 20.16.0
         cache: "pnpm"
 
     - name: Install dependencies

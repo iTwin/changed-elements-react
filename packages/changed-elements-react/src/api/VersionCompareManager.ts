@@ -5,7 +5,7 @@
 import { BeEvent, Logger } from "@itwin/core-bentley";
 import { IModelVersion, type ChangedElements } from "@itwin/core-common";
 import {
-  CheckpointConnection, GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, NotifyMessageDetails,
+  CheckpointConnection, FeatureSymbology, GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, NotifyMessageDetails,
   OutputMessagePriority
 } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
@@ -18,7 +18,9 @@ import { ChangesTooltipProvider } from "./ChangesTooltipProvider.js";
 import { VersionCompareUtils, VersionCompareVerboseMessages } from "./VerboseMessages.js";
 import { VersionCompare, type VersionCompareFeatureTracking, type VersionCompareOptions } from "./VersionCompare.js";
 import { VisualizationHandler } from "./VisualizationHandler.js";
+import { extractDrivenByInstances, extractDrivesInstances, transformToAPIChangedElements } from "../utils/utils.js";
 import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
+import { ChangedECInstanceCache } from "./ChangedECInstanceCache.js";
 
 const LOGGER_CATEGORY = "Version-Compare";
 
@@ -46,6 +48,8 @@ export enum VersionCompareProgressStage {
 export class VersionCompareManager {
   /** Changed Elements Manager responsible for maintaining the elements obtained from the service */
   public changedElementsManager: ChangedElementsManager;
+  /** ChangedECInstance cache only used when using changesProvider options */
+  public changedECInstanceCache: ChangedECInstanceCache;
 
   private progressCoordinator: ProgressCoordinator<VersionCompareProgressStage>;
 
@@ -53,6 +57,7 @@ export class VersionCompareManager {
   private _hasTypeOfChange = false;
   private _hasPropertiesForFiltering = false;
   private _hasParentIds = false;
+  private _skipParentChildRelationships = false;
 
   // define stage and order
   private weights: Record<VersionCompareProgressStage, number> = {
@@ -79,6 +84,8 @@ export class VersionCompareManager {
 
     this.changedElementsManager = new ChangedElementsManager(this);
 
+    this.changedECInstanceCache = new ChangedECInstanceCache();
+
     // Tooltip provider for type of change
     if (options.wantTooltipAugment) {
       const tooltipProvider = new ChangesTooltipProvider(this);
@@ -103,7 +110,11 @@ export class VersionCompareManager {
   }
 
   public get filterSpatial(): boolean {
-    return this.options.filterSpatial ?? true;
+    return this.options.filterSpatial ?? this.options.changesProvider === undefined;
+  }
+
+  public get skipParentChildRelationships(): boolean {
+    return this._skipParentChildRelationships;
   }
 
   public get wantPropertyFiltering(): boolean {
@@ -239,6 +250,24 @@ export class VersionCompareManager {
   };
 
   /**
+   * Helper function that will use the provided `colorOverrideProvider` initialization option
+   * @returns
+   */
+  public getColorOverrideProvider = (): ((visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void) | undefined => {
+    const customProvider = this.options.colorOverrideProvider;
+    if (!customProvider) {
+      return undefined;
+    }
+
+    // Wrap the option function to provide the visible and hidden ChangedECInstance arrays instead of changed-elements-react specific ChangedElementEntry[]
+    return (visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => {
+      const visibleInstances = this.changedECInstanceCache.mapFromEntries(visibleEntries);
+      const hiddenInstances = this.changedECInstanceCache.mapFromEntries(hiddenEntries);
+      customProvider(visibleInstances, hiddenInstances, overrides);
+    };
+  }
+
+  /**
    * Request changed elements between two versions given from the Changed Elements Service.
    * @param currentIModel Current IModelConnection
    * @param current Current Version
@@ -293,14 +322,14 @@ export class VersionCompareManager {
         throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
       }
 
+      if (!this._currentIModel.iModelId || !this._currentIModel.iTwinId) {
+        throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
+      }
+
       // Setup visualization handler
       this._initializeVisualizationHandler();
       // Raise event that comparison is starting
       this.versionCompareStarting.raiseEvent();
-
-      if (!this._currentIModel.iModelId || !this._currentIModel.iTwinId) {
-        throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
-      }
 
       this.loadingProgressEvent.raiseEvent(
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
@@ -408,6 +437,151 @@ export class VersionCompareManager {
     return success;
   }
 
+  /**
+   * Uses the changeset processor to get the changed elements between two versions.
+   * @param currentIModel
+   * @param currentVersion
+   * @param targetVersion
+   * @returns
+   */
+  public async startDirectComparison(
+    currentIModel: IModelConnection,
+    currentVersion: NamedVersion,
+    targetVersion: NamedVersion): Promise<boolean> {
+    this._currentIModel = currentIModel;
+    let success = true;
+    this._skipParentChildRelationships = true;
+    try {
+      const changesetProcessor = VersionCompare.changesProvider;
+      if (!changesetProcessor) {
+        throw new Error("Cannot do direct comparison without a changeset processor");
+      }
+
+      // Setup visualization handler
+      this._initializeVisualizationHandler();
+      // Raise event that comparison is starting
+      this.versionCompareStarting.raiseEvent();
+
+      if (!this._currentIModel.iModelId || !this._currentIModel.iTwinId) {
+        throw new Error("Cannot compare with an iModel lacking iModelId or iTwinId (aka projectId)");
+      }
+
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_openingTarget"),
+      );
+
+      // Open the target version IModel
+      const changesetId = targetVersion.changesetId;
+      this._targetIModel = await CheckpointConnection.openRemote(
+        this._currentIModel.iTwinId,
+        this._currentIModel.iModelId,
+        IModelVersion.asOfChangeSet(changesetId!),
+      );
+      const processorResults = await changesetProcessor(
+        { id: targetVersion.changesetId ?? "", index: targetVersion.changesetIndex ?? 0 },
+        {
+          id: currentVersion.changesetId ?? "", index: currentVersion.changesetIndex ?? 0,
+        }, currentIModel);
+      const changedElements = [transformToAPIChangedElements(processorResults.changedInstances)];
+      if (!targetVersion.changesetId) {
+        throw new Error("Cannot compare to a version if it doesn't contain a changeset Id");
+      }
+
+      // Initialize ChangedECInstance cache for correlating entries
+      this.changedECInstanceCache.initialize(processorResults.changedInstances);
+
+      // Keep metadata around for UI uses and other queries
+      this.currentVersion = currentVersion;
+      this.targetVersion = targetVersion;
+
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_getChangedElements"),
+      );
+
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_initializingComparison"),
+      );
+
+      let wantedModelClasses = [
+        GeometricModel2dState.classFullName,
+        GeometricModel3dState.classFullName,
+      ];
+      if (this.options.wantedModelClasses) {
+        wantedModelClasses = this.options.wantedModelClasses;
+      }
+      let filteredChangedElements = changedElements;
+      if (this.ignoredElementIds !== undefined) {
+        filteredChangedElements = this._filterIgnoredElementsFromChangesets(changedElements);
+      }
+      await this.changedElementsManager.initialize(
+        this._currentIModel,
+        this._targetIModel,
+        filteredChangedElements,
+        this.wantAllModels ? undefined : wantedModelClasses,
+        false,
+        this.filterSpatial,
+        undefined,
+        this.loadingProgressEvent,
+      );
+      // Add source of changes for driven and domain specific element changes
+      this.changedElementsManager.setElementToDrivenElementMap(extractDrivenByInstances(processorResults.changedInstances));
+      this.changedElementsManager.setElementDrivesElementMap(extractDrivesInstances(processorResults.changedInstances));
+      const changedElementEntries = this.changedElementsManager.entryCache.getAll();
+
+      // We have parent Ids available if any entries contain undefined parent data
+      this._hasParentIds = false;
+      // We have type of change available if any of the entries has a valid type of change value
+      this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
+      // We have property filtering available if any of the entries has a valid array of changed properties
+      this._hasPropertiesForFiltering = changedElementEntries.some(
+        (entry) => entry.properties !== undefined && entry.properties.size !== 0,
+      );
+
+      // Get the entries
+      this.loadingProgressEvent.raiseEvent(
+        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_findingAssemblies"),
+      );
+      await this.changedElementsManager.entryCache.initialLoad(changedElementEntries.map((entry) => entry.id)); //, true);
+
+      // Reset the select tool to allow external iModels to be located
+      await IModelApp.toolAdmin.startDefaultTool();
+
+      // Enable visualization of version comparison
+      await this.enableVisualization(false);
+
+      // Raise event
+      this.versionCompareStarted.raiseEvent(this._currentIModel, this._targetIModel, changedElementEntries);
+      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerStartedComparison);
+      VersionCompare.manager?.featureTracking?.trackVersionSelectorV2Usage();
+    } catch (ex) {
+      // Let user know comparison failed - TODO: Give better errors
+      const briefError = IModelApp.localization.getLocalizedString(
+        "VersionCompare:versionCompare.error_versionCompare",
+      );
+      const detailed = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_cantStart");
+      let errorMessage = "Unknown Error";
+      if (ex instanceof Error) {
+        errorMessage = ex.message;
+      } else if (typeof ex === "string") {
+        errorMessage = ex;
+      }
+
+      IModelApp.notifications.outputMessage(
+        new NotifyMessageDetails(OutputMessagePriority.Error, briefError, `${detailed}: ${errorMessage}`),
+      );
+
+      this.versionCompareStartFailed.raiseEvent();
+      this._currentIModel = undefined;
+      this._targetIModel = undefined;
+      success = false;
+      this._skipParentChildRelationships = false;
+      VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.versionCompareManagerErrorStarting);
+
+      await this.stopComparison();
+    }
+
+    return success;
+  }
   /**
    * Starts comparison by opening a new iModelConnection and setting up the store.
    * @param currentIModel Current IModelConnection to be used to compare against
@@ -554,7 +728,6 @@ export class VersionCompareManager {
   public async stopComparison(): Promise<void> {
     // Let listeners know we are cleaning up comparison
     this.versionCompareStopping.raiseEvent();
-
     try {
       if (this._targetIModel) {
         await this._targetIModel.close();
@@ -563,6 +736,7 @@ export class VersionCompareManager {
       }
 
       this.changedElementsManager.cleanup();
+      this.changedECInstanceCache.clear();
 
       // Reset the select tool to allow external iModels to be located
       await IModelApp.toolAdmin.startDefaultTool();
@@ -578,6 +752,7 @@ export class VersionCompareManager {
     this._currentIModel = undefined;
     this._targetIModel = undefined;
     this._isComparisonStarted = false;
+    this._skipParentChildRelationships = false;
 
     // Clean-up visualization handler
     await this._visualizationHandler?.cleanUp();

@@ -16,8 +16,7 @@ export class PropertyLabelCache {
     _classId: Id64String,
     propertyName: string,
   ): string => {
-    // TODO: For now disregard class Id, as we need to handle it differently from the changed elements accumulation step
-    // return `${classId}:${propertyName}`;
+    // For now disregard class Id, as we need to handle it differently from the changed elements accumulation step
     return propertyName;
   };
 

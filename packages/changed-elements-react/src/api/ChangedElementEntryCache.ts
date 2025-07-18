@@ -604,20 +604,16 @@ export class ChangedElementEntryCache {
       .map((elem: ChangedElementEntry) => elem.id);
 
     // Find top parents
-    const numTopParentQueries =
-      (currentEntryIds.length + targetEntryIds.length) /
-      this._findTopParentChunkSize +
-      1;
-    this._setCurrentLoadingMessage("msg_findingParents", numTopParentQueries);
     this._progressCoordinator?.updateProgress(VersionCompareProgressStage.FindParents);
-    const currentTopParents = await this._findTopParents(
+    const currentTopParents = !this._manager.skipParentChildRelationships ? await this._findTopParents(
       this._currentIModel,
       currentEntryIds,
-    );
-    const targetTopParents = await this._findTopParents(
+    ) : currentEntryIds;
+
+    const targetTopParents = !this._manager.skipParentChildRelationships ? await this._findTopParents(
       this._targetIModel,
       targetEntryIds,
-    );
+    ): targetEntryIds;
 
     // Find which parents require querying and which ones are available in entries
     const unchangedCurrentTopParents = [];
@@ -722,7 +718,7 @@ export class ChangedElementEntryCache {
 
     this._progressCoordinator?.updateProgress(VersionCompareProgressStage.FindChildren, 0);
     // Load child elements of the root nodes if we are not using fast parent loading
-    if (this._childrenCache && !VersionCompare.manager?.wantFastParentLoad) {
+    if (this._childrenCache && !VersionCompare.manager?.wantFastParentLoad && !this._manager.skipParentChildRelationships) {
       // Set update function for UI updates
       this._childrenCache.updateFunction = (percent: number) => {
         this._progressCoordinator?.addProgress(VersionCompareProgressStage.FindChildren, percent);
@@ -757,7 +753,8 @@ export class ChangedElementEntryCache {
     this._overrideEntriesInCache(finalEntries);
     // Go through all our entries and use the top parent information
     // to create the children arrays of top parents
-    this._findChildrenOfTopParents();
+    if (!this._manager.skipParentChildRelationships)
+      this._findChildrenOfTopParents();
 
     // Create the data provider and load the changed model nodes
     if (this._uiDataProvider === undefined) {

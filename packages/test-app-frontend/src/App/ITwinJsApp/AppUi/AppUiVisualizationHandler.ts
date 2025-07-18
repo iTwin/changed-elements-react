@@ -72,6 +72,8 @@ export class AppUiVisualizationHandler implements VisualizationHandler {
         changedElementsManager.unchangedModels,
         undefined,
         options?.wantTargetModified,
+        // Wrap the color override provider to allow customization of coloring via initialization options
+        this._manager.getColorOverrideProvider(),
       );
 
       if (options?.focusedSelection) {

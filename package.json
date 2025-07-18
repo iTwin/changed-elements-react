@@ -8,7 +8,7 @@
     "test:components": "npm test --prefix packages/changed-elements-react",
     "cover": "run-p --silent cover:*",
     "cover:components": "npm run test:cover --prefix packages/changed-elements-react",
-    "lint": "eslint '**/*.{ts,tsx}'",
+    "lint": "eslint ./packages/**/src/**/*.{ts,tsx}",
     "typecheck": "run-p --silent typecheck:*",
     "typecheck:components": "npm run typecheck --prefix packages/changed-elements-react",
     "typecheck:backend": "npm run typecheck --prefix packages/test-app-backend",
@@ -16,7 +16,7 @@
     "check": "changeset status"
   },
   "engines": {
-    "pnpm": ">=8",
+    "pnpm": ">=10",
     "npm": "<0",
     "node": ">=20"
   },
@@ -43,6 +43,16 @@
       "axios@<1.8.2": ">=1.8.2",
       "dompurify@<3.2.4": ">=3.2.4",
       "esbuild@<=0.24.2": ">=0.25.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@bentley/imodeljs-native",
+      "@parcel/watcher",
+      "@swc/core",
+      "esbuild",
+      "protobufjs"
+    ]
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.5"
   }
 }

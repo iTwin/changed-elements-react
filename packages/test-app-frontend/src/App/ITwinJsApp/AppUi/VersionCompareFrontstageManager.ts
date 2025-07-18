@@ -14,6 +14,7 @@ import {
 } from "@itwin/changed-elements-react";
 import { DbOpcode, Logger, type BeEvent, type Id64String } from "@itwin/core-bentley";
 import {
+  FeatureSymbology,
   IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection,
   type ScreenViewport, type ViewState
 } from "@itwin/core-frontend";
@@ -58,6 +59,7 @@ export class VersionCompareFrontstageManager {
    * @param onViewChanged [optional] The application may raise this event to let version compare UI components know they
    *                      need to refresh
    * @param showTargetModified [optional] Show the modified elements on the secondary connection
+   * @param colorOverrideProvider [optional] Function to provide color overrides for changed elements, this can be created by using VersionCompareManager.getColorOverrideProvider(), this will wrap the colorOverrideProvider provided to the initialization options for usage by the internal visualization
    */
   public async initializeSingleViewComparison(
     _currentIModel: IModelConnection,
@@ -67,6 +69,7 @@ export class VersionCompareFrontstageManager {
     unchangedModels?: Set<string>,
     onViewChanged?: BeEvent<(args: unknown) => void>,
     showTargetModified?: boolean,
+    colorOverrideProvider?: (visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void,
   ) {
     this._changedElementEntries = changedElementEntries;
     const viewport = IModelApp.viewManager.getFirstOpenView();
@@ -83,6 +86,7 @@ export class VersionCompareFrontstageManager {
       unchangedModels,
       onViewChanged,
       showTargetModified,
+      colorOverrideProvider,
     );
     await ModelsCategoryCache.load(_currentIModel, targetIModel, changedElementEntries);
     await this.visualizationManager.attachToViewport(viewport);

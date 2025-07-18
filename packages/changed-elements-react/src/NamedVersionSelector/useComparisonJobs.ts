@@ -87,7 +87,6 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
         job,
         watchJob: async function* (pollingIntervalMs: number, signal?: AbortSignal) {
           signal?.throwIfAborted();
-
           while (job.status === "Queued" || job.status === "Started") {
             await new Promise((resolve) => setTimeout(resolve, pollingIntervalMs));
             const comparisonJob = await getComparisonJob({
