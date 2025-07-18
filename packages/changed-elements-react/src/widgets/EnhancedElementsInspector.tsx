@@ -1364,7 +1364,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   private readonly _selectEntry = (iModel: IModelConnection, entry: ChangedElementEntry): void => {
     iModel.selectionSet.emptyAll();
     iModel.selectionSet.add(entry.id);
-    Presentation.selection
+    void Presentation.selection
       .replaceSelectionWithScope("ChangedElementsWidget", iModel, entry.id, "element")
       .catch(() => { });
   };
@@ -1372,7 +1372,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   private _selectEntries = (iModel: IModelConnection, entries: ChangedElementEntry[]): void => {
     iModel.selectionSet.emptyAll();
     iModel.selectionSet.add(entries.map(entry => entry.id));
-    Presentation.selection
+    void Presentation.selection
       .replaceSelectionWithScope("ChangedElementsWidget", iModel, entries.map(entry => entry.id), "assembly")
       .catch(() => { });
   };
