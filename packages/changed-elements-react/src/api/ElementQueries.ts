@@ -9,6 +9,7 @@ import { KeySet, type InstanceKey, type Key } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { VersionCompare } from "./VersionCompare.js";
 
 /**
  * Interface for query data
@@ -58,7 +59,7 @@ export const generateEntryFromQueryData = (
       existingEntry && existingEntry.opcode
         ? existingEntry.opcode
         : DbOpcode.Update,
-    type: existingEntry?.type ?? 0, // TODO: Do we need to mark these as indirect ?
+    type: existingEntry?.type ?? 0,
     indirect: existingEntry === undefined,
     foundInCurrent,
     loaded: false,
@@ -108,7 +109,7 @@ export const queryEntryData = async (
       classFullName: (row.className as string).replace(".", ":"),
       modelId: row.model.id,
       classId: row.classId,
-      parent: row.parent ? row.parent.id : undefined,
+      parent: row.parent && !VersionCompare.manager?.skipParentChildRelationships  ? row.parent.id : undefined,
     };
     result.push(data);
   }

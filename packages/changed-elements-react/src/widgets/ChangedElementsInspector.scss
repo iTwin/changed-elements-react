@@ -311,6 +311,11 @@
     border-color:  RGB(0, 139, 225);
   }
 
+  &-driven {
+    @extend .change-square;
+    border-color: RGB(185, 139, 225);
+  }
+
   &-indirect {
     @extend .change-square;
     border-color: RGB(0, 139, 225);

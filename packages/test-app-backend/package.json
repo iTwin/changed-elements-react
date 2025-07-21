@@ -11,6 +11,9 @@
     "start": "ts-node-dev --transpile-only --respawn -- src/main.ts",
     "typecheck": "tsc --noEmit"
   },
+  "devDependencies": {
+    "@types/express": "5.0.0"
+  },
   "dependencies": {
     "@itwin/core-backend": "^5.0.0-dev.111",
     "@itwin/core-bentley": "^5.0.0-dev.111",
@@ -20,9 +23,11 @@
     "@itwin/imodels-client-authoring": "^6.0.0-dev.1",
     "@itwin/presentation-backend": "^5.0.0-dev.111",
     "@itwin/presentation-common": "^5.0.0-dev.111",
+    "@itwin/object-storage-azure": "^3.0.1",
     "@types/dotenv-flow": "^3.2.0",
     "@types/node": "^18.0.0",
     "dotenv-flow": "^3.2.0",
+    "express": "4.21.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "~5.5.4"
   }

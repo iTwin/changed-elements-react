@@ -5,7 +5,7 @@
 import { BeEvent, DbOpcode, type Id64String } from "@itwin/core-bentley";
 import { ColorDef, EmphasizeElementsProps, Placement3d, RgbColor, type ElementProps, type GeometricElement3dProps } from "@itwin/core-common";
 import {
-  EmphasizeElements, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, ViewState3d } from "@itwin/core-frontend";
+  EmphasizeElements, FeatureSymbology, GeometricModelState, IModelApp, IModelConnection, MarginPercent, ScreenViewport, SpatialViewState, ViewState3d } from "@itwin/core-frontend";
 import { Range3d, Transform } from "@itwin/core-geometry";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSetProvider } from "@itwin/presentation-frontend";
@@ -44,6 +44,9 @@ export class VersionCompareVisualizationManager {
   public static colorModifiedRgb() {
     return new RgbColor(0, 139, 225);
   }
+  public static colorModifiedDrivenRgb() {
+    return new RgbColor(185, 139, 225);
+  }
   public static colorModifiedTargetRgb() {
     return new RgbColor(0, 200, 225);
   }
@@ -78,6 +81,7 @@ export class VersionCompareVisualizationManager {
     private _unchangedModels?: Set<string>,
     private _onViewChanged?: BeEvent<(args: unknown) => void>,
     _wantSecondaryModified?: boolean,
+    _colorOverrideProvider?: (visibleInstances: ChangedElementEntry[], hiddenInstances: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void,
   ) {
     if (_onViewChanged !== undefined) {
       _onViewChanged.addListener(this.onViewChangedHandler);
@@ -88,6 +92,7 @@ export class VersionCompareVisualizationManager {
       hideModified: false,
       wantModified: _wantSecondaryModified,
       emphasized: true,
+      colorOverrideProvider: _colorOverrideProvider,
     };
     this._currentHiliteSetProvider = HiliteSetProvider.create({
       imodel: this._viewport.iModel,
@@ -598,6 +603,48 @@ export class VersionCompareVisualizationManager {
     });
     viewport.synchWithView();
   };
+
+  /**
+   * Zooms to multiple entries
+   * @param iModel
+   * @param entries
+   * @returns
+   */
+  private _zoomToElements = async (iModel: IModelConnection, elementIds: Id64String[]) => {
+    const viewport = IModelApp.viewManager.selectedView;
+    if (viewport === undefined) {
+      return;
+    }
+
+    // Get the 3d view state to adjust for
+    const viewState: ViewState3d = viewport.view as ViewState3d;
+    // Find the range of the combined elements
+    const range = await this._findElementsVolume(iModel, viewState, elementIds);
+    if (range === undefined) {
+      return;
+    }
+    // Do zoom operation with a 10% margin
+    viewport.view.lookAtVolume(range, viewport.viewRect.aspect, {
+      marginPercent: new MarginPercent(0.1, 0.1, 0.1, 0.1),
+    });
+    viewport.synchWithView();
+  };
+
+  /**
+   * Zooms to the merged volume of many elements
+   * @param elementIds
+   */
+  public zoomToElements = async (elementIds: Id64String[]) => {
+    const currentIModel = this._viewport.iModel;
+    // TODO: Appropriately zoom to target and current
+    // const targetIModel = this._targetIModel;
+    await this._zoomToElements(
+      currentIModel,
+      elementIds,
+    );
+
+    VersionCompareUtils.outputVerbose(VersionCompareVerboseMessages.changedElementsTreeElementClicked);
+  }
 
   /** Handles zooming to element and selecting elements */
   public zoomToEntry = async (entry: ChangedElementEntry) => {

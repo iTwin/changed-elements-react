@@ -6,7 +6,7 @@ import { BeEvent, DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat, TypeOfChange, type ChangedElements } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ModelState } from "@itwin/core-frontend";
 
-import { ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
+import { ChangedElementEntry, ChangedElementEntryCache, type ChangedElement, type Checksums } from "./ChangedElementEntryCache.js";
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
 import { VersionCompareManager, VersionCompareProgressStage } from "./VersionCompareManager.js";
@@ -294,6 +294,8 @@ export const extractProperties = (
 ): Map<string, Checksums> | undefined => {
   if (changeset.opcodes[index] === DbOpcode.Update && changeset.properties) {
     const map: Map<string, Checksums> = new Map<string, Checksums>();
+    if (changeset.properties[index] === undefined)
+      return undefined;
     for (
       let propIndex = 0;
       propIndex < changeset.properties[index].length;
@@ -377,6 +379,16 @@ export class ChangedElementsManager {
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;
+
+  public elementToDrivenElement: Map<string, string[]> = new Map<string, string[]>();
+  public setElementToDrivenElementMap(_map: Map<string, string[]>) {
+    this.elementToDrivenElement = _map;
+  }
+
+  public elementDrivesElement: Map<string, string[]> = new Map<string, string[]>();
+  public setElementDrivesElementMap(_map: Map<string, string[]>) {
+    this.elementDrivesElement = _map;
+  }
 
   /**
    *
@@ -533,6 +545,53 @@ export class ChangedElementsManager {
     }
     return models;
   };
+
+  private _getDirectlyDrivenElements = (entries: ChangedElementEntry[]): ChangedElementEntry[] => {
+    const relevantChangedElements = [];
+    for (const entry of entries) {
+      const key = `${entry.id}`;
+      const drivenElements = this.elementDrivesElement.get(key);
+      if (drivenElements) {
+        // TODO: Seems like everything is using instance id without class id, that seems wrong...
+        for (const instanceId of drivenElements) {
+          const changedElement = this._entryCache.changedElementEntries.get(instanceId);
+          if (changedElement) {
+            relevantChangedElements.push(changedElement);
+          }
+        }
+      }
+    }
+    return relevantChangedElements;
+  }
+
+  /**
+   * Returns any elements (recursively) that were changed by direct changes of the given instances with multiple jumps
+   * @param entries
+   * @returns
+   */
+  public getDrivenElementsRecursive = (entries: ChangedElementEntry[]): ChangedElementEntry[] => {
+    const relevantChangedElements = [];
+    let currentElements = entries;
+    while (currentElements.length > 0) {
+      const drivenElements = this._getDirectlyDrivenElements(currentElements);
+      if (drivenElements.length === 0) {
+        break;
+      }
+      currentElements = drivenElements;
+      relevantChangedElements.push(...drivenElements);
+    }
+
+    return relevantChangedElements;
+  }
+
+  /**
+   * Returns any elements that were changed by direct changes of the given instances with multiple jumps
+   * @param entries
+   * @returns
+   */
+  public getDrivenElements = (entries: ChangedElementEntry[]): ChangedElementEntry[] => {
+    return this._getDirectlyDrivenElements(entries);
+  }
 
   /**
    * Get props for all elements and get changed models. Later on this data will be provided in the Changed Elements Service
@@ -856,8 +915,10 @@ export class ChangedElementsManager {
       cleanMergedElements(this._changedElements);
     }
 
-    // Fix missing model Ids before we filter by model class
-    await this._fixModelIds(currentIModel, targetIModel);
+    if (!this._manager.skipParentChildRelationships) {
+      // Fix missing model Ids before we filter by model class
+      await this._fixModelIds(currentIModel, targetIModel);
+    }
 
     // Filter out changed elements that we don't care about given the model classes
     if (wantedModelClasses) {
@@ -869,12 +930,13 @@ export class ChangedElementsManager {
     }
 
     // Filter by spatial elements if we want
-    if (filterSpatial) {
+    if (filterSpatial && !this._manager.skipParentChildRelationships) {
       const geom3dId = await this._getGeometricElement3dClassId(currentIModel);
       if (!geom3dId) {
         return;
       }
 
+      // Filter out elements that are not GeometricElement3d
       const ecsql =
         "SELECT SourceECInstanceId FROM meta.ClasshasAllBaseClasses WHERE TargetECInstanceId = " +
         geom3dId;
@@ -894,8 +956,10 @@ export class ChangedElementsManager {
       }
     }
 
-    // Find proper models to display elements under
-    await this._findParentModels(currentIModel, targetIModel);
+    if (!this._manager.skipParentChildRelationships) {
+      // Find proper models to display elements under
+      await this._findParentModels(currentIModel, targetIModel);
+    }
   }
 
   /**
@@ -1185,29 +1249,15 @@ export class ChangedElementsManager {
         IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingChangedModels"),
       );
     }
-    progressCoordinator?.updateProgress(VersionCompareProgressStage.ComputeChangedModels);
+    if (!this._manager.skipParentChildRelationships) {
+      progressCoordinator?.updateProgress(VersionCompareProgressStage.ComputeChangedModels);
 
-    // Find changed models
-    this._changedModels = await this.findChangedModels(
-      currentIModel,
-      targetIModel,
-      forward ?? false,
-      progressCoordinator,
-      progressLoadingEvent,
-    );
+      // Find changed models
+      this._changedModels = await this.findChangedModels(currentIModel, targetIModel, forward ?? false, progressCoordinator, progressLoadingEvent);
 
-    if (progressLoadingEvent) {
-      progressLoadingEvent.raiseEvent(
-        IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.msg_computingUnchangedModels"),
-      );
+      // Find unchanged models
+      this._unchangedModels = await this.findUnchangedModels(currentIModel, this._changedModels);
     }
-    progressCoordinator?.updateProgress(VersionCompareProgressStage.ComputeChangedModels, 100);
-
-    // Find unchanged models
-    this._unchangedModels = await this.findUnchangedModels(
-      currentIModel,
-      this._changedModels,
-    );
 
     await this.generateEntries(currentIModel, targetIModel, progressCoordinator);
   }

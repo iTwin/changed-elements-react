@@ -1,13 +1,12 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+import { DbOpcode } from "@itwin/core-bentley";
+import { ChangedElements, TypeOfChange } from "@itwin/core-common";
+import { ChangedECInstance } from "../api/VersionCompare.js";
 
-export async function* splitBeforeEach<T, U>(
-  iterable: AsyncIterable<T>,
-  selector: (value: T) => U,
-  markers: U[],
-): AsyncGenerator<T[]> {
+export async function* splitBeforeEach<T, U>(iterable: AsyncIterable<T>, selector: (value: T) => U, markers: U[]): AsyncGenerator<T[]> {
   let accumulator: T[] = [];
   let currentMarkerIndex = 0;
   for await (const value of iterable) {
@@ -22,7 +21,6 @@ export async function* splitBeforeEach<T, U>(
 
   yield accumulator;
 }
-
 
 export async function* flatten<T>(iterable: AsyncIterable<T[]>): AsyncGenerator<T> {
   for await (const values of iterable) {
@@ -56,12 +54,7 @@ export async function* skip<T>(iterable: AsyncIterable<T>, n: number): AsyncGene
   return result.value;
 }
 
-export async function tryXTimes<T>(
-  func: () => Promise<T>,
-  attempts: number,
-  delayInMilliseconds: number = 5000,
-  signal?: AbortSignal,
-): Promise<T> {
+export async function tryXTimes<T>(func: () => Promise<T>, attempts: number, delayInMilliseconds: number = 5000, signal?: AbortSignal): Promise<T> {
   signal?.throwIfAborted();
 
   let error: unknown = null;
@@ -100,3 +93,96 @@ export const arrayToMap = <T, U>(array: T[], createKey: (entry: T) => U) => {
   });
   return newMap;
 };
+
+/**
+ * @returns Empty ChangedElements object
+ */
+const createEmptyChangedElements = (): ChangedElements => {
+  return {
+    elements: [],
+    classIds: [],
+    modelIds: [],
+    opcodes: [],
+    type: [],
+    properties: [],
+    parentIds: [],
+    parentClassIds: [],
+  };
+};
+
+/**
+ * Convert {@link SqliteChangeOp} string to {@link DbOpcode} number.
+ *
+ * Throws error if not a valid {@link SqliteChangeOp} string.
+ */
+const stringToOpcode = (operation: string): DbOpcode => {
+  switch (operation) {
+    case "Inserted":
+      return DbOpcode.Insert;
+    case "Updated":
+      return DbOpcode.Update;
+    case "Deleted":
+      return DbOpcode.Delete;
+    default:
+      throw new Error("Unknown opcode string");
+  }
+};
+
+/**
+ * Transforms ChangedECInstance array to ChangedElements object for direct comparison
+ * @param instances Array of ChangedECInstance objects
+ * @returns ChangedElements object representing all changed elements
+ */
+export const transformToAPIChangedElements = (instances: ChangedECInstance[]): ChangedElements => {
+  const ce: ChangedElements = createEmptyChangedElements();
+  const ceMap: Map<string, ChangedECInstance> = new Map<string, ChangedECInstance>();
+  instances.forEach((elem) => {
+    if (!ceMap.has(`${elem.ECInstanceId}:${elem.ECClassId}`)) {
+      ceMap.set(`${elem.ECInstanceId}:${elem.ECClassId}`, elem);
+    }
+  });
+
+  for (const elem of ceMap.values()) {
+    ce.elements.push(elem.ECInstanceId);
+    ce.classIds.push(elem.ECClassId ?? "");
+    ce.opcodes.push(stringToOpcode(elem.$meta?.op ?? ""));
+    ce.type.push(elem.$comparison?.type ?? TypeOfChange.NoChange);
+  }
+
+  return ce;
+};
+
+/**
+ * Returns a map of ECInstanceId:ECClassId of the element that is driven by another element
+ * e.g. Target -> Source
+ * TODO: This needs to be refactored and passed by the consuming application
+ * @param instances
+ * @returns
+ */
+export const extractDrivenByInstances = (instances: ChangedECInstance[]): Map<string, string[]> => {
+  const elementDrivenByElementMap = new Map<string, string[]>();
+  instances.forEach((elem) => {
+    if (elem.$comparison?.drivenBy) {
+      const ids = elem.$comparison.drivenBy.map((idWithRelationship: { id: string; }) => idWithRelationship.id);
+      elementDrivenByElementMap.set(`${elem.ECInstanceId}`, ids);
+    }
+  });
+  return elementDrivenByElementMap;
+}
+
+/**
+ * Returns a map of ECInstanceId:ECClassId of the element that drives another element
+ * TODO: This needs to be refactored and passed by the consuming application
+ * @param instances
+ * @returns
+ */
+export const extractDrivesInstances = (instances: ChangedECInstance[]): Map<string, string[]> => {
+  const elementDrivesElementMap = new Map<string, string[]>();
+  instances.forEach((elem) => {
+    if (elem.$comparison?.drives) {
+      const ids = elem.$comparison.drives.map((idWithRelationship: { id: string; }) => idWithRelationship.id);
+      elementDrivesElementMap.set(`${elem.ECInstanceId}`, ids);
+    }
+  });
+  return elementDrivesElementMap;
+}

@@ -45,6 +45,7 @@ export interface VersionDisplayOptions {
   changedModels?: Set<string>;
   hiddenDeletedElements?: Set<string>;
   emphasized?: boolean;
+  colorOverrideProvider?: (visibleInstances: ChangedElementEntry[], hiddenInstances: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void;
 }
 
 class Trees extends SpatialModelTileTrees {
@@ -137,6 +138,7 @@ export class Provider
     targetIModelModels?: Set<string>,
     targetIModelCategories?: Set<string>,
     hiddenElems?: ChangedElementEntry[],
+    private _colorOverrideProvider?: (visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void,
   ) {
     this.iModel = iModel;
     this.visibleChangedElems = elems;
@@ -295,6 +297,8 @@ export class Provider
         options,
         new Set([...data.deletedElementsModels, ...data.updatedElementsModels]),
         data.categories,
+        undefined,
+        options?.colorOverrideProvider,
       );
     } catch (ex) {
       let error = "Unknown Error";
@@ -397,12 +401,11 @@ export class Provider
     for (const elem of updatedElems) {
       // Check if user is emphasizing some elements, and if so, only override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
-        overrides.override({
-          elementId: elem.id,
-          appearance: elem.indirect
-              ? updatedIndirectly
-              : updated,
-         });
+        // TODO: Appropriate type of change enum
+        const appearance = elem.indirect
+            ? updatedIndirectly
+            : updated;
+        overrides.override({ elementId: elem.id, appearance: appearance });
       }
     }
 
@@ -414,6 +417,11 @@ export class Provider
           appearance: hiddenAppearance,
         });
       }
+    }
+
+    /** Allow apps to define their own color overrides if provided */
+    if (this._colorOverrideProvider) {
+      this._colorOverrideProvider(this.visibleChangedElems, this.hiddenChangedElems, overrides);
     }
   }
 

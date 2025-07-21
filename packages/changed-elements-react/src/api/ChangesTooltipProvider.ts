@@ -21,7 +21,7 @@ import { VersionCompareManager } from "./VersionCompareManager.js";
 const appendChangeType = (
   message: string,
   type: number,
-  toc: TypeOfChange,
+  toc: number,
   localeStr: string,
 ) => {
   if ((type & toc) !== 0) {
@@ -67,7 +67,7 @@ const appendChangeTypes = (message: string, typeOfChange: number) => {
     TypeOfChange.Hidden,
     "hiddenProperty",
   );
-  return message.substr(0, message.length - 2);
+  return message.substring(0, message.length - 2);
 };
 
 /**

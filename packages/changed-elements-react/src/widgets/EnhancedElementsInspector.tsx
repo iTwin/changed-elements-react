@@ -31,7 +31,6 @@ import { ElementsList } from "./ElementsList.js";
 import "./ChangedElementsInspector.scss";
 import { TextEx } from "../NamedVersionSelector/TextEx.js";
 
-
 export interface ChangedElementsInspectorProps {
   manager: VersionCompareManager;
   onFilterChange?: (options: FilterOptions) => void;
@@ -610,6 +609,20 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   private _selectionChangedHandler = (args: SelectionChangeEventArgs): void => {
     let ids: string[] = [];
     args.keys.instanceKeys.forEach((keys) => { ids = [...ids, ...keys]; });
+
+    // Callback for changed instance selections
+    const onSelectionCallback = this.props.manager.options.onInstancesSelected;
+    if (onSelectionCallback) {
+      const cache = this.props.manager.changedECInstanceCache;
+      const entries = this.props.manager.changedElementsManager.entryCache.getCached(ids);
+      const changedInstances = entries
+        .map((entry) => cache.getFromEntry(entry))
+        .filter((instance) => instance !== undefined);
+
+      // Don't await selection callback to avoid blocking the UI
+      void onSelectionCallback(changedInstances);
+    }
+
     this.setState({ selectedIds: new Set(ids) });
   };
 
@@ -850,6 +863,15 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const { visible, hidden } =
       this.props.dataProvider.GetEntriesByModelIdsAndFilters(modelIds, includeFilter, hideFilter);
 
+    // Add driven elements to visible entries
+    const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(visible);
+    visible.push(...drivenElements);
+
+    // Add hidden driven elements to hidden entries
+    const hiddenDrivenElements = this.props.manager.changedElementsManager.getDrivenElements(hidden);
+    hidden.push(...hiddenDrivenElements);
+
+
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
     await visualizationManager?.setFocusedElements(visible, hidden);
   };
@@ -884,9 +906,14 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
     const includeFilter = (e: ChangedElementEntry) => this._includeFilter(e, opts) && !this._hideFilter(e, opts);
     const hideFilter = (e: ChangedElementEntry) => this._hideFilter(e, opts);
 
+    const drivenElements = this.props.manager.changedElementsManager.getDrivenElements(entries);
+
+    const visibleEntries = entries.filter(includeFilter);
+    visibleEntries.push(...drivenElements);
+
     // Visualize the filtered elements and focus
     const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
-    await visualizationManager?.setFocusedElements(entries.filter(includeFilter), entries.filter(hideFilter));
+    await visualizationManager?.setFocusedElements(visibleEntries, entries.filter(hideFilter));
   };
 
   /** Sets viewport visualization based on the given nodes and target/parent node. */
@@ -1335,8 +1362,18 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
    * @param directSelection Whether to do the selection directly in the iModel instead of the presentation layer.
    */
   private readonly _selectEntry = (iModel: IModelConnection, entry: ChangedElementEntry): void => {
-    Presentation.selection
+    iModel.selectionSet.emptyAll();
+    iModel.selectionSet.add(entry.id);
+    void Presentation.selection
       .replaceSelectionWithScope("ChangedElementsWidget", iModel, entry.id, "element")
+      .catch(() => { });
+  };
+
+  private _selectEntries = (iModel: IModelConnection, entries: ChangedElementEntry[]): void => {
+    iModel.selectionSet.emptyAll();
+    iModel.selectionSet.add(entries.map(entry => entry.id));
+    void Presentation.selection
+      .replaceSelectionWithScope("ChangedElementsWidget", iModel, entries.map(entry => entry.id), "assembly")
       .catch(() => { });
   };
 
@@ -1359,6 +1396,41 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
   };
 
   /**
+   * Handle selecting any elements that are driven by this tree node
+   * @param item
+   * @returns
+   */
+  private _handleDrivenElementsSelection = (item: TreeNodeItem, drivenElementIds: string[]): void => {
+    const currentIModel = this.props.manager.currentIModel;
+    const element: ChangedElementEntry | undefined = item.extendedData?.element;
+    if (element === undefined || currentIModel === undefined) {
+      return;
+    }
+
+    const drivenEntries = this.props.manager.changedElementsManager.entryCache.getEntries(new Set([...drivenElementIds, element.id]));
+    this._selectEntries(currentIModel, drivenEntries);
+  };
+
+  /**
+   * Handles selection logic for a changed element tree node
+   * @param item
+   */
+  private _handleElementSelection = async (item: TreeNodeItem) => {
+      const instanceId = item.id;
+      const drivenElements = this.props.manager.changedElementsManager.elementDrivesElement.get(instanceId);
+      const visualizationManager = this.props.manager.visualization?.getSingleViewVisualizationManager();
+      if (drivenElements !== undefined && drivenElements.length > 0) {
+        // Handle selection and zoom
+        this._handleDrivenElementsSelection(item, drivenElements);
+        await visualizationManager?.zoomToElements(drivenElements);
+      } else {
+        // Handle zooming to specific element
+        this._selectNode(item);
+        await visualizationManager?.zoomToEntry(item.extendedData?.element);
+      }
+  };
+
+  /**
    * On click, select the element and zoom to it.
    * @param item Tree Node that was clicked.
    */
@@ -1370,10 +1442,7 @@ export class ChangedElementsListComponent extends Component<ChangedElementsListP
         await visualizationManager.zoomToModel(item.id);
       }
     } else if (item.extendedData?.element && visualizationManager) {
-      // Select the element
-      this._selectNode(item);
-      // Handle zooming to specific element
-      await visualizationManager.zoomToEntry(item.extendedData.element);
+      await this._handleElementSelection(item);
     }
   };
 
