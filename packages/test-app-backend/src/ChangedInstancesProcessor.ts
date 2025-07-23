@@ -7,12 +7,10 @@ import {
   ChangedECInstance,
   ChangesetECAdaptor,
   IModelDb,
-  IModelHost,
   PartialECChangeUnifier,
   SqliteChangesetReader
 } from "@itwin/core-backend";
 import {
-  AuthorizationClient,
   ChangesetFileProps,
   ChangesetIdWithIndex,
   IModelRpcProps
