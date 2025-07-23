@@ -48,15 +48,14 @@ export interface VersionDisplayOptions {
   colorOverrideProvider?: (visibleInstances: ChangedElementEntry[], hiddenInstances: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void;
 }
 
-class Trees extends SpatialModelTileTrees {
-  private readonly _provider: Provider;
-
+export class Trees extends SpatialModelTileTrees {
   public constructor(
-    provider: Provider,
     private _models: Set<string> | undefined,
     private _categories: Set<string> | undefined,
+    private _vp: Viewport,
+    private _symbologyOverrides: FeatureSymbology.Overrides,
   ) {
-    super(provider.viewport.view as SpatialViewState, _models);
+    super(_vp.view as SpatialViewState, _models);
 
     // Ensure the given models are loaded into the viewstate
     if (this._models) {
@@ -69,19 +68,13 @@ class Trees extends SpatialModelTileTrees {
     if (this._categories) {
       this._view.categorySelector.addCategories(this._categories);
     }
-
-    this._provider = provider;
-  }
-
-  protected override get _iModel() {
-    return this._provider.iModel;
   }
 
   protected override createTileTreeReference(model: SpatialModelState): TileTreeReference | undefined {
     if (!this._models || this._models.has(model.id)) {
       return new Reference(
-        model.createTileTreeReference(this._provider.viewport.view),
-        this._provider,
+        model.createTileTreeReference(this._vp.view),
+        this._symbologyOverrides,
       );
     }
 
@@ -146,19 +139,20 @@ export class Provider
     this.viewport = vp;
     this._options = options;
 
+    this.secondaryIModelOverrides = this.initOverrides();
+
     if (vp.view.is3d()) {
-      this._trees = new Trees(this, targetIModelModels, targetIModelCategories);
+      this._trees = new Trees(targetIModelModels, targetIModelCategories, vp, this.secondaryIModelOverrides);
     } else {
       const viewState = vp.view.clone(iModel) as ViewState2d;
       const model = viewState.getViewedModel();
       if (undefined !== model) {
         this._treeRef2d = new Reference(
           model.createTileTreeReference(viewState),
-          this,
+          this.secondaryIModelOverrides,
         );
       }
     }
-    this.secondaryIModelOverrides = this.initOverrides();
 
     this._removals.push(
       vp.onViewportChanged.addListener((_vp, flags) => this.handleViewportChanged(flags)),
@@ -801,14 +795,12 @@ export class Provider
 }
 
 /** A proxy reference to a TileTreeReference originating from the secondary IModelConnection. */
-class Reference extends TileTreeReference {
+export class Reference extends TileTreeReference {
   private readonly _ref: TileTreeReference;
-  private readonly _provider: Provider;
 
-  public constructor(ref: TileTreeReference, provider: Provider) {
+  public constructor(ref: TileTreeReference, private _symbologyOverrides: FeatureSymbology.Overrides) {
     super();
     this._ref = ref;
-    this._provider = provider;
   }
 
   public get treeOwner() {
@@ -818,8 +810,8 @@ class Reference extends TileTreeReference {
     return false;
   }
 
-  protected override getSymbologyOverrides() {
-    return this._provider.secondaryIModelOverrides;
+  protected override getSymbologyOverrides(): FeatureSymbology.Overrides {
+    return this._symbologyOverrides;
   }
 }
 

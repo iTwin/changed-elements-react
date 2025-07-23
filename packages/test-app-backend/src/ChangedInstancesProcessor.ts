@@ -40,12 +40,6 @@ export class ChangedInstancesProcessor {
     iModelId: string,
     authToken: string,
   ): Promise<ChangesetFileProps[]> {
-    const authClient: AuthorizationClient = {
-      getAccessToken: function (): Promise<string> {
-        return Promise.resolve(authToken);
-      },
-    };
-    IModelHost.authorizationClient = authClient;
     try {
       const csFileProps = [];
       const startIndex = startChangesetIdWithIndex.index;

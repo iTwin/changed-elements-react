@@ -637,7 +637,6 @@ export class VersionCompareVisualizationManager {
   public zoomToElements = async (elementIds: Id64String[]) => {
     const currentIModel = this._viewport.iModel;
     // TODO: Appropriately zoom to target and current
-    // const targetIModel = this._targetIModel;
     await this._zoomToElements(
       currentIModel,
       elementIds,
