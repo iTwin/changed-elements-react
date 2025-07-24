@@ -16,7 +16,7 @@ overrides:
   eslint-plugin-prettier: '>=5.5.3'
   eslint-config-prettier: '>=10.1.8'
   form-data: '>=4.0.4'
-  synckit: '>=0.11.11'
+  synckit: 0.12.2
   '@pkgr/core': '>=0.2.9'
 
 importers:
