@@ -36,9 +36,9 @@
   "pnpm": {
     "overrides": {
       "@babel/runtime@<7.26.10": ">=7.26.10",
-      "@itwin/appui-abstract": "^5.0.0-dev.111",
-      "@itwin/core-bentley": "^5.0.0-dev.111",
-      "@itwin/core-quantity": "^5.0.0-dev.111",
+      "@itwin/appui-abstract": "^5.0.4",
+      "@itwin/core-bentley": "^5.0.4",
+      "@itwin/core-quantity": "^5.0.4",
       "@itwin/core-react": "^5.4.0",
       "axios@<1.8.2": ">=1.8.2",
       "dompurify@<3.2.4": ">=3.2.4",

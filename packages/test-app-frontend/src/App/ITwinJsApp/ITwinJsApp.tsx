@@ -9,11 +9,14 @@ import {
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
+  ChangedECInstance,
   ChangedElementsWidget,
-  ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
-  VersionCompareFeatureTracking,
+  ComparisonJobClient,
+  ITwinIModelsClient,
   NamedVersionSelectorWidget,
-  ChangedECInstance
+  VersionCompare,
+  VersionCompareContext,
+  VersionCompareFeatureTracking
 } from "@itwin/changed-elements-react";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, FeatureAppearance, IModelReadRpcInterface, IModelTileRpcInterface,
@@ -31,11 +34,12 @@ import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js"
+import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js";
 import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
+import { getUnifiedSelectionStorage } from "./AppUi/presentation/SelectionStorage.js";
 import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore.js";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager.js";
 
@@ -162,7 +166,9 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   await Promise.all([
     UiCore.initialize(IModelApp.localization),
-    Presentation.initialize(),
+    Presentation.initialize({
+      selection: {selectionStorage: getUnifiedSelectionStorage()}
+    }),
     UiFramework.initialize(undefined),
   ]);
 

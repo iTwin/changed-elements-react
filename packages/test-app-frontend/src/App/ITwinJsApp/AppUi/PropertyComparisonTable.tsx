@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { ContentControl, UiFramework, type ConfigurableCreateInfo } from "@itwin/appui-react";
+import { UiFramework } from "@itwin/appui-react";
 import {
   PropertyComparisonTable, updateVersionComparisonTransparencies, type PropertyComparisonTableProps,
   type VersionCompareManager
@@ -17,19 +17,19 @@ export interface PropertyComparisonTableControlOptions {
   manager?: VersionCompareManager | undefined;
 }
 
-export class PropertyComparisonTableControl extends ContentControl {
-  constructor(info: ConfigurableCreateInfo, options: PropertyComparisonTableControlOptions) {
-    super(info, options);
-
-    if (options.manager === undefined) {
-      throw new Error(
-        "Property Comparison Table Control should be passed a VersionCompareManager object as application Data (applicationData.manager)",
-      );
-    }
-
-    this.reactNode = <ConnectedPropertyComparisonTable manager={options.manager} />;
-  }
+export interface PropertyComparisonTableContentProps {
+  manager?: VersionCompareManager | undefined;
 }
+
+export const PropertyComparisonTableContent = (props: PropertyComparisonTableContentProps) => {
+  if (props.manager === undefined) {
+    throw new Error(
+      "Property Comparison Table Control should be passed a VersionCompareManager object as application Data (applicationData.manager)",
+    );
+  }
+
+  return <ConnectedPropertyComparisonTable manager={props.manager} />;
+};
 
 const ConnectedPropertyComparisonTable = connect(mapStateToProps)(PropertyComparisonTable);
 

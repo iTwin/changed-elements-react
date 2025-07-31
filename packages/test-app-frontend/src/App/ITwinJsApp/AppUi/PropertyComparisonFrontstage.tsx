@@ -1,20 +1,23 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
-import type { ContentLayoutProps, LayoutVerticalSplitProps } from "@itwin/appui-abstract";
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+import type { ContentLayoutProps, ContentProps, LayoutVerticalSplitProps } from "@itwin/appui-react";
 import {
-  ContentGroup, ContentLayoutDef, FrontstageProvider, StatusBarComposer, UiFramework,
-  ViewToolWidgetComposer, type ContentProps, type FrontstageActivatedEventArgs,
-  type FrontstageConfig
+  ContentGroup,
+  ContentLayoutDef,
+  Frontstage,
+  StatusBarComposer,
+  UiFramework,
+  ViewToolWidgetComposer,
 } from "@itwin/appui-react";
 import { VersionCompareManager } from "@itwin/changed-elements-react";
 import { IModelApp, type IModelConnection, type ViewState } from "@itwin/core-frontend";
 
 import { DummyTool } from "./DummyTool.js";
-import { PropertyComparisonTableControl } from "./PropertyComparisonTable.js";
+import { PropertyComparisonTableContent } from "./PropertyComparisonTable.js";
 import { PropertyComparisonToolWidget } from "./PropertyComparisonToolWidget.js";
-import { PropertyComparisonViewportControl } from "./PropertyComparisonViewport.js";
+import { PropertyComparisonViewportContent } from "./PropertyComparisonViewport.js";
 
 import "./PropertyComparisonFrontstage.scss";
 
@@ -22,7 +25,7 @@ import "./PropertyComparisonFrontstage.scss";
  * Frontstage with two viewports for showing current and target versions of an iModel and the property comparison table
  * content view. Can be given frontstage props via constructor to override/customize the zones.
  */
-export class PropertyComparisonFrontstage extends FrontstageProvider {
+export class PropertyComparisonFrontstage {
   public static readonly id = "VersionCompare_PropertyComparisonFrontstage";
   public static readonly viewportContentId = "VersionCompare_PropertyComparisonFrontstageViewportContent";
   public static readonly propertyComparisonTableContentId = "VersionCompare_PropertyComparisonTableContent";
@@ -58,25 +61,18 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     public getPrimaryViewState: () => ViewState,
     public getSecondaryViewState: () => ViewState,
   ) {
-    super();
-    if (!UiFramework.controls.isRegistered(PropertyComparisonFrontstage.viewportContentId)) {
-      UiFramework.controls.register(PropertyComparisonFrontstage.viewportContentId, PropertyComparisonViewportControl);
-    }
-    if (!UiFramework.controls.isRegistered(PropertyComparisonFrontstage.propertyComparisonTableContentId)) {
-      UiFramework.controls.register(
-        PropertyComparisonFrontstage.propertyComparisonTableContentId,
-        PropertyComparisonTableControl,
-      );
-    }
-
     // Add layouts for frontstage to content layout manager
-    if (UiFramework.content.layouts.find(PropertyComparisonFrontstage.sideBySideLayoutId) === undefined) {
+    if (
+      UiFramework.content.layouts.find(
+        PropertyComparisonFrontstage.sideBySideLayoutId
+      ) === undefined
+    ) {
       PropertyComparisonFrontstage._sideBySideLayoutDef = new ContentLayoutDef(
-        PropertyComparisonFrontstage._sideBySideLayoutProps(),
+        PropertyComparisonFrontstage._sideBySideLayoutProps()
       );
       UiFramework.content.layouts.add(
         PropertyComparisonFrontstage.sideBySideLayoutId,
-        PropertyComparisonFrontstage._sideBySideLayoutDef,
+        PropertyComparisonFrontstage._sideBySideLayoutDef
       );
     }
 
@@ -105,8 +101,8 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     // Register dummy tool for no selection
     DummyTool.register(VersionCompareManager.namespace);
 
-    if (!UiFramework.frontstages.onFrontstageActivatedEvent.has(handleFrontstageChanged)) {
-      UiFramework.frontstages.onFrontstageActivatedEvent.addListener(handleFrontstageChanged);
+    if (!UiFramework.frontstages.onFrontstageActivatedEvent.has(onFrontstageChanged)) {
+      UiFramework.frontstages.onFrontstageActivatedEvent.addListener(onFrontstageChanged);
     }
   }
 
@@ -223,25 +219,19 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     contentProps.push({
       id: PropertyComparisonFrontstage.primarySideLayoutId,
       classId: PropertyComparisonFrontstage.viewportContentId,
-      applicationData: {
-        getViewState: this.getPrimaryViewState,
-        iModelConnection: this.primaryIModel,
-      },
+      content: <PropertyComparisonViewportContent getViewState={this.getPrimaryViewState} iModelConnection={this.primaryIModel} />,
     });
 
     contentProps.push({
       id: PropertyComparisonFrontstage.secondarySideLayoutId,
       classId: PropertyComparisonFrontstage.viewportContentId,
-      applicationData: {
-        getViewState: this.getSecondaryViewState,
-        iModelConnection: this.secondaryIModel,
-      },
+      content: <PropertyComparisonViewportContent getViewState={this.getSecondaryViewState} iModelConnection={this.secondaryIModel} />,
     });
 
     const propertyComparisonTable: ContentProps = {
       id: PropertyComparisonFrontstage.propertyComparisonTableContentId,
       classId: PropertyComparisonFrontstage.propertyComparisonTableContentId,
-      applicationData: { manager: this.manager },
+      content: <PropertyComparisonTableContent manager={this.manager} />,
     };
     contentProps.push(propertyComparisonTable);
     return contentProps;
@@ -253,22 +243,19 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
     contentProps.push({
       id: PropertyComparisonFrontstage.overviewLayoutId,
       classId: PropertyComparisonFrontstage.viewportContentId,
-      applicationData: {
-        getViewState: this.getPrimaryViewState,
-        iModelConnection: this.primaryIModel,
-      },
+      content: <PropertyComparisonViewportContent getViewState={this.getPrimaryViewState} iModelConnection={this.primaryIModel} />,
     });
 
     const propertyComparisonTable: ContentProps = {
       id: PropertyComparisonFrontstage.propertyComparisonTableContentId,
       classId: PropertyComparisonFrontstage.propertyComparisonTableContentId,
-      applicationData: { manager: this.manager },
+      content: <PropertyComparisonTableContent manager={this.manager} />,
     };
     contentProps.push(propertyComparisonTable);
     return contentProps;
   };
 
-  public override frontstageConfig(): FrontstageConfig {
+  public frontstageConfig(): Frontstage {
     return {
       id: PropertyComparisonFrontstage.id,
       version: 0,
@@ -290,22 +277,24 @@ export class PropertyComparisonFrontstage extends FrontstageProvider {
 }
 
 let originalDefaultToolId: string | undefined = undefined;
-function handleFrontstageChanged(args: FrontstageActivatedEventArgs): void {
+const onFrontstageChanged = async (args: any): Promise<void> => {
   if (args.activatedFrontstageDef.id === PropertyComparisonFrontstage.id) {
     originalDefaultToolId = IModelApp.toolAdmin.defaultToolId;
     IModelApp.toolAdmin.defaultToolId = DummyTool.toolId;
-    // Currently the defaultTool property of the frontstage config is not working properly, consequently the
-    // PropertyComparisonFrontstage will be set with the default select tool, which this handler overrides, but we must
-    // use setTimeout to let the other listeners finish running so that this default tool (DummyTool) as applied last.
-    // In practise without this the dummy tool is still active but the tool assistance will show the select tool instead
-    // of this blank tool in the status bar.
-    setTimeout(() => IModelApp.toolAdmin.startDefaultTool());
+    // Note: currently the defaultTool property of the frontstage config is not working properly,
+    //   consequently the PropertyComparisonFrontstage will be set with the default select tool, which
+    //   this handler overrides, but we must use setImmediate to let the other listners finish running so that
+    //   this default tool (DummyTool) as applied last. In practise without this the dummy tool is still active but
+    //   the tool assistance will show the select tool instead of this blank tool in the status bar
+    setTimeout(async () => {
+      await IModelApp.toolAdmin.startDefaultTool();
+    }, 0);
   }
 
   if (args.deactivatedFrontstageDef?.id === PropertyComparisonFrontstage.id) {
     if (originalDefaultToolId) {
       IModelApp.toolAdmin.defaultToolId = originalDefaultToolId;
-      void IModelApp.toolAdmin.startDefaultTool();
+      await IModelApp.toolAdmin.startDefaultTool();
     }
   }
 }

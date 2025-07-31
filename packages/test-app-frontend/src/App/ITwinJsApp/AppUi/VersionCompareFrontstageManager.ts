@@ -209,7 +209,7 @@ export class VersionCompareFrontstageManager {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
     );
-    UiFramework.frontstages.addFrontstageProvider(stage);
+    UiFramework.frontstages.addFrontstage(stage.frontstageConfig());
 
     // Clear selection before we start property comparison
     Presentation.selection.clearSelection("SideBySideVisualizationManager", currentIModel);
