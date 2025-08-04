@@ -226,15 +226,15 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
 
             setEntries((prev) => prev.concat(entries));
           }
-
-          setIsLoading(false);
         } catch (error) {
           if (!isAbortError(error)) {
             // eslint-disable-next-line no-console
             console.error(error);
-            setIsLoading(false);
             setIsError(true);
           }
+        } finally {
+          setIsLoading(false);
+          abortController.abort();
         }
       })();
       return () => {
