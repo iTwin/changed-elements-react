@@ -31,7 +31,8 @@ import { Sticky } from "./Sticky.js";
 import { TextEx } from "./TextEx.js";
 import { useComparisonJobs } from "./useComparisonJobs.js";
 import {
-  useNamedVersionsList, type ComparisonJobStatus, type NamedVersionEntry
+  useNamedVersionsList,
+  type ComparisonJobStatus, type NamedVersionEntry
 } from "./useNamedVersionsList.js";
 import { useQueue } from "./useQueue.js";
 

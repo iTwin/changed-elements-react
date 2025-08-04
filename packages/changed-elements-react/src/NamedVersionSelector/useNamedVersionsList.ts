@@ -5,7 +5,7 @@
 import { IModelApp } from "@itwin/core-frontend";
 import { useEffect, useMemo, useState } from "react";
 
-import type { IModelsClient, NamedVersion } from "../clients/iModelsClient.js";
+import type { NamedVersion, Changeset } from "../clients/iModelsClient.js";
 import { isAbortError } from "../utils/utils.js";
 import { useVersionCompare } from "../VersionCompareContext.js";
 
@@ -116,129 +116,119 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
 
   useEffect(
     () => {
-      const abortController = new AbortController();
+      let disposed = false;
+
       setIsLoading(true);
       setIsError(false);
       setEntries([]);
+      setCurrentNamedVersion(undefined);
 
       void (async () => {
         try {
-          abortController.signal.throwIfAborted();
-          // Slow! This loads all Changesets [0 -> Inf) but we'll only use [currentChangeset -> 0].
-          // We don't need the early Changesets yet because they represent the oldest
-          // Named Versions which will most likely appear below the fold.
-          const changesets = await iModelsClient.getChangesets({
+          // First, get the current changeset to establish our baseline
+          const currentChangeset = await iModelsClient.getChangeset({
             iModelId,
-            signal: abortController.signal,
+            changesetId: currentChangesetId,
           });
-          abortController.signal.throwIfAborted();
+          const allNamedVersions: NamedVersion[] = [];
+          if (disposed) return;
 
-          // Discard all future Changesets relative to the current Changeset
-          const currentChangesetArrayIndex = changesets.findIndex(
-            ({ id }) => id === currentChangesetId,
-          );
-          if (currentChangesetArrayIndex === -1) {
-            setIsLoading(false);
+          if (!currentChangeset) {
             setIsError(true);
-            setCurrentNamedVersion(undefined);
+            setIsLoading(false);
             return;
           }
 
-          changesets.splice(currentChangesetArrayIndex + 1);
+          let currentNamedVersionFound: NamedVersion | undefined;
+          let currentPage = 0;
+          const pageSize = 20;
 
-          // We'll be looking at the most recent Named Versions first thus order
-          // Changesets from current to oldest; highest index to lowest.
+          // Load Named Versions in pages
+          while (!disposed) {
+            const namedVersions = await iModelsClient.getNamedVersions({
+              iModelId,
+              top: pageSize,
+              skip: currentPage * pageSize,
+              orderby: "changesetIndex",
+              ascendingOrDescending: "desc",
+            });
+            allNamedVersions.push(...namedVersions);
+            if (disposed) return;
 
-          changesets.reverse();
-          const currentChangeset = changesets[0];
-          let currentNamedVersion: NamedVersion | undefined = undefined;
-          let seekHead = 1;
-
-          const iterator = loadNamedVersions(iModelsClient, iModelId, abortController.signal);
-          for await (const page of iterator) {
-            // Skip pages that are newer than the currentChangeset. We'll always
-            // find the oldest (smallest) Changeset index at the back of the page.
-            if (currentChangeset.index < page[page.length - 1].changesetIndex) {
-              continue;
+            // If no more results, we're done
+            if (namedVersions.length === 0) {
+              break;
             }
+            // Filter to only versions older than current
+            const relevantVersions = namedVersions.filter(
+              nv => nv.changesetIndex < currentChangeset.index,
+            );
+            // Process this page of named versions
+            const pageEntries: NamedVersionEntry[] = [];
 
-            // According to the Intermediate Value Theorem, we must have crossed
-            // the current Named Version in between the start and the end of current
-            // page. If we can't find it here, we'll assume currentChangeset exists
-            // at its declared index but doesn't have a Named Version pointing at it.
-
-            const entries: NamedVersionEntry[] = [];
-
-            for (let i = 0; i < page.length; ++i) {
-              const namedVersion = page[i];
-
-              if (!currentNamedVersion) {
-                if (currentChangeset.index < namedVersion.changesetIndex) {
-                  continue;
+            for (const namedVersion of relevantVersions) {
+              //Todo check with with @Diego Pinate, is the offset correct here? Also do we need to offset current changeset index? I do not think so current index comes from iModelConnection.
+              // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
+              // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
+              // this assuming latest is current
+              const offsetChangesetIndex = (namedVersion.changesetIndex + 1).toString();
+              try {
+                const changeSet = await iModelsClient.getChangeset({
+                  iModelId: iModelId,
+                  changesetId: offsetChangesetIndex,
+                });
+                if (changeSet) {
+                  pageEntries.push({
+                    namedVersion: {
+                      ...namedVersion,
+                      targetChangesetId: changeSet.id,
+                    },
+                    job: undefined,
+                  });
                 }
-
-                if (namedVersion.changesetId === currentChangeset.id) {
-                  currentNamedVersion = namedVersion;
-                  setCurrentNamedVersion(namedVersion);
-                  continue;
-                }
-
-                currentNamedVersion = {
-                  id: currentChangeset.id,
-                  displayName: IModelApp.localization.getLocalizedString(
-                    "VersionCompare:versionCompare.currentChangeset",
-                  ),
-                  changesetId: currentChangeset.id,
-                  changesetIndex: currentChangeset.index,
-                  description: currentChangeset.description,
-                  createdDateTime: currentChangeset.pushDateTime,
-                };
-                setCurrentNamedVersion(currentNamedVersion);
-              }
-
-              // Changed Elements service asks for a changeset range to operate
-              // on. Because user expects to see changes made since the selected
-              // NamedVersion, we need to find the first Changeset that follows
-              // the target NamedVersion.
-              const recoveryPosition = seekHead;
-              while (
-                seekHead < changesets.length && namedVersion.changesetIndex < changesets[seekHead].index
-              ) {
-                seekHead += 1;
-              }
-
-              if (changesets[seekHead].id !== namedVersion.changesetId) {
-                // We didn't find the Changeset that this Named Version is based
-                // on. UI should mark this Named Version as invalid but that's not
-                // yet implemented.
-                seekHead = recoveryPosition;
+              } catch (error) {
+                console.warn(`Could not fetch target changeset ${offsetChangesetIndex} for named version ${namedVersion.displayName}`);
+                // Skip this named version if we can't get the target changeset
                 continue;
               }
-
-              entries.push({
-                namedVersion: {
-                  ...namedVersion,
-                  targetChangesetId: changesets[seekHead - 1].id,
-                },
-                job: undefined,
-              });
             }
 
-            setEntries((prev) => prev.concat(entries));
+            if (disposed) return;
+
+            // Add to entries if we have any
+            if (pageEntries.length > 0) {
+              setEntries(prev => prev.concat(pageEntries));
+            }
+
+            // If we got fewer results than page size, we're done
+            if (namedVersions.length < pageSize) {
+              break;
+            }
+
+            currentPage++;
+          }
+          // Set current named version if not found yet
+          if (!currentNamedVersionFound) {
+            currentNamedVersionFound = getOrCreateCurrentNamedVersion(
+              allNamedVersions,
+              currentChangeset,
+            );
+            if (disposed) return;
+            setCurrentNamedVersion(currentNamedVersionFound);
           }
         } catch (error) {
-          if (!isAbortError(error)) {
-            // eslint-disable-next-line no-console
-            console.error(error);
+          if (!disposed && !isAbortError(error)) {
             setIsError(true);
           }
         } finally {
-          setIsLoading(false);
-          abortController.abort();
+          if (!disposed) {
+            setIsLoading(false);
+          }
         }
       })();
+
       return () => {
-        abortController.abort();
+        disposed = true;
       };
     },
     [iModelsClient, iTwinId, iModelId, currentChangesetId],
@@ -253,33 +243,28 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
   };
 }
 
-/** Returns pages of Named Versions in reverse chronological order. */
-async function* loadNamedVersions(
-  iModelsClient: IModelsClient,
-  iModelId: string,
-  signal: AbortSignal,
-): AsyncGenerator<NamedVersion[]> {
-  signal.throwIfAborted();
+function getOrCreateCurrentNamedVersion(
+  namedVersions: NamedVersion[],
+  currentChangeset: Changeset,
+): NamedVersion {
+  // Check if current changeset has a named version
+  const existingNamedVersion = namedVersions.find(
+    nv => nv.changesetId === currentChangeset.id || nv.changesetIndex === currentChangeset.index,
+  );
 
-  const pageSize = 20;
-  let skip = 0;
-
-  while (true) {
-    const namedVersions = await iModelsClient.getNamedVersions({
-      iModelId,
-      top: pageSize,
-      skip,
-      orderby: "changesetIndex",
-      ascendingOrDescending: "desc",
-      signal,
-    });
-    signal.throwIfAborted();
-
-    if (namedVersions.length === 0) {
-      return;
-    }
-
-    skip += namedVersions.length;
-    yield namedVersions;
+  if (existingNamedVersion) {
+    return existingNamedVersion;
   }
+
+  // Create synthetic named version for current changeset
+  return {
+    id: currentChangeset.id,
+    displayName: IModelApp.localization.getLocalizedString(
+      "VersionCompare:versionCompare.currentChangeset",
+    ),
+    changesetId: currentChangeset.id,
+    changesetIndex: currentChangeset.index,
+    description: currentChangeset.description || "",
+    createdDateTime: currentChangeset.pushDateTime || new Date().toISOString(),
+  };
 }
