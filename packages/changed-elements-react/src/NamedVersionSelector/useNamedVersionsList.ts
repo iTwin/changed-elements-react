@@ -163,35 +163,43 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
             const relevantVersions = namedVersions.filter(
               nv => nv.changesetIndex < currentChangeset.index,
             );
-            // Process this page of named versions
-            const pageEntries: NamedVersionEntry[] = [];
 
-            for (const namedVersion of relevantVersions) {
-              //Todo check with with @Diego Pinate, is the offset correct here? Also do we need to offset current changeset index? I do not think so current index comes from iModelConnection.
-              // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
-              // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
-              // this assuming latest is current
+            // Process this page of named versions with Promise.allSettled for better error handling
+            const changesetPromises = relevantVersions.map(async (namedVersion) => {
               const offsetChangesetIndex = (namedVersion.changesetIndex + 1).toString();
-              try {
-                const changeSet = await iModelsClient.getChangeset({
-                  iModelId: iModelId,
-                  changesetId: offsetChangesetIndex,
+
+              const changeSet = await iModelsClient.getChangeset({
+                iModelId: iModelId,
+                changesetId: offsetChangesetIndex,
+              });
+
+              return {
+                namedVersion,
+                changeSet,
+                offsetChangesetIndex,
+              };
+            });
+
+            // Execute all in parallel with individual error handling
+            const results = await Promise.allSettled(changesetPromises);
+
+            // Process results
+            const pageEntries: NamedVersionEntry[] = [];
+            results.forEach((result, index) => {
+              if (result.status === "fulfilled" && result.value.changeSet) {
+                pageEntries.push({
+                  namedVersion: {
+                    ...result.value.namedVersion,
+                    targetChangesetId: result.value.changeSet.id,
+                  },
+                  job: undefined,
                 });
-                if (changeSet) {
-                  pageEntries.push({
-                    namedVersion: {
-                      ...namedVersion,
-                      targetChangesetId: changeSet.id,
-                    },
-                    job: undefined,
-                  });
-                }
-              } catch (error) {
-                console.warn(`Could not fetch target changeset ${offsetChangesetIndex} for named version ${namedVersion.displayName}`);
-                // Skip this named version if we can't get the target changeset
-                continue;
+              } else {
+                const namedVersion = relevantVersions[index];
+                // eslint-disable-next-line no-console
+                console.warn(`Could not fetch target changeset for named version ${namedVersion.displayName}`);
               }
-            }
+            });
 
             if (disposed) return;
 
