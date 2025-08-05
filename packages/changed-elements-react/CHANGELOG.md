@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.16.0
+
+### Minor Changes
+
+#### [0.16.0](https://github.com/iTwin/changed-elements-react/tree/v0.16.0/packages/changed-elements-react) - 2025-08-05
+
+_Frontend Enhancements:_
+
+1. Provide consumers a way to inject their own changes and skip using the changed elements service altogether
+2. Provide colorization overrides for any special customization logic
+3. Provide a callback when changed instances are selected in the UI
+
+_Backend Enhancements:_
+
+1. Initial ChangesRpcInterface and ChangesRpcImpl which aim to allow using the Partial EC Change Unifier in a simplified way
+2. The Rpc interface allows the app to provide relationships that they care about and marks any related changed ec instance with what relationships were affected that may drive the element for changes
+
+See VersionCompare initialization options (`changesProvider`, `colorOverrideProvider` and `onInstancesSelected`) for more information.
+
+### Patch Changes
+
+#### [0.15.9](https://github.com/iTwin/changed-elements-react/tree/v0.15.9/packages/changed-elements-react) - 2025-08-05
+
+### **Performance Issues Fixed:**
+
+1. **Eliminated massive changeset over-fetching**
+
+   - Previously loaded ALL changesets `[0 -> Inf)` upfront
+   - Now uses efficient pagination (20 items at a time)
+
+2. **Parallelized individual changeset queries**
+   - Replaced sequential api calls with more efficient method
+
+### **Critical Bug Fixed:**
+
+3. **Missing index offset for Named Versions**
+   - Fixed to properly apply `+1 offset` as required by [Changed Elements API](https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements)
+
 ## 0.15.8
 
 ### Patch Changes
