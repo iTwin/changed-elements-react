@@ -166,6 +166,9 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
 
             // Process this page of named versions with Promise.allSettled for better error handling
             const changesetPromises = relevantVersions.map(async (namedVersion) => {
+              // we must offset the named versions , because that changeset is "already applied" to the named version, see this:
+              // https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
+              // this assuming latest is current
               const offsetChangesetIndex = (namedVersion.changesetIndex + 1).toString();
 
               const changeSet = await iModelsClient.getChangeset({
