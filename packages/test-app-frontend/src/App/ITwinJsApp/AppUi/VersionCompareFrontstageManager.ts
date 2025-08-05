@@ -46,7 +46,7 @@ export class VersionCompareFrontstageManager {
     private _propertyComparisonStageId: string,
     private _manager: VersionCompareManager,
   ) {
-    UiFramework.frontstages.onFrontstageReadyEvent.addListener(this._onFrontstageReady);
+    IModelApp.viewManager.onViewOpen.addListener(this._onViewOpen);
   }
 
   /**
@@ -109,27 +109,32 @@ export class VersionCompareFrontstageManager {
   /** Cleans up and dettaches from Frontstage events to trigger comparison visualization. */
   public async detach() {
     await this.cleanUp();
-    UiFramework.frontstages.onFrontstageReadyEvent.removeListener(this._onFrontstageReady);
+    IModelApp.viewManager.onViewOpen.removeListener(this._onViewOpen);
   }
 
-  /** Handler for frontstage ready. */
-  private _onFrontstageReady = async (args: FrontstageReadyEventArgs) => {
+  /** Handler for frontstage ready */
+  private _onViewOpen = async (_: ScreenViewport) => {
+    const frontstageDef = UiFramework.frontstages.activeFrontstageDef;
+    if (!frontstageDef) {
+      return;
+    }
+
     if (
-      args.frontstageDef.id !== this._propertyComparisonStageId &&
-      !this._mainComparisonStageIds.has(args.frontstageDef.id)
+      frontstageDef.id !== this._propertyComparisonStageId &&
+      !this._mainComparisonStageIds.has(frontstageDef.id)
     ) {
       await this._manager.stopComparison();
     } else {
-      if (args.frontstageDef.id === this._propertyComparisonStageId) {
+      if (frontstageDef.id === this._propertyComparisonStageId) {
         this._setupSideBySideViewStates();
-        await this._onPropertyComparisonFrontstageOpened();
+        await this._onPropertyComparisonViewOpened();
       } else {
         // Stop property comparison
         this.stopPropertyComparison();
       }
 
-      if (this._mainComparisonStageIds.has(args.frontstageDef.id)) {
-        await this._onMainComparisonFrontstageOpened(args.frontstageDef);
+      if (this._mainComparisonStageIds.has(frontstageDef.id)) {
+        await this._onMainComparisonViewOpened();
       }
     }
   };
@@ -145,9 +150,8 @@ export class VersionCompareFrontstageManager {
       vps.push(vp);
     }
     if (vps.length < 2) {
-      throw new Error(
-        "Programmer Error: Property comparison requires a frontstage with two viewports to show side-by-side comparison",
-      );
+      // Nothing to do, as this will get called again when the viewports are appropriately ready
+      return;
     }
 
     vps[0].applyViewState(this._mainViewportState);
@@ -208,6 +212,15 @@ export class VersionCompareFrontstageManager {
       () => this._mainViewportState!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
+      // VersionCompare.options.ninezoneOptions?.propertyComparisonOptions?.frontstageProps,
+      // {
+      //   verticalTools:
+      //     VersionCompare.options.ninezoneOptions?.propertyComparisonOptions
+      //       ?.verticalTools,
+      //   horizontalTools:
+      //     VersionCompare.options.ninezoneOptions?.propertyComparisonOptions
+      //       ?.horizontalTools,
+      // }
     );
     UiFramework.frontstages.addFrontstage(stage.frontstageConfig());
 
@@ -358,7 +371,7 @@ export class VersionCompareFrontstageManager {
   };
 
   /** Handler for when property comparison frontstage is opened */
-  private async _onPropertyComparisonFrontstageOpened() {
+  private async _onPropertyComparisonViewOpened() {
     // Avoid caching any changes to the view state made during property compare overview mode
     enableVersionCompareVisualizationCaching(false);
     await this.setupSideBySideVisualization();
@@ -368,12 +381,9 @@ export class VersionCompareFrontstageManager {
    * Handler for when the main comparison frontstage is opened. Used to set colorization and overrides if we are in an
    * active version compare session.
    */
-  private async _onMainComparisonFrontstageOpened(frontstageDef: FrontstageDef): Promise<void> {
+  private async _onMainComparisonViewOpened() {
     // Ensure we are using the cached provider props so that we restore visualization properly
     enableVersionCompareVisualizationCaching(true);
-
-    // Enable visualization again
-    await this._manager.enableVisualization();
 
     // Raise event to attach changed elements widget to the viewports
     const vp = IModelApp.viewManager.getFirstOpenView();
@@ -387,7 +397,8 @@ export class VersionCompareFrontstageManager {
       this._mainViewportState = undefined;
     }
 
-    frontstageDef.findWidgetDef(ChangedElementsWidget.widgetId)?.setWidgetState(WidgetState.Open);
+    // Enable visualization again after we have set the appropriate view state
+    await this._manager.enableVisualization();
   }
 
   /** Stops property comparison */

@@ -4,25 +4,29 @@
 *--------------------------------------------------------------------------------------------*/
 import { ConditionalBooleanValue } from "@itwin/appui-abstract";
 import {
-  BackstageAppButton, CommandItemDef, HideIsolateEmphasizeActionHandler, SyncUiEventId, ToolbarComposer, ToolbarHelper,
-  ToolbarItem, ToolbarOrientation, ToolbarUsage, ToolItemDef, ToolWidgetComposer, UiFramework
+  BackstageAppButton,
+  HideIsolateEmphasizeActionHandler, SyncUiEventId, ToolbarComposer,
+  ToolbarItem, ToolbarItemUtilities, ToolbarOrientation, ToolbarUsage,
+  ToolWidgetComposer, UiFramework
 } from "@itwin/appui-react";
 import { SideBySideVisualizationManager, VersionCompare } from "@itwin/changed-elements-react";
 import { EmphasizeElements, IModelApp } from "@itwin/core-frontend";
-import { Component, type ReactElement, type ReactNode } from "react";
+import { SvgIsolate, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
+import { Component, useCallback, type ReactNode } from "react";
 
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
-
 import "./PropertyComparisonToolWidget.override.css";
 
 export interface PropertyComparisonVisibilityClearToolProps {
   clearIsolate: () => void;
+  className?: string;
 }
 
-export function PropertyComparisonVisibilityClearTool(
-  { clearIsolate }: PropertyComparisonVisibilityClearToolProps,
-): ReactElement {
-  const areElementDisplayOverridesActive = () => {
+export const PropertyComparisonVisibilityClearTool = ({
+  clearIsolate,
+  className: _className,
+}: PropertyComparisonVisibilityClearToolProps) => {
+  const areElementDisplayOverridesActive = (): boolean => {
     const vp = IModelApp.viewManager.selectedView;
     if (!vp) {
       return false;
@@ -32,31 +36,37 @@ export function PropertyComparisonVisibilityClearTool(
     return isolatedElements !== undefined && isolatedElements.size !== 0;
   };
 
-  const clearIsolateToolCommand = new CommandItemDef({
-    commandId: "VersionCompare.PropertyComparisonTools.ClearIsolate",
-    iconSpec: "icon-visibility",
-    isHidden: new ConditionalBooleanValue(
-      () => !areElementDisplayOverridesActive(),
-      [
-        HideIsolateEmphasizeActionHandler.hideIsolateEmphasizeUiSyncId,
-        SyncUiEventId.ActiveViewportChanged,
-        SyncUiEventId.ViewStateChanged,
-        SyncUiEventId.FeatureOverridesChanged,
-        "visibilitycleartooloverridechanged",
-      ],
+  const executeClearIsolate = useCallback(() => {
+    clearIsolate();
+  }, []);
+
+  const clearIsolateToolCommand = ToolbarItemUtilities.createActionItem({
+    id: "VersionCompare.PropertyComparisonTools.ClearIsolate",
+    itemPriority: 0,
+    icon: <SvgVisibilityShow />,
+    label: IModelApp.localization.getLocalizedString(
+      "VersionCompare:versionCompare.clearIsolate"
     ),
-    label: () => IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.clearIsolate"),
-    execute: clearIsolate,
+    execute: executeClearIsolate,
+    isHidden: new ConditionalBooleanValue(() => {
+      return !areElementDisplayOverridesActive();
+    }, [
+      HideIsolateEmphasizeActionHandler.hideIsolateEmphasizeUiSyncId,
+      SyncUiEventId.ActiveViewportChanged,
+      SyncUiEventId.ViewStateChanged,
+      SyncUiEventId.FeatureOverridesChanged,
+      "visibilitycleartooloverridechanged",
+    ]),
   });
 
   return (
     <ToolbarComposer
-      items={[ToolbarHelper.createToolbarItemFromItemDef(0, clearIsolateToolCommand)]}
+      items={[clearIsolateToolCommand]}
       usage={ToolbarUsage.ContentManipulation}
       orientation={ToolbarOrientation.Horizontal}
     />
   );
-}
+};
 
 export interface ToolWidgetProps {
   /** Extra tools to add to the Property Comparison Tool Widget */
@@ -116,17 +126,15 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
     const horizontalTools: ToolbarItem[] = [];
 
     tools.push(
-      ToolbarHelper.createToolbarItemFromItemDef(
-        0,
-        new ToolItemDef(
-          {
-            toolId: "VersionCompare.IsolateSelected",
-            iconSpec: "icon-isolate",
-            label: IModelApp.localization.getLocalizedString("VersionCompare:tools.isolate"),
-          },
-          isolateSelected,
+      ToolbarItemUtilities.createActionItem({
+        id: "VersionCompare.IsolateSelected",
+        itemPriority: 0,
+        icon: <SvgIsolate />,
+        label: IModelApp.localization.getLocalizedString(
+          "VersionCompare:tools.isolate"
         ),
-      ),
+        execute: isolateSelected,
+      })
     );
 
     if (this.props.verticalTools !== undefined) {
