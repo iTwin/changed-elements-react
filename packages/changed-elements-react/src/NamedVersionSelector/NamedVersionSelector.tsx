@@ -7,7 +7,7 @@ import {
   SvgChevronLeft, SvgChevronRight, SvgStatusError, SvgStatusSuccess
 } from "@itwin/itwinui-icons-react";
 import {
-  Button, Divider, Flex, List, ListItem, ProgressRadial, Text, ThemeProvider
+  Button, Divider, Flex, ListItem, ProgressRadial, Text, ThemeProvider
 } from "@itwin/itwinui-react";
 import {
   useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement,
@@ -517,9 +517,16 @@ export function NamedVersionInfiniteList({
   loadNextPage,
   manageVersions,
   contextValue,
-  height = 1000,
+  height = 600,
   itemHeight = 120,
 }: NamedVersionInfiniteListProps): ReactElement {
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dimensions = useResizeObserver(containerRef);
+
+  const containerHeight = dimensions.height > 0 ? dimensions.height - 60 : height;
+  // Use a stable width that doesn't cause feedback loops
+  const containerWidth = dimensions.width > 0 ? dimensions.width : 400;
 
   // Calculate total item count (entries + loading indicator if needed)
   const itemCount = hasNextPage ? entries.length + 1 : entries.length;
@@ -534,27 +541,31 @@ export function NamedVersionInfiniteList({
 
   const Item = ({ index, style }: { index: number; style: React.CSSProperties; }): ReactNode => {
     const entry = entries[index];
-    console.log('Item style:', style, 'Index:', index);
+
     if (!entry) {
-      // Loading indicator, //todo, Caleb add to localization
+      // Loading indicator
       return (
         <div style={style} className="_cer_v1_loading-indicator">
           <LoadingContent>
-            <TextEx>{t("Loading more versions...")}</TextEx>
+            <TextEx>Loading more versions...</TextEx>
           </LoadingContent>
         </div>
       );
     }
-
-    // Regular named version entry
     return (
-      <NamedVersionListEntry entry={entry} />
+      <NamedVersionListEntry
+        entry={entry}
+        style={style}
+        containerWidth={containerWidth}
+      />
     );
   };
 
   return (
     <div
+      ref={containerRef}
       className="_cer_v1_named-version-list"
+      style={{ height: '100%', width: '100%' }}
     >
       <Sticky className="_cer_v1_named-version-list-header">
         <TextEx variant="small">
@@ -562,28 +573,28 @@ export function NamedVersionInfiniteList({
         </TextEx>
         {manageVersions}
       </Sticky>
-        <namedVersionSelectorContext.Provider value={contextValue}>
-          <InfiniteLoader
-            isItemLoaded={isItemLoaded}
-            itemCount={itemCount}
-            loadMoreItems={loadMoreItems}
-            threshold={5}
-          >
-            {({ onItemsRendered, ref }) => (
-              <FixedSizeList
-                ref={ref}
-                height={height}
-                width="100%"
-                itemCount={itemCount}
-                itemSize={itemHeight}
-                onItemsRendered={onItemsRendered}
-                className="_cer_v1_infinite-list"
-              >
-                {Item}
-              </FixedSizeList>
-            )}
-          </InfiniteLoader>
-        </namedVersionSelectorContext.Provider>
+      <namedVersionSelectorContext.Provider value={contextValue}>
+        <InfiniteLoader
+          isItemLoaded={isItemLoaded}
+          itemCount={itemCount}
+          loadMoreItems={loadMoreItems}
+          threshold={5}
+        >
+          {({ onItemsRendered, ref }) => (
+            <FixedSizeList
+              ref={ref}
+              height={containerHeight}
+              width="100%"
+              itemCount={itemCount}
+              itemSize={itemHeight}
+              onItemsRendered={onItemsRendered}
+              className="_cer_v1_infinite-list"
+            >
+              {Item}
+            </FixedSizeList>
+          )}
+        </InfiniteLoader>
+      </namedVersionSelectorContext.Provider>
     </div>
   );
 }
@@ -591,13 +602,13 @@ export function NamedVersionInfiniteList({
 interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
   style?: React.CSSProperties;
+  containerWidth?: number;
 }
 
 function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
   const { processResults, viewResults } = useContext(namedVersionSelectorContext);
   const { namedVersion, job } = props.entry;
-  const ref = useRef<HTMLDivElement>(null);
-  const dimensions = useResizeObserver(ref);
+  const { containerWidth = 400 } = props;
   const widthBreakpointInPx = 400;
   const dateString = useMemo(
     () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
@@ -622,14 +633,14 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
                 <circle cx="8" cy="8" r="8" />
               </svg>
             </IconEx>
-            {dimensions.width >= widthBreakpointInPx && <TextEx weight="normal" variant="body">
+            {containerWidth >= widthBreakpointInPx && <TextEx weight="normal" variant="body">
               {t("VersionCompare:versionCompare.notProcessed")}
             </TextEx>}
           </Flex>
         ),
         action: (
           <NavigationButton onClick={() => processResults(props.entry)}>
-            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.processResults") : t("VersionCompare:versionCompare.process")}
+            {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.processResults") : t("VersionCompare:versionCompare.process")}
           </NavigationButton>
         ),
       };
@@ -638,10 +649,10 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
     case "Queued":
     case "Started":
       stateInfo = {
-        status: <ProcessingEntryStatus displayMin={dimensions.width <= widthBreakpointInPx} entry={props.entry} />,
+        status: <ProcessingEntryStatus displayMin={containerWidth <= widthBreakpointInPx} entry={props.entry} />,
         action: (
           <NavigationButton disabled>
-            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
+            {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
           </NavigationButton>
         ),
       };
@@ -654,14 +665,14 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
             <IconEx size="m" fill="positive">
               <SvgStatusSuccess />
             </IconEx>
-            {dimensions.width >= widthBreakpointInPx && <TextEx variant="body">
+            {containerWidth >= widthBreakpointInPx && <TextEx variant="body">
               {t("VersionCompare:versionCompare.available")}
             </TextEx>}
           </Flex>
         ),
         action: (
           <NavigationButton onClick={() => viewResults(props.entry)}>
-            {dimensions.width >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
+            {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
           </NavigationButton>
         ),
       };
@@ -675,7 +686,7 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
             <IconEx size="m" fill="negative">
               <SvgStatusError />
             </IconEx>
-            {dimensions.width >= widthBreakpointInPx &&
+            {containerWidth >= widthBreakpointInPx &&
               <TextEx weight="normal" variant="body">
                 {t("VersionCompare:versionCompare.error")}
               </TextEx>}
@@ -691,22 +702,26 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
   }
 
   return (
-    <ListItem ref={ref} className="_cer_v1_named-version-entry">
-      <div>
-        <div style={{ display: "grid", gap: "1px" }}>
-          <TextEx variant="small" overflow="nowrap" oblique>
-            {dateString}
-          </TextEx>
-          <TextEx variant="body" weight="semibold" overflow="ellipsis">
-            {namedVersion.displayName}
-          </TextEx>
-          <TextEx variant="small" overflow="ellipsis">
-            {namedVersion.description ?? ""}
-          </TextEx>
+    <ListItem className="_cer_v1_named-version-entry" style={props.style}>
+      <Flex gap="var(--iui-size-m)" alignItems="center" justifyContent="space-between" style={{ width: "100%" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "grid", gap: "1px" }}>
+            <TextEx variant="small" overflow="nowrap" oblique>
+              {dateString}
+            </TextEx>
+            <TextEx variant="body" weight="semibold" overflow="ellipsis">
+              {namedVersion.displayName}
+            </TextEx>
+            <TextEx variant="small" overflow="ellipsis">
+              {namedVersion.description ?? ""}
+            </TextEx>
+          </div>
         </div>
-      </div>
-      {stateInfo.status}
-      {stateInfo.action}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--iui-size-s)" }}>
+          {stateInfo.status}
+          {stateInfo.action}
+        </div>
+      </Flex>
     </ListItem>
   );
 }
