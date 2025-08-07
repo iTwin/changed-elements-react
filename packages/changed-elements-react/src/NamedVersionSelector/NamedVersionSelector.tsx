@@ -525,7 +525,6 @@ export function NamedVersionInfiniteList({
   const dimensions = useResizeObserver(containerRef);
 
   const containerHeight = dimensions.height > 0 ? dimensions.height - 60 : height;
-  // Use a stable width that doesn't cause feedback loops
   const containerWidth = dimensions.width > 0 ? dimensions.width : 400;
 
   // Calculate total item count (entries + loading indicator if needed)

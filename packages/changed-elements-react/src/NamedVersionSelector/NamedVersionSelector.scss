@@ -111,7 +111,6 @@
 
       display: grid;
       grid: 1fr / minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, auto);
-      column-gap: var(--iui-size-m);
 
       > * {
         padding-inline: var(--_cer_v1_container-margin-internal);
