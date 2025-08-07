@@ -54,6 +54,9 @@ export type NamedVersionSelectorContentProps = {
   updateJobStatus: ReturnType<typeof useNamedVersionsList>["updateJobStatus"];
   emptyState?: ReactNode;
   manageVersions?: ReactNode;
+  hasNextPage: boolean;
+  isNextPageLoading: boolean;
+  loadNextPage: () => Promise<void>;
 };
 
 export const NamedVersionSelectorContentContext = createContext<NamedVersionSelectorContentProps>(

@@ -27,7 +27,7 @@ interface UseComparisonJobsResult {
    *          that queries the current job status with each invocation.
    */
   startJob: (
-    namedVersion: NamedVersion & { targetChangesetId: string; },
+    namedVersion: NamedVersion,
     signal?: AbortSignal,
   ) => Promise<{
     job: ComparisonJobStatus;
@@ -56,7 +56,7 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
         throw new Error(`Could not find named version entry: '${targetVersionId}'`);
       }
 
-      const jobId = `${entry.namedVersion.targetChangesetId}-${currentNamedVersion.changesetId}`;
+      const jobId = `${entry.namedVersion.changesetId}-${currentNamedVersion.changesetId}`;
       const comparisonJob = await getComparisonJob({
         comparisonJobClient,
         iTwinId,
@@ -70,14 +70,14 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   );
 
   const startJob = useCallback(
-    async (namedVersion: NamedVersion & { targetChangesetId: string; }, signal?: AbortSignal) => {
+    async (namedVersion: NamedVersion, signal?: AbortSignal) => {
       signal?.throwIfAborted();
 
       const comparisonJob = await postOrGetComparisonJob({
         comparisonJobClient,
         iTwinId,
         iModelId,
-        startChangesetId: namedVersion.targetChangesetId,
+        startChangesetId: namedVersion.changesetId as string,
         endChangesetId: currentNamedVersion.changesetId as string,
         signal,
       });

@@ -38,6 +38,8 @@ import { useQueue } from "./useQueue.js";
 import "./NamedVersionSelector.scss";
 import { FeedbackButton } from "../widgets/FeedbackButton.js";
 import { useResizeObserver } from "../ResizeObserver.js";
+import InfiniteLoader from "react-window-infinite-loader";
+import { FixedSizeList } from "react-window";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
@@ -94,15 +96,22 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   }
 
   if (!iModel.iTwinId || !iModel.iModelId || !iModel.changeset.id) {
-    throw new Error("Empty IModel Connection")
+    throw new Error("Empty IModel Connection");
   }
 
   const iTwinId = iModel.iTwinId;
   const iModelId = iModel.iModelId;
   const currentChangesetId = iModel.changeset.id;
 
-  const { isLoading, currentNamedVersion, entries, updateJobStatus } = useNamedVersionsList({
-    iTwinId,
+  const {
+    isLoading,
+    currentNamedVersion,
+    entries,
+    updateJobStatus,
+    hasNextPage,
+    isNextPageLoading,
+    loadNextPage,
+  } = useNamedVersionsList({
     iModelId,
     currentChangesetId,
   });
@@ -123,7 +132,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
           iTwinId,
           iModelId,
           startChangesetId: currentChangesetId,
-          endChangesetId: targetVersion.namedVersion.targetChangesetId ?? "",
+          endChangesetId: targetVersion.namedVersion.changesetId ?? "",
           comparison: {
             href: targetVersion.job.comparisonUrl,
           },
@@ -154,19 +163,19 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         }
 
         {isComparisonStarted &&
-        <div>
-          <ChangedElementsHeaderButtons
-            useNewNamedVersionSelector
-            loaded
-            onInspect={() => manager.initializePropertyComparison()}
-            onOpenReportDialog={
-              manager.wantReportGeneration
-                ? () => void widgetRef.current?.openReportDialog()
-                : undefined
-            }
-            documentationHref={props.documentationHref}
-          />
-        </div>}
+          <div>
+            <ChangedElementsHeaderButtons
+              useNewNamedVersionSelector
+              loaded
+              onInspect={() => manager.initializePropertyComparison()}
+              onOpenReportDialog={
+                manager.wantReportGeneration
+                  ? () => void widgetRef.current?.openReportDialog()
+                  : undefined
+              }
+              documentationHref={props.documentationHref}
+            />
+          </div>}
 
       </Widget.Header>
       {
@@ -187,12 +196,15 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
             onNamedVersionOpened,
             emptyState,
             manageVersions,
+            hasNextPage,
+            loadNextPage,
+            isNextPageLoading,
           }}
         >
-            <NamedVersionSelectorContent />
-            <div className="_cer_v1_feedback_btn_container">
-              {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
-            </div>
+          <NamedVersionSelectorContent />
+          <div className="_cer_v1_feedback_btn_container">
+            {feedbackUrl && <FeedbackButton feedbackUrl={feedbackUrl} />}
+          </div>
         </NamedVersionSelectorContentContext.Provider>
       }
 
@@ -236,7 +248,7 @@ function LoadingState(): ReactElement {
 
 function NamedVersionSelectorContent(): ReactElement {
   const { isLoading, currentNamedVersion, ...restProps } = useContext(NamedVersionSelectorContentContext);
-  if (!isLoading && restProps.entries.length === 0) {
+  if (!isLoading && !restProps.hasNextPage && !restProps.isNextPageLoading && restProps.entries.length === 0) {
     return <EmptyState />;
   }
 
@@ -245,9 +257,9 @@ function NamedVersionSelectorContent(): ReactElement {
   }
 
   return (
-   <NamedVersionSelectorLoaded
-    {...restProps}
-    currentNamedVersion={currentNamedVersion}
+    <NamedVersionSelectorLoaded
+      {...restProps}
+      currentNamedVersion={currentNamedVersion}
     />
   );
 }
@@ -366,6 +378,9 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     updateJobStatus,
     onNamedVersionOpened,
     manageVersions,
+    hasNextPage,
+    isNextPageLoading,
+    loadNextPage,
   } = props;
 
   const { queryJobStatus, startJob } = useComparisonJobs({
@@ -458,29 +473,124 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     ),
   );
 
+  const contextValue = useMemo(() => ({
+    processResults,
+    viewResults,
+    initialLoad,
+    checkStatus,
+  }), [processResults, viewResults, initialLoad, checkStatus]);
+
   return (
-    <List className="_cer_v1_named-version-list">
+    <NamedVersionInfiniteList
+      entries={entries}
+      hasNextPage={hasNextPage}
+      isNextPageLoading={isNextPageLoading}
+      loadNextPage={loadNextPage}
+      manageVersions={manageVersions}
+      contextValue={contextValue}
+      height={600}
+      itemHeight={120}
+    />
+  );
+}
+
+interface NamedVersionInfiniteListProps {
+  entries: NamedVersionEntry[];
+  hasNextPage: boolean;
+  isNextPageLoading: boolean;
+  loadNextPage: () => Promise<void>;
+  manageVersions?: ReactNode;
+  contextValue: {
+    processResults: (entry: NamedVersionEntry) => Promise<void>;
+    viewResults: (entry: NamedVersionEntry) => Promise<void>;
+    initialLoad: (entry: NamedVersionEntry) => { cancel: () => void; };
+    checkStatus: (entry: NamedVersionEntry) => { cancel: () => void; };
+  };
+  height?: number;
+  itemHeight?: number;
+}
+
+export function NamedVersionInfiniteList({
+  entries,
+  hasNextPage,
+  isNextPageLoading,
+  loadNextPage,
+  manageVersions,
+  contextValue,
+  height = 1000,
+  itemHeight = 120,
+}: NamedVersionInfiniteListProps): ReactElement {
+
+  // Calculate total item count (entries + loading indicator if needed)
+  const itemCount = hasNextPage ? entries.length + 1 : entries.length;
+
+  // Only load more if not already loading
+  const loadMoreItems = isNextPageLoading ? async () => { } : loadNextPage;
+
+  // Check if item is loaded (all items loaded except loading indicator)
+  const isItemLoaded = (index: number): boolean => {
+    return !!entries[index];
+  };
+
+  const Item = ({ index, style }: { index: number; style: React.CSSProperties; }): ReactNode => {
+    const entry = entries[index];
+    console.log('Item style:', style, 'Index:', index);
+    if (!entry) {
+      // Loading indicator, //todo, Caleb add to localization
+      return (
+        <div style={style} className="_cer_v1_loading-indicator">
+          <LoadingContent>
+            <TextEx>{t("Loading more versions...")}</TextEx>
+          </LoadingContent>
+        </div>
+      );
+    }
+
+    // Regular named version entry
+    return (
+      <NamedVersionListEntry entry={entry} />
+    );
+  };
+
+  return (
+    <div
+      className="_cer_v1_named-version-list"
+    >
       <Sticky className="_cer_v1_named-version-list-header">
         <TextEx variant="small">
           {t("VersionCompare:versionCompare.previousVersions")}
         </TextEx>
         {manageVersions}
       </Sticky>
-      <namedVersionSelectorContext.Provider
-        value={{ processResults, viewResults, initialLoad, checkStatus }}
-      >
-        {
-          entries.map((entry) => (
-            <NamedVersionListEntry key={entry.namedVersion.id} entry={entry} />
-          ))
-        }
-      </namedVersionSelectorContext.Provider>
-    </List>
+        <namedVersionSelectorContext.Provider value={contextValue}>
+          <InfiniteLoader
+            isItemLoaded={isItemLoaded}
+            itemCount={itemCount}
+            loadMoreItems={loadMoreItems}
+            threshold={5}
+          >
+            {({ onItemsRendered, ref }) => (
+              <FixedSizeList
+                ref={ref}
+                height={height}
+                width="100%"
+                itemCount={itemCount}
+                itemSize={itemHeight}
+                onItemsRendered={onItemsRendered}
+                className="_cer_v1_infinite-list"
+              >
+                {Item}
+              </FixedSizeList>
+            )}
+          </InfiniteLoader>
+        </namedVersionSelectorContext.Provider>
+    </div>
   );
 }
 
 interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
+  style?: React.CSSProperties;
 }
 
 function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
