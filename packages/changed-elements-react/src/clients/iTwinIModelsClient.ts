@@ -3,7 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import type {
-  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
+  Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion,
+  PostNamedVersionParams
 } from "./iModelsClient.js";
 import { callPagedITwinApi, callITwinApi } from "./iTwinApi.js";
 
@@ -22,6 +23,22 @@ export class ITwinIModelsClient implements IModelsClient {
     this.baseUrl = args.baseUrl ?? "https://api.bentley.com/imodels";
     this.getAccessToken = args.getAccessToken;
     this.showHiddenNamedVersions = !!args.showHiddenNamedVersions;
+  }
+
+ public async postNamedVersions(args: PostNamedVersionParams): Promise<NamedVersion | undefined> {
+     const namedVersion = await callITwinApi({
+      method: "POST",
+      url: `${this.baseUrl}/${args.iModelId}/namedversions`,
+      getAccessToken: this.getAccessToken,
+      signal: args.signal,
+      headers: { Accept: acceptMimeType, "Content-Type": "application/json" },
+      body:{
+        name: args.name,
+        description: args.description,
+        changesetId: args.changesetId,
+      },
+    });
+    return namedVersion?.namedVersion as NamedVersion | undefined;
   }
 
   public async getChangeset(args: GetChangesetParams): Promise<Changeset | undefined> {

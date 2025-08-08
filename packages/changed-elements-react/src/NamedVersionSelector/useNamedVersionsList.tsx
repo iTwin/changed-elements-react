@@ -10,7 +10,7 @@ import { isAbortError } from "../utils/utils.js";
 import { useVersionCompare } from "../VersionCompareContext.js";
 
 export interface NamedVersionEntry {
-  namedVersion: NamedVersion & { targetChangesetId: string;};
+  namedVersion: NamedVersion & { targetChangesetId: string; };
   job: ComparisonJobStatus | undefined;
 }
 
@@ -188,11 +188,9 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
           orderby: "changesetIndex",
           ascendingOrDescending: "desc",
         });
-
-        if(currentNamedVersion?.isSynthetic){
+        if (currentNamedVersion?.isSynthetic) {
           setCurrentNamedVersion(getOrCreateCurrentNamedVersion(namedVersions, currentChangeset));
         }
-
         if (namedVersions.length === 0) {
           setHasNextPage(false);
           return;
