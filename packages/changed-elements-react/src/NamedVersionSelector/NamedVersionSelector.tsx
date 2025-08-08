@@ -63,7 +63,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
 
   const { iModel, emptyState, manageVersions, feedbackUrl } = props;
 
-  const [targetgVersion, setTargetVersion] = useState<NamedVersion>();
+  const [targetVersion, setTargetVersion] = useState<NamedVersion>();
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
 
@@ -132,7 +132,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
           iTwinId,
           iModelId,
           startChangesetId: currentChangesetId,
-          endChangesetId: targetVersion.namedVersion.changesetId ?? "",
+          endChangesetId: targetVersion.namedVersion.targetChangesetId,
           comparison: {
             href: targetVersion.job.comparisonUrl,
           },
@@ -180,7 +180,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
       </Widget.Header>
       {
         currentNamedVersion &&
-        <ActiveVersionsBox current={currentNamedVersion} selected={targetgVersion}></ActiveVersionsBox>
+        <ActiveVersionsBox current={currentNamedVersion} selected={targetVersion}></ActiveVersionsBox>
       }
 
       {
@@ -252,7 +252,7 @@ function NamedVersionSelectorContent(): ReactElement {
     return <EmptyState />;
   }
 
-  if (!currentNamedVersion || (isLoading && restProps.entries.length === 0)) {
+  if (!currentNamedVersion || isLoading) {
     return <LoadingState />;
   }
 
@@ -446,6 +446,8 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     async (entry: NamedVersionEntry, signal: AbortSignal) => {
       try {
         const job = await queryJobStatus(entry.namedVersion.id, signal);
+        if(!job)
+          return;
         updateJobStatus(job);
       } catch (error) {
         if (!isAbortError(error)) {

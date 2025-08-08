@@ -19,7 +19,7 @@ interface UseComparisonJobsArgs {
 
 interface UseComparisonJobsResult {
   /** Inquires `IComparisonJobClient` about current status of the job. */
-  queryJobStatus: (targetVersionId: string, signal?: AbortSignal) => Promise<ComparisonJobStatus>;
+  queryJobStatus: (targetVersionId: string, signal?: AbortSignal) => Promise<ComparisonJobStatus | undefined>;
 
   /**
    * Starts comparison job if one is not running already.
@@ -27,7 +27,7 @@ interface UseComparisonJobsResult {
    *          that queries the current job status with each invocation.
    */
   startJob: (
-    namedVersion: NamedVersion,
+    namedVersion: NamedVersion & { targetChangesetId: string; },
     signal?: AbortSignal,
   ) => Promise<{
     job: ComparisonJobStatus;
@@ -50,13 +50,15 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   const queryJobStatus = useCallback(
     async (targetVersionId: string, signal?: AbortSignal) => {
       signal?.throwIfAborted();
-
+      if(entries.length === 0) {
+        return undefined;
+      }
       const entry = entries.find((entry) => entry.namedVersion.id === targetVersionId);
       if (!entry) {
         throw new Error(`Could not find named version entry: '${targetVersionId}'`);
       }
 
-      const jobId = `${entry.namedVersion.changesetId}-${currentNamedVersion.changesetId}`;
+      const jobId = `${entry.namedVersion.targetChangesetId}-${currentNamedVersion.changesetId}`;
       const comparisonJob = await getComparisonJob({
         comparisonJobClient,
         iTwinId,
@@ -70,14 +72,16 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   );
 
   const startJob = useCallback(
-    async (namedVersion: NamedVersion, signal?: AbortSignal) => {
+    async (
+      namedVersion: NamedVersion & { targetChangesetId: string; },
+      signal?: AbortSignal) => {
       signal?.throwIfAborted();
 
       const comparisonJob = await postOrGetComparisonJob({
         comparisonJobClient,
         iTwinId,
         iModelId,
-        startChangesetId: namedVersion.changesetId as string,
+        startChangesetId: namedVersion.targetChangesetId,
         endChangesetId: currentNamedVersion.changesetId as string,
         signal,
       });

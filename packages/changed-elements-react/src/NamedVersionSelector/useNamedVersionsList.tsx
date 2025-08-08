@@ -10,9 +10,11 @@ import { isAbortError } from "../utils/utils.js";
 import { useVersionCompare } from "../VersionCompareContext.js";
 
 export interface NamedVersionEntry {
-  namedVersion: NamedVersion;
+  namedVersion: NamedVersion & { targetChangesetId: string;};
   job: ComparisonJobStatus | undefined;
 }
+
+export type CurrentNamedVersion = NamedVersion & { isSynthetic: boolean; };
 
 export type ComparisonJobStatus = {
   jobId: string;
@@ -79,8 +81,7 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
   const { iModelsClient } = useVersionCompare();
   const [loadingInitNamedVersion, setLoadingInitNamedVersion] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [currentNamedVersion, setCurrentNamedVersion] = useState<NamedVersion>();
-  const [allNamedVersions, setAllNamedVersions] = useState<NamedVersion[]>([]);
+  const [currentNamedVersion, setCurrentNamedVersion] = useState<CurrentNamedVersion>();
   const [currentChangeset, setCurrentChangeset] = useState<Changeset>();
   const [entries, setEntries] = useState<NamedVersionEntry[]>([]);
 
@@ -144,11 +145,15 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
         }
 
         setCurrentChangeset(changeset);
-        setCurrentNamedVersion(getOrCreateCurrentNamedVersion(allNamedVersions, changeset));
-        // Reset pagination
+
+        // Reset pagination and entries
         setCurrentPage(0);
         setEntries([]);
         setHasNextPage(true);
+
+        // Always create/update current named version when changeset changes
+        const currentNV = getOrCreateCurrentNamedVersion([], changeset);
+        setCurrentNamedVersion(currentNV);
       } catch (error) {
         if (!disposed && !isAbortError(error)) {
           setIsError(true);
@@ -167,7 +172,6 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
     };
   }, [iModelsClient, iModelId, currentChangesetId]);
 
-
   const loadNextPage = useCallback(
     async () => {
       if (isNextPageLoading || !hasNextPage || !currentChangeset) {
@@ -185,13 +189,14 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
           ascendingOrDescending: "desc",
         });
 
+        if(currentNamedVersion?.isSynthetic){
+          setCurrentNamedVersion(getOrCreateCurrentNamedVersion(namedVersions, currentChangeset));
+        }
+
         if (namedVersions.length === 0) {
           setHasNextPage(false);
           return;
         }
-        const updatedAllNamedVersions = allNamedVersions.concat(namedVersions);
-        setAllNamedVersions(updatedAllNamedVersions);
-
         // Filter to only versions older than current
         const relevantVersions = namedVersions.filter(
           nv => nv.changesetIndex < currentChangeset.index,
@@ -204,7 +209,6 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
             iModelId: iModelId,
             changesetId: offsetChangesetIndex,
           });
-          namedVersion.changesetId = changeSet?.id ?? namedVersion.changesetId;
           return { namedVersion, changeSet, offsetChangesetIndex };
         });
 
@@ -217,6 +221,7 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
             pageEntries.push({
               namedVersion: {
                 ...result.value.namedVersion,
+                targetChangesetId: result.value.changeSet.id,
               },
               job: undefined,
             });
@@ -232,23 +237,7 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
         }
 
         setCurrentPage(prev => prev + 1);
-        setHasNextPage(namedVersions.length === pageSize); // ✅ Fixed
-        if (!currentNamedVersion) {
-          const currentNamedVersionFound = getOrCreateCurrentNamedVersion(
-            updatedAllNamedVersions,
-            currentChangeset,
-          );
-          setCurrentNamedVersion(currentNamedVersionFound);
-        }
-
-        // Set current named version if not found yet
-        if (currentNamedVersion && isEqualToSyntheticNamedVersion(currentNamedVersion, currentChangeset)) {
-          const currentNamedVersionFound = getOrCreateCurrentNamedVersion(
-            updatedAllNamedVersions,
-            currentChangeset,
-          );
-          setCurrentNamedVersion(currentNamedVersionFound);
-        }
+        setHasNextPage(namedVersions.length === pageSize);
 
       } catch (error) {
         if (!isAbortError(error)) {
@@ -258,7 +247,7 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
         setIsNextPageLoading(false);
       }
     },
-    [isNextPageLoading, hasNextPage, currentChangeset, iModelsClient, iModelId, currentPage, allNamedVersions, currentNamedVersion]
+    [isNextPageLoading, hasNextPage, currentChangeset, iModelsClient, iModelId, currentPage],
   );
 
   return {
@@ -276,14 +265,14 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
 function getOrCreateCurrentNamedVersion(
   namedVersions: NamedVersion[],
   currentChangeset: Changeset,
-): NamedVersion {
+): CurrentNamedVersion {
   // Check if current changeset has a named version
   const existingNamedVersion = namedVersions.find(
     nv => nv.changesetId === currentChangeset.id || nv.changesetIndex === currentChangeset.index,
   );
 
   if (existingNamedVersion) {
-    return existingNamedVersion;
+    return { ...existingNamedVersion, isSynthetic: false };
   }
 
   // Create synthetic named version for current changeset
@@ -296,34 +285,6 @@ function getOrCreateCurrentNamedVersion(
     changesetIndex: currentChangeset.index,
     description: currentChangeset.description || "",
     createdDateTime: currentChangeset.pushDateTime || new Date().toISOString(),
+    isSynthetic: true,
   };
-}
-
-function isEqualToSyntheticNamedVersion(
-  namedVersion: NamedVersion,
-  currentChangeset: Changeset): boolean {
-  for (const key of Object.keys(namedVersion) as (keyof NamedVersion)[]) {
-    if (key === "displayName") {
-      continue;
-    }
-    if (key === "createdDateTime") {
-      const changesetTime = currentChangeset.pushDateTime ?
-        new Date(currentChangeset.pushDateTime).getTime() : 0;
-      const namedVersionTime = namedVersion.createdDateTime ?
-        new Date(namedVersion.createdDateTime).getTime() : 0;
-      // If createdDateTime is not equal, then it's not the same named version
-      if (namedVersionTime !== changesetTime) {
-        return false;
-      }
-      continue;
-    }
-    if (!(key in currentChangeset)) {
-      continue;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (namedVersion[key] !== (currentChangeset as any)[key]) {
-      return false;
-    }
-  }
-  return true;
 }
