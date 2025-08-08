@@ -150,7 +150,11 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   return (
     <Widget>
       <Widget.Header>
-        {isComparisonStarted && <NavigationButton backward onClick={() => manager.stopComparison()}>
+        {isComparisonStarted && <NavigationButton backward onClick={async () => {
+          setDisableStartComparison(false);
+          setTargetVersion(undefined);
+          await manager.stopComparison()
+          }}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>}
         <TextEx variant="title">
@@ -428,7 +432,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     [startJob, updateJobStatus],
   );
 
-  const processResults = async (target: NamedVersionEntry) => {
+  const processResults = useCallback(async (target: NamedVersionEntry) => {
     try {
       await getComparison(target);
     } catch (error) {
@@ -438,11 +442,11 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
         updateJobStatus.failed(target.namedVersion);
       }
     }
-  };
+  }, [getComparison, updateJobStatus]);
 
-  const viewResults = async (entry: NamedVersionEntry) => {
+  const viewResults = useCallback(async (entry: NamedVersionEntry) => {
     onNamedVersionOpened(entry);
-  };
+  }, [onNamedVersionOpened]);
 
   const queryStatus = useCallback(
     async (entry: NamedVersionEntry, signal: AbortSignal) => {
@@ -572,7 +576,7 @@ export function NamedVersionInfiniteList({
     <div
       ref={containerRef}
       className="_cer_v1_named-version-list"
-      style={{ height: '100%', width: '100%' }}
+      style={{ height: "100%", width: "100%" }}
     >
       <Sticky className="_cer_v1_named-version-list-header">
         <TextEx variant="small">
