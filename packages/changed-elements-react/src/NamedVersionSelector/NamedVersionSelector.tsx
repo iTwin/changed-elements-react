@@ -685,9 +685,6 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
         action: props.disableStartComparison ? ( // todo add localization
           <Flex>
             <ProgressRadial size='small' indeterminate />
-            <TextEx variant="body">
-              {t("VersionCompare:versionCompare.comparing")}
-            </TextEx>
           </Flex>
         ) : (
           <NavigationButton onClick={() => viewResults(props.entry)}>
