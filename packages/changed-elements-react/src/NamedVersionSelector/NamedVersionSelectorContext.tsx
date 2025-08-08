@@ -57,8 +57,9 @@ export type NamedVersionSelectorContentProps = {
   hasNextPage: boolean;
   isNextPageLoading: boolean;
   loadNextPage: () => Promise<void>;
+  disableStartComparison?: boolean;
 };
 
 export const NamedVersionSelectorContentContext = createContext<NamedVersionSelectorContentProps>(
   {} as NamedVersionSelectorContentProps,
-)
+);

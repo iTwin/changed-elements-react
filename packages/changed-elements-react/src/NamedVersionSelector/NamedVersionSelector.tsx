@@ -66,7 +66,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
-
+  const [disableStartComparison, setDisableStartComparison] = useState(false);
   useEffect(
     () => {
       const cleanup = [
@@ -123,7 +123,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
     }
-
+    setDisableStartComparison(true);
     await runManagerStartComparisonV2({
       comparisonJob: {
         comparisonJob: {
@@ -199,6 +199,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
             hasNextPage,
             loadNextPage,
             isNextPageLoading,
+            disableStartComparison,
           }}
         >
           <NamedVersionSelectorContent />
@@ -381,6 +382,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     hasNextPage,
     isNextPageLoading,
     loadNextPage,
+    disableStartComparison,
   } = props;
 
   const { queryJobStatus, startJob } = useComparisonJobs({
@@ -446,7 +448,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     async (entry: NamedVersionEntry, signal: AbortSignal) => {
       try {
         const job = await queryJobStatus(entry.namedVersion.id, signal);
-        if(!job)
+        if (!job)
           return;
         updateJobStatus(job);
       } catch (error) {
@@ -489,6 +491,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
       isNextPageLoading={isNextPageLoading}
       loadNextPage={loadNextPage}
       manageVersions={manageVersions}
+      disableStartComparison={disableStartComparison}
       contextValue={contextValue}
       height={600}
       itemHeight={120}
@@ -510,6 +513,7 @@ interface NamedVersionInfiniteListProps {
   };
   height?: number;
   itemHeight?: number;
+  disableStartComparison?: boolean;
 }
 
 export function NamedVersionInfiniteList({
@@ -518,6 +522,7 @@ export function NamedVersionInfiniteList({
   isNextPageLoading,
   loadNextPage,
   manageVersions,
+  disableStartComparison,
   contextValue,
   height = 600,
   itemHeight = 120,
@@ -540,7 +545,7 @@ export function NamedVersionInfiniteList({
     return !!entries[index];
   };
 
-  const Item = ({ index, style }: { index: number; style: React.CSSProperties; }): ReactNode => {
+  function Item({ index, style }: { index: number; style: React.CSSProperties; }): ReactNode {
     const entry = entries[index];
 
     if (!entry) {
@@ -558,9 +563,10 @@ export function NamedVersionInfiniteList({
         entry={entry}
         style={style}
         containerWidth={containerWidth}
+        disableStartComparison={disableStartComparison}
       />
     );
-  };
+  }
 
   return (
     <div
@@ -604,6 +610,7 @@ interface NamedVersionEntryProps {
   entry: NamedVersionEntry;
   style?: React.CSSProperties;
   containerWidth?: number;
+  disableStartComparison?: boolean;
 }
 
 function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
@@ -666,12 +673,19 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
             <IconEx size="m" fill="positive">
               <SvgStatusSuccess />
             </IconEx>
-            {containerWidth >= widthBreakpointInPx && <TextEx variant="body">
+            {containerWidth >= widthBreakpointInPx && !props.disableStartComparison && <TextEx variant="body">
               {t("VersionCompare:versionCompare.available")}
             </TextEx>}
           </Flex>
         ),
-        action: (
+        action: props.disableStartComparison ? ( // todo add localization
+          <Flex>
+            <ProgressRadial size='small' indeterminate />
+            <TextEx variant="body">
+              {t("Comparison Running")}
+            </TextEx>
+          </Flex>
+        ) : (
           <NavigationButton onClick={() => viewResults(props.entry)}>
             {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
           </NavigationButton>
