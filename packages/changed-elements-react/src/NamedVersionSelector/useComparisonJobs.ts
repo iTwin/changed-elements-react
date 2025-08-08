@@ -50,7 +50,7 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   const queryJobStatus = useCallback(
     async (targetVersionId: string, signal?: AbortSignal) => {
       signal?.throwIfAborted();
-      if(entries.length === 0) {
+      if (entries.length === 0) {
         return undefined;
       }
       const entry = entries.find((entry) => entry.namedVersion.id === targetVersionId);
@@ -183,12 +183,12 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
 
   const runGetDeletePostJobWorkflow = async () => {
     const response = await getComparisonJob({
-        comparisonJobClient,
-        iTwinId,
-        iModelId,
-        jobId: jobId,
-        signal,
-      })
+      comparisonJobClient,
+      iTwinId,
+      iModelId,
+      jobId: jobId,
+      signal,
+    });
 
     if (response?.comparisonJob?.status === "Failed") {
       await args.comparisonJobClient.deleteComparisonJob({
