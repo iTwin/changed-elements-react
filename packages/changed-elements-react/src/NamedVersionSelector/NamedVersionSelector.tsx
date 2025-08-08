@@ -153,8 +153,8 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
         {isComparisonStarted && <NavigationButton backward onClick={async () => {
           setDisableStartComparison(false);
           setTargetVersion(undefined);
-          await manager.stopComparison()
-          }}>
+          await manager.stopComparison();
+        }}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>}
         <TextEx variant="title">
