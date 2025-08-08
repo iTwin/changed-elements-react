@@ -686,7 +686,7 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
           <Flex>
             <ProgressRadial size='small' indeterminate />
             <TextEx variant="body">
-              {t("Comparison Running")}
+              {t("VersionCompare:versionCompare.comparing")}
             </TextEx>
           </Flex>
         ) : (
