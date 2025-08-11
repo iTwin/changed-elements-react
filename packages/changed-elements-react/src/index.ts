@@ -38,3 +38,4 @@ export type {
 export { ChangedElementsListComponent } from "./widgets/EnhancedElementsInspector.js";
 export * from "./widgets/VersionCompareSelectWidget.js";
 export { NamedVersionSelectorWidget } from "./NamedVersionSelector/NamedVersionSelector.js";
+export * from "./api/ComparisonFeatureOverridesProvider.js";
