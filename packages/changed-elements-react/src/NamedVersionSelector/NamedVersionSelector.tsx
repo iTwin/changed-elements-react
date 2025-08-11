@@ -154,7 +154,6 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     await manager.stopComparison();
   }, [manager]);
 
-
   return (
     <Widget>
       <Widget.Header>
