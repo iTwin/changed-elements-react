@@ -587,7 +587,6 @@ export function NamedVersionInfiniteList({
     <div
       ref={containerRef}
       className="_cer_v1_named-version-list"
-      style={{ height: "100%", width: "100%" }}
     >
       <Sticky className="_cer_v1_named-version-list-header">
         <TextEx variant="small">
@@ -745,8 +744,8 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
   return (
     <ListItem className="_cer_v1_named-version-entry" style={props.style}>
       <Flex gap="var(--iui-size-m)" alignItems="center" justifyContent="space-between">
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "grid", gap: "1px" }}>
+        <div className="_cer_v1_version-content">
+          <div className="_cer_v1_version-details">
             <TextEx variant="small" overflow="nowrap" oblique>
               {dateString}
             </TextEx>
@@ -758,10 +757,10 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
             </TextEx>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--iui-size-s)" }}>
+        <Flex alignItems="center" gap="var(--iui-size-s)">
           {stateInfo.status}
           {stateInfo.action}
-        </div>
+        </Flex>
       </Flex>
     </ListItem>
   );

@@ -111,6 +111,8 @@
 
       display: grid;
       grid: 1fr / minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, auto);
+      height: 100%;
+      width: 100%;
 
       > * {
         padding-inline: var(--_cer_v1_container-margin-internal);
@@ -162,6 +164,16 @@
 
     ._cer_v1_not-processed {
       color: var(--iui-color-border);
+    }
+
+    ._cer_v1_version-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    ._cer_v1_version-details {
+      display: grid;
+      gap: 1px;
     }
   }
 }
