@@ -34,6 +34,11 @@ export interface NamedVersionSelectorContextValue {
    * `<NamedVersionSelectorWidget />`.
    */
   contextExists?: boolean | undefined;
+
+  /**
+   * Index of the currently running changeset comparison, if any.
+   */
+  selectedRunningChangesetIndex?: number | undefined;
 }
 
 export const namedVersionSelectorContext = createContext<NamedVersionSelectorContextValue>({
@@ -42,6 +47,7 @@ export const namedVersionSelectorContext = createContext<NamedVersionSelectorCon
   initialLoad: () => ({ cancel: () => { } }),
   checkStatus: () => ({ cancel: () => { } }),
   contextExists: false,
+  selectedRunningChangesetIndex: undefined,
 });
 
 export type NamedVersionSelectorContentProps = {
@@ -58,6 +64,8 @@ export type NamedVersionSelectorContentProps = {
   isNextPageLoading: boolean;
   loadNextPage: () => Promise<void>;
   disableStartComparison?: boolean;
+  setSelectedRunningChangesetIndex: React.Dispatch<React.SetStateAction<number | undefined>>;
+  selectedRunningChangesetIndex: number | undefined;
 };
 
 export const NamedVersionSelectorContentContext = createContext<NamedVersionSelectorContentProps>(

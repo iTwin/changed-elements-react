@@ -62,7 +62,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   }
 
   const { iModel, emptyState, manageVersions, feedbackUrl } = props;
-
+  const [selectedRunningChangesetIndex, setSelectedRunningChangesetIndex] = useState<number | undefined>(undefined);
   const [targetVersion, setTargetVersion] = useState<NamedVersion>();
   const [isComparing, setIsComparing] = useState(manager.isComparing);
   const [isComparisonStarted, setIsComparisonStarted] = useState(manager.isComparisonReady);
@@ -147,14 +147,18 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     });
   };
 
+  const stopComparisonCallback = useCallback(async () => {
+    setSelectedRunningChangesetIndex(undefined);
+    setDisableStartComparison(false);
+    setTargetVersion(undefined);
+    await manager.stopComparison();
+  }, [manager]);
+
+
   return (
     <Widget>
       <Widget.Header>
-        {isComparisonStarted && <NavigationButton backward onClick={async () => {
-          setDisableStartComparison(false);
-          setTargetVersion(undefined);
-          await manager.stopComparison();
-        }}>
+        {isComparisonStarted && <NavigationButton backward onClick={stopComparisonCallback}>
           {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>}
         <TextEx variant="title">
@@ -204,6 +208,8 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
             loadNextPage,
             isNextPageLoading,
             disableStartComparison,
+            setSelectedRunningChangesetIndex,
+            selectedRunningChangesetIndex,
           }}
         >
           <NamedVersionSelectorContent />
@@ -387,6 +393,8 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     isNextPageLoading,
     loadNextPage,
     disableStartComparison,
+    setSelectedRunningChangesetIndex,
+    selectedRunningChangesetIndex,
   } = props;
 
   const { queryJobStatus, startJob } = useComparisonJobs({
@@ -445,8 +453,9 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   }, [getComparison, updateJobStatus]);
 
   const viewResults = useCallback(async (entry: NamedVersionEntry) => {
+    setSelectedRunningChangesetIndex(entry.namedVersion.changesetIndex);
     onNamedVersionOpened(entry);
-  }, [onNamedVersionOpened]);
+  }, [onNamedVersionOpened, setSelectedRunningChangesetIndex]);
 
   const queryStatus = useCallback(
     async (entry: NamedVersionEntry, signal: AbortSignal) => {
@@ -486,7 +495,8 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     viewResults,
     initialLoad,
     checkStatus,
-  }), [processResults, viewResults, initialLoad, checkStatus]);
+    selectedRunningChangesetIndex,
+  }), [processResults, viewResults, initialLoad, checkStatus, selectedRunningChangesetIndex]);
 
   return (
     <NamedVersionInfiniteList
@@ -514,6 +524,7 @@ interface NamedVersionInfiniteListProps {
     viewResults: (entry: NamedVersionEntry) => Promise<void>;
     initialLoad: (entry: NamedVersionEntry) => { cancel: () => void; };
     checkStatus: (entry: NamedVersionEntry) => { cancel: () => void; };
+    selectedRunningChangesetIndex?: number;
   };
   height?: number;
   itemHeight?: number;
@@ -618,7 +629,7 @@ interface NamedVersionEntryProps {
 }
 
 function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
-  const { processResults, viewResults } = useContext(namedVersionSelectorContext);
+  const { processResults, viewResults, selectedRunningChangesetIndex } = useContext(namedVersionSelectorContext);
   const { namedVersion, job } = props.entry;
   const { containerWidth = 400 } = props;
   const widthBreakpointInPx = 400;
@@ -670,7 +681,7 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
       };
       break;
 
-    case "Completed":
+    case "Completed": {
       stateInfo = {
         status: (
           <Flex>
@@ -682,18 +693,32 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
             </TextEx>}
           </Flex>
         ),
-        action: props.disableStartComparison ? ( // todo add localization
-          <Flex>
-            <ProgressRadial size='small' indeterminate />
-          </Flex>
-        ) : (
-          <NavigationButton onClick={() => viewResults(props.entry)}>
-            {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
-          </NavigationButton>
-        ),
+        action: (() => {
+          if (props.disableStartComparison) {
+            // Show spinner only for the currently running comparison
+            if (props.entry.namedVersion.changesetIndex === selectedRunningChangesetIndex) {
+              return (
+                <Flex>
+                  <ProgressRadial size="small" indeterminate />
+                </Flex>
+              );
+            }
+            return (
+              <NavigationButton disabled onClick={() => viewResults(props.entry)}>
+                {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
+              </NavigationButton>
+            );
+          }
+
+          return (
+            <NavigationButton onClick={() => viewResults(props.entry)}>
+              {containerWidth >= widthBreakpointInPx ? t("VersionCompare:versionCompare.viewResults") : t("VersionCompare:versionCompare.view")}
+            </NavigationButton>
+          );
+        })(),
       };
       break;
-
+    }
     case "Failed":
     default:
       stateInfo = {
