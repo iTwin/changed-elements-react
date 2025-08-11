@@ -4,7 +4,7 @@
 
 _Frontend Enhancements:_
 
-1\. Change named version list to be a infinite list, so we do not spam the UI with quires for constructing Named Versions
+1. Change named version list to be a infinite list, so we do not spam the UI with quires for constructing Named Versions
 
 _Frontend Bug Fixes:_
 
