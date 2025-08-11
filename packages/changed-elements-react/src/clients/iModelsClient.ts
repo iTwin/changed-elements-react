@@ -21,13 +21,6 @@ export interface GetChangesetParams extends CommonRequestParams {
   changesetId: string;
 }
 
-export interface PostNamedVersionParams extends CommonRequestParams {
-  iModelId: string;
-  changesetId: string;
-  name: string;
-  description?: string | undefined;
-}
-
 export interface GetChangesetsParams extends CommonRequestParams {
   iModelId: string;
 }
