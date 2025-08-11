@@ -108,104 +108,12 @@ interface UseNamedVersionListResult {
 }
 
 /**
- * Fetches a page of named versions from the API and updates the current named version
- * if it's synthetic and a real version is found.
- */
-async function fetchNamedVersionsPage(
-  iModelsClient: IModelsClient,
-  iModelId: string,
-  currentPage: number,
-  pageSize: number,
-  currentNamedVersion: CurrentNamedVersion | undefined,
-  currentChangeset: Changeset,
-  setCurrentNamedVersion: (version: CurrentNamedVersion) => void,
-): Promise<{ namedVersions: NamedVersion[]; shouldContinue: boolean; }> {
-  const namedVersions = await iModelsClient.getNamedVersions({
-    iModelId,
-    top: pageSize,
-    skip: currentPage * pageSize,
-    orderby: "changesetIndex",
-    ascendingOrDescending: "desc",
-  });
-
-  /**
-   * We create a named version from the current changeset and update this later once the real named version is queried.
-   * If the current changeset does not have a named version, then we keep the synthetic one.
-   */
-  if (currentNamedVersion?.isSynthetic) {
-    setCurrentNamedVersion(getOrCreateCurrentNamedVersion(namedVersions, currentChangeset));
-  }
-
-  if (namedVersions.length === 0) {
-    return { namedVersions, shouldContinue: false };
-  }
-
-  return { namedVersions, shouldContinue: true };
-}
-
-/**
- * Filters named versions to only include those older than the current changeset.
- */
-function filterRelevantVersions(namedVersions: NamedVersion[], currentChangeset: Changeset): NamedVersion[] {
-  // Filter to only versions older than current
-  return namedVersions.filter(nv => nv.changesetIndex < currentChangeset.index);
-}
-
-/**
- * Fetches offset changesets for each named version. The offset is needed because
- * the changeset is "already applied" to the named version according to the API docs.
- * See: https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
- */
-async function fetchOffsetChangesets(
-  iModelsClient: IModelsClient,
-  iModelId: string,
-  relevantVersions: NamedVersion[],
-): Promise<PromiseSettledResult<{ namedVersion: NamedVersion; offsetChangeset: Changeset | undefined; offsetChangesetIndex: string; }>[]> {
-  const changesetPromises = relevantVersions.map(async (namedVersion) => {
-    const offsetChangesetIndex = (namedVersion.changesetIndex + 1).toString();
-    const offsetChangeset = await iModelsClient.getChangeset({
-      iModelId: iModelId,
-      changesetId: offsetChangesetIndex,
-    });
-    return { namedVersion, offsetChangeset, offsetChangesetIndex };
-  });
-
-  return Promise.allSettled(changesetPromises);
-}
-
-/**
- * Processes the results from fetching offset changesets and creates page entries
- * for successfully retrieved changesets.
- */
-function processChangesetResults(
-  results: PromiseSettledResult<{ namedVersion: NamedVersion; offsetChangeset: Changeset | undefined; offsetChangesetIndex: string; }>[],
-  relevantVersions: NamedVersion[],
-): VersionCompareEntry[] {
-  // Process results
-  const pageEntries: VersionCompareEntry[] = [];
-  results.forEach((result, index) => {
-    if (result.status === "fulfilled" && result.value.offsetChangeset) {
-      pageEntries.push({
-        namedVersion: {
-          ...result.value.namedVersion,
-          targetChangesetId: result.value.offsetChangeset.id,
-        },
-        job: undefined,
-      });
-    } else {
-      const namedVersion = relevantVersions[index];
-      // eslint-disable-next-line no-console
-      console.warn(`Could not fetch target changeset for named version ${namedVersion.displayName}`);
-    }
-  });
-
-  return pageEntries;
-}
-
-/**
  * Downloads information about available and current Named Versions. The Named Version
  * list is sorted in reverse chronological order and incrementally updated as new
  * Named Version pages are loaded.
+ *
+ * @param args - Configuration object containing iModelId and currentChangesetId
+ * @returns Hook result containing loading state, entries, and pagination controls
  */
 export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVersionListResult {
   const { iModelId, currentChangesetId } = args;
@@ -369,6 +277,134 @@ export function useNamedVersionsList(args: UseNamedVersionListArgs): UseNamedVer
   };
 }
 
+/**
+ * Fetches a page of named versions from the API and updates the current named version
+ * if it's synthetic and a real version is found.
+ *
+ * @param iModelsClient - The iModels client for API calls
+ * @param iModelId - The ID of the iModel to fetch versions for
+ * @param currentPage - The current page number for pagination
+ * @param pageSize - The number of items to fetch per page
+ * @param currentNamedVersion - The current named version (may be synthetic)
+ * @param currentChangeset - The current changeset information
+ * @param setCurrentNamedVersion - Function to update the current named version state
+ * @returns Promise resolving to the fetched named versions and continuation flag
+ */
+async function fetchNamedVersionsPage(
+  iModelsClient: IModelsClient,
+  iModelId: string,
+  currentPage: number,
+  pageSize: number,
+  currentNamedVersion: CurrentNamedVersion | undefined,
+  currentChangeset: Changeset,
+  setCurrentNamedVersion: (version: CurrentNamedVersion) => void,
+): Promise<{ namedVersions: NamedVersion[]; shouldContinue: boolean; }> {
+  const namedVersions = await iModelsClient.getNamedVersions({
+    iModelId,
+    top: pageSize,
+    skip: currentPage * pageSize,
+    orderby: "changesetIndex",
+    ascendingOrDescending: "desc",
+  });
+
+  /**
+   * We create a named version from the current changeset and update this later once the real named version is queried.
+   * If the current changeset does not have a named version, then we keep the synthetic one.
+   */
+  if (currentNamedVersion?.isSynthetic) {
+    setCurrentNamedVersion(getOrCreateCurrentNamedVersion(namedVersions, currentChangeset));
+  }
+
+  if (namedVersions.length === 0) {
+    return { namedVersions, shouldContinue: false };
+  }
+
+  return { namedVersions, shouldContinue: true };
+}
+
+/**
+ * Filters named versions to only include those older than the current changeset.
+ *
+ * @param namedVersions - Array of named versions to filter
+ * @param currentChangeset - The current changeset to compare against
+ * @returns Array of named versions that are older than the current changeset
+ */
+function filterRelevantVersions(namedVersions: NamedVersion[], currentChangeset: Changeset): NamedVersion[] {
+  // Filter to only versions older than current
+  return namedVersions.filter(nv => nv.changesetIndex < currentChangeset.index);
+}
+
+/**
+ * Fetches offset changesets for each named version. The offset is needed because
+ * the changeset is "already applied" to the named version according to the API docs.
+ * See: https://developer.bentley.com/tutorials/changed-elements-api/#221-using-the-api-to-get-changed-elements
+ *
+ * @param iModelsClient - The iModels client for API calls
+ * @param iModelId - The ID of the iModel to fetch changesets for
+ * @param relevantVersions - Array of named versions to fetch offset changesets for
+ * @returns Promise resolving to settled results of offset changeset fetch operations
+ */
+async function fetchOffsetChangesets(
+  iModelsClient: IModelsClient,
+  iModelId: string,
+  relevantVersions: NamedVersion[],
+): Promise<PromiseSettledResult<{ namedVersion: NamedVersion; offsetChangeset: Changeset | undefined; offsetChangesetIndex: string; }>[]> {
+  const changesetPromises = relevantVersions.map(async (namedVersion) => {
+    const offsetChangesetIndex = (namedVersion.changesetIndex + 1).toString();
+    const offsetChangeset = await iModelsClient.getChangeset({
+      iModelId: iModelId,
+      changesetId: offsetChangesetIndex,
+    });
+    return { namedVersion, offsetChangeset, offsetChangesetIndex };
+  });
+
+  return Promise.allSettled(changesetPromises);
+}
+
+/**
+ * Processes the results from fetching offset changesets and creates page entries
+ * for successfully retrieved changesets.
+ *
+ * @param results - Promise settled results from offset changeset fetch operations
+ * @param relevantVersions - Array of named versions corresponding to the results
+ * @returns Array of VersionCompareEntry objects for successfully processed changesets
+ */
+function processChangesetResults(
+  results: PromiseSettledResult<{ namedVersion: NamedVersion; offsetChangeset: Changeset | undefined; offsetChangesetIndex: string; }>[],
+  relevantVersions: NamedVersion[],
+): VersionCompareEntry[] {
+  // Process results
+  const pageEntries: VersionCompareEntry[] = [];
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled" && result.value.offsetChangeset) {
+      pageEntries.push({
+        namedVersion: {
+          ...result.value.namedVersion,
+          targetChangesetId: result.value.offsetChangeset.id,
+        },
+        job: undefined,
+      });
+    } else {
+      const namedVersion = relevantVersions[index];
+      // eslint-disable-next-line no-console
+      console.warn(`Could not fetch target changeset for named version ${namedVersion.displayName}`);
+    }
+  });
+
+  return pageEntries;
+}
+
+/**
+ * Gets or creates a current named version based on the changeset and available named versions.
+ * First checks if the current changeset already has a corresponding named version in the provided list.
+ * If found, returns it as a non-synthetic version. If not found, creates a synthetic named version
+ * using the changeset information, which will be used until a real named version is discovered
+ * or confirmed to not exist.
+ *
+ * @param namedVersions - List of named versions to search for an existing match
+ * @param currentChangeset - The current changeset to create or find a named version for
+ * @returns A CurrentNamedVersion that is either real (isSynthetic: false) or synthetic (isSynthetic: true)
+ */
 function getOrCreateCurrentNamedVersion(
   namedVersions: NamedVersion[],
   currentChangeset: Changeset,
