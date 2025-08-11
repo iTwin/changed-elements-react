@@ -14,9 +14,6 @@ export interface IModelsClient {
   /** Retrieves a list Named Versions */
   getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]>;
 
-    /** Retrieves a Named Versions */
-  postNamedVersions(args: PostNamedVersionParams): Promise<NamedVersion | undefined>;
-
 }
 
 export interface GetChangesetParams extends CommonRequestParams {

@@ -31,15 +31,15 @@ import { Sticky } from "./Sticky.js";
 import { TextEx } from "./TextEx.js";
 import { useComparisonJobs } from "./useComparisonJobs.js";
 import {
-  useNamedVersionsList, type ComparisonJobStatus, type NamedVersionEntry
+  useNamedVersionsList, type ComparisonJobStatus, type VersionCompareEntry
 } from "./useNamedVersionsList.js";
 import { useQueue } from "./useQueue.js";
 
-import "./NamedVersionSelector.scss";
-import { FeedbackButton } from "../widgets/FeedbackButton.js";
-import { useResizeObserver } from "../ResizeObserver.js";
-import InfiniteLoader from "react-window-infinite-loader";
 import { FixedSizeList } from "react-window";
+import InfiniteLoader from "react-window-infinite-loader";
+import { useResizeObserver } from "../ResizeObserver.js";
+import { FeedbackButton } from "../widgets/FeedbackButton.js";
+import "./NamedVersionSelector.scss";
 
 interface NamedVersionSelectorWidgetProps {
   iModel: IModelConnection;
@@ -118,7 +118,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
 
   const widgetRef = useRef<ChangedElementsWidget>(null);
 
-  const onNamedVersionOpened = async (targetVersion?: NamedVersionEntry) => {
+  const onNamedVersionOpened = async (targetVersion?: VersionCompareEntry) => {
     setTargetVersion(targetVersion?.namedVersion);
     if (!targetVersion || !currentNamedVersion || targetVersion.job?.status !== "Completed") {
       return;
@@ -407,7 +407,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   const pausedPassiveChecksRef = useRef(new Set<string>());
 
   const getComparison = useCallback(
-    async (entry: NamedVersionEntry, signal?: AbortSignal) => {
+    async (entry: VersionCompareEntry, signal?: AbortSignal) => {
       signal?.throwIfAborted();
 
       if (entry.job?.status === "Completed") {
@@ -440,7 +440,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     [startJob, updateJobStatus],
   );
 
-  const processResults = useCallback(async (target: NamedVersionEntry) => {
+  const processResults = useCallback(async (target: VersionCompareEntry) => {
     try {
       await getComparison(target);
     } catch (error) {
@@ -452,15 +452,16 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
     }
   }, [getComparison, updateJobStatus]);
 
-  const viewResults = useCallback(async (entry: NamedVersionEntry) => {
+  const viewResults = useCallback(async (entry: VersionCompareEntry) => {
     setSelectedRunningChangesetIndex(entry.namedVersion.changesetIndex);
     onNamedVersionOpened(entry);
   }, [onNamedVersionOpened, setSelectedRunningChangesetIndex]);
 
   const queryStatus = useCallback(
-    async (entry: NamedVersionEntry, signal: AbortSignal) => {
+    async (entry: VersionCompareEntry, signal: AbortSignal) => {
       try {
         const job = await queryJobStatus(entry.namedVersion.id, signal);
+        // If the job is not found, it means the entry is not loaded yet, this is not an error condition, just wait for the next page to load
         if (!job)
           return;
         updateJobStatus(job);
@@ -480,7 +481,7 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   const { addItem: initialLoad } = useQueue(queryStatus);
   const { addItem: checkStatus } = useQueue(
     useCallback(
-      async (entry: NamedVersionEntry, signal: AbortSignal) => {
+      async (entry: VersionCompareEntry, signal: AbortSignal) => {
         await new Promise((resolve) => setTimeout(resolve, 5000));
         if (!pausedPassiveChecksRef.current.has(entry.namedVersion.id)) {
           await queryStatus(entry, signal);
@@ -514,16 +515,16 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
 }
 
 interface NamedVersionInfiniteListProps {
-  entries: NamedVersionEntry[];
+  entries: VersionCompareEntry[];
   hasNextPage: boolean;
   isNextPageLoading: boolean;
   loadNextPage: () => Promise<void>;
   manageVersions?: ReactNode;
   contextValue: {
-    processResults: (entry: NamedVersionEntry) => Promise<void>;
-    viewResults: (entry: NamedVersionEntry) => Promise<void>;
-    initialLoad: (entry: NamedVersionEntry) => { cancel: () => void; };
-    checkStatus: (entry: NamedVersionEntry) => { cancel: () => void; };
+    processResults: (entry: VersionCompareEntry) => Promise<void>;
+    viewResults: (entry: VersionCompareEntry) => Promise<void>;
+    initialLoad: (entry: VersionCompareEntry) => { cancel: () => void; };
+    checkStatus: (entry: VersionCompareEntry) => { cancel: () => void; };
     selectedRunningChangesetIndex?: number;
   };
   height?: number;
@@ -564,7 +565,6 @@ export function NamedVersionInfiniteList({
     const entry = entries[index];
 
     if (!entry) {
-      // Loading indicator
       return (
         <div style={style} className="_cer_v1_loading-indicator">
           <LoadingContent>
@@ -622,7 +622,7 @@ export function NamedVersionInfiniteList({
 }
 
 interface NamedVersionEntryProps {
-  entry: NamedVersionEntry;
+  entry: VersionCompareEntry;
   style?: React.CSSProperties;
   containerWidth?: number;
   disableStartComparison?: boolean;
@@ -744,7 +744,7 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
 
   return (
     <ListItem className="_cer_v1_named-version-entry" style={props.style}>
-      <Flex gap="var(--iui-size-m)" alignItems="center" justifyContent="space-between" style={{ width: "100%" }}>
+      <Flex gap="var(--iui-size-m)" alignItems="center" justifyContent="space-between">
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "grid", gap: "1px" }}>
             <TextEx variant="small" overflow="nowrap" oblique>
@@ -768,7 +768,7 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
 }
 
 interface LoadingEntryStatusProps {
-  entry: NamedVersionEntry;
+  entry: VersionCompareEntry;
 }
 
 function LoadingEntryStatus(props: Readonly<LoadingEntryStatusProps>): ReactElement {
@@ -790,7 +790,7 @@ function LoadingEntryStatus(props: Readonly<LoadingEntryStatusProps>): ReactElem
 }
 
 interface ProcessingEntryStatusProps {
-  entry: NamedVersionEntry;
+  entry: VersionCompareEntry;
   displayMin?: boolean;
 }
 

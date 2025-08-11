@@ -78,7 +78,7 @@ export const useNamedVersionLoader = (
               setResultNoNamedVersions();
               setIsLoading(false);
               break;
-             }
+            }
 
             if (!currentNamedVersion)
               currentNamedVersion = await getOrCreateCurrentNamedVersion(namedVersions, currentChangeSetId, iModelsClient, iModelId, currentChangeSetIndex);

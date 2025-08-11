@@ -25,22 +25,6 @@ export class ITwinIModelsClient implements IModelsClient {
     this.showHiddenNamedVersions = !!args.showHiddenNamedVersions;
   }
 
- public async postNamedVersions(args: PostNamedVersionParams): Promise<NamedVersion | undefined> {
-     const namedVersion = await callITwinApi({
-      method: "POST",
-      url: `${this.baseUrl}/${args.iModelId}/namedversions`,
-      getAccessToken: this.getAccessToken,
-      signal: args.signal,
-      headers: { Accept: acceptMimeType, "Content-Type": "application/json" },
-      body:{
-        name: args.name,
-        description: args.description,
-        changesetId: args.changesetId,
-      },
-    });
-    return namedVersion?.namedVersion as NamedVersion | undefined;
-  }
-
   public async getChangeset(args: GetChangesetParams): Promise<Changeset | undefined> {
     const changeset = await callITwinApi({
       url: `${this.baseUrl}/${args.iModelId}/changesets/${args.changesetId}`,

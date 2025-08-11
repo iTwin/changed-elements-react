@@ -8,13 +8,13 @@ import type { ComparisonJob, IComparisonJobClient } from "../clients/IComparison
 import type { NamedVersion } from "../clients/iModelsClient.js";
 import { tryXTimes } from "../utils/utils.js";
 import { useVersionCompare } from "../VersionCompareContext.js";
-import type { ComparisonJobStatus, NamedVersionEntry } from "./useNamedVersionsList.js";
+import type { ComparisonJobStatus, VersionCompareEntry } from "./useNamedVersionsList.js";
 
 interface UseComparisonJobsArgs {
   iTwinId: string;
   iModelId: string;
   currentNamedVersion: NamedVersion;
-  entries: NamedVersionEntry[];
+  entries: VersionCompareEntry[];
 }
 
 interface UseComparisonJobsResult {
@@ -50,7 +50,10 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   const queryJobStatus = useCallback(
     async (targetVersionId: string, signal?: AbortSignal) => {
       signal?.throwIfAborted();
-      if (entries.length === 0) {
+      const haveEntriesLoaded = entries.length > 0;
+      if (!haveEntriesLoaded) {
+        // Entries will be loaded asynchronously, so we need to check if they are available.
+        // May return `undefined` if the entry is not loaded yet.
         return undefined;
       }
       const entry = entries.find((entry) => entry.namedVersion.id === targetVersionId);
