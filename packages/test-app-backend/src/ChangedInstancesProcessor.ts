@@ -7,12 +7,10 @@ import {
   ChangedECInstance,
   ChangesetECAdaptor,
   IModelDb,
-  IModelHost,
   PartialECChangeUnifier,
   SqliteChangesetReader
 } from "@itwin/core-backend";
 import {
-  AuthorizationClient,
   ChangesetFileProps,
   ChangesetIdWithIndex,
   IModelRpcProps
@@ -40,12 +38,6 @@ export class ChangedInstancesProcessor {
     iModelId: string,
     authToken: string,
   ): Promise<ChangesetFileProps[]> {
-    const authClient: AuthorizationClient = {
-      getAccessToken: function (): Promise<string> {
-        return Promise.resolve(authToken);
-      },
-    };
-    IModelHost.authorizationClient = authClient;
     try {
       const csFileProps = [];
       const startIndex = startChangesetIdWithIndex.index;
