@@ -8,18 +8,18 @@ import type { ComparisonJob, IComparisonJobClient } from "../clients/IComparison
 import type { NamedVersion } from "../clients/iModelsClient.js";
 import { tryXTimes } from "../utils/utils.js";
 import { useVersionCompare } from "../VersionCompareContext.js";
-import type { ComparisonJobStatus, NamedVersionEntry } from "./useNamedVersionsList.js";
+import type { ComparisonJobStatus, VersionCompareEntry } from "./useNamedVersionsList.js";
 
 interface UseComparisonJobsArgs {
   iTwinId: string;
   iModelId: string;
   currentNamedVersion: NamedVersion;
-  entries: NamedVersionEntry[];
+  entries: VersionCompareEntry[];
 }
 
 interface UseComparisonJobsResult {
   /** Inquires `IComparisonJobClient` about current status of the job. */
-  queryJobStatus: (targetVersionId: string, signal?: AbortSignal) => Promise<ComparisonJobStatus>;
+  queryJobStatus: (targetVersionId: string, signal?: AbortSignal) => Promise<ComparisonJobStatus | undefined>;
 
   /**
    * Starts comparison job if one is not running already.
@@ -50,7 +50,12 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   const queryJobStatus = useCallback(
     async (targetVersionId: string, signal?: AbortSignal) => {
       signal?.throwIfAborted();
-
+      const haveEntriesLoaded = entries.length > 0;
+      if (!haveEntriesLoaded) {
+        // Entries will be loaded asynchronously, so we need to check if they are available.
+        // May return `undefined` if the entry is not loaded yet.
+        return undefined;
+      }
       const entry = entries.find((entry) => entry.namedVersion.id === targetVersionId);
       if (!entry) {
         throw new Error(`Could not find named version entry: '${targetVersionId}'`);
@@ -70,7 +75,9 @@ export function useComparisonJobs(args: UseComparisonJobsArgs): UseComparisonJob
   );
 
   const startJob = useCallback(
-    async (namedVersion: NamedVersion & { targetChangesetId: string; }, signal?: AbortSignal) => {
+    async (
+      namedVersion: NamedVersion & { targetChangesetId: string; },
+      signal?: AbortSignal) => {
       signal?.throwIfAborted();
 
       const comparisonJob = await postOrGetComparisonJob({
@@ -179,12 +186,12 @@ async function postOrGetComparisonJob(args: PostOrGetComparisonJobParams): Promi
 
   const runGetDeletePostJobWorkflow = async () => {
     const response = await getComparisonJob({
-        comparisonJobClient,
-        iTwinId,
-        iModelId,
-        jobId: jobId,
-        signal,
-      })
+      comparisonJobClient,
+      iTwinId,
+      iModelId,
+      jobId: jobId,
+      signal,
+    });
 
     if (response?.comparisonJob?.status === "Failed") {
       await args.comparisonJobClient.deleteComparisonJob({
