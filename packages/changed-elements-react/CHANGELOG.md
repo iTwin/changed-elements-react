@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.2
+
+### Patch Changes
+
+#### [0.17.2](https://github.com/iTwin/changed-elements-react/tree/v0.17.2/packages/changed-elements-react) - 2025-09-03
+
+Fixed header alignment for changed elements widget
+
 ## 0.17.1
 
 ### Patch Changes
