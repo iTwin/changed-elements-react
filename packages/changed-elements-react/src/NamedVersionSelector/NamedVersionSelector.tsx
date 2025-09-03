@@ -608,7 +608,6 @@ export function NamedVersionInfiniteList({
               itemCount={itemCount}
               itemSize={itemHeight}
               onItemsRendered={onItemsRendered}
-              className="_cer_v1_named-version-list"
             >
               {Item}
             </FixedSizeList>
@@ -647,8 +646,8 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
         status: (
           <Flex>
             <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
-              <svg viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="8" />
+              <svg viewBox="0 0 18 18">
+                <circle cx="9" cy="9" r="9" />
               </svg>
             </IconEx>
             {containerWidth >= widthBreakpointInPx && <TextEx weight="normal" variant="body">
@@ -739,21 +738,25 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
 
   return (
     <ListItem className="_cer_v1_named-version-entry">
-      <div>
-        <div style={{ display: "grid", gap: "1px" }}>
-          <TextEx variant="small" overflow="nowrap" oblique>
-            {dateString}
-          </TextEx>
-          <TextEx variant="body" weight="semibold" overflow="ellipsis">
-            {namedVersion.displayName}
-          </TextEx>
-          <TextEx variant="small" overflow="ellipsis">
-            {namedVersion.description ?? ""}
-          </TextEx>
-        </div>
-      </div>
-      {stateInfo.status}
-      {stateInfo.action}
+      <Flex justifyContent="left" >
+        <Flex.Item flex='2'>
+          <div>
+            <div style={{ display: "grid", gap: "1px" }}>
+              <TextEx variant="small" overflow="nowrap" oblique>
+                {dateString}
+              </TextEx>
+              <TextEx variant="body" weight="semibold" overflow="ellipsis">
+                {namedVersion.displayName}
+              </TextEx>
+              <TextEx variant="small" overflow="ellipsis">
+                {namedVersion.description ?? ""}
+              </TextEx>
+            </div>
+          </div>
+        </Flex.Item>
+        <Flex.Item flex='1' alignSelf="center">{stateInfo.status}</Flex.Item>
+        <Flex.Item flex='1' alignSelf="center">{stateInfo.action}</Flex.Item>
+      </Flex>
     </ListItem>
   );
 }

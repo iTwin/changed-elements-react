@@ -107,7 +107,6 @@
     ._cer_v1_named-version-list {
       margin: 0;
       overflow: auto;
-
       display: grid;
       grid: 1fr / minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, auto);
       height: 100%;
@@ -120,16 +119,11 @@
       padding-block: var(--iui-size-m);
       border: 1px solid var(--iui-color-border-subtle);
       border-radius: 0;
-      display: grid;
-      gap: unset;
-      grid-template-columns: subgrid;
-      grid-column: 1 / 4;
-      align-items: center;
-      grid-auto-flow: column;
-      > :nth-child(2):last-child {
-        grid-column: 2 / 4;
-      }
+      width:100%;
+    }
 
+    ._cer_v1_named-version-entry > :first-child {
+      width: 100%;
     }
 
     ._cer_v1_action-button {
