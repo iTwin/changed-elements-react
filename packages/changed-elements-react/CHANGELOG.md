@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.1
+
+### Patch Changes
+
+#### [0.17.1](https://github.com/iTwin/changed-elements-react/tree/v0.17.1/packages/changed-elements-react) - 2025-09-03
+
+Fixed miss-alignment issue in named versions entries
+
 ## 0.17.0
 
 ### Minor Changes
