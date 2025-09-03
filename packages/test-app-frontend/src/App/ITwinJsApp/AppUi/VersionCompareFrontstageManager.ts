@@ -3,11 +3,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageDef,
-  type FrontstageReadyEventArgs
+  StateManager, SyncUiEventDispatcher, UiFramework
 } from "@itwin/appui-react";
 import {
-  ChangedElementsWidget, changedElementsWidgetAttachToViewportEvent,
+  changedElementsWidgetAttachToViewportEvent,
   enableVersionCompareVisualizationCaching, ModelsCategoryCache, SideBySideVisualizationManager,
   VersionCompare, VersionCompareVisualizationManager, type ChangedElementEntry,
   type VersionCompareManager
@@ -21,6 +20,7 @@ import {
 import { KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
+import { getUnifiedSelectionStorage } from "./presentation/SelectionStorage.js";
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
 import { VersionCompareActionTypes } from "./redux/VersionCompareStore.js";
 
@@ -225,8 +225,11 @@ export class VersionCompareFrontstageManager {
     UiFramework.frontstages.addFrontstage(stage.frontstageConfig());
 
     // Clear selection before we start property comparison
-    Presentation.selection.clearSelection("SideBySideVisualizationManager", currentIModel);
-    Presentation.selection.clearSelection("SideBySideVisualizationManager", targetIModel);
+    getUnifiedSelectionStorage().clearSelection({ source: "SideBySideVisualizationManager", imodelKey: currentIModel.key });
+    getUnifiedSelectionStorage().clearSelection({ source: "SideBySideVisualizationManager", imodelKey: targetIModel.key });
+
+    // Presentation.selection.clearSelection("SideBySideVisualizationManager", currentIModel);
+    // Presentation.selection.clearSelection("SideBySideVisualizationManager", targetIModel);
 
     const frontstageDef = await UiFramework.frontstages.getFrontstageDef(this._propertyComparisonStageId);
     if (undefined !== frontstageDef) {
@@ -285,6 +288,7 @@ export class VersionCompareFrontstageManager {
    */
   public async initializePropertyComparison(currentConnection: IModelConnection, targetConnection: IModelConnection) {
     const currentSelection = Presentation.selection.getSelection(currentConnection);
+    // const currentSelection = getUnifiedSelectionStorage().getSelection({imodelKey: createIModelKey(currentConnection)});
 
     // Check if there's any selected elements
     if (currentSelection.instanceKeysCount === 0) {
@@ -366,6 +370,7 @@ export class VersionCompareFrontstageManager {
         vps[0],
         vps[1],
         this._manager.options.getPropertyComparisonViewState === undefined,
+        getUnifiedSelectionStorage(),
       );
     await this.propertyComparisonVisualizationManager.initialize(this._emphasizedElements);
   };

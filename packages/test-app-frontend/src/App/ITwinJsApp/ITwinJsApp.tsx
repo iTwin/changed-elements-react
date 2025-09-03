@@ -4,8 +4,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance,
-  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
+  AppNotificationManager, ConfigurableUiContent, FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, FrameworkFrontstages,
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
@@ -69,8 +69,35 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
         setLoadingState("loaded");
         UiFramework.setIModelConnection(iModel);
         UiFramework.setDefaultViewState(viewState);
-        UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
-        await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
+
+        // Define the frontstage configuration object
+        const mainFrontstageProps = {
+          id: "MainFrontstageProvider",
+          usage: StageUsage.General,
+          contentGroupProps: {
+            id: "MainFrontstageProviderContentGroup",
+            layout: { id: "MainFrontstageProviderContentGroupLayout" },
+            contents: [{
+              id: "MainFrontstageProviderContentView",
+              classId: IModelViewportControl,
+              applicationData: {
+                viewState: UiFramework.getDefaultViewState(),
+                iModelConnection: UiFramework.getIModelConnection(),
+              },
+            }],
+          },
+          rightPanelProps: {
+            resizable: true,
+            pinned: true,
+            defaultState: StagePanelState.Open,
+            size: 400,
+            maxSizeSpec: Number.POSITIVE_INFINITY,
+          },
+        };
+        // UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
+        UiFramework.frontstages.addFrontstage(FrontstageUtilities.createStandardFrontstage(mainFrontstageProps));
+        UiItemsManager.register(new MainFrontstageItemsProvider());
+        await UiFramework.frontstages.setActiveFrontstage("MainFrontstageProvider");
       }
     })();
     return () => {
@@ -228,7 +255,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     wantTooltipAugment: true,
     createVisualizationHandler: (manager) => new AppUiVisualizationHandler(
       manager,
-      { frontstageIds: [MainFrontstageProvider.name] },
+      { frontstageIds: ["MainFrontstageProvider"] },
     ),
     featureTracking: featureTrackingTesterFunctions,
     changesProvider: useDirectComparison ? changesProvider : undefined,
@@ -329,7 +356,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     section?: StagePanelSection,
   ): Widget[] {
     if (
-      stageId !== MainFrontstageProvider.name ||
+      stageId !== "MainFrontstageProvider" ||
       stageUsage !== StageUsage.General ||
       location !== StagePanelLocation.Right ||
       section !== StagePanelSection.Start
