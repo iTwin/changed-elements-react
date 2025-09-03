@@ -738,7 +738,7 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
 
   return (
     <ListItem className="_cer_v1_named-version-entry">
-      <Flex justifyContent="left" >
+      <Flex justifyContent="left" gap="5px" >
         <Flex.Item flex='2'>
           <div>
             <div style={{ display: "grid", gap: "1px" }}>
