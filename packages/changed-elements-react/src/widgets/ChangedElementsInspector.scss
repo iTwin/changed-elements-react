@@ -54,19 +54,19 @@
   }
 }
 
-.vc-color-toggle.vc-unchanged.iui-toggle-switch-wrapper > input:checked {
+.vc-color-toggle.vc-unchanged[class*="toggle-switch-wrapper"] > input:checked {
   background-color: RGBA(0, 0, 0);
 }
 
-.vc-color-toggle.vc-deleted.iui-toggle-switch-wrapper > input:checked {
+.vc-color-toggle.vc-deleted[class*="toggle-switch-wrapper"] > input:checked {
   background-color: #cc0000;
 }
 
-.vc-color-toggle.vc-added.iui-toggle-switch-wrapper > input:checked {
+.vc-color-toggle.vc-added[class*="toggle-switch-wrapper"] > input:checked {
   background-color: #57aa1c;
 }
 
-.vc-color-toggle.vc-modified.iui-toggle-switch-wrapper > input:checked {
+.vc-color-toggle.vc-modified[class*="toggle-switch-wrapper"] > input:checked {
   background-color: #008be1;
 }
 
