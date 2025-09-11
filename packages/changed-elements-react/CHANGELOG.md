@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.3
+
+### Patch Changes
+
+#### [0.17.3](https://github.com/iTwin/changed-elements-react/tree/v0.17.3/packages/changed-elements-react) - 2025-09-11
+
+Fixed colors of toggles in filters to depict color legend of changes
+
 ## 0.17.2
 
 ### Patch Changes
