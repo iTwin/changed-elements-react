@@ -277,14 +277,15 @@ export class PropertyComparisonFrontstage {
 }
 
 let originalDefaultToolId: string | undefined = undefined;
-const onFrontstageChanged = async (args: any): Promise<void> => {
+type FrontstageActivatedArgs = Parameters<Parameters<typeof UiFramework.frontstages.onFrontstageActivatedEvent.addListener>[0]>[0];
+const onFrontstageChanged = async (args: FrontstageActivatedArgs): Promise<void> => {
   if (args.activatedFrontstageDef.id === PropertyComparisonFrontstage.id) {
     originalDefaultToolId = IModelApp.toolAdmin.defaultToolId;
     IModelApp.toolAdmin.defaultToolId = DummyTool.toolId;
     // Note: currently the defaultTool property of the frontstage config is not working properly,
     //   consequently the PropertyComparisonFrontstage will be set with the default select tool, which
-    //   this handler overrides, but we must use setImmediate to let the other listners finish running so that
-    //   this default tool (DummyTool) as applied last. In practise without this the dummy tool is still active but
+    //   this handler overrides, but we must use setImmediate to let the other listeners finish running so that
+    //   this default tool (DummyTool) as applied last. In practice without this the dummy tool is still active but
     //   the tool assistance will show the select tool instead of this blank tool in the status bar
     setTimeout(async () => {
       await IModelApp.toolAdmin.startDefaultTool();

@@ -277,7 +277,6 @@ export class VersionCompareFrontstageManager {
    */
   public async initializePropertyComparison(currentConnection: IModelConnection, targetConnection: IModelConnection) {
     const currentSelection = Presentation.selection.getSelection(currentConnection);
-    // const currentSelection = getUnifiedSelectionStorage().getSelection({imodelKey: createIModelKey(currentConnection)});
 
     // Check if there's any selected elements
     if (currentSelection.instanceKeysCount === 0) {
