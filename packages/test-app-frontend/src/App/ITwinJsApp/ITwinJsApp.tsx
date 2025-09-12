@@ -4,8 +4,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, ConfigurableUiContent, FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
-  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider, FrameworkFrontstages,
+  AppNotificationManager, ConfigurableUiContent,
+  FrameworkFrontstages,
+  FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
@@ -27,6 +29,7 @@ import {
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
+import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { FrontendIModelsAccess } from "@itwin/imodels-access-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
@@ -188,7 +191,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface, ECSchemaRpcInterface],
   );
 
   await Promise.all([

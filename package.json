@@ -21,14 +21,14 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.11",
-    "@changesets/types": "6.0.0",
-    "@types/node": "^18.11.9",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.35.2",
-    "eslint-plugin-react-hooks": "^4.6.2",
+    "@changesets/cli": "^2.29.7",
+    "@changesets/types": "6.1.0",
+    "@types/node": "^24.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^9.35.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "npm-run-all": "^4.1.5",
     "ts-node": "^10.9.1",
     "typescript": "~5.5.4"
@@ -36,10 +36,10 @@
   "pnpm": {
     "overrides": {
       "@babel/runtime@<7.26.10": ">=7.26.10",
-      "@itwin/appui-abstract": "^5.0.4",
-      "@itwin/core-bentley": "^5.0.4",
-      "@itwin/core-quantity": "^5.0.4",
-      "@itwin/core-react": "^5.4.0",
+      "@itwin/appui-abstract": "^5.1.7",
+      "@itwin/core-bentley": "^5.1.7",
+      "@itwin/core-quantity": "^5.1.7",
+      "@itwin/core-react": "^5.15.0",
       "axios@<1.8.2": ">=1.8.2",
       "dompurify@<3.2.4": ">=3.2.4",
       "esbuild@<=0.24.2": ">=0.25.0",
