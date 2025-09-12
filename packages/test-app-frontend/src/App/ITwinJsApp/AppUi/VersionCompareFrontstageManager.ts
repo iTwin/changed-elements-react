@@ -212,15 +212,6 @@ export class VersionCompareFrontstageManager {
       () => this._mainViewportState!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
-      // VersionCompare.options.ninezoneOptions?.propertyComparisonOptions?.frontstageProps,
-      // {
-      //   verticalTools:
-      //     VersionCompare.options.ninezoneOptions?.propertyComparisonOptions
-      //       ?.verticalTools,
-      //   horizontalTools:
-      //     VersionCompare.options.ninezoneOptions?.propertyComparisonOptions
-      //       ?.horizontalTools,
-      // }
     );
     UiFramework.frontstages.addFrontstage(stage.frontstageConfig());
 
@@ -228,8 +219,6 @@ export class VersionCompareFrontstageManager {
     getUnifiedSelectionStorage().clearSelection({ source: "SideBySideVisualizationManager", imodelKey: currentIModel.key });
     getUnifiedSelectionStorage().clearSelection({ source: "SideBySideVisualizationManager", imodelKey: targetIModel.key });
 
-    // Presentation.selection.clearSelection("SideBySideVisualizationManager", currentIModel);
-    // Presentation.selection.clearSelection("SideBySideVisualizationManager", targetIModel);
 
     const frontstageDef = await UiFramework.frontstages.getFrontstageDef(this._propertyComparisonStageId);
     if (undefined !== frontstageDef) {

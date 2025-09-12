@@ -210,37 +210,10 @@ export class SideBySideVisualizationManager {
       })) {
         selectables2.push(selectable);
       }
-    
-      // const selectables = computeSelection({
-      //   queryExecutor: createECSqlQueryExecutor(this._currentIModel),
-      //   elementIds: [instanceKey.id],
-      //   scope: "element",
-      // });
-      // const selectables2 = computeSelection({
-      //   queryExecutor: createECSqlQueryExecutor(this._currentIModel),
-      //   elementIds: [instanceKey.id],
-      //   scope: "element",
-      // });
 
       // Clear selections and add the selected element
-      this._selectionStorage.replaceSelection({ source: "SideBySideVisualizationManager", imodelKey: this._currentIModel.key, selectables: selectables }); 
-      this._selectionStorage.replaceSelection({ source: "SideBySideVisualizationManager", imodelKey: this._targetIModel.key, selectables: selectables2}); 
-
-      // const scope = Presentation.selection.scopes.activeScope
-      //   ? Presentation.selection.scopes.activeScope
-      //   : "element";
-      // await Presentation.selection.replaceSelectionWithScope(
-      //   "SideBySideVisualizationManager",
-      //   this._currentIModel,
-      //   instanceKey.id,
-      //   scope,
-      // );
-      // await Presentation.selection.replaceSelectionWithScope(
-      //   "SideBySideVisualizationManager",
-      //   this._targetIModel,
-      //   instanceKey.id,
-      //   scope,
-      // );
+      this._selectionStorage.replaceSelection({ source: "SideBySideVisualizationManager", imodelKey: this._currentIModel.key, selectables: selectables });
+      this._selectionStorage.replaceSelection({ source: "SideBySideVisualizationManager", imodelKey: this._targetIModel.key, selectables: selectables2});
     }
   }
 

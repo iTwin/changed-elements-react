@@ -97,7 +97,6 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
             maxSizeSpec: Number.POSITIVE_INFINITY,
           },
         };
-        // UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
         UiFramework.frontstages.addFrontstage(FrontstageUtilities.createStandardFrontstage(mainFrontstageProps));
         UiItemsManager.register(new MainFrontstageItemsProvider());
         await UiFramework.frontstages.setActiveFrontstage("MainFrontstageProvider");
