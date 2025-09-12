@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 import { IModelApp, type IModelConnection } from "@itwin/core-frontend";
 import {
   SvgChevronLeft, SvgChevronRight, SvgStatusError, SvgStatusSuccess
@@ -69,23 +69,23 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
   const [disableStartComparison, setDisableStartComparison] = useState(false);
   useEffect(
     () => {
-      const cleanup = [
-        manager.versionCompareStarting.addListener(() => {
-          setIsComparing(true);
-        }),
-        manager.versionCompareStopped.addListener(() => {
-          setIsComparing(false);
-          setIsComparisonStarted(false);
-        }),
-        manager.versionCompareStarted.addListener(() => {
-          setIsComparisonStarted(true);
-        }),
-        manager.versionCompareStartFailed.addListener(() => {
-          setIsComparing(false);
-          setIsComparisonStarted(false);
-        }),
-      ];
-      return () => cleanup.forEach((cb) => cb());
+    const cleanup = [
+      manager.versionCompareStarting.addListener(() => {
+        setIsComparing(true);
+      }),
+      manager.versionCompareStopped.addListener(() => {
+        setIsComparing(false);
+        setIsComparisonStarted(false);
+      }),
+      manager.versionCompareStarted.addListener(() => {
+        setIsComparisonStarted(true);
+      }),
+      manager.versionCompareStartFailed.addListener(() => {
+        setIsComparing(false);
+        setIsComparisonStarted(false);
+      }),
+    ];
+    return () => cleanup.forEach((cb) => cb());
     },
     [manager],
   );
@@ -158,7 +158,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
     <Widget>
       <Widget.Header>
         {isComparisonStarted && <NavigationButton backward onClick={stopComparisonCallback}>
-          {t("VersionCompare:versionCompare.versionsList")}
+            {t("VersionCompare:versionCompare.versionsList")}
         </NavigationButton>}
         <TextEx variant="title">
           {t("VersionCompare:versionCompare.versionPickerTitle")}
@@ -281,7 +281,7 @@ interface WidgetProps {
 const Widget = Object.assign(
   WidgetMain,
   {
-    Header: WidgetHeader,
+  Header: WidgetHeader,
   },
 );
 
@@ -440,20 +440,20 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   );
 
   const processResults = useCallback(async (target: VersionCompareEntry) => {
-    try {
-      await getComparison(target);
-    } catch (error) {
-      if (!isAbortError(error)) {
-        // eslint-disable-next-line no-console
-        console.error(error);
-        updateJobStatus.failed(target.namedVersion);
+      try {
+        await getComparison(target);
+      } catch (error) {
+        if (!isAbortError(error)) {
+          // eslint-disable-next-line no-console
+          console.error(error);
+          updateJobStatus.failed(target.namedVersion);
+        }
       }
-    }
   }, [getComparison, updateJobStatus]);
 
   const viewResults = useCallback(async (entry: VersionCompareEntry) => {
-    setSelectedRunningChangesetIndex(entry.namedVersion.changesetIndex);
-    onNamedVersionOpened(entry);
+      setSelectedRunningChangesetIndex(entry.namedVersion.changesetIndex);
+      onNamedVersionOpened(entry);
   }, [onNamedVersionOpened, setSelectedRunningChangesetIndex]);
 
   const queryStatus = useCallback(
@@ -491,11 +491,11 @@ function NamedVersionSelectorLoaded(props: LoadedStateProps): ReactElement {
   );
 
   const contextValue = useMemo(() => ({
-    processResults,
-    viewResults,
-    initialLoad,
-    checkStatus,
-    selectedRunningChangesetIndex,
+      processResults,
+      viewResults,
+      initialLoad,
+      checkStatus,
+      selectedRunningChangesetIndex,
   }), [processResults, viewResults, initialLoad, checkStatus, selectedRunningChangesetIndex]);
 
   return (
@@ -608,7 +608,6 @@ export function NamedVersionInfiniteList({
               itemCount={itemCount}
               itemSize={itemHeight}
               onItemsRendered={onItemsRendered}
-              className="_cer_v1_infinite-list"
             >
               {Item}
             </FixedSizeList>
@@ -622,19 +621,16 @@ export function NamedVersionInfiniteList({
 interface NamedVersionEntryProps {
   entry: VersionCompareEntry;
   style?: React.CSSProperties;
-  containerWidth?: number;
+  containerWidth: number;
   disableStartComparison?: boolean;
 }
 
 function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactElement {
   const { processResults, viewResults, selectedRunningChangesetIndex } = useContext(namedVersionSelectorContext);
   const { namedVersion, job } = props.entry;
-  const { containerWidth = 400 } = props;
-  const widthBreakpointInPx = 400;
-  const dateString = useMemo(
-    () => new Date(namedVersion.createdDateTime).toLocaleDateString(),
-    [namedVersion.createdDateTime],
-  );
+  const { containerWidth } = props;
+  const widthBreakpointInPx = 459;
+  const dateString = useMemo(() => new Date(namedVersion.createdDateTime).toLocaleDateString(), [namedVersion.createdDateTime]);
 
   let stateInfo: { status: ReactNode; action: ReactNode; };
   switch (job?.status) {
@@ -650,12 +646,12 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
         status: (
           <Flex>
             <IconEx className="_cer_v1_not-processed" size="m" fill="currentColor">
-              <svg viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="8" />
+              <svg viewBox="0 0 18 18">
+                <circle cx="9" cy="9" r="9" />
               </svg>
             </IconEx>
             {containerWidth >= widthBreakpointInPx && <TextEx weight="normal" variant="body">
-              {t("VersionCompare:versionCompare.notProcessed")}
+                {t("VersionCompare:versionCompare.notProcessed")}
             </TextEx>}
           </Flex>
         ),
@@ -741,25 +737,25 @@ function NamedVersionListEntry(props: Readonly<NamedVersionEntryProps>): ReactEl
   }
 
   return (
-    <ListItem className="_cer_v1_named-version-entry" style={props.style}>
-      <Flex gap="var(--iui-size-m)" alignItems="center" justifyContent="space-between">
-        <div className="_cer_v1_version-content">
-          <div className="_cer_v1_version-details">
-            <TextEx variant="small" overflow="nowrap" oblique>
-              {dateString}
-            </TextEx>
-            <TextEx variant="body" weight="semibold" overflow="ellipsis">
-              {namedVersion.displayName}
-            </TextEx>
-            <TextEx variant="small" overflow="ellipsis">
-              {namedVersion.description ?? ""}
-            </TextEx>
+    <ListItem className="_cer_v1_named-version-entry">
+      <Flex justifyContent="left" gap="5px" >
+        <Flex.Item flex='2'>
+          <div>
+            <div style={{ display: "grid", gap: "1px" }}>
+              <TextEx variant="small" overflow="nowrap" oblique>
+                {dateString}
+              </TextEx>
+              <TextEx variant="body" weight="semibold" overflow="ellipsis">
+                {namedVersion.displayName}
+              </TextEx>
+              <TextEx variant="small" overflow="ellipsis">
+                {namedVersion.description ?? ""}
+              </TextEx>
+            </div>
           </div>
-        </div>
-        <Flex alignItems="center" gap="var(--iui-size-s)">
-          {stateInfo.status}
-          {stateInfo.action}
-        </Flex>
+        </Flex.Item>
+        <Flex.Item flex='1' alignSelf="center">{stateInfo.status}</Flex.Item>
+        <Flex.Item flex='1' alignSelf="center">{stateInfo.action}</Flex.Item>
       </Flex>
     </ListItem>
   );
@@ -773,8 +769,8 @@ function LoadingEntryStatus(props: Readonly<LoadingEntryStatusProps>): ReactElem
   const { initialLoad } = useContext(namedVersionSelectorContext);
   useEffect(
     () => {
-      const { cancel } = initialLoad(props.entry);
-      return () => cancel();
+    const { cancel } = initialLoad(props.entry);
+    return () => cancel();
     },
     [initialLoad, props.entry],
   );
@@ -801,8 +797,8 @@ function ProcessingEntryStatus(props: Readonly<ProcessingEntryStatusProps>): Rea
   const { checkStatus } = useContext(namedVersionSelectorContext);
   useEffect(
     () => {
-      const { cancel } = checkStatus(props.entry);
-      return () => cancel();
+    const { cancel } = checkStatus(props.entry);
+    return () => cancel();
     },
     [checkStatus, props.entry],
   );

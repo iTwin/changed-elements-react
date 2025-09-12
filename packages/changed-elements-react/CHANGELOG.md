@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.17.3
+
+### Patch Changes
+
+#### [0.17.3](https://github.com/iTwin/changed-elements-react/tree/v0.17.3/packages/changed-elements-react) - 2025-09-11
+
+Fixed colors of toggles in filters to depict color legend of changes
+
+## 0.17.2
+
+### Patch Changes
+
+#### [0.17.2](https://github.com/iTwin/changed-elements-react/tree/v0.17.2/packages/changed-elements-react) - 2025-09-03
+
+Fixed header alignment for changed elements widget
+
+## 0.17.1
+
+### Patch Changes
+
+#### [0.17.1](https://github.com/iTwin/changed-elements-react/tree/v0.17.1/packages/changed-elements-react) - 2025-09-03
+
+Fixed miss-alignment issue in named versions entries
+
 ## 0.17.0
 
 ### Minor Changes

@@ -88,7 +88,7 @@
     ._cer_v1_named-version-list-header {
       grid-column: 1 / 4;
       padding-block: var(--iui-size-m);
-
+      padding-inline: var(--iui-size-m);
       display: flex;
       gap: var(--iui-size-s);
       justify-content: space-between;
@@ -106,17 +106,12 @@
 
     ._cer_v1_named-version-list {
       margin: 0;
-      min-width: min-content;
       overflow: auto;
-
       display: grid;
       grid: 1fr / minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, auto);
       height: 100%;
       width: 100%;
 
-      > * {
-        padding-inline: var(--_cer_v1_container-margin-internal);
-      }
     }
 
     ._cer_v1_named-version-entry {
@@ -124,16 +119,12 @@
       padding-block: var(--iui-size-m);
       border: 1px solid var(--iui-color-border-subtle);
       border-radius: 0;
-      display: grid;
-      gap: unset;
-      grid-template-columns: subgrid;
-      grid-column: 1 / 4;
-      align-items: center;
+      width:100%;
+    }
 
-      > :nth-child(2):last-child {
-        grid-column: 2 / 4;
-      }
-
+    ._cer_v1_named-version-entry > :first-child {
+      width: 100%;
+      padding-inline: var(--iui-size-2xs);
     }
 
     ._cer_v1_action-button {
