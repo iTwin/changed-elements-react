@@ -204,7 +204,7 @@ export class SideBySideVisualizationManager {
       }
       const selectables2: SelectableInstanceKey[] = [];
       for await (const selectable of computeSelection({
-        queryExecutor: createECSqlQueryExecutor(this._currentIModel),
+        queryExecutor: createECSqlQueryExecutor(this._targetIModel),
         elementIds: [instanceKey.id],
         scope: { id: "element", ancestorLevel: 1 },
       })) {
