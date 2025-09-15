@@ -20,7 +20,7 @@ export interface PropertyComparisonViewportContentProps {
  * Property Comparison Viewport Control that accepts a getViewState function to obtain
  * the necessary view state on runtime
  */
-export const PropertyComparisonViewportContent = (props: PropertyComparisonViewportContentProps) => {
+export function PropertyComparisonViewportContent(props: PropertyComparisonViewportContentProps) {
   React.useEffect(() => {
     const iModelAccess = {
       ...createECSqlQueryExecutor(props.iModelConnection),
@@ -61,7 +61,6 @@ export const PropertyComparisonViewportContent = (props: PropertyComparisonViewp
           // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
           (window as any).viewport = v;
         }
-      }}
-    />
+      } } />
   );
-};
+}

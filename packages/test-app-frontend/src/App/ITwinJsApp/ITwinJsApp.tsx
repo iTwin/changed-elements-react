@@ -5,7 +5,6 @@
 *--------------------------------------------------------------------------------------------*/
 import {
   AppNotificationManager, ConfigurableUiContent,
-  FrameworkFrontstages,
   FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
   StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
@@ -196,7 +195,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
   await Promise.all([
     UiCore.initialize(IModelApp.localization),
     Presentation.initialize({
-      selection: {selectionStorage: getUnifiedSelectionStorage()}
+      selection: {selectionStorage: getUnifiedSelectionStorage()},
     }),
     UiFramework.initialize(undefined),
   ]);
@@ -317,37 +316,6 @@ function displayIModelError(message: string, error: unknown, toaster: Toaster): 
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
   toaster.negative(<>{message}<br /> {errorMessage}</>);
 }
-
-class MainFrontstageProvider extends StandardFrontstageProvider {
-  constructor() {
-    super({
-      id: MainFrontstageProvider.name,
-      usage: StageUsage.General,
-      contentGroupProps: {
-        id: `${MainFrontstageProvider.name}ContentGroup`,
-        layout: { id: `${MainFrontstageProvider.name}ContentGroupLayout` },
-        contents: [{
-          id: `${MainFrontstageProvider.name}ContentView`,
-          classId: IModelViewportControl,
-          applicationData: {
-            viewState: UiFramework.getDefaultViewState(),
-            iModelConnection: UiFramework.getIModelConnection(),
-          },
-        }],
-      },
-      rightPanelProps: {
-        resizable: true,
-        pinned: true,
-        defaultState: StagePanelState.Open,
-        size: 400,
-        maxSizeSpec: Number.POSITIVE_INFINITY,
-      },
-    });
-
-    UiItemsManager.register(new MainFrontstageItemsProvider());
-  }
-}
-
 class MainFrontstageItemsProvider implements UiItemsProvider {
   public readonly id = MainFrontstageItemsProvider.name;
 

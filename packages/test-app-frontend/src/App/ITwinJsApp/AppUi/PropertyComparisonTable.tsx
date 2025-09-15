@@ -21,7 +21,7 @@ export interface PropertyComparisonTableContentProps {
   manager?: VersionCompareManager | undefined;
 }
 
-export const PropertyComparisonTableContent = (props: PropertyComparisonTableContentProps) => {
+export function PropertyComparisonTableContent(props: PropertyComparisonTableContentProps) {
   if (props.manager === undefined) {
     throw new Error(
       "Property Comparison Table Control should be passed a VersionCompareManager object as application Data (applicationData.manager)",
@@ -29,7 +29,7 @@ export const PropertyComparisonTableContent = (props: PropertyComparisonTableCon
   }
 
   return <ConnectedPropertyComparisonTable manager={props.manager} />;
-};
+}
 
 const ConnectedPropertyComparisonTable = connect(mapStateToProps)(PropertyComparisonTable);
 

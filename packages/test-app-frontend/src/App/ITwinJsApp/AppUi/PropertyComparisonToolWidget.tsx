@@ -22,10 +22,9 @@ export interface PropertyComparisonVisibilityClearToolProps {
   className?: string;
 }
 
-export const PropertyComparisonVisibilityClearTool = ({
-  clearIsolate,
-  className: _className,
-}: PropertyComparisonVisibilityClearToolProps) => {
+export function PropertyComparisonVisibilityClearTool({
+  clearIsolate, className: _className,
+}: PropertyComparisonVisibilityClearToolProps) {
   const areElementDisplayOverridesActive = (): boolean => {
     const vp = IModelApp.viewManager.selectedView;
     if (!vp) {
@@ -38,14 +37,14 @@ export const PropertyComparisonVisibilityClearTool = ({
 
   const executeClearIsolate = useCallback(() => {
     clearIsolate();
-  }, []);
+  }, [clearIsolate]);
 
   const clearIsolateToolCommand = ToolbarItemUtilities.createActionItem({
     id: "VersionCompare.PropertyComparisonTools.ClearIsolate",
     itemPriority: 0,
     icon: <SvgVisibilityShow />,
     label: IModelApp.localization.getLocalizedString(
-      "VersionCompare:versionCompare.clearIsolate"
+      "VersionCompare:versionCompare.clearIsolate",
     ),
     execute: executeClearIsolate,
     isHidden: new ConditionalBooleanValue(() => {
@@ -63,10 +62,9 @@ export const PropertyComparisonVisibilityClearTool = ({
     <ToolbarComposer
       items={[clearIsolateToolCommand]}
       usage={ToolbarUsage.ContentManipulation}
-      orientation={ToolbarOrientation.Horizontal}
-    />
+      orientation={ToolbarOrientation.Horizontal} />
   );
-};
+}
 
 export interface ToolWidgetProps {
   /** Extra tools to add to the Property Comparison Tool Widget */
@@ -131,7 +129,7 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
         itemPriority: 0,
         icon: <SvgIsolate />,
         label: IModelApp.localization.getLocalizedString(
-          "VersionCompare:tools.isolate"
+          "VersionCompare:tools.isolate",
         ),
         execute: isolateSelected,
       })

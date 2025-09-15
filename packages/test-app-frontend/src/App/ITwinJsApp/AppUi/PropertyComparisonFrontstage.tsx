@@ -9,7 +9,7 @@ import {
   Frontstage,
   StatusBarComposer,
   UiFramework,
-  ViewToolWidgetComposer,
+  ViewToolWidgetComposer
 } from "@itwin/appui-react";
 import { VersionCompareManager } from "@itwin/changed-elements-react";
 import { IModelApp, type IModelConnection, type ViewState } from "@itwin/core-frontend";
@@ -64,15 +64,15 @@ export class PropertyComparisonFrontstage {
     // Add layouts for frontstage to content layout manager
     if (
       UiFramework.content.layouts.find(
-        PropertyComparisonFrontstage.sideBySideLayoutId
+        PropertyComparisonFrontstage.sideBySideLayoutId,
       ) === undefined
     ) {
       PropertyComparisonFrontstage._sideBySideLayoutDef = new ContentLayoutDef(
-        PropertyComparisonFrontstage._sideBySideLayoutProps()
+        PropertyComparisonFrontstage._sideBySideLayoutProps(),
       );
       UiFramework.content.layouts.add(
         PropertyComparisonFrontstage.sideBySideLayoutId,
-        PropertyComparisonFrontstage._sideBySideLayoutDef
+        PropertyComparisonFrontstage._sideBySideLayoutDef,
       );
     }
 
