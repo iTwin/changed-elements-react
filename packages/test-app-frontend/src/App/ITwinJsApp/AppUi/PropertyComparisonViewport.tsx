@@ -11,6 +11,12 @@ import React from "react";
 import { getSchemaContext } from "./presentation/SchemaContextProvider";
 import { getUnifiedSelectionStorage } from "./presentation/SelectionStorage";
 
+declare global {
+  interface Window { // extend the Window interface, via interface merging. https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+    viewport?: ScreenViewport;
+  }
+}
+
 export interface PropertyComparisonViewportContentProps {
   iModelConnection: IModelConnection;
   getViewState: () => ViewStateProp | undefined;
@@ -58,8 +64,7 @@ export function PropertyComparisonViewportContent(props: PropertyComparisonViewp
       viewportRef={(v: ScreenViewport) => {
         // for convenience, if window defined bind viewport to window
         if (undefined !== window) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
-          (window as any).viewport = v;
+          window.viewport = v;
         }
       } } />
   );

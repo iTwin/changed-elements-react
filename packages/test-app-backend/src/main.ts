@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { IModelHost } from "@itwin/core-backend";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { BentleyCloudRpcManager, HttpServerRequest, HttpServerResponse, IModelReadRpcInterface, IModelTileRpcInterface, RpcManager } from "@itwin/core-common";
+import { BentleyCloudRpcManager, IModelReadRpcInterface, IModelTileRpcInterface, RpcManager } from "@itwin/core-common";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { IModelJsExpressServer } from "@itwin/express-server";
@@ -14,7 +14,6 @@ import { AzureClientStorage, BlockBlobClientWrapperFactory } from "@itwin/object
 import { Presentation } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { config } from "dotenv-flow";
-import express from "express";
 import { ChangesRpcImpl } from "./RPC/ChangesRpcImpl";
 import { ChangesRpcInterface } from "./RPC/ChangesRpcInterface";
 
@@ -43,12 +42,8 @@ void (async () => {
     { info: { title: "test-app-backend", version: "v1.0" } },
     [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface, ECSchemaRpcInterface],
   );
-  const app = express();
+
   const server = new IModelJsExpressServer(rpcConfig.protocol);
   await server.initialize(port);
   console.log(`Backend (PID ${process.pid}) is listening on port ${port}.`);
-
-  app.post("*", async (request: HttpServerRequest, response: HttpServerResponse) => {
-    await rpcConfig.protocol.handleOperationPostRequest(request, response);
-  });
 })();
