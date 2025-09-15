@@ -6,7 +6,7 @@
 import {
   AppNotificationManager, ConfigurableUiContent,
   FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
-  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, 
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {

@@ -132,7 +132,7 @@ export class PropertyComparisonToolWidget extends Component<ToolWidgetProps> {
           "VersionCompare:tools.isolate",
         ),
         execute: isolateSelected,
-      })
+      }),
     );
 
     if (this.props.verticalTools !== undefined) {
