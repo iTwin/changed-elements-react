@@ -7,7 +7,7 @@ import {
   PropertyComparisonTable,
   updateVersionComparisonTransparencies,
   type PropertyComparisonTableProps,
-  type VersionCompareManager,
+  type VersionCompareManager
 } from "@itwin/changed-elements-react";
 import { connect } from "react-redux";
 
