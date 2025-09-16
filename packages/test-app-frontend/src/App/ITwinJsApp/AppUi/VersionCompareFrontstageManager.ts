@@ -137,7 +137,7 @@ export class VersionCompareFrontstageManager {
             viewports[1].applyViewState(this._targetViewportState);
             await this._onPropertyComparisonFrontstageOpened();
           },
-          10000,
+          1000,
         );
       } else {
         // Stop property comparison
@@ -418,14 +418,17 @@ export class VersionCompareFrontstageManager {
       // Timeout to prevent hanging
       setTimeout(() => {
         IModelApp.viewManager.onViewOpen.removeListener(onViewOpenHandler);
-        vps.length = 0;
-        for( const vp of IModelApp.viewManager) {
-          vps.push(vp);
-        }
-        if( vps.length === numberOfViewPorts) {
-          // Call function once view ports are mounted
-          func(vps).then(resolve).catch(reject);
-          return;
+        // try to repopulate vps in case viewports were opened before we added the listener
+        if (vps.length !== numberOfViewPorts) {
+          vps.length = 0;
+          for (const vp of IModelApp.viewManager) {
+            vps.push(vp);
+          }
+          if (vps.length === numberOfViewPorts) {
+            // Call function once view ports are mounted
+            func(vps).then(resolve).catch(reject);
+            return;
+          }
         }
         reject(new Error(`Timeout: Expected ${numberOfViewPorts} viewports to mount within ${timeoutMs}ms`));
       }, timeoutMs);

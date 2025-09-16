@@ -56,7 +56,7 @@ function mapStateToProps(state: { versionCompareState: VersionCompareState; }, o
           await manager.enableVisualization(true, selection);
           updateVersionComparisonTransparencies(viewports[0], 0.5, 0.5);
         },
-        10000,
+        1000,
       );
     } else if (PropertyComparisonFrontstage.isSideBySide) {
       await VersionCompareFrontstageManager.onViewPortMounts(
@@ -64,7 +64,7 @@ function mapStateToProps(state: { versionCompareState: VersionCompareState; }, o
         async () => {
           await manager.enableSideBySideVisualization();
         },
-        10000,
+        1000,
       );
     }
   };
