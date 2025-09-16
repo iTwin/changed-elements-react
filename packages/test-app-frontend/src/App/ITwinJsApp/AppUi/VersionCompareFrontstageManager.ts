@@ -418,6 +418,15 @@ export class VersionCompareFrontstageManager {
       // Timeout to prevent hanging
       setTimeout(() => {
         IModelApp.viewManager.onViewOpen.removeListener(onViewOpenHandler);
+        vps.length = 0;
+        for( const vp of IModelApp.viewManager) {
+          vps.push(vp);
+        }
+        if( vps.length === numberOfViewPorts) {
+          // Call function once view ports are mounted
+          func(vps).then(resolve).catch(reject);
+          return;
+        }
         reject(new Error(`Timeout: Expected ${numberOfViewPorts} viewports to mount within ${timeoutMs}ms`));
       }, timeoutMs);
     });
