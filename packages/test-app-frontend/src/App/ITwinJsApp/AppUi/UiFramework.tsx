@@ -1,34 +1,26 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 import { StateManager, ThemeManager, UiFramework, UiStateStorageHandler } from "@itwin/appui-react";
 import { UiStateStorage, UiStateStorageResult, UiStateStorageStatus } from "@itwin/core-react";
 import { PropsWithChildren, ReactElement, useEffect } from "react";
 import { Provider } from "react-redux";
 
 export function UIFramework(props: PropsWithChildren<unknown>): ReactElement {
-  useEffect(
-    () => {
-      UiFramework.setColorTheme("inherit");
-
-      // We do not want UI state to persist between sessions
-      void UiFramework.setUiStateStorage(new MemoryUISettingsStorage(), true);
-    },
-    [],
-  );
+  useEffect(() => {
+    // We do not want UI state to persist between sessions
+    void UiFramework.setUiStateStorage(new MemoryUISettingsStorage(), true);
+  }, []);
 
   return (
     <Provider store={StateManager.store}>
-      <ThemeManager>
-        <UiStateStorageHandler>
-          {props.children}
-        </UiStateStorageHandler>
+      <ThemeManager theme="inherit">
+        <UiStateStorageHandler>{props.children}</UiStateStorageHandler>
       </ThemeManager>
     </Provider>
   );
 }
-
 
 /** UI settings storage that resets after page refresh. */
 class MemoryUISettingsStorage implements UiStateStorage {

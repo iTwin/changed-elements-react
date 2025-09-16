@@ -1,28 +1,37 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+import { StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageDef } from "@itwin/appui-react";
 import {
-  StateManager, SyncUiEventDispatcher, UiFramework, WidgetState, type FrontstageDef,
-  type FrontstageReadyEventArgs
-} from "@itwin/appui-react";
-import {
-  ChangedElementsWidget, changedElementsWidgetAttachToViewportEvent,
-  enableVersionCompareVisualizationCaching, ModelsCategoryCache, SideBySideVisualizationManager,
-  VersionCompare, VersionCompareVisualizationManager, type ChangedElementEntry,
+  ChangedElementsWidget,
+  changedElementsWidgetAttachToViewportEvent,
+  enableVersionCompareVisualizationCaching,
+  ModelsCategoryCache,
+  SideBySideVisualizationManager,
+  VersionCompare,
+  VersionCompareVisualizationManager,
+  type ChangedElementEntry,
   type VersionCompareManager
 } from "@itwin/changed-elements-react";
 import { DbOpcode, Logger, type BeEvent, type Id64String } from "@itwin/core-bentley";
 import {
   FeatureSymbology,
-  IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection,
-  type ScreenViewport, type ViewState
+  IModelApp,
+  NotifyMessageDetails,
+  OutputMessagePriority,
+  type IModelConnection,
+  type ScreenViewport,
+  type ViewState
 } from "@itwin/core-frontend";
 import { KeySet, type InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
+import { getUnifiedSelectionStorage } from "./presentation/SelectionStorage.js";
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
 import { VersionCompareActionTypes } from "./redux/VersionCompareStore.js";
+
+type FrontstageReadyEventArgs = Parameters<Parameters<typeof UiFramework.frontstages.onFrontstageReadyEvent.addListener>[0]>[0];
 
 /** Manages version compare workflows based on design review's use case. */
 export class VersionCompareFrontstageManager {
@@ -41,11 +50,7 @@ export class VersionCompareFrontstageManager {
    * @param _propertyComparisonStageId Frontstage Id used for Side-by-Side Property Comparison
    * @param _manager Version Compare Manager object
    */
-  constructor(
-    private _mainComparisonStageIds: Set<string>,
-    private _propertyComparisonStageId: string,
-    private _manager: VersionCompareManager,
-  ) {
+  constructor(private _mainComparisonStageIds: Set<string>, private _propertyComparisonStageId: string, private _manager: VersionCompareManager) {
     UiFramework.frontstages.onFrontstageReadyEvent.addListener(this._onFrontstageReady);
   }
 
@@ -69,7 +74,11 @@ export class VersionCompareFrontstageManager {
     unchangedModels?: Set<string>,
     onViewChanged?: BeEvent<(args: unknown) => void>,
     showTargetModified?: boolean,
-    colorOverrideProvider?: (visibleEntries: ChangedElementEntry[], hiddenEntries: ChangedElementEntry[], overrides: FeatureSymbology.Overrides) => void,
+    colorOverrideProvider?: (
+      visibleEntries: ChangedElementEntry[],
+      hiddenEntries: ChangedElementEntry[],
+      overrides: FeatureSymbology.Overrides,
+    ) => void,
   ) {
     this._changedElementEntries = changedElementEntries;
     const viewport = IModelApp.viewManager.getFirstOpenView();
@@ -114,15 +123,22 @@ export class VersionCompareFrontstageManager {
 
   /** Handler for frontstage ready. */
   private _onFrontstageReady = async (args: FrontstageReadyEventArgs) => {
-    if (
-      args.frontstageDef.id !== this._propertyComparisonStageId &&
-      !this._mainComparisonStageIds.has(args.frontstageDef.id)
-    ) {
+    if (args.frontstageDef.id !== this._propertyComparisonStageId && !this._mainComparisonStageIds.has(args.frontstageDef.id)) {
       await this._manager.stopComparison();
     } else {
       if (args.frontstageDef.id === this._propertyComparisonStageId) {
-        this._setupSideBySideViewStates();
-        await this._onPropertyComparisonFrontstageOpened();
+        await VersionCompareFrontstageManager.onViewPortMounts(
+          2,
+          async (viewports: ScreenViewport[]) => {
+            if (!this._targetViewportState || !this._mainViewportState) {
+              return;
+            }
+            viewports[0].applyViewState(this._mainViewportState);
+            viewports[1].applyViewState(this._targetViewportState);
+            await this._onPropertyComparisonFrontstageOpened();
+          },
+          1000,
+        );
       } else {
         // Stop property comparison
         this.stopPropertyComparison();
@@ -134,36 +150,12 @@ export class VersionCompareFrontstageManager {
     }
   };
 
-  /** Sets the initial view states of property comparison frontstage. */
-  private _setupSideBySideViewStates() {
-    if (!this._targetViewportState || !this._mainViewportState) {
-      return;
-    }
-
-    const vps: ScreenViewport[] = [];
-    for (const vp of IModelApp.viewManager) {
-      vps.push(vp);
-    }
-    if (vps.length < 2) {
-      throw new Error(
-        "Programmer Error: Property comparison requires a frontstage with two viewports to show side-by-side comparison",
-      );
-    }
-
-    vps[0].applyViewState(this._mainViewportState);
-    vps[1].applyViewState(this._targetViewportState);
-  }
-
   /**
    * Opens the side by side property comparison frontstage and maintains selection to zoom to the given element on open.
    * @param currentIModel Current IModelConnection
    * @param targetIModel Target IModelConnection being compared against
    */
-  public async openSideBySideFrontstage(
-    currentIModel: IModelConnection,
-    targetIModel: IModelConnection,
-    currentSelection: Readonly<KeySet>,
-  ) {
+  public async openSideBySideFrontstage(currentIModel: IModelConnection, targetIModel: IModelConnection, currentSelection: Readonly<KeySet>) {
     // Reset
     this._mainViewportState = undefined;
     // Get view state from options if passed
@@ -179,10 +171,7 @@ export class VersionCompareFrontstageManager {
 
     // Create a view state for the target connection
     if (this._mainViewportState) {
-      this._targetViewportState = await SideBySideVisualizationManager.cloneViewState(
-        this._mainViewportState,
-        targetIModel,
-      );
+      this._targetViewportState = await SideBySideVisualizationManager.cloneViewState(this._mainViewportState, targetIModel);
     }
 
     // Set elements to emphasize during property comparison
@@ -209,11 +198,11 @@ export class VersionCompareFrontstageManager {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this._targetViewportState!,
     );
-    UiFramework.frontstages.addFrontstageProvider(stage);
+    UiFramework.frontstages.addFrontstage(stage.frontstageConfig());
 
     // Clear selection before we start property comparison
-    Presentation.selection.clearSelection("SideBySideVisualizationManager", currentIModel);
-    Presentation.selection.clearSelection("SideBySideVisualizationManager", targetIModel);
+    getUnifiedSelectionStorage().clearSelection({ source: "SideBySideVisualizationManager", imodelKey: currentIModel.key });
+    getUnifiedSelectionStorage().clearSelection({ source: "SideBySideVisualizationManager", imodelKey: targetIModel.key });
 
     const frontstageDef = await UiFramework.frontstages.getFrontstageDef(this._propertyComparisonStageId);
     if (undefined !== frontstageDef) {
@@ -275,36 +264,24 @@ export class VersionCompareFrontstageManager {
 
     // Check if there's any selected elements
     if (currentSelection.instanceKeysCount === 0) {
-      const brief = IModelApp.localization.getLocalizedString(
-        "VersionCompare:versionCompare.error_brief_propertyComparisonNoElement",
-      );
-      const detailed = IModelApp.localization.getLocalizedString(
-        "VersionCompare:versionCompare.error_propertyComparisonNoElement",
-      );
+      const brief = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_brief_propertyComparisonNoElement");
+      const detailed = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_propertyComparisonNoElement");
       IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief, detailed));
       return;
     }
 
     // Check if we can do property comparison given our selection set (only modified elements are permitted)
     if (!this._canDoPropertyComparison(currentSelection)) {
-      const brief = IModelApp.localization.getLocalizedString(
-        "VersionCompare:versionCompare.error_brief_propertyComparisonOnModifyOnly",
-      );
-      const detailed = IModelApp.localization.getLocalizedString(
-        "VersionCompare:versionCompare.error_propertyComparisonOnModifyOnly",
-      );
+      const brief = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_brief_propertyComparisonOnModifyOnly");
+      const detailed = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_propertyComparisonOnModifyOnly");
       IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief, detailed));
       return;
     }
 
     // Find the element to focus during property comparison and set it internally
     if (!this._findFocusedElementFromSelection(currentSelection)) {
-      const brief = IModelApp.localization.getLocalizedString(
-        "VersionCompare:versionCompare.error_brief_elementNotInComparison",
-      );
-      const detailed = IModelApp.localization.getLocalizedString(
-        "VersionCompare:versionCompare.error_elementNotInComparison",
-      );
+      const brief = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_brief_elementNotInComparison");
+      const detailed = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_elementNotInComparison");
       IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Error, brief, detailed));
       return;
     }
@@ -342,18 +319,18 @@ export class VersionCompareFrontstageManager {
     }
 
     // Start property comparison visualization
-    this.propertyComparisonVisualizationManager =
-      new SideBySideVisualizationManager(
-        this._manager.currentIModel,
-        this._manager.targetIModel,
-        this._manager.currentVersion,
-        this._manager.targetVersion,
-        this._focusedElementKey,
-        this._changedElementEntries,
-        vps[0],
-        vps[1],
-        this._manager.options.getPropertyComparisonViewState === undefined,
-      );
+    this.propertyComparisonVisualizationManager = new SideBySideVisualizationManager(
+      this._manager.currentIModel,
+      this._manager.targetIModel,
+      this._manager.currentVersion,
+      this._manager.targetVersion,
+      this._focusedElementKey,
+      this._changedElementEntries,
+      vps[0],
+      vps[1],
+      this._manager.options.getPropertyComparisonViewState === undefined,
+      getUnifiedSelectionStorage(),
+    );
     await this.propertyComparisonVisualizationManager.initialize(this._emphasizedElements);
   };
 
@@ -401,4 +378,60 @@ export class VersionCompareFrontstageManager {
       this.propertyComparisonVisualizationManager = undefined;
     }
   }
+
+  /**
+   * Waits for a specified number of viewports to mount and then executes a callback function with those viewports.
+   * This utility function is useful for scenarios where you need to ensure multiple viewports are available
+   * before performing operations that require them (e.g., side-by-side comparisons).
+   *
+   * @param numberOfViewPorts - The number of viewports to wait for before executing the callback
+   * @param func - The callback function to execute once the required number of viewports are mounted.
+   *               Receives an array of ScreenViewport instances as its parameter.
+   * @param timeoutMs - Timeout in milliseconds to prevent the function from hanging indefinitely.
+   *                    If the timeout is reached before the required viewports are mounted,
+   *                    the promise rejects with a timeout error.
+   *
+   * @returns A Promise that resolves when the callback function completes successfully.
+   *          The promise rejects if the callback function throws an error or if the timeout is reached.
+   * @note This function should be assumed to be temporary and may be removed. This is probably not the best way to handle this. Ask appUI team for suggestions.
+   */
+  public static onViewPortMounts = async (
+    numberOfViewPorts: number,
+    func: (vps: ScreenViewport[]) => Promise<void>,
+    timeoutMs: number,
+  ): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+      const vps = new Array<ScreenViewport>();
+
+      const onViewOpenHandler = (vp: ScreenViewport) => {
+        vps.push(vp);
+        if (vps.length === numberOfViewPorts) {
+          IModelApp.viewManager.onViewOpen.removeListener(onViewOpenHandler);
+
+          // Call function once view ports are mounted
+          func(vps).then(resolve).catch(reject);
+        }
+      };
+
+      IModelApp.viewManager.onViewOpen.addListener(onViewOpenHandler);
+
+      // Timeout to prevent hanging
+      setTimeout(() => {
+        IModelApp.viewManager.onViewOpen.removeListener(onViewOpenHandler);
+        // try to repopulate vps in case viewports were opened before we added the listener
+        if (vps.length !== numberOfViewPorts) {
+          vps.length = 0;
+          for (const vp of IModelApp.viewManager) {
+            vps.push(vp);
+          }
+          if (vps.length === numberOfViewPorts) {
+            // Call function once view ports are mounted
+            func(vps).then(resolve).catch(reject);
+            return;
+          }
+        }
+        reject(new Error(`Timeout: Expected ${numberOfViewPorts} viewports to mount within ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+  };
 }

@@ -81,7 +81,7 @@ export class ChangedInstancesProcessor {
     changesetFileProps: Partial<ChangesetFileProps>[],
     db: IModelDb,
   ): Promise<ChangedECInstance[]> {
-    const ecChangeUnifier = new PartialECChangeUnifier();
+    const ecChangeUnifier = new PartialECChangeUnifier(db);
 
     const changesetFilePaths = changesetFileProps
       .filter((csFile) => csFile.pathname !== undefined)

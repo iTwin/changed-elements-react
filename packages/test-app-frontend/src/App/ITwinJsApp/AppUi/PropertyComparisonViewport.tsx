@@ -2,49 +2,70 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { ConfigurableCreateInfo, ViewportContentControl } from "@itwin/appui-react";
 import { IModelConnection, ScreenViewport } from "@itwin/core-frontend";
 import { ViewportComponent, ViewStateProp } from "@itwin/imodel-components-react";
-import { viewWithUnifiedSelection } from "@itwin/presentation-components";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createIModelHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
+import React from "react";
+import { getSchemaContext } from "./presentation/SchemaContextProvider";
+import { getUnifiedSelectionStorage } from "./presentation/SelectionStorage";
 
-const UnifiedSelectionViewport = viewWithUnifiedSelection(ViewportComponent);
+declare global {
+  interface Window { // extend the Window interface, via interface merging. https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+    viewport?: ScreenViewport;
+  }
+}
 
-export interface PropertyComparisonViewportControlOptions {
+export interface PropertyComparisonViewportContentProps {
   iModelConnection: IModelConnection;
   getViewState: () => ViewStateProp | undefined;
 }
 
 /**
- * Property Compraison Viewport Control that accepts a getViewState function to obtain
+ * Property Comparison Viewport Control that accepts a getViewState function to obtain
  * the necessary view state on runtime
  */
-export class PropertyComparisonViewportControl extends ViewportContentControl {
-  constructor(
-    info: ConfigurableCreateInfo,
-    options: PropertyComparisonViewportControlOptions,
-  ) {
-    super(info, options);
+export function PropertyComparisonViewportContent(props: PropertyComparisonViewportContentProps) {
+  React.useEffect(() => {
+    const iModelAccess = {
+      ...createECSqlQueryExecutor(props.iModelConnection),
+      ...createCachingECClassHierarchyInspector({
+        schemaProvider: createECSchemaProvider(getSchemaContext(props.iModelConnection)),
+      }),
+      key: createIModelKey(props.iModelConnection),
+      hiliteSet: props.iModelConnection.hilited,
+      selectionSet: props.iModelConnection.selectionSet,
+    };
 
-    if (options.getViewState) {
-      this.reactNode = (
-        <UnifiedSelectionViewport
-          viewState={options.getViewState()}
-          imodel={options.iModelConnection}
-          viewportRef={(v: ScreenViewport) => {
-            this.viewport = v;
+    const selectionStorage = getUnifiedSelectionStorage();
 
-            // for convenience, if window defined bind viewport to window
-            if (undefined !== window) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
-              (window as any).viewport = v;
-            }
-          }}
-        />
-      );
-    } else {
-      this.reactNode = (
-        <div>Invalid Options For Property Comparison Viewport</div>
-      );
-    }
+    return enableUnifiedSelectionSyncWithIModel({
+      imodelAccess: iModelAccess,
+      selectionStorage: getUnifiedSelectionStorage(),
+      activeScopeProvider: () => {
+        return { id: "element", ancestorLevel: 1 };
+      },
+      imodelHiliteSetProvider: createIModelHiliteSetProvider({
+        selectionStorage,
+        imodelProvider: () => iModelAccess,
+      }),
+    });
+  }, [props.iModelConnection]);
+
+  if (props.getViewState === undefined) {
+    return <div>Invalid Options For Property Comparison Viewport</div>;
   }
+
+  return (
+    <ViewportComponent
+      viewState={props.getViewState()}
+      imodel={props.iModelConnection}
+      viewportRef={(v: ScreenViewport) => {
+        // for convenience, if window defined bind viewport to window
+        if (undefined !== window) {
+          window.viewport = v;
+        }
+      } } />
+  );
 }

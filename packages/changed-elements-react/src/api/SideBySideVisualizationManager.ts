@@ -10,7 +10,9 @@ import {
 } from "@itwin/core-frontend";
 import { Range3d } from "@itwin/core-geometry";
 import type { InstanceKey } from "@itwin/presentation-common";
+import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
+import { computeSelection, SelectableInstanceKey, type SelectionStorage } from "@itwin/unified-selection";
 
 import type { NamedVersion } from "../clients/iModelsClient.js";
 import { SideBySideLabelDecorator, ViewportLabelDecoration } from "../contentviews/ViewportLabel.js";
@@ -43,6 +45,7 @@ export class SideBySideVisualizationManager {
     private _primaryViewport: ScreenViewport,
     private _secondaryViewport: ScreenViewport,
     private _wantZooming: boolean,
+    private _selectionStorage: SelectionStorage,
   ) { }
 
   /**
@@ -191,22 +194,26 @@ export class SideBySideVisualizationManager {
    */
   public async selectInstanceWithScope(instanceKey: InstanceKey): Promise<void> {
     if (this._currentIModel && this._targetIModel) {
+      const selectables: SelectableInstanceKey[] = [];
+      for await (const selectable of computeSelection({
+        queryExecutor: createECSqlQueryExecutor(this._currentIModel),
+        elementIds: [instanceKey.id],
+        scope: { id: "element", ancestorLevel: 1 },
+      })) {
+        selectables.push(selectable);
+      }
+      const selectables2: SelectableInstanceKey[] = [];
+      for await (const selectable of computeSelection({
+        queryExecutor: createECSqlQueryExecutor(this._targetIModel),
+        elementIds: [instanceKey.id],
+        scope: { id: "element", ancestorLevel: 1 },
+      })) {
+        selectables2.push(selectable);
+      }
+
       // Clear selections and add the selected element
-      const scope = Presentation.selection.scopes.activeScope
-        ? Presentation.selection.scopes.activeScope
-        : "element";
-      await Presentation.selection.replaceSelectionWithScope(
-        "SideBySideVisualizationManager",
-        this._currentIModel,
-        instanceKey.id,
-        scope,
-      );
-      await Presentation.selection.replaceSelectionWithScope(
-        "SideBySideVisualizationManager",
-        this._targetIModel,
-        instanceKey.id,
-        scope,
-      );
+      this._selectionStorage.replaceSelection({ source: "SideBySideVisualizationManager", imodelKey: this._currentIModel.key, selectables: selectables });
+      this._selectionStorage.replaceSelection({ source: "SideBySideVisualizationManager", imodelKey: this._targetIModel.key, selectables: selectables2});
     }
   }
 

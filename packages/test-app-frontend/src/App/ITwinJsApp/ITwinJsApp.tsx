@@ -4,16 +4,20 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import {
-  AppNotificationManager, ConfigurableUiContent, IModelViewportControl, ReducerRegistryInstance,
-  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, StandardFrontstageProvider,
+  AppNotificationManager, ConfigurableUiContent,
+  FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, 
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
+  ChangedECInstance,
   ChangedElementsWidget,
-  ComparisonJobClient, ITwinIModelsClient, VersionCompare, VersionCompareContext,
-  VersionCompareFeatureTracking,
+  ComparisonJobClient,
+  ITwinIModelsClient,
   NamedVersionSelectorWidget,
-  ChangedECInstance
+  VersionCompare,
+  VersionCompareContext,
+  VersionCompareFeatureTracking
 } from "@itwin/changed-elements-react";
 import {
   AuthorizationClient, BentleyCloudRpcManager, BentleyCloudRpcParams, ChangesetIdWithIndex, FeatureAppearance, IModelReadRpcInterface, IModelTileRpcInterface,
@@ -24,6 +28,7 @@ import {
 } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { UiCore } from "@itwin/core-react";
+import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { FrontendIModelsAccess } from "@itwin/imodels-access-frontend";
 import { IModelsClient } from "@itwin/imodels-client-management";
 import { PageLayout } from "@itwin/itwinui-layouts-react";
@@ -31,11 +36,12 @@ import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js"
+import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js";
 import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
+import { getUnifiedSelectionStorage } from "./AppUi/presentation/SelectionStorage.js";
 import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore.js";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager.js";
 
@@ -65,8 +71,34 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
         setLoadingState("loaded");
         UiFramework.setIModelConnection(iModel);
         UiFramework.setDefaultViewState(viewState);
-        UiFramework.frontstages.addFrontstageProvider(new MainFrontstageProvider());
-        await UiFramework.frontstages.setActiveFrontstage(MainFrontstageProvider.name);
+
+        // Define the frontstage configuration object
+        const mainFrontstageProps = {
+          id: "MainFrontstageProvider",
+          usage: StageUsage.General,
+          contentGroupProps: {
+            id: "MainFrontstageProviderContentGroup",
+            layout: { id: "MainFrontstageProviderContentGroupLayout" },
+            contents: [{
+              id: "MainFrontstageProviderContentView",
+              classId: IModelViewportControl,
+              applicationData: {
+                viewState: UiFramework.getDefaultViewState(),
+                iModelConnection: UiFramework.getIModelConnection(),
+              },
+            }],
+          },
+          rightPanelProps: {
+            resizable: true,
+            pinned: true,
+            defaultState: StagePanelState.Open,
+            size: 400,
+            maxSizeSpec: Number.POSITIVE_INFINITY,
+          },
+        };
+        UiFramework.frontstages.addFrontstage(FrontstageUtilities.createStandardFrontstage(mainFrontstageProps));
+        UiItemsManager.register(new MainFrontstageItemsProvider());
+        await UiFramework.frontstages.setActiveFrontstage("MainFrontstageProvider");
       }
     })();
     return () => {
@@ -157,12 +189,14 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
 
   BentleyCloudRpcManager.initializeClient(
     rpcParams,
-    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface],
+    [IModelReadRpcInterface, IModelTileRpcInterface, PresentationRpcInterface, ChangesRpcInterface, ECSchemaRpcInterface],
   );
 
   await Promise.all([
     UiCore.initialize(IModelApp.localization),
-    Presentation.initialize(),
+    Presentation.initialize({
+      selection: {selectionStorage: getUnifiedSelectionStorage()},
+    }),
     UiFramework.initialize(undefined),
   ]);
 
@@ -222,7 +256,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
     wantTooltipAugment: true,
     createVisualizationHandler: (manager) => new AppUiVisualizationHandler(
       manager,
-      { frontstageIds: [MainFrontstageProvider.name] },
+      { frontstageIds: ["MainFrontstageProvider"] },
     ),
     featureTracking: featureTrackingTesterFunctions,
     changesProvider: useDirectComparison ? changesProvider : undefined,
@@ -282,37 +316,6 @@ function displayIModelError(message: string, error: unknown, toaster: Toaster): 
   const errorMessage = (error && typeof error === "object") ? (error as { message: unknown; }).message : error;
   toaster.negative(<>{message}<br /> {errorMessage}</>);
 }
-
-class MainFrontstageProvider extends StandardFrontstageProvider {
-  constructor() {
-    super({
-      id: MainFrontstageProvider.name,
-      usage: StageUsage.General,
-      contentGroupProps: {
-        id: `${MainFrontstageProvider.name}ContentGroup`,
-        layout: { id: `${MainFrontstageProvider.name}ContentGroupLayout` },
-        contents: [{
-          id: `${MainFrontstageProvider.name}ContentView`,
-          classId: IModelViewportControl,
-          applicationData: {
-            viewState: UiFramework.getDefaultViewState(),
-            iModelConnection: UiFramework.getIModelConnection(),
-          },
-        }],
-      },
-      rightPanelProps: {
-        resizable: true,
-        pinned: true,
-        defaultState: StagePanelState.Open,
-        size: 400,
-        maxSizeSpec: Number.POSITIVE_INFINITY,
-      },
-    });
-
-    UiItemsManager.register(new MainFrontstageItemsProvider());
-  }
-}
-
 class MainFrontstageItemsProvider implements UiItemsProvider {
   public readonly id = MainFrontstageItemsProvider.name;
 
@@ -323,7 +326,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     section?: StagePanelSection,
   ): Widget[] {
     if (
-      stageId !== MainFrontstageProvider.name ||
+      stageId !== "MainFrontstageProvider" ||
       stageUsage !== StageUsage.General ||
       location !== StagePanelLocation.Right ||
       section !== StagePanelSection.Start
