@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+#### [1.0.0](https://github.com/iTwin/changed-elements-react/tree/v1.0.0/packages/changed-elements-react) - 2025-09-16
+
+# Major Change
+
+Updated all Itwin JS to 5.x.x and stopped using deprecated methods.
+This is a breaking change and will require updates to consumers of this package in their implementation of their property comparison frontstage.
+
 ## 0.17.3
 
 ### Patch Changes
