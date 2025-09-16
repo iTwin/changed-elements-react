@@ -1,17 +1,19 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 import { UiFramework } from "@itwin/appui-react";
 import {
-  PropertyComparisonTable, updateVersionComparisonTransparencies, type PropertyComparisonTableProps,
-  type VersionCompareManager
+  PropertyComparisonTable,
+  updateVersionComparisonTransparencies,
+  type PropertyComparisonTableProps,
+  type VersionCompareManager,
 } from "@itwin/changed-elements-react";
-import { IModelApp } from "@itwin/core-frontend";
 import { connect } from "react-redux";
 
 import { PropertyComparisonFrontstage } from "./PropertyComparisonFrontstage.js";
 import { type VersionCompareState } from "./redux/VersionCompareStore.js";
+import { VersionCompareFrontstageManager } from "./VersionCompareFrontstageManager.js";
 
 export interface PropertyComparisonTableControlOptions {
   manager?: VersionCompareManager | undefined;
@@ -33,10 +35,7 @@ export function PropertyComparisonTableContent(props: PropertyComparisonTableCon
 
 const ConnectedPropertyComparisonTable = connect(mapStateToProps)(PropertyComparisonTable);
 
-function mapStateToProps(
-  state: { versionCompareState: VersionCompareState; },
-  ownProps: PropertyComparisonTableProps,
-): PropertyComparisonTableProps {
+function mapStateToProps(state: { versionCompareState: VersionCompareState; }, ownProps: PropertyComparisonTableProps): PropertyComparisonTableProps {
   const manager = ownProps.manager;
   const selection = state.versionCompareState.selection;
 
@@ -50,15 +49,23 @@ function mapStateToProps(
     }
 
     if (PropertyComparisonFrontstage.isOverview) {
-      await manager.enableVisualization(true, selection);
-
       // Set transparency to center since slider starts in center
-      const vp = IModelApp.viewManager.getFirstOpenView();
-      if (vp) {
-        updateVersionComparisonTransparencies(vp, 0.5, 0.5);
-      }
+      await VersionCompareFrontstageManager.onViewPortMounts(
+        1,
+        async (viewports) => {
+          await manager.enableVisualization(true, selection);
+          updateVersionComparisonTransparencies(viewports[0], 0.5, 0.5);
+        },
+        10000,
+      );
     } else if (PropertyComparisonFrontstage.isSideBySide) {
-      await manager.enableSideBySideVisualization();
+      await VersionCompareFrontstageManager.onViewPortMounts(
+        2,
+        async () => {
+          await manager.enableSideBySideVisualization();
+        },
+        10000,
+      );
     }
   };
 
