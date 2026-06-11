@@ -19,11 +19,11 @@ describe("ProgressCoordinator", () => {
   }
 
   let progressCoordinator: ProgressCoordinator<stages>;
-  let callback: ReturnType<typeof vi.fn>;
+  let callback: ReturnType<typeof vi.fn<(percent: number) => void>>;
 
   beforeEach(() => {
     progressCoordinator = new ProgressCoordinator(weights);
-    callback = vi.fn();
+    callback = vi.fn<(percent: number) => void>();
     progressCoordinator.onProgressChanged.addListener(callback);
   });
 
