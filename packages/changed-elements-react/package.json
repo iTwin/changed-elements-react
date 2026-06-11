@@ -72,8 +72,8 @@
     "react-redux": "^7.2.2",
     "redux": "^4.1.0",
     "typescript": "~5.5.4",
-    "vite": "^5.4.18",
-    "vitest": "^2.1.9"
+    "vite": "^5.4.20",
+    "vitest": "^4.1.0"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^5.1.7",
