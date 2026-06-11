@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+### Patch Changes
+
+#### [1.0.1](https://github.com/iTwin/changed-elements-react/tree/v1.0.1/packages/changed-elements-react) - 2026-06-11
+
+Fix named version selector row flicker
+
 ## 1.0.0
 
 ### Major Changes
