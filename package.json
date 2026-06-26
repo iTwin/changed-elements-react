@@ -18,12 +18,12 @@
   "engines": {
     "pnpm": ">=10",
     "npm": "<0",
-    "node": ">=22"
+    "node": ">=24"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.11",
+    "@changesets/cli": "^2.31.0",
     "@changesets/types": "6.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.57.0",
@@ -44,7 +44,13 @@
     "overrides": {
       "happy-dom@<=20.8.9": ">=20.8.9",
       "@remix-run/router@<=1.23.1": ">=1.23.2",
-      "tmp@<0.2.6": ">=0.2.6"
+      "tmp@<0.2.6": ">=0.2.6",
+      "ws@<7.5.11": ">=7.5.11",
+      "form-data@<4.0.6": ">=4.0.6",
+      "dompurify@<=3.4.10": ">=3.4.11",
+      "js-yaml@<4.2.0": ">=4.2.0",
+      "@google-cloud/storage@<7.21.0": ">=7.21.0",
+      "uuid@<11.1.1": ">=11.1.1"
     }
   },
   "devDependencies": {

@@ -21,12 +21,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       # Install pnpm
       - name: Install pnpm
-        run: npm install -g pnpm@10.12.4
+        run: npm install -g pnpm@10.30.1
 
       # Install dependencies
       - name: Install dependencies

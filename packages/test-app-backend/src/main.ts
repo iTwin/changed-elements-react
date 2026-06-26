@@ -16,6 +16,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { config } from "dotenv-flow";
 import { ChangesRpcImpl } from "./RPC/ChangesRpcImpl";
 import { ChangesRpcInterface } from "./RPC/ChangesRpcInterface";
+import { FallbackIModelReadRpcImpl } from "./RPC/FallbackIModelReadRpcImpl";
 
 config({ path: "../test-app-frontend" });
 
@@ -37,6 +38,7 @@ void (async () => {
   });
   Presentation.initialize();
   ECSchemaRpcImpl.register();
+  RpcManager.registerImpl(IModelReadRpcInterface, FallbackIModelReadRpcImpl);
   RpcManager.registerImpl(ChangesRpcInterface, ChangesRpcImpl);
   const rpcConfig = BentleyCloudRpcManager.initializeImpl(
     { info: { title: "test-app-backend", version: "v1.0" } },
