@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+#### [1.1.0](https://github.com/iTwin/changed-elements-react/tree/v1.1.0/packages/changed-elements-react) - 2026-06-26
+
+Update to iTwinJs packages 5.10.2. Fix audit vulnerabilities.
+
 ## 1.0.1
 
 ### Patch Changes
