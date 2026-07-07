@@ -209,6 +209,58 @@ describe("DiffJobClient", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("matches lowercase diffingStrategy values from list responses", async () => {
+    vi.mocked(iModelsClient.getChangeset)
+      .mockResolvedValueOnce(createChangeset(startChangesetId, 4))
+      .mockResolvedValueOnce(createChangeset(endChangesetId, 8));
+
+    const jobId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      jobs: [{
+        jobId,
+        status: "Completed",
+        iTwinId,
+        iModelId,
+        startChangesetIndex: 4,
+        endChangesetIndex: 8,
+        diffingStrategy: "versioncompare",
+      }],
+    }), { status: 200 }));
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      job: {
+        jobId,
+        status: "Completed",
+        iTwinId,
+        iModelId,
+        startChangesetIndex: 4,
+        endChangesetIndex: 8,
+        diffingStrategy: "versioncompare",
+        href: "https://example.test/results",
+      },
+    }), { status: 200 }));
+
+    const client = new DiffJobClient({
+      baseUrl: "https://api.bentley.com/changedelements",
+      getAccessToken: async () => "Bearer token",
+      iModelsClient,
+    });
+
+    const result = await client.getComparisonJob({
+      iTwinId,
+      iModelId,
+      jobId: `${startChangesetId}-${endChangesetId}`,
+    });
+
+    expect(result.comparisonJob.status).toBe("Completed");
+    if (result.comparisonJob.status !== "Completed") {
+      throw new Error("Expected completed comparison job.");
+    }
+    expect(result.comparisonJob.comparison.href).toBe("https://example.test/results");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("resolves UUID composite job IDs by trying the midpoint split first", async () => {
     // startChangesetId and endChangesetId are both UUIDs (36 chars each).
     // Their composite "uuid1-uuid2" has 9 dashes; the correct separator is at
@@ -279,6 +331,43 @@ describe("DiffJobClient", () => {
     });
 
     await expect(client.getComparisonJob({
+      iTwinId,
+      iModelId,
+      jobId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    })).rejects.toMatchObject({ code: "ComparisonNotFound" });
+  });
+
+  it("rejects unsupported delete job identifiers instead of silently succeeding", async () => {
+    const client = new DiffJobClient({
+      baseUrl: "https://api.bentley.com/changedelements",
+      getAccessToken: async () => "Bearer token",
+      iModelsClient,
+    });
+
+    await expect(client.deleteComparisonJob({
+      iTwinId,
+      iModelId,
+      jobId: "not-a-composite-job-id",
+    })).rejects.toMatchObject({ code: "ComparisonNotFound" });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("maps DiffJobNotFound during delete to ComparisonNotFound", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      error: {
+        code: "DiffJobNotFound",
+        message: "Requested DiffJob is not available.",
+      },
+    }), { status: 404 }));
+
+    const client = new DiffJobClient({
+      baseUrl: "https://api.bentley.com/changedelements",
+      getAccessToken: async () => "Bearer token",
+      iModelsClient,
+    });
+
+    await expect(client.deleteComparisonJob({
       iTwinId,
       iModelId,
       jobId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -394,6 +483,37 @@ describe("DiffJobClient", () => {
     expect(firstRequest.headers).toMatchObject({
       "X-Test-Header": "test-value",
     });
+  });
+
+  it("forwards signal when downloading comparison job results", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      changedElements: {
+        elements: [],
+      },
+    }), { status: 200 }));
+
+    const client = new DiffJobClient({
+      baseUrl: "https://api.bentley.com/changedelements",
+      getAccessToken: async () => "Bearer token",
+      iModelsClient,
+    });
+
+    const signal = new AbortController().signal;
+    await client.getComparisonJobResult({
+      signal,
+      comparisonJob: {
+        jobId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        status: "Completed",
+        iTwinId,
+        iModelId,
+        comparison: {
+          href: "https://example.test/results",
+        },
+      },
+    });
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(request.signal).toBe(signal);
   });
 
   it("does not delete a fallback strategy job when preferred strategy is not found", async () => {

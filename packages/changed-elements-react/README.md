@@ -18,7 +18,7 @@ To begin using this package in your application, you will need to:
 2. Provide `<VersionCompareContext />` somewhere in your app.
 
     ```tsx
-    import { ComparisonJobClient, VersionCompareContext } from "@itwin/changed-elements-react";
+    import { ComparisonJobClient, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 
     const comparisonJobClient = new ComparisonJobClient({
       baseUrl: "https://api.bentley.com/changedelements",
@@ -60,7 +60,7 @@ To begin using this package in your application, you will need to:
 Use `DiffJobClient` in `VersionCompareContext` and set `apiVersion="v3"` on `ChangedElementsWidget`.
 
 ```tsx
-import { DiffJobClient, VersionCompareContext } from "@itwin/changed-elements-react";
+import { DiffJobClient, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 
 const comparisonJobClient = new DiffJobClient({
   baseUrl: "https://api.bentley.com/changedelements",

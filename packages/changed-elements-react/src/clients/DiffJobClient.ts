@@ -38,6 +38,7 @@ type DiffJob = {
   diffingPlan?: {
     strategy?: string;
   };
+  diffingStrategy?: string;
   href?: string;
   error?: string;
   completedAgents?: number;
@@ -143,8 +144,9 @@ export class DiffJobClient implements IComparisonJobClient {
     let jobId = args.jobId;
     if (!uuidPattern.test(jobId)) {
       const pair = await this._resolveCompositeJobId(args.iModelId, jobId);
-      if (!pair)
-        return;
+      if (!pair) {
+        throw new ComparisonNotFoundError(`Unsupported job identifier format: ${jobId}`);
+      }
       const preferredStrategy = this._getPreferredStrategy(jobId);
       let listResponse = await this._listDiffJobs({
         iTwinId: args.iTwinId,
@@ -175,16 +177,20 @@ export class DiffJobClient implements IComparisonJobClient {
       jobId = match.jobId;
     }
 
-    await callITwinApi({
-      url: this._buildJobUrl(jobId, args.iTwinId, args.iModelId),
-      method: "DELETE",
-      getAccessToken: this._getAccessToken,
-      signal: args.signal,
-      headers: {
-        Accept: DiffJobClient._acceptHeader,
-        ...args.headers,
-      },
-    });
+    try {
+      await callITwinApi({
+        url: this._buildJobUrl(jobId, args.iTwinId, args.iModelId),
+        method: "DELETE",
+        getAccessToken: this._getAccessToken,
+        signal: args.signal,
+        headers: {
+          Accept: DiffJobClient._acceptHeader,
+          ...args.headers,
+        },
+      });
+    } catch (error: unknown) {
+      throw this._normalizeNotFoundError(error);
+    }
   }
 
   public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElementsPayload> {
@@ -193,6 +199,7 @@ export class DiffJobClient implements IComparisonJobClient {
       args.comparisonJob.comparison.href,
       {
         method: "GET",
+        signal: args.signal,
         headers: {
           Accept: DiffJobClient._acceptHeader,
         },
@@ -430,7 +437,7 @@ export class DiffJobClient implements IComparisonJobClient {
   }
 
   private _isMatchingStrategy(job: DiffJob, strategy: DiffingStrategy): boolean {
-    return this._normalizeStrategy(job.diffingPlan?.strategy) === strategy;
+    return this._normalizeStrategy(job.diffingPlan?.strategy ?? job.diffingStrategy) === strategy;
   }
 
   private _normalizeStrategy(strategy: string | undefined): DiffingStrategy | undefined {
