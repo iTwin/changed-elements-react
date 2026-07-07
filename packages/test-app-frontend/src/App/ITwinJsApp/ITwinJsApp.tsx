@@ -6,13 +6,14 @@
 import {
   AppNotificationManager, ConfigurableUiContent,
   FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
-  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage, 
+  StagePanelLocation, StagePanelSection, StagePanelState, StageUsage,
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
   ChangedECInstance,
   ChangedElementsWidget,
   ComparisonJobClient,
+  DiffJobClient,
   ITwinIModelsClient,
   NamedVersionSelectorWidget,
   VersionCompare,
@@ -37,7 +38,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js";
-import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, usingLocalBackend } from "../../environment.js";
+import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, useV3Comparison, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
@@ -119,12 +120,21 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
 
   const comparisonJobClient = useMemo(
     () => {
+      if (useV3Comparison) {
+        return new DiffJobClient({
+          baseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
+          getAccessToken: VersionCompare.getAccessToken,
+          iModelsClient,
+          diffingStrategy: "VersionCompare",
+        });
+      }
+
       return new ComparisonJobClient({
         baseUrl: applyUrlPrefix("https://api.bentley.com/changedelements"),
         getAccessToken: VersionCompare.getAccessToken,
       });
     },
-    [],
+    [iModelsClient],
   );
 
   if (loadingState === "opening-imodel") {
@@ -155,6 +165,7 @@ const savedFilters = new MockSavedFiltersManager();
 /** Simple console log testing functions for feature tracking implementation */
 const featureTrackingTesterFunctions: VersionCompareFeatureTracking = {
   trackVersionSelectorV2Usage: () => { console.log("trackVersionSelectorV2Usage"); },
+  trackVersionSelectorV3Usage: () => { console.log("trackVersionSelectorV3Usage"); },
   trackVersionSelectorUsage: () => { console.log("trackVersionSelectorUsage"); },
   trackPropertyComparisonUsage: () => { console.log("trackPropertyComparisonUsage"); },
   trackChangeReportGenerationUsage: () => { console.log("trackChangeReportGenerationUsage"); },
@@ -359,7 +370,7 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
       return [{
         id: "ChangedElementsWidget",
         content: <ChangedElementsWidget
-          useV2Widget
+          apiVersion={useV3Comparison ? "v3" : "v2"}
           feedbackUrl="https://example.com"
           iModelConnection={UiFramework.getIModelConnection()!}
           enableComparisonJobUpdateToasts

@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import type {
   ChangedElementsPayload, IComparisonJobClient, ComparisonJob, GetComparisonJobParams, GetComparisonJobResultParams,
-  PostComparisonJobParams,
+  PostComparisonJobParams, PostComparisonJobParamsWithIds,
   DeleteComparisonJobParams
 } from "./IComparisonJobClient.js";
 import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
@@ -15,6 +15,7 @@ export interface ComparisonJobClientParams {
 }
 
 export class ComparisonJobClient implements IComparisonJobClient {
+  public readonly apiVersion = "v2" as const;
   private static readonly _acceptHeader = "application/vnd.bentley.itwin-platform.v2+json";
   private _baseUrl: string;
   private _getAccessToken: () => Promise<string>;
@@ -87,7 +88,12 @@ export class ComparisonJobClient implements IComparisonJobClient {
   * @returns ComparisonJob
   * @throws on a non 2XX response.
   */
+  public async postComparisonJob(args: PostComparisonJobParamsWithIds): Promise<ComparisonJob>;
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {
+    if (!args.startChangesetId || !args.endChangesetId) {
+      throw new Error("ComparisonJobClient requires startChangesetId and endChangesetId.");
+    }
+
     return callITwinApi({
       url: `${this._baseUrl}/comparisonJob`,
       method: "POST",

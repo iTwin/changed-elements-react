@@ -30,3 +30,4 @@ export const runExperimental: boolean = import.meta.env.VITE_RUN_EXPERIMENTAL ==
 export const usingLocalBackend: boolean = import.meta.env.VITE_USE_LOCAL_BACKEND === "true";
 export const localBackendPort: number = Number.parseInt(import.meta.env.VITE_LOCAL_BACKEND_PORT, 10);
 export const useDirectComparison: boolean = import.meta.env.VITE_USE_DIRECT_COMPARISON === "true";
+export const useV3Comparison: boolean = import.meta.env.VITE_USE_V3_COMPARISON === "true";
