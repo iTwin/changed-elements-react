@@ -124,7 +124,7 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
       return;
     }
     setDisableStartComparison(true);
-    await runManagerStartComparisonV2({
+    const started = await runManagerStartComparisonV2({
       comparisonJob: {
         comparisonJob: {
           status: "Completed",
@@ -145,6 +145,9 @@ export function NamedVersionSelectorWidget(props: Readonly<NamedVersionSelectorW
       getToastsEnabled: () => true,
       iModelsClient,
     });
+    if (!started) {
+      setDisableStartComparison(false);
+    }
   };
 
   const stopComparisonCallback = useCallback(async () => {

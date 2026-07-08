@@ -13,7 +13,21 @@ export interface CallITwinApiParams {
   body?: Record<string, unknown> | undefined;
 }
 
-export async function callITwinApi(args: CallITwinApiParams): Promise<Record<string, unknown> | undefined> {
+/**
+ * Calls the iTwin API and returns the raw, unvalidated JSON body.
+ * @throws on a non 2XX response.
+ */
+export async function callITwinApi(args: CallITwinApiParams): Promise<Record<string, unknown> | undefined>;
+/**
+ * Calls the iTwin API and validates the JSON body against the provided type guard.
+ * @throws on a non 2XX response, or if the response body does not satisfy `validate`.
+ */
+export async function callITwinApi<T>(
+  args: CallITwinApiParams & { validate: (value: unknown) => value is T; },
+): Promise<T>;
+export async function callITwinApi<T>(
+  args: CallITwinApiParams & { validate?: (value: unknown) => value is T; },
+): Promise<T | Record<string, unknown> | undefined> {
   const response = await fetch(
     args.url,
     {
@@ -30,10 +44,16 @@ export async function callITwinApi(args: CallITwinApiParams): Promise<Record<str
   if (!response.ok) {
     await throwBadResponseCodeError(response, "iTwin API request failed.");
   }
-  if (response.status !== 204) {
-    return response.json();
+
+  const body = response.status !== 204 ? await response.json() : undefined;
+  if (args.validate) {
+    if (!args.validate(body)) {
+      throw new Error(`iTwin API request to ${args.url} returned an unexpected response shape.`);
+    }
+    return body;
   }
-  return undefined;
+
+  return body;
 }
 
 export async function* callPagedITwinApi(

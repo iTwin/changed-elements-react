@@ -20,6 +20,7 @@ import { VersionCompareManager } from "../api/VersionCompareManager.js";
 import { CenteredDiv } from "../common/CenteredDiv.js";
 import { EmptyStateComponent } from "../common/EmptyStateComponent.js";
 import { Widget as WidgetComponent } from "../common/Widget/Widget.js";
+import type { ChangedElementsApiVersion } from "../clients/IComparisonJobClient.js";
 import { PropertyLabelCache } from "../dialogs/PropertyLabelCache.js";
 import { ReportGeneratorDialog } from "../dialogs/ReportGeneratorDialog.js";
 import { ChangedElementsInspector } from "./EnhancedElementsInspector.js";
@@ -39,6 +40,16 @@ import { Documentation } from "./Documentation.js";
 
 export const changedElementsWidgetAttachToViewportEvent = new BeEvent<(vp: ScreenViewport) => void>();
 
+export type ChangedElementsWidgetApiVersion = "v1" | ChangedElementsApiVersion;
+
+const resolveWidgetApiVersion = (props: Pick<ChangedElementsWidgetProps, "apiVersion" | "useV2Widget">): ChangedElementsWidgetApiVersion => {
+  if (props.apiVersion) {
+    return props.apiVersion;
+  }
+
+  return props.useV2Widget ? "v2" : "v1";
+};
+
 /** Props for changed elements widget. */
 export interface ChangedElementsWidgetProps {
   /** IModel Connection that is being visualized. */
@@ -57,13 +68,18 @@ export interface ChangedElementsWidgetProps {
   /**
    * Optional. If true will use v2 dialog and will run comparison jobs for faster
    * comparisons.
-   * @beta
+   * @deprecated Use `apiVersion` instead.
    */
   useV2Widget?: boolean;
 
   /**
+   * Optional. Controls which Changed Elements API workflow the widget should use.
+   * If not provided, legacy `useV2Widget` is used for compatibility.
+   */
+  apiVersion?: ChangedElementsWidgetApiVersion;
+
+  /**
  * Optional. If set information button will show documentation link.
- * @beta
  */
   documentationHref?: string;
 
@@ -74,17 +90,17 @@ export interface ChangedElementsWidgetProps {
  */
   usingExperimentalSelector?: boolean;
 
-  /** Optional. Supply a link for feedback. Should only be used if v2 is enabled. */
+  /** Optional. Supply a link for feedback. Should only be used in comparison-job mode (v2/v3). */
   feedbackUrl?: string;
 
   /**
-   * Optional. When enabled will toast messages regarding job status. If not defined
-   * will default to false and will not show toasts (Only for V2).
+  * Optional. When enabled will toast messages regarding job status. If not defined
+  * will default to false and will not show toasts (comparison-job mode only).
    */
   enableComparisonJobUpdateToasts?: boolean;
 
   /**
-   * On Job Update (Only for V2). Optional. A callback function for handling job
+  * On Job Update (comparison-job mode only). Optional. A callback function for handling job
    * updates.
    *
    * @param comparisonJobUpdateType param for the type of update:
@@ -148,9 +164,10 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _onComparisonStopped = (): void => {
+    const isComparisonJobWidget = resolveWidgetApiVersion(this.props) !== "v1";
     this.setState({
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: this.props.useV2Widget
+      description: isComparisonJobWidget
         ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       loading: false,
@@ -215,7 +232,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
       currentIModel: manager.currentIModel,
       targetIModel: manager.targetIModel,
       message: IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonNotActive"),
-      description: this.props.useV2Widget
+      description: resolveWidgetApiVersion(this.props) !== "v1"
         ? IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.versionCompareGettingStartedV2")
         : IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.comparisonGetStarted"),
       versionSelectDialogVisible: false,
@@ -331,6 +348,11 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   private _handleCompare = async (): Promise<void> => {
+    const resolvedApiVersion = resolveWidgetApiVersion(this.props);
+    if (resolvedApiVersion === "v3") {
+      this.state.manager.featureTracking?.trackVersionSelectorV3Usage?.();
+    }
+
     this.setState({ versionSelectDialogVisible: true });
   };
 
@@ -392,6 +414,9 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
   };
 
   public override render(): ReactElement {
+    const resolvedApiVersion = resolveWidgetApiVersion(this.props);
+    const isComparisonJobWidget = resolvedApiVersion !== "v1";
+
     return (
       <>
         <WidgetComponent data-testid="comparison-legend-widget">
@@ -408,7 +433,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                   <WidgetComponent.Header.Actions>
                     <ChangedElementsHeaderButtons
                       loaded={this.state.loaded}
-                      useV2Widget={this.props.useV2Widget}
+                      useV2Widget={isComparisonJobWidget}
                       onOpenVersionSelector={this._handleCompare}
                       onStopComparison={this._handleStopCompare}
                       onOpenReportDialog={
@@ -438,7 +463,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
             }
           </WidgetComponent.Body>
           {
-            this.props.useV2Widget && this.props.feedbackUrl &&
+            isComparisonJobWidget && this.props.feedbackUrl &&
             <WidgetComponent.ToolBar>
               <FeedbackButton
                 data-testid="comparison-widget-v2-feedback-btn"
@@ -457,7 +482,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
           />
         }
         {
-          this.props.useV2Widget
+          isComparisonJobWidget
             ? (
               <VersionCompareSelectProviderV2
                 onJobUpdate={this.props.onJobUpdate}
@@ -468,6 +493,7 @@ export class ChangedElementsWidget extends Component<ChangedElementsWidgetProps,
                   <VersionCompareSelectDialogV2
                     data-testid="comparison-widget-v2-modal"
                     iModelConnection={this.props.iModelConnection}
+                    apiVersion={resolvedApiVersion}
                     onClose={this._handleVersionSelectDialogClose}
                     manageNamedVersionsSlot={this.props.manageNamedVersionsSlot}
                   />

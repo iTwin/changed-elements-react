@@ -2,7 +2,12 @@
 
 ## About
 
-This package provides React components that help implement iTwin version comparison workflows. These components are designed to communicate with [iTwin Platform Changed Elements API](https://developer.bentley.com/apis/changed-elements-v2), which is used to retrieve data about iModel change history.
+This package provides React components that help implement iTwin version comparison workflows. These components are designed to communicate with iTwin Platform Changed Elements APIs (v1/v2/v3) to retrieve data about iModel change history.
+
+API Documentation:
+- [V3 API Documentation - Tech Preview](https://developer.bentley.com/apis/changed-elements-v3/)
+- [V2 API Documentation](https://developer.bentley.com/apis/changed-elements-v2/)
+- [V1 API Documentation - DEPRECATED](https://developer.bentley.com/apis/changed-elements/)
 
 ## Installation
 
@@ -18,9 +23,14 @@ To begin using this package in your application, you will need to:
 2. Provide `<VersionCompareContext />` somewhere in your app.
 
     ```tsx
-    import { VersionCompareContext } from "@itwin/changed-elements-react";
+    import { ComparisonJobClient, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
 
-    <VersionCompareContext iModelsClient={iTwinIModelsClient}>
+    const comparisonJobClient = new ComparisonJobClient({
+      baseUrl: "https://api.bentley.com/changedelements",
+      getAccessToken: VersionCompare.getAccessToken,
+    });
+
+    <VersionCompareContext iModelsClient={iTwinIModelsClient} comparisonJobClient={comparisonJobClient}>
       <App />
     </VersionCompareContext>
     ```
@@ -41,7 +51,7 @@ To begin using this package in your application, you will need to:
     import { ChangedElementsWidget } from "@itwin/changed-elements-react";
 
     <ChangedElementsWidget
-      useV2Widget
+      apiVersion="v2"
       feedbackUrl="https://example.com"
       iModelConnection={UiFramework.getIModelConnection()}
       enableComparisonJobUpdateToasts
@@ -49,6 +59,31 @@ To begin using this package in your application, you will need to:
       documentationHref="https://example.com"
     />,
     ```
+
+### V3 setup
+
+Use `DiffJobClient` in `VersionCompareContext` and set `apiVersion="v3"` on `ChangedElementsWidget`.
+
+```tsx
+import { DiffJobClient, VersionCompare, VersionCompareContext } from "@itwin/changed-elements-react";
+
+const comparisonJobClient = new DiffJobClient({
+  baseUrl: "https://api.bentley.com/changedelements",
+  getAccessToken: VersionCompare.getAccessToken,
+  iModelsClient: iTwinIModelsClient,
+  diffingStrategy: "VersionCompare",
+});
+
+<VersionCompareContext iModelsClient={iTwinIModelsClient} comparisonJobClient={comparisonJobClient}>
+  <ChangedElementsWidget
+    apiVersion="v3"
+    iModelConnection={UiFramework.getIModelConnection()}
+    enableComparisonJobUpdateToasts
+  />
+</VersionCompareContext>
+```
+
+`useV2Widget` is still supported for backward compatibility, but `apiVersion` is the preferred prop moving forward.
 
 5. The `<NamedVersionSelectorWidget />` is an **experimental** React component that lets users inspect differences in properties between versions, generate reports, search for changed elements, and control element visibility. The following code shows an example widget initialization (does not show off all props).
 

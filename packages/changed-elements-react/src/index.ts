@@ -17,9 +17,13 @@ export type { MainVisualizationOptions, VisualizationHandler } from "./api/Visua
 export {
   ComparisonJobClient, type ComparisonJobClientParams,
 } from "./clients/ComparisonJobClient.js";
+export {
+  DiffJobClient, type DiffJobClientParams,
+} from "./clients/DiffJobClient.js";
 export type {
+  ChangedElementsApiVersion,
   ComparisonJob, ComparisonJobCompleted, ComparisonJobFailed, ComparisonJobQueued,
-  ComparisonJobStarted,
+  ComparisonJobStarted, DiffingStrategy, IComparisonJobClient,
 } from "./clients/IComparisonJobClient.js";
 export type {
   Changeset, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion,

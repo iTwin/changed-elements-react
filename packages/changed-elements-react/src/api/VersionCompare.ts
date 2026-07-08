@@ -19,6 +19,8 @@ export interface VersionCompareFeatureTracking {
   trackVersionSelectorV2Usage: () => void;
   /** Track when the user opens the version compare selector dialog to start a comparison */
   trackVersionSelectorUsage: () => void;
+  /** Track when the user opens the version compare selector dialog to start a comparison using V3 API */
+  trackVersionSelectorV3Usage?: () => void;
   /** Tracks when the user does a property comparison and opens the side-by-side frontstage */
   trackPropertyComparisonUsage: () => void;
   /** Tracks when the user opens the change report dialog */

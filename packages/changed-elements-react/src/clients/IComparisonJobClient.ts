@@ -4,7 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 import { ChangedElements } from "@itwin/core-common";
 
+export type ChangedElementsApiVersion = "v2" | "v3";
+export type DiffingStrategy = "Basic" | "VersionCompare" | "Full";
+
 export interface IComparisonJobClient {
+  /** Indicates which Changed Elements API version this client targets. */
+  readonly apiVersion: ChangedElementsApiVersion;
+
   /** Gets comparison job status. Throws on encountering an error or receiving non-success response code. */
   getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob>;
 
@@ -15,7 +21,7 @@ export interface IComparisonJobClient {
   getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElementsPayload>;
 
   /** Starts comparison job. Throws on encountering an error or receiving non-success response code. */
-  postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob>;
+  postComparisonJob(args: PostComparisonJobParamsWithIds): Promise<ComparisonJob>;
 
 }
 
@@ -31,14 +37,22 @@ export interface DeleteComparisonJobParams extends GetComparisonJobParams { }
 
 export type ComparisonJob = ComparisonJobCompleted | ComparisonJobStarted | ComparisonJobQueued | ComparisonJobFailed;
 
+interface ComparisonJobCommon {
+  jobId: string;
+  iTwinId: string;
+  iModelId: string;
+  startChangesetId?: string;
+  endChangesetId?: string;
+  startChangesetIndex?: number;
+  endChangesetIndex?: number;
+  diffingPlan?: {
+    strategy: DiffingStrategy;
+  };
+}
+
 export interface ComparisonJobCompleted {
-  comparisonJob: {
+  comparisonJob: ComparisonJobCommon & {
     status: "Completed";
-    jobId: string;
-    iTwinId: string;
-    iModelId: string;
-    startChangesetId: string;
-    endChangesetId: string;
     comparison: {
       href: string;
     };
@@ -46,37 +60,24 @@ export interface ComparisonJobCompleted {
 }
 
 export interface ComparisonJobStarted {
-  comparisonJob: {
+  comparisonJob: ComparisonJobCommon & {
     status: "Started";
-    jobId: string;
-    iTwinId: string;
-    iModelId: string;
-    startChangesetId: string;
-    endChangesetId: string;
     currentProgress: number;
     maxProgress: number;
+    completedAgents?: number;
+    totalAgents?: number;
   };
 }
 
 export interface ComparisonJobQueued {
-  comparisonJob: {
+  comparisonJob: ComparisonJobCommon & {
     status: "Queued";
-    jobId: string;
-    iTwinId: string;
-    iModelId: string;
-    startChangesetId: string;
-    endChangesetId: string;
   };
 }
 
 export interface ComparisonJobFailed {
-  comparisonJob: {
+  comparisonJob: ComparisonJobCommon & {
     status: "Failed";
-    jobId: string;
-    iTwinId: string;
-    iModelId: string;
-    startChangesetId: string;
-    endChangesetId: string;
     errorDetails: string;
   };
 }
@@ -89,12 +90,27 @@ export interface ChangedElementsPayload {
   changedElements: ChangedElements;
 }
 
-export interface PostComparisonJobParams extends BodilessRequest {
+interface PostComparisonJobParamsBase extends BodilessRequest {
   iTwinId: string;
   iModelId: string;
+  diffingStrategy?: DiffingStrategy;
+}
+
+export interface PostComparisonJobParamsWithIds extends PostComparisonJobParamsBase {
   startChangesetId: string;
   endChangesetId: string;
+  startChangesetIndex?: never;
+  endChangesetIndex?: never;
 }
+
+export interface PostComparisonJobParamsWithIndexes extends PostComparisonJobParamsBase {
+  startChangesetIndex: number;
+  endChangesetIndex: number;
+  startChangesetId?: string;
+  endChangesetId?: string;
+}
+
+export type PostComparisonJobParams = PostComparisonJobParamsWithIds | PostComparisonJobParamsWithIndexes;
 
 export interface CommonRequestParams {
   signal?: AbortSignal | undefined;
