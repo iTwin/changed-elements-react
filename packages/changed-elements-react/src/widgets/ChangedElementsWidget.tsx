@@ -69,7 +69,6 @@ export interface ChangedElementsWidgetProps {
    * Optional. If true will use v2 dialog and will run comparison jobs for faster
    * comparisons.
    * @deprecated Use `apiVersion` instead.
-   * @beta
    */
   useV2Widget?: boolean;
 
@@ -81,7 +80,6 @@ export interface ChangedElementsWidgetProps {
 
   /**
  * Optional. If set information button will show documentation link.
- * @beta
  */
   documentationHref?: string;
 
