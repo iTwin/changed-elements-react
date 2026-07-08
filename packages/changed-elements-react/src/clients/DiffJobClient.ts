@@ -16,49 +16,94 @@ import { isChangedElementsPayload, isRecord } from "./typeGuards.js";
  * Satisfies the `{ code: "ComparisonNotFound" }` contract checked by callers.
  */
 class ComparisonNotFoundError extends Error {
+  /** Discriminant used by callers to detect this error type without an `instanceof` check across module boundaries. */
   public readonly code = "ComparisonNotFound" as const;
+
+  /** @param message Human-readable description of why the comparison could not be found. */
   constructor(message: string) {
     super(message);
     this.name = "ComparisonNotFoundError";
   }
 }
 
+/** Constructor parameters for {@link DiffJobClient}. */
 export interface DiffJobClientParams {
+  /** Base URL of the Changed Elements v3 (diff) API. */
   baseUrl: string;
+
+  /** Callback that resolves the access token used to authenticate API requests. */
   getAccessToken: () => Promise<string>;
+
+  /** Client used to resolve changeset ids to changeset indexes. */
   iModelsClient: IModelsClient;
+
+  /** Diffing strategy requested when creating new diff jobs. Defaults to `"VersionCompare"`. */
   diffingStrategy?: DiffingStrategy;
 }
 
+/** Raw diff job shape as returned by the Changed Elements v3 (diff) API. */
 type DiffJob = {
+  /** Unique identifier of the diff job. */
   jobId: string;
+
+  /** Current processing status of the diff job. */
   status: "Queued" | "Started" | "Completed" | "Failed";
+
+  /** iTwin id the diff job belongs to. */
   iTwinId: string;
+
+  /** iModel id the diff job belongs to. */
   iModelId: string;
+
+  /** Changeset index the comparison starts from. */
   startChangesetIndex: number;
+
+  /** Changeset index the comparison ends at. */
   endChangesetIndex: number;
+
+  /** Diffing plan used to create the job, if reported by the API. */
   diffingPlan?: {
+    /** Raw (non-normalized) strategy name. */
     strategy?: string;
   };
+
+  /** Raw (non-normalized) strategy name, reported directly on the job by some API versions. */
   diffingStrategy?: string;
+
+  /** Pre-signed URL to the diff result. Present once the job status is `"Completed"`. */
   href?: string;
+
+  /** Error message. Present when the job status is `"Failed"`. */
   error?: string;
+
+  /** Number of diff agents that have finished processing. Present while the job is `"Started"`. */
   completedAgents?: number;
+
+  /** Total number of diff agents assigned to the job. Present while the job is `"Started"`. */
   totalAgents?: number;
 };
 
+/** Response body of a single diff job request (`GET`/`POST .../diff/{jobId}`). */
 type DiffJobResponse = {
+  /** The diff job returned by the API. */
   job: DiffJob;
 };
 
+/** Response body of a diff job list request (`GET .../diff`). */
 type DiffJobListResponse = {
+  /** Diff jobs matching the list query. */
   jobs: DiffJob[];
 };
 
+/**
+ * Type guard validating the shape of a raw {@link DiffJob} returned by the API.
+ *
+ * `status` is intentionally only checked to be a string here (not restricted to the known status
+ * literals): unrecognized status values are a valid API response and are rejected with a
+ * specific "unsupported diff job status" error by `DiffJobClient`'s private `_normalizeJob` instead.
+ * @param value Unknown value to validate.
+ */
 function isDiffJob(value: unknown): value is DiffJob {
-  // `status` is intentionally only checked to be a string here (not restricted to `diffJobStatuses`):
-  // unrecognized status values are a valid API response and are rejected with a specific
-  // "unsupported diff job status" error by `_normalizeJob` instead.
   return (
     isRecord(value) &&
     typeof value.jobId === "string" &&
@@ -70,26 +115,56 @@ function isDiffJob(value: unknown): value is DiffJob {
   );
 }
 
+/**
+ * Type guard validating the shape of a {@link DiffJobResponse}.
+ * @param value Unknown value to validate.
+ */
 function isDiffJobResponse(value: unknown): value is DiffJobResponse {
   return isRecord(value) && isDiffJob(value.job);
 }
 
+/**
+ * Type guard validating the shape of a {@link DiffJobListResponse}.
+ * @param value Unknown value to validate.
+ */
 function isDiffJobListResponse(value: unknown): value is DiffJobListResponse {
   return isRecord(value) && Array.isArray(value.jobs) && value.jobs.every(isDiffJob);
 }
 
+/** Matches a RFC 4122 v1-v5 UUID string, used to distinguish real diff job ids from composite (changeset pair) ids. */
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/**
+ * `IComparisonJobClient` implementation backed by the Changed Elements v3 (diff) API.
+ *
+ * Unlike {@link ComparisonJobClient} (v2), this client accepts composite job ids of the form
+ * `${startChangesetId}-${endChangesetId}` in addition to real diff job UUIDs, resolving them to
+ * changeset indexes via the provided `IModelsClient` and caching the results.
+ */
 export class DiffJobClient implements IComparisonJobClient {
+  /** Indicates this client targets the Changed Elements v3 API. */
   public readonly apiVersion = "v3" as const;
   private static readonly _acceptHeader = "application/vnd.bentley.itwin-platform.v3+json";
+
+  /** Base URL of the Changed Elements v3 (diff) API. */
   private readonly _baseUrl: string;
+
+  /** Resolves the access token used to authenticate API requests. */
   private readonly _getAccessToken: () => Promise<string>;
+
+  /** Client used to resolve changeset ids to changeset indexes. */
   private readonly _iModelsClient: IModelsClient;
+
+  /** Default diffing strategy requested when creating new diff jobs. */
   private readonly _diffingStrategy: DiffingStrategy;
+
+  /** Caches resolved changeset indexes, keyed by `${iModelId}:${changesetId}`. */
   private readonly _changesetIndexCache = new Map<string, number>();
+
+  /** Caches the diffing strategy used for composite job ids, keyed by `${startChangesetId}-${endChangesetId}`. */
   private readonly _compositeJobStrategyCache = new Map<string, DiffingStrategy>();
 
+  /** @param args Constructor parameters, see {@link DiffJobClientParams}. */
   constructor(args: DiffJobClientParams) {
     this._baseUrl = args.baseUrl;
     this._getAccessToken = args.getAccessToken;
@@ -97,6 +172,15 @@ export class DiffJobClient implements IComparisonJobClient {
     this._diffingStrategy = args.diffingStrategy ?? "VersionCompare";
   }
 
+  /**
+   * Gets comparison job status.
+   *
+   * Accepts either a real diff job UUID, or a composite id of the form
+   * `${startChangesetId}-${endChangesetId}`, which is resolved to the matching diff job.
+   * @param args iTwin/iModel/job identification and request options.
+   * @returns ComparisonJob
+   * @throws a `ComparisonNotFoundError` (`{ code: "ComparisonNotFound" }`) if no matching job is found, or on any other non-2XX response.
+   */
   public async getComparisonJob(args: GetComparisonJobParams): Promise<ComparisonJob> {
     try {
       if (uuidPattern.test(args.jobId)) {
@@ -167,6 +251,15 @@ export class DiffJobClient implements IComparisonJobClient {
     }
   }
 
+  /**
+   * Deletes comparison job.
+   *
+   * Accepts either a real diff job UUID, or a composite id of the form
+   * `${startChangesetId}-${endChangesetId}`, which is resolved to the matching diff job before deletion.
+   * @param args iTwin/iModel/job identification and request options.
+   * @returns void
+   * @throws a `ComparisonNotFoundError` (`{ code: "ComparisonNotFound" }`) if no matching job is found, or on any other non-2XX response.
+   */
   public async deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
     try {
       let jobId = args.jobId;
@@ -220,6 +313,12 @@ export class DiffJobClient implements IComparisonJobClient {
     }
   }
 
+  /**
+   * Gets changed elements for given comparisonJob.
+   * @param args The comparison job whose result should be fetched, plus request options.
+   * @returns ChangedElements
+   * @throws on a non 2XX response, or if the response body does not match the expected shape.
+   */
   public async getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElementsPayload> {
     // The href is a pre-signed URL (e.g. Azure Blob SAS URL); no Authorization header is needed or wanted.
     const response = await fetch(
@@ -245,7 +344,21 @@ export class DiffJobClient implements IComparisonJobClient {
     return body;
   }
 
+  /**
+   * Starts comparison job using changeset ids.
+   *
+   * Ids are resolved to changeset indexes (and cached) via the `IModelsClient`.
+   * @param args iTwin/iModel identification, changeset ids, diffing strategy, and request options.
+   * @returns ComparisonJob
+   * @throws on a non 2XX response.
+   */
   public async postComparisonJob(args: PostComparisonJobParamsWithIds): Promise<ComparisonJob>;
+  /**
+   * Starts comparison job using explicit changeset indexes.
+   * @param args iTwin/iModel identification, changeset indexes, diffing strategy, and request options.
+   * @returns ComparisonJob
+   * @throws on a non 2XX response.
+   */
   public async postComparisonJob(args: PostComparisonJobParamsWithIndexes): Promise<ComparisonJob>;
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {
     const startChangesetIndex = args.startChangesetIndex ??
@@ -283,6 +396,12 @@ export class DiffJobClient implements IComparisonJobClient {
     return this._normalizeJob(response.job, args.startChangesetId, args.endChangesetId);
   }
 
+  /**
+   * Resolves a changeset id to its numeric changeset index via the `IModelsClient`, caching the result.
+   * @param iModelId iModel the changeset belongs to.
+   * @param changesetId Changeset id to resolve, or `undefined`.
+   * @throws if `changesetId` is undefined, or if the changeset cannot be found (as a `ComparisonNotFoundError`).
+   */
   private async _resolveChangesetIndex(iModelId: string, changesetId: string | undefined): Promise<number> {
     if (!changesetId) {
       throw new Error("Missing required changeset identifier.");
@@ -306,6 +425,13 @@ export class DiffJobClient implements IComparisonJobClient {
     return changeset.index;
   }
 
+  /**
+   * Converts a raw {@link DiffJob} (v3 API shape) into the public, discriminated-union `ComparisonJob` shape.
+   * @param job Raw diff job to normalize.
+   * @param startChangesetId Changeset id the comparison starts from, if known (e.g. from a composite job id).
+   * @param endChangesetId Changeset id the comparison ends at, if known (e.g. from a composite job id).
+   * @throws if `job.status` is `"Completed"` but missing its result `href`, or if `job.status` is not a recognized value.
+   */
   private _normalizeJob(job: DiffJob, startChangesetId?: string, endChangesetId?: string): ComparisonJob {
     const common = {
       jobId: job.jobId,
@@ -365,6 +491,15 @@ export class DiffJobClient implements IComparisonJobClient {
     }
   }
 
+  /**
+   * Attempts to split a composite job id (`${startChangesetId}-${endChangesetId}`) into its two
+   * changeset ids and resolve both to changeset indexes, trying every dash as a possible split
+   * point (starting from the one closest to the midpoint) to support opaque changeset ids that
+   * may themselves contain dashes.
+   * @param iModelId iModel the changesets belong to.
+   * @param jobId Composite job id of the form `${startChangesetId}-${endChangesetId}`.
+   * @returns The resolved changeset id/index pair, or `undefined` if `jobId` has no dashes or no split resolves successfully.
+   */
   private async _resolveCompositeJobId(
     iModelId: string,
     jobId: string,
@@ -426,6 +561,11 @@ export class DiffJobClient implements IComparisonJobClient {
     return undefined;
   }
 
+  /**
+   * Lists diff jobs matching the given iTwin/iModel/changeset-range (and optionally strategy) query.
+   * @param args iTwin/iModel identification, changeset index range, optional diffing strategy filter, and request options.
+   * @throws on a non 2XX response, or if the response body does not match the expected shape.
+   */
   private async _listDiffJobs(args: {
     iTwinId: string;
     iModelId: string;
@@ -457,6 +597,12 @@ export class DiffJobClient implements IComparisonJobClient {
     });
   }
 
+  /**
+   * Builds the URL for a single diff job resource (`.../diff/{jobId}?iTwinId=...&iModelId=...`).
+   * @param jobId Diff job id.
+   * @param iTwinId iTwin id the job belongs to.
+   * @param iModelId iModel id the job belongs to.
+   */
   private _buildJobUrl(jobId: string, iTwinId: string, iModelId: string): string {
     const url = new URL(`${this._baseUrl}/diff/${encodeURIComponent(jobId)}`);
     url.searchParams.set("iTwinId", iTwinId);
@@ -464,19 +610,38 @@ export class DiffJobClient implements IComparisonJobClient {
     return url.toString();
   }
 
+  /**
+   * Returns the diffing strategy previously used for a composite job id, falling back to the client's default.
+   * @param jobId Composite job id previously passed to {@link DiffJobClient.postComparisonJob}.
+   */
   private _getPreferredStrategy(jobId: string): DiffingStrategy {
     return this._compositeJobStrategyCache.get(jobId) ?? this._diffingStrategy;
   }
 
+  /**
+   * Picks the best matching job from an unfiltered job list: prefers a job matching
+   * `preferredStrategy`, falling back to one matching the client's default strategy.
+   * @param jobs Candidate jobs to search.
+   * @param preferredStrategy Diffing strategy to prefer.
+   */
   private _pickBestStrategyMatch(jobs: DiffJob[], preferredStrategy: DiffingStrategy): DiffJob | undefined {
     return jobs.find((job) => this._isMatchingStrategy(job, preferredStrategy))
       ?? jobs.find((job) => this._isMatchingStrategy(job, this._diffingStrategy));
   }
 
+  /**
+   * Checks whether a job's (normalized) diffing strategy matches `strategy`.
+   * @param job Job to check.
+   * @param strategy Diffing strategy to compare against.
+   */
   private _isMatchingStrategy(job: DiffJob, strategy: DiffingStrategy): boolean {
     return this._normalizeStrategy(job.diffingPlan?.strategy ?? job.diffingStrategy) === strategy;
   }
 
+  /**
+   * Normalizes a raw, case-insensitive strategy string from the API into a `DiffingStrategy`, or `undefined` if unrecognized.
+   * @param strategy Raw strategy string reported by the API, or `undefined`.
+   */
   private _normalizeStrategy(strategy: string | undefined): DiffingStrategy | undefined {
     switch (strategy?.toLowerCase()) {
       case "basic": return "Basic";
@@ -486,6 +651,10 @@ export class DiffJobClient implements IComparisonJobClient {
     }
   }
 
+  /**
+   * Converts a `{ code: "DiffJobNotFound" }` error from the API into a `ComparisonNotFoundError`; other errors are passed through unchanged.
+   * @param error Error caught from an API call.
+   */
   private _normalizeNotFoundError(error: unknown): unknown {
     if (error && typeof error === "object" && "code" in error) {
       const code = (error as Record<string, unknown>).code;
