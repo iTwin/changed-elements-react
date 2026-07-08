@@ -258,6 +258,7 @@ describe("DiffJobClient", () => {
       throw new Error("Expected completed comparison job.");
     }
     expect(result.comparisonJob.comparison.href).toBe("https://example.test/results");
+    expect(result.comparisonJob.diffingPlan?.strategy).toBe("VersionCompare");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -371,6 +372,32 @@ describe("DiffJobClient", () => {
       iTwinId,
       iModelId,
       jobId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    })).rejects.toMatchObject({ code: "ComparisonNotFound" });
+  });
+
+  it("maps DiffJobNotFound raised while resolving a composite id for delete to ComparisonNotFound", async () => {
+    vi.mocked(iModelsClient.getChangeset)
+      .mockResolvedValueOnce(createChangeset(startChangesetId, 4))
+      .mockResolvedValueOnce(createChangeset(endChangesetId, 8));
+
+    // The list query used to resolve the composite id into a UUID fails with DiffJobNotFound.
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      error: {
+        code: "DiffJobNotFound",
+        message: "Requested DiffJob is not available.",
+      },
+    }), { status: 404 }));
+
+    const client = new DiffJobClient({
+      baseUrl: "https://api.bentley.com/changedelements",
+      getAccessToken: async () => "Bearer token",
+      iModelsClient,
+    });
+
+    await expect(client.deleteComparisonJob({
+      iTwinId,
+      iModelId,
+      jobId: `${startChangesetId}-${endChangesetId}`,
     })).rejects.toMatchObject({ code: "ComparisonNotFound" });
   });
 

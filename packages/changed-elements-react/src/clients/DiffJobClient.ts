@@ -4,7 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 import type {
   ChangedElementsPayload, ComparisonJob, DeleteComparisonJobParams, DiffingStrategy, GetComparisonJobParams,
-  GetComparisonJobResultParams, IComparisonJobClient, PostComparisonJobParams
+  GetComparisonJobResultParams, IComparisonJobClient, PostComparisonJobParams, PostComparisonJobParamsWithIds,
+  PostComparisonJobParamsWithIndexes
 } from "./IComparisonJobClient.js";
 import type { IModelsClient } from "./iModelsClient.js";
 import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
@@ -141,43 +142,43 @@ export class DiffJobClient implements IComparisonJobClient {
   }
 
   public async deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
-    let jobId = args.jobId;
-    if (!uuidPattern.test(jobId)) {
-      const pair = await this._resolveCompositeJobId(args.iModelId, jobId);
-      if (!pair) {
-        throw new ComparisonNotFoundError(`Unsupported job identifier format: ${jobId}`);
-      }
-      const preferredStrategy = this._getPreferredStrategy(jobId);
-      let listResponse = await this._listDiffJobs({
-        iTwinId: args.iTwinId,
-        iModelId: args.iModelId,
-        startChangesetIndex: pair.startChangesetIndex,
-        endChangesetIndex: pair.endChangesetIndex,
-        diffingStrategy: preferredStrategy,
-        signal: args.signal,
-        headers: args.headers,
-      });
-
-      let match = listResponse.jobs.find((job) => this._isMatchingStrategy(job, preferredStrategy));
-      if (!match) {
-        listResponse = await this._listDiffJobs({
+    try {
+      let jobId = args.jobId;
+      if (!uuidPattern.test(jobId)) {
+        const pair = await this._resolveCompositeJobId(args.iModelId, jobId);
+        if (!pair) {
+          throw new ComparisonNotFoundError(`Unsupported job identifier format: ${jobId}`);
+        }
+        const preferredStrategy = this._getPreferredStrategy(jobId);
+        let listResponse = await this._listDiffJobs({
           iTwinId: args.iTwinId,
           iModelId: args.iModelId,
           startChangesetIndex: pair.startChangesetIndex,
           endChangesetIndex: pair.endChangesetIndex,
+          diffingStrategy: preferredStrategy,
           signal: args.signal,
           headers: args.headers,
         });
-        match = this._pickBestStrategyMatch(listResponse.jobs, preferredStrategy);
+
+        let match = listResponse.jobs.find((job) => this._isMatchingStrategy(job, preferredStrategy));
+        if (!match) {
+          listResponse = await this._listDiffJobs({
+            iTwinId: args.iTwinId,
+            iModelId: args.iModelId,
+            startChangesetIndex: pair.startChangesetIndex,
+            endChangesetIndex: pair.endChangesetIndex,
+            signal: args.signal,
+            headers: args.headers,
+          });
+          match = this._pickBestStrategyMatch(listResponse.jobs, preferredStrategy);
+        }
+
+        if (!match) {
+          throw new ComparisonNotFoundError("Requested comparison is not available.");
+        }
+        jobId = match.jobId;
       }
 
-      if (!match) {
-        throw new ComparisonNotFoundError("Requested comparison is not available.");
-      }
-      jobId = match.jobId;
-    }
-
-    try {
       await callITwinApi({
         url: this._buildJobUrl(jobId, args.iTwinId, args.iModelId),
         method: "DELETE",
@@ -212,6 +213,8 @@ export class DiffJobClient implements IComparisonJobClient {
     return response.json() as unknown as Promise<ChangedElementsPayload>;
   }
 
+  public async postComparisonJob(args: PostComparisonJobParamsWithIds): Promise<ComparisonJob>;
+  public async postComparisonJob(args: PostComparisonJobParamsWithIndexes): Promise<ComparisonJob>;
   public async postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob> {
     const startChangesetIndex = args.startChangesetIndex ??
       await this._resolveChangesetIndex(args.iModelId, args.startChangesetId);
@@ -280,7 +283,7 @@ export class DiffJobClient implements IComparisonJobClient {
       startChangesetIndex: job.startChangesetIndex,
       endChangesetIndex: job.endChangesetIndex,
       diffingPlan: {
-        strategy: this._normalizeStrategy(job.diffingPlan?.strategy) ?? this._diffingStrategy,
+        strategy: this._normalizeStrategy(job.diffingPlan?.strategy ?? job.diffingStrategy) ?? this._diffingStrategy,
       },
     };
 

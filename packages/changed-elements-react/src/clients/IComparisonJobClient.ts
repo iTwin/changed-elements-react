@@ -21,7 +21,7 @@ export interface IComparisonJobClient {
   getComparisonJobResult(args: GetComparisonJobResultParams): Promise<ChangedElementsPayload>;
 
   /** Starts comparison job. Throws on encountering an error or receiving non-success response code. */
-  postComparisonJob(args: PostComparisonJobParams): Promise<ComparisonJob>;
+  postComparisonJob(args: PostComparisonJobParamsWithIds): Promise<ComparisonJob>;
 
 }
 

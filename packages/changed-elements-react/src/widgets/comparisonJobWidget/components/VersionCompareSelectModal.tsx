@@ -434,7 +434,7 @@ const notifyComparisonCompletion = (args: ConditionallyToastCompletionArgs) => {
 const pollUpdateCurrentEntriesForModal = async (args: PollForInProgressJobsArgs) => {
   const currentVersionId = args.iModelConnection?.changeset.id;
   let entries = args.namedVersionLoaderState!.namedVersions.entries.slice();
-  const currentRunningJobsMap = arrayToMap(args.getRunningJobs(), (job: JobAndNamedVersions) => { return job.comparisonJob?.comparisonJob.jobId as string; });
+  const currentRunningJobsMap = arrayToMap(args.getRunningJobs(), (job: JobAndNamedVersions) => { return createJobId(job.targetNamedVersion, job.currentNamedVersion); });
   if (areJobsInProgress(entries, args.getRunningJobs)) {
     const idEntryMap = arrayToMap(entries, (entry: VersionState) => { return entry.version.id; });
     let updatingEntries = getUpdatingEntries(entries, currentVersionId, currentRunningJobsMap);
