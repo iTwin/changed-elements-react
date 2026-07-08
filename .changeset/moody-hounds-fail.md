@@ -13,7 +13,3 @@ Add support for Changed Elements API v3 alongside v1/v2.
 
 **Deprecations:**
 - `useV2Widget` prop on `ChangedElementsWidget` is now deprecated in favor of `apiVersion`.
-
-**Backward compatibility:**
-- `useV2Widget` continues to work for existing consumers; no immediate migration required.
-- All v1/v2 call sites unaffected when `apiVersion` is omitted.
