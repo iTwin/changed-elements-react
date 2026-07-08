@@ -9,6 +9,7 @@ import type {
 } from "./IComparisonJobClient.js";
 import type { IModelsClient } from "./iModelsClient.js";
 import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
+import { isChangedElementsPayload, isRecord } from "./typeGuards.js";
 
 /**
  * Structured error thrown when a requested diff job cannot be found.
@@ -54,6 +55,29 @@ type DiffJobListResponse = {
   jobs: DiffJob[];
 };
 
+function isDiffJob(value: unknown): value is DiffJob {
+  // `status` is intentionally only checked to be a string here (not restricted to `diffJobStatuses`):
+  // unrecognized status values are a valid API response and are rejected with a specific
+  // "unsupported diff job status" error by `_normalizeJob` instead.
+  return (
+    isRecord(value) &&
+    typeof value.jobId === "string" &&
+    typeof value.status === "string" &&
+    typeof value.iTwinId === "string" &&
+    typeof value.iModelId === "string" &&
+    typeof value.startChangesetIndex === "number" &&
+    typeof value.endChangesetIndex === "number"
+  );
+}
+
+function isDiffJobResponse(value: unknown): value is DiffJobResponse {
+  return isRecord(value) && isDiffJob(value.job);
+}
+
+function isDiffJobListResponse(value: unknown): value is DiffJobListResponse {
+  return isRecord(value) && Array.isArray(value.jobs) && value.jobs.every(isDiffJob);
+}
+
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export class DiffJobClient implements IComparisonJobClient {
@@ -85,7 +109,8 @@ export class DiffJobClient implements IComparisonJobClient {
             Accept: DiffJobClient._acceptHeader,
             ...args.headers,
           },
-        }) as unknown as DiffJobResponse;
+          validate: isDiffJobResponse,
+        });
         return this._normalizeJob(response.job);
       }
 
@@ -133,7 +158,8 @@ export class DiffJobClient implements IComparisonJobClient {
           Accept: DiffJobClient._acceptHeader,
           ...args.headers,
         },
-      }) as unknown as DiffJobResponse;
+        validate: isDiffJobResponse,
+      });
 
       return this._normalizeJob(detailedResponse.job, pair.startChangesetId, pair.endChangesetId);
     } catch (error: unknown) {
@@ -210,7 +236,13 @@ export class DiffJobClient implements IComparisonJobClient {
     if (!response.ok) {
       await throwBadResponseCodeError(response, "Changed Elements request failed.");
     }
-    return response.json() as unknown as Promise<ChangedElementsPayload>;
+
+    const body: unknown = await response.json();
+    if (!isChangedElementsPayload(body)) {
+      throw new Error(`Changed Elements request to ${args.comparisonJob.comparison.href} returned an unexpected response shape.`);
+    }
+
+    return body;
   }
 
   public async postComparisonJob(args: PostComparisonJobParamsWithIds): Promise<ComparisonJob>;
@@ -241,7 +273,8 @@ export class DiffJobClient implements IComparisonJobClient {
           strategy: requestedStrategy,
         },
       },
-    }) as unknown as DiffJobResponse;
+      validate: isDiffJobResponse,
+    });
 
     if (args.startChangesetId && args.endChangesetId) {
       this._compositeJobStrategyCache.set(`${args.startChangesetId}-${args.endChangesetId}`, requestedStrategy);
@@ -420,7 +453,8 @@ export class DiffJobClient implements IComparisonJobClient {
         Accept: DiffJobClient._acceptHeader,
         ...args.headers,
       },
-    }) as unknown as Promise<DiffJobListResponse>;
+      validate: isDiffJobListResponse,
+    });
   }
 
   private _buildJobUrl(jobId: string, iTwinId: string, iModelId: string): string {

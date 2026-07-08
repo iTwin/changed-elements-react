@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import { Logger } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, NotifyMessageDetails, OutputMessagePriority } from "@itwin/core-frontend";
 import {
   Button, Modal, ModalButtonBar, ModalContent, ProgressLinear, ProgressRadial, Radio, Text
 } from "@itwin/itwinui-react";
@@ -185,11 +185,35 @@ function usePagedNamedVersionLoader(
 
       let disposed = false;
       void (async () => {
-        const [namedVersions, changesets] = await Promise.all([
-          iModelsClient.getNamedVersions({ iModelId }),
-          // Changesets need to be in descending index order
-          iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse()),
-        ]);
+        let namedVersions: NamedVersion[];
+        let changesets: Changeset[];
+        try {
+          [namedVersions, changesets] = await Promise.all([
+            iModelsClient.getNamedVersions({ iModelId }),
+            // Changesets need to be in descending index order
+            iModelsClient.getChangesets({ iModelId }).then((changesets) => changesets.slice().reverse()),
+          ]);
+        } catch (error) {
+          if (disposed) {
+            return;
+          }
+
+          const errorMessage = error instanceof Error ? error.message : "Unknown Error";
+          Logger.logError(VersionCompare.logCategory, `Could not load named versions and changesets: ${errorMessage}`);
+          IModelApp.notifications.outputMessage(
+            new NotifyMessageDetails(
+              OutputMessagePriority.Error,
+              IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_versionCompare"),
+              IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_cantLoadNamedVersions"),
+            ),
+          );
+          setResult({
+            namedVersions: { entries: [], currentVersion: undefined },
+            changesets: [],
+          });
+          return;
+        }
+
         if (disposed) {
           return;
         }

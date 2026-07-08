@@ -74,6 +74,7 @@
     "error_versionCompare": "Version Compare Error",
     "error_cantStart": "Could not start comparison against version",
     "error_invalidToken": "Could not authenticate user for version compare usage",
+    "error_cantLoadNamedVersions": "Could not load named versions and changesets",
     "msg_openingTarget": "Opening target iModel",
     "msg_getChangedElements": "Requesting changed elements",
     "msg_initializingComparison": "Initializing comparison",

@@ -113,7 +113,7 @@ export interface ResizeObserverWrapperProps extends Omit<HTMLAttributes<HTMLDivE
  */
 export const ResizeObserverWrapper = forwardRef < HTMLDivElement, ResizeObserverWrapperProps>(
   function ResizeObserverWrapper(props, ref) {
-    const divRef = useRef(null as unknown as HTMLDivElement);
+    const divRef = useRef<HTMLDivElement>(null);
     const size = useResizeObserver(divRef);
     const mergedRefs = useMemo(() => mergeRefs(divRef, ref), [divRef, ref]);
     return <div ref={mergedRefs} className={props.className}>{size && props.children(size)}</div>;

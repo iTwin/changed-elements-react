@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { Logger } from "@itwin/core-bentley";
-import type { IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, NotifyMessageDetails, OutputMessagePriority, type IModelConnection } from "@itwin/core-frontend";
 import { VersionCompare } from "../../../api/VersionCompare.js";
 import type { ComparisonJobCompleted, ComparisonJobStarted, IComparisonJobClient } from "../../../clients/IComparisonJobClient.js";
 import type { IModelsClient, NamedVersion } from "../../../clients/iModelsClient.js";
@@ -23,7 +23,7 @@ export type ManagerStartComparisonV2Args = {
   iModelsClient: IModelsClient;
 };
 
-export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args) => {
+export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2Args): Promise<boolean> => {
   if (VersionCompare.manager?.isComparing) {
     await VersionCompare.manager?.stopComparison();
   }
@@ -43,14 +43,14 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
   const manager = VersionCompare.manager;
   if (!manager) {
     Logger.logError("VersionCompare", "VersionCompare manager is not initialized");
-    return;
+    return false;
   }
 
   try {
     const targetVersion = await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient);
     if (VersionCompare.changesProvider) {
       await manager.startDirectComparison(args.iModelConnection, args.currentVersion, targetVersion);
-      return;
+      return true;
     }
 
     const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
@@ -60,10 +60,17 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
       await updateTargetVersion(args.iModelConnection, args.targetVersion, args.iModelsClient),
       [changedElements.changedElements],
     );
+    return true;
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      Logger.logError("VersionCompare", `Error starting comparison: ${error.message}`);
-    }
+    const errorMessage = error instanceof Error ? error.message : "Unknown Error";
+    Logger.logError("VersionCompare", `Error starting comparison: ${errorMessage}`);
+
+    const briefError = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_versionCompare");
+    const detailed = IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.error_cantStart");
+    IModelApp.notifications.outputMessage(
+      new NotifyMessageDetails(OutputMessagePriority.Error, briefError, `${detailed}: ${errorMessage}`),
+    );
+    return false;
   }
 };
 

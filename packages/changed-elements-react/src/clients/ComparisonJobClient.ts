@@ -8,6 +8,7 @@ import type {
   DeleteComparisonJobParams
 } from "./IComparisonJobClient.js";
 import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
+import { isChangedElementsPayload, isComparisonJob } from "./typeGuards.js";
 
 export interface ComparisonJobClientParams {
   baseUrl: string;
@@ -31,7 +32,7 @@ export class ComparisonJobClient implements IComparisonJobClient {
    * @throws on a non 2XX response
   */
   public async deleteComparisonJob(args: DeleteComparisonJobParams): Promise<void> {
-    return callITwinApi({
+    await callITwinApi({
       url: `${this._baseUrl}/comparisonJob/${args.jobId}/iTwin/${args.iTwinId}/iModel/${args.iModelId}`,
       method: "DELETE",
       getAccessToken: this._getAccessToken,
@@ -40,7 +41,7 @@ export class ComparisonJobClient implements IComparisonJobClient {
         Accept: ComparisonJobClient._acceptHeader,
         ...args.headers,
       },
-    }) as unknown as Promise<void>;
+    });
   }
 
   /**
@@ -58,7 +59,8 @@ export class ComparisonJobClient implements IComparisonJobClient {
         Accept: ComparisonJobClient._acceptHeader,
         ...args.headers,
       },
-    }) as unknown as Promise<ComparisonJob>;
+      validate: isComparisonJob,
+    });
   }
 
   /**
@@ -80,7 +82,13 @@ export class ComparisonJobClient implements IComparisonJobClient {
     if (!response.ok) {
       await throwBadResponseCodeError(response, "Changed Elements request failed.");
     }
-    return response.json() as unknown as Promise<ChangedElementsPayload>;
+
+    const body: unknown = await response.json();
+    if (!isChangedElementsPayload(body)) {
+      throw new Error(`Changed Elements request to ${args.comparisonJob.comparison.href} returned an unexpected response shape.`);
+    }
+
+    return body;
   }
 
   /**
@@ -109,6 +117,7 @@ export class ComparisonJobClient implements IComparisonJobClient {
         startChangesetId: args.startChangesetId,
         endChangesetId: args.endChangesetId,
       },
-    }) as unknown as Promise<ComparisonJob>;
+      validate: isComparisonJob,
+    });
   }
 }

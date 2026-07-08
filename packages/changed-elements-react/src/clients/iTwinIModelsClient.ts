@@ -6,6 +6,8 @@ import type {
   Changeset, GetChangesetParams, GetChangesetsParams, GetNamedVersionsParams, IModelsClient, NamedVersion
 } from "./iModelsClient.js";
 import { callPagedITwinApi, callITwinApi } from "./iTwinApi.js";
+import { isChangeset, isChangesetsPage, isNamedVersionsPage } from "./typeGuards.js";
+import type { NamedVersionResponseItem } from "./typeGuards.js";
 
 export interface ITwinIModelsClientParams {
   baseUrl?: string | undefined;
@@ -25,13 +27,19 @@ export class ITwinIModelsClient implements IModelsClient {
   }
 
   public async getChangeset(args: GetChangesetParams): Promise<Changeset | undefined> {
-    const changeset = await callITwinApi({
+    const response = await callITwinApi({
       url: `${this.baseUrl}/${args.iModelId}/changesets/${args.changesetId}`,
       getAccessToken: this.getAccessToken,
       signal: args.signal,
       headers: { Accept: acceptMimeType },
     });
-    return changeset?.changeset as Changeset | undefined;
+    if (response === undefined) {
+      return undefined;
+    }
+    if (!isChangeset(response.changeset)) {
+      throw new Error(`Changeset request for ${args.changesetId} returned an unexpected response shape.`);
+    }
+    return response.changeset;
   }
 
   public async getChangesets(args: GetChangesetsParams): Promise<Changeset[]> {
@@ -42,12 +50,15 @@ export class ITwinIModelsClient implements IModelsClient {
       headers: { Accept: acceptMimeType },
     });
 
-    const pages: Array<unknown[]> = [];
+    const pages: Changeset[][] = [];
     for await (const page of iterator) {
-      pages.push((page as { changesets: unknown[]; }).changesets);
+      if (!isChangesetsPage(page)) {
+        throw new Error(`Changesets request for iModel ${args.iModelId} returned an unexpected response shape.`);
+      }
+      pages.push(page.changesets);
     }
 
-    return pages.flat() as Changeset[];
+    return pages.flat();
   }
 
   public async getNamedVersions(args: GetNamedVersionsParams): Promise<NamedVersion[]> {
@@ -64,8 +75,8 @@ export class ITwinIModelsClient implements IModelsClient {
         signal: args.signal,
         headers: { Accept: acceptMimeType, Prefer: "return=representation" },
       });
-      if (!response || !Array.isArray(response?.namedVersions)) return [];
-      return response.namedVersions as NamedVersion[];
+      if (!response || !isNamedVersionsPage(response)) return [];
+      return response.namedVersions;
     }
 
     if (args.orderby) urlParams = `${urlParams}$orderBy=${args.orderby} `;
@@ -78,17 +89,20 @@ export class ITwinIModelsClient implements IModelsClient {
       headers: { Accept: acceptMimeType, Prefer: "return=representation" },
     });
 
-    const pages: Array<unknown[]> = [];
+    const pages: NamedVersionResponseItem[][] = [];
     for await (const page of iterator) {
-      pages.push((page as { namedVersions: unknown[]; }).namedVersions);
+      if (!isNamedVersionsPage(page)) {
+        throw new Error(`Named versions request for iModel ${args.iModelId} returned an unexpected response shape.`);
+      }
+      pages.push(page.namedVersions);
     }
 
-    let result = pages.flat();
+    let result: NamedVersionResponseItem[] = pages.flat();
     if (!this.showHiddenNamedVersions) {
-      result = (result as Array<{ state: "visible" | "hidden"; }>).filter(({ state }) => state === "visible");
+      result = result.filter(({ state }) => state === "visible");
     }
 
-    return result as NamedVersion[];
+    return result;
   }
 
 }
