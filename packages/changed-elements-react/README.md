@@ -4,6 +4,11 @@
 
 This package provides React components that help implement iTwin version comparison workflows. These components are designed to communicate with iTwin Platform Changed Elements APIs (v1/v2/v3) to retrieve data about iModel change history.
 
+API Documentation:
+- [V3 API Documentation - Tech Preview](https://developer.bentley.com/apis/changed-elements-v3/)
+- [V2 API Documentation](https://developer.bentley.com/apis/changed-elements-v2/)
+- [V1 API Documentation - DEPRECATED](https://developer.bentley.com/apis/changed-elements/)
+
 ## Installation
 
 ```shell
