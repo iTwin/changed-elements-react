@@ -53,7 +53,7 @@ export function IModelBrowser(): ReactElement {
     updatedRecentIModels.unshift(iModelId);
     localStorage.setItem(recentIModelsKey, JSON.stringify(updatedRecentIModels));
 
-    navigate(`/itwinjs/open-imodel/${iTwinId}/${iModelId}`);
+    void navigate(`/itwinjs/open-imodel/${iTwinId}/${iModelId}`);
   };
 
   return (
