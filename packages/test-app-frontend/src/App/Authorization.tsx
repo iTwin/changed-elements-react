@@ -280,7 +280,7 @@ export function SignInCallback(): ReactElement {
             return;
           }
 
-          navigate(user.state || "/", { replace: true });
+          void navigate(user.state || "/", { replace: true });
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error(error);
