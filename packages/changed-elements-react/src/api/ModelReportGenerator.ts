@@ -26,10 +26,11 @@ const makeQuery = (modelIds: string[]): string | undefined => {
   }
 
   return (
-    "SELECT DISTINCT element.Model.Id as modelId, scopeAspect.JsonProperties as jsonProps FROM Bis.ExternalSourceAspect ea " +
+    "SELECT DISTINCT model.ECInstanceId as modelId, scopeAspect.JsonProperties as jsonProps FROM Bis.ExternalSourceAspect ea " +
     "JOIN Bis.Element element ON ea.Element.Id = element.ECInstanceId " +
+    "JOIN Bis.Model model ON element.Model.Id = model.ECInstanceId OR ea.Element.Id = model.ModeledElement.Id " +
     "JOIN Bis.ExternalSourceAspect scopeAspect ON ea.Scope.Id = scopeAspect.Element.Id " +
-    "WHERE InVirtualSet(?, element.Model.Id)"
+    "WHERE InVirtualSet(?, model.ECInstanceId)"
   );
 };
 
