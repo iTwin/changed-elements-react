@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.2
+
+### Patch Changes
+
+#### [2.0.2](https://github.com/iTwin/changed-elements-react/tree/v2.0.2/packages/changed-elements-react) - 2026-08-27
+
+Fix change report generation:
+
+- Properties are now properly populated in the report.
+- Changed model report fixed to correctly find filenames via source aspect queries.
+
 ## 2.0.1
 
 ### Patch Changes
