@@ -2,7 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { QueryRowFormat, type ModelProps } from "@itwin/core-common";
+import { QueryBinder, QueryRowFormat, type ModelProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
@@ -20,18 +20,17 @@ interface ModelInfo {
 }
 
 /** Make the query for getting the source information */
-const makeQuery = (modelProps: ModelProps[]) => {
-  let queryJsonProps =
-    "SELECT mea.Element.Id as id, ea.JsonProperties as jsonProps FROM Bis.ExternalSourceAspect ea " +
-    "JOIN bis.ExternalSourceAspect mea ON mea.Scope.Id = ea.Element.Id " +
-    "WHERE mea.Kind='Model' AND mea.Element.Id in (";
-  for (const prop of modelProps) {
-    if (prop.id) {
-      queryJsonProps += prop.id + ",";
-    }
+const makeQuery = (modelIds: string[]): string | undefined => {
+  if (modelIds.length === 0) {
+    return undefined;
   }
-  queryJsonProps = queryJsonProps.substr(0, queryJsonProps.length - 1) + ")";
-  return queryJsonProps;
+
+  return (
+    "SELECT DISTINCT element.Model.Id as modelId, scopeAspect.JsonProperties as jsonProps FROM Bis.ExternalSourceAspect ea " +
+    "JOIN Bis.Element element ON ea.Element.Id = element.ECInstanceId " +
+    "JOIN Bis.ExternalSourceAspect scopeAspect ON ea.Scope.Id = scopeAspect.Element.Id " +
+    "WHERE InVirtualSet(?, element.Model.Id)"
+  );
 };
 
 /** Returns a map for the sources of the model (model Id -> file name) */
@@ -41,15 +40,22 @@ const getModelSources = async (
 ): Promise<Map<string, string>> => {
   // This may fail if the connector doesn't add this information
   try {
-    const query = makeQuery(modelProps);
     const map = new Map<string, string>();
-    for await (const row of iModel.createQueryReader(query, undefined, {
-      rowFormat: QueryRowFormat.UseJsPropertyNames,
+    const modelIds = modelProps.flatMap((prop) => prop.id === undefined ? [] : [prop.id]);
+    const query = makeQuery(modelIds);
+    if (query === undefined) {
+      return map;
+    }
+
+    const queryBinder = new QueryBinder();
+    queryBinder.bindIdSet(1, modelIds);
+    for await (const row of iModel.createQueryReader(query, queryBinder, {
+      rowFormat: QueryRowFormat.UseECSqlPropertyNames,
     })) {
-      if (row.id !== undefined && row.jsonProps !== undefined) {
+      if (row.modelId !== undefined && row.jsonProps !== undefined) {
         const jsonProps = JSON.parse(row.jsonProps);
         if (jsonProps?.fileName !== undefined) {
-          map.set(row.id, jsonProps.fileName);
+          map.set(row.modelId, jsonProps.fileName);
         }
       }
     }
