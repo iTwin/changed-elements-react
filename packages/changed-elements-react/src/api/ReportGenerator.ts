@@ -5,7 +5,7 @@
 import { DbOpcode } from "@itwin/core-bentley";
 import { QueryBinder, QueryRowFormat, TypeOfChange } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { DisplayValue, type Field, type InstanceKey, KeySet, type Ruleset } from "@itwin/presentation-common";
+import { DisplayValue, type Field, type InstanceKey, KeySet, type Item, type Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
@@ -311,10 +311,15 @@ export class ReportGenerator extends ReportGeneratorBase {
   /** Gets all wanted field descriptors based on the given fields and our wanted properties */
   private _getWantedFields(fields: Field[]): Field[] {
     const wantedFields: Field[] = [];
+    const fieldDescriptors = new Set<string>();
     for (const field of fields) {
       const currentWantedFields = this._getWantedFieldsFromField(field);
-      if (currentWantedFields !== undefined) {
-        wantedFields.push(...currentWantedFields);
+      for (const wantedField of currentWantedFields) {
+        const descriptor = JSON.stringify(wantedField.getFieldDescriptor());
+        if (!fieldDescriptors.has(descriptor)) {
+          fieldDescriptors.add(descriptor);
+          wantedFields.push(wantedField);
+        }
       }
     }
     return wantedFields;
@@ -429,6 +434,29 @@ export class ReportGenerator extends ReportGeneratorBase {
     return undefined;
   };
 
+  /** Gets display values for a field, including fields nested beneath related instances */
+  private _getFieldDisplayValues = (item: Item, field: Field): DisplayValue[] => {
+    const fieldPath: Field[] = [field];
+    for (let parent = field.parent; parent !== undefined; parent = parent.parent) {
+      fieldPath.unshift(parent);
+    }
+
+    let items: Array<Pick<Item, "values" | "displayValues">> = [item];
+    for (const parentField of fieldPath.slice(0, -1)) {
+      const nestedItems: Array<Pick<Item, "values" | "displayValues">> = [];
+      for (const currentItem of items) {
+        const nestedValue = currentItem.values[parentField.name];
+        if (Value.isNestedContent(nestedValue)) {
+          nestedItems.push(...nestedValue);
+        }
+      }
+      items = nestedItems;
+    }
+
+    const propertyField = fieldPath[fieldPath.length - 1];
+    return items.map((currentItem) => currentItem.displayValues[propertyField.name]);
+  };
+
   /** Loads properties */
   private _loadProperties = async (
     iModel: IModelConnection,
@@ -442,7 +470,16 @@ export class ReportGenerator extends ReportGeneratorBase {
     // </ContentRule>
     const stubRuleset: Ruleset = {
       id: "__itwin-changed-elements-react-stub",
-      rules: [],
+      rules: [
+        {
+          ruleType: "Content",
+          specifications: [
+            {
+              specType: "SelectedNodeInstances",
+            },
+          ],
+        },
+      ],
     };
     const keys = this._entriesToKeys(entries);
     const descriptor = await Presentation.presentation.getContentDescriptor({
@@ -474,8 +511,10 @@ export class ReportGenerator extends ReportGeneratorBase {
           // Element ids containing the property value
           const elementIds = singleContent.primaryKeys.map((key: InstanceKey) => key.id);
           // Value of the field
-          const propertyValue = singleContent.displayValues[field.name];
-          const parsedValue = this._parseDisplayValue(propertyValue);
+          const parsedValues = this._getFieldDisplayValues(singleContent, field)
+            .map((propertyValue) => this._parseDisplayValue(propertyValue))
+            .filter((propertyValue): propertyValue is string => propertyValue !== undefined);
+          const parsedValue = parsedValues.length > 0 ? parsedValues.join("; ") : undefined;
           if (field.isPropertiesField()) {
             // Property name, normally should only be one property here
             for (const property of field.properties) {
@@ -656,10 +695,10 @@ export class ReportGenerator extends ReportGeneratorBase {
     // Create string of values separated by commas
     for (const prop of props) {
       data +=
-        this._cleanComma(propertyMap?.get(prop.propertyName)?.newValue ?? "") +
+        this._cleanComma(propertyMap?.get(prop.propertyName)?.newValue ?? "-") +
         ",";
       data +=
-        this._cleanComma(propertyMap?.get(prop.propertyName)?.oldValue ?? "") +
+        this._cleanComma(propertyMap?.get(prop.propertyName)?.oldValue ?? "-") +
         ",";
     }
 
