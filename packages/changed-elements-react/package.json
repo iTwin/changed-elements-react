@@ -63,7 +63,7 @@
     "@types/react-window": "^1.8.8",
     "@types/react-window-infinite-loader": "^1.0.9",
     "@vitejs/plugin-react-swc": "^3.11.0",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.11",
     "cpx2": "^5.0.0",
     "happy-dom": "^20.11.2",
     "npm-run-all": "^4.1.5",
@@ -73,7 +73,7 @@
     "redux": "^4.2.1",
     "typescript": "~5.5.4",
     "vite": "^6.4.3",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^5.10.2",

@@ -30,7 +30,7 @@
     "@types/dotenv-flow": "^3.3.3",
     "@types/node": "^24.13.3",
     "dotenv-flow": "^3.3.0",
-    "express": "^4.22.2",
+    "express": "^4.22.3",
     "inversify": "^7.11.0",
     "reflect-metadata": "^0.2.2",
     "ts-node-dev": "^2.0.0",
