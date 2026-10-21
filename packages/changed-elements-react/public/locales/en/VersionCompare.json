@@ -203,7 +203,29 @@
     "queryingOldNativeIds": "Querying native Ids from older version",
     "noNativeIdsFound": "Native ids not found",
     "success": "Comparison report generated successfully",
-    "failure": "Failed to generate comparison report"
+    "failure": "Failed to generate comparison report",
+    "csvHeaders": {
+      "iModel": "iModel",
+      "currentVersion": "Current Version",
+      "targetVersion": "Target Version",
+      "elementId": "Element Id",
+      "nativeId": "Native Id",
+      "label": "Label",
+      "class": "Class",
+      "elementType": "Element Type",
+      "change": "Change",
+      "geometric": "Geometric",
+      "placement": "Placement",
+      "property": "Property",
+      "hidden": "Hidden",
+      "modelId": "Model Id",
+      "indirect": "Indirect",
+      "childrenIds": "Children Ids",
+      "newProperty": "New - {{label}}",
+      "oldProperty": "Old - {{label}}",
+      "name": "Name",
+      "sourceFile": "Source File"
+    }
   },
   "filters": {
     "save": "Save",

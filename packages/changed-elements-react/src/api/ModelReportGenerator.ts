@@ -117,7 +117,7 @@ export class ModelReportGenerator extends ReportGeneratorBase {
   }
 
   private _getHeader() {
-    return "Model Id,Name,Source File,Change\n";
+    return this._getHeaderRow(["modelId", "name", "sourceFile", "change"]) + "\n";
   }
 
   private _infoToRow(info: ModelInfo | undefined, change: string): string {
