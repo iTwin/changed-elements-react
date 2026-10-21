@@ -81,9 +81,19 @@ export abstract class ReportGeneratorBase {
     return str.replace(/,/g, ";");
   }
 
+  /** Get a localized CSV column header, commas removed so translations can't shift columns */
+  protected _getColumnHeader(key: string, args?: Record<string, string>): string {
+    return this._cleanComma(IModelApp.localization.getLocalizedString(`VersionCompare:report.csvHeaders.${key}`, args));
+  }
+
+  /** Join localized CSV column headers */
+  protected _getHeaderRow(keys: string[]): string {
+    return keys.map((key) => this._getColumnHeader(key)).join(",");
+  }
+
   /** Get CSV Info header for iModel name, etc */
   protected _getInfoHeader(): string {
-    return "iModel,Current Version,Target Version,\n";
+    return this._getHeaderRow(["iModel", "currentVersion", "targetVersion"]) + ",\n";
   }
 
   /** Get IModel Name */
@@ -731,8 +741,8 @@ export class ReportGenerator extends ReportGeneratorBase {
 
     const propRows: string[] = [];
     for (const prop of props) {
-      propRows.push("New - " + prop.label);
-      propRows.push("Old - " + prop.label);
+      propRows.push(this._getColumnHeader("newProperty", { label: prop.label }));
+      propRows.push(this._getColumnHeader("oldProperty", { label: prop.label }));
     }
 
     return propRows
@@ -743,13 +753,13 @@ export class ReportGenerator extends ReportGeneratorBase {
   /** Get CSV header */
   private _getHeader(): string {
     return (
-      "Element Id,Native Id,Label,Class,Element Type,Change," +
+      this._getHeaderRow(["elementId", "nativeId", "label", "class", "elementType", "change"]) + "," +
       (this._options.wantTypeOfChange
-        ? "Geometric,Placement,Property,Hidden,"
+        ? this._getHeaderRow(["geometric", "placement", "property", "hidden"]) + ","
         : "") +
-      "Model Id,Indirect," +
+      this._getHeaderRow(["modelId", "indirect"]) + "," +
       (this._wantProperties() ? this._getPropertyHeader() + "," : "") +
-      "Children Ids,\n"
+      this._getColumnHeader("childrenIds") + ",\n"
     );
   }
 
