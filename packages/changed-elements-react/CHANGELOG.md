@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.3
+
+### Patch Changes
+
+#### [2.0.3](https://github.com/iTwin/changed-elements-react/tree/v2.0.3/packages/changed-elements-react) - 2026-10-21
+
+Localize column headers of exported Change Report CSV files.
+
 ## 2.0.2
 
 ### Patch Changes
