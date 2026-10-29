@@ -7,6 +7,7 @@ import type {
   PostComparisonJobParams, PostComparisonJobParamsWithIds,
   DeleteComparisonJobParams
 } from "./IComparisonJobClient.js";
+import { readChangedElementsPayload } from "./common.js";
 import { callITwinApi, throwBadResponseCodeError } from "./iTwinApi.js";
 import { isChangedElementsPayload, isComparisonJob } from "./typeGuards.js";
 
@@ -83,12 +84,7 @@ export class ComparisonJobClient implements IComparisonJobClient {
       await throwBadResponseCodeError(response, "Changed Elements request failed.");
     }
 
-    const body: unknown = await response.json();
-    if (!isChangedElementsPayload(body)) {
-      throw new Error(`Changed Elements request to ${args.comparisonJob.comparison.href} returned an unexpected response shape.`);
-    }
-
-    return body;
+    return readChangedElementsPayload(response, isChangedElementsPayload);
   }
 
   /**

@@ -10,6 +10,7 @@ import { ChangedElementEntry, ChangedElementEntryCache, type ChangedElement, typ
 import { ChangedElementsChildrenCache } from "./ChangedElementsChildrenCache.js";
 import { ChangedElementsLabelsCache } from "./ChangedElementsLabelCache.js";
 import { VersionCompareManager, VersionCompareProgressStage } from "./VersionCompareManager.js";
+import type { ChangedElementsResult } from "../clients/IComparisonJobClient.js";
 import { ProgressCoordinator } from "../widgets/ProgressCoordinator.js";
 
 /** Properties that are not shown but still found by the agent */
@@ -329,7 +330,7 @@ export const extractProperties = (
  */
 export const accumulateChanges = (
   changedElements: Map<string, ChangedElement>,
-  changeset: ChangedElements,
+  changeset: ChangedElementsResult,
   forward?: boolean,
 ): void => {
   changeset.elements.forEach((elementId: string, index: number) => {
@@ -347,7 +348,8 @@ export const accumulateChanges = (
       changeset.modelIds !== undefined ? changeset.modelIds[index] : undefined;
     const properties = extractProperties(changeset, index);
     let type = changeset.type[index] ?? 0;
-    if (properties === undefined) {
+    // Property data was dropped for size reasons, not because nothing changed: keep the Property bit.
+    if (properties === undefined && !changeset.propertiesOmitted) {
       type &= ~TypeOfChange.Property;
     }
     accumulateChange(

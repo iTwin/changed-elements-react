@@ -54,6 +54,17 @@ export const runManagerStartComparisonV2 = async (args: ManagerStartComparisonV2
     }
 
     const changedElements = await args.comparisonJobClient.getComparisonJobResult(args.comparisonJob);
+    if (changedElements.changedElements.propertiesOmitted) {
+      Logger.logWarning("VersionCompare", "Comparison result too large; property and checksum data was dropped.");
+      IModelApp.notifications.outputMessage(
+        new NotifyMessageDetails(
+          OutputMessagePriority.Warning,
+          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.warning_largeResult"),
+          IModelApp.localization.getLocalizedString("VersionCompare:versionCompare.warning_largeResultDetails"),
+        ),
+      );
+    }
+
     await manager.startComparisonV2(
       args.iModelConnection,
       args.currentVersion,
