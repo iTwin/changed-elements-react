@@ -62,6 +62,10 @@ describe("parseJsonResponse", () => {
   it("rejects truncated input", async () => {
     await expect(parseJsonResponse(streamed(text.slice(0, -3), 4))).rejects.toThrow("Unexpected end of JSON input");
   });
+
+  it("rejects mismatched closing brackets", async () => {
+    await expect(parseJsonResponse(streamed("{\"a\":[1,2}}", 3))).rejects.toThrow("Unexpected token }");
+  });
 });
 
 describe("readChangedElementsPayload", () => {

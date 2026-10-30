@@ -876,7 +876,11 @@ export class ChangedElementsManager {
    * @param changesets
    * @returns
    */
-  private _dataAllowsCleanupOfMergedElements = (changesets: ChangedElements[]) => {
+  private _dataAllowsCleanupOfMergedElements = (changesets: ChangedElementsResult[]) => {
+    // Cleanup relies on property maps; results with omitted properties would be wrongly wiped out.
+    if (changesets.some((changeset) => changeset.propertiesOmitted)) {
+      return false;
+    }
     for (const changeset of changesets) {
       // If any of our changesets contain property data and type of change data
       // we are good to do cleanup

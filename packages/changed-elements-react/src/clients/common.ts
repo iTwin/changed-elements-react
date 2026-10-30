@@ -123,7 +123,8 @@ class IncrementalJsonParser {
         this._stack.push(container);
         i++;
       } else if (c === "}" || c === "]") {
-        if (this._stack.pop() === undefined) {
+        const closed = this._stack.pop();
+        if (closed === undefined || Array.isArray(closed) !== (c === "]")) {
           throw new SyntaxError(`Unexpected token ${c} in JSON`);
         }
 
