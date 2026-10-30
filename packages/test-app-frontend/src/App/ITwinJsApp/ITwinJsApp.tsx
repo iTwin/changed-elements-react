@@ -7,6 +7,7 @@ import {
   AppNotificationManager, ConfigurableUiContent,
   FrontstageUtilities, IModelViewportControl, ReducerRegistryInstance,
   StagePanelLocation, StagePanelSection, StagePanelState, StageUsage,
+  StandardNavigationToolsUiItemsProvider, StandardStatusbarUiItemsProvider,
   UiFramework, UiItemsManager, type UiItemsProvider, type Widget
 } from "@itwin/appui-react";
 import {
@@ -36,12 +37,14 @@ import { PageLayout } from "@itwin/itwinui-layouts-react";
 import { useToaster } from "@itwin/itwinui-react";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { ModelsTreeComponent, TreeWidget } from "@itwin/tree-widget-react";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { ChangesRpcInterface, RelationshipClassWithDirection } from "../../../../test-app-backend/src/RPC/ChangesRpcInterface.js";
 import { applyUrlPrefix, localBackendPort, runExperimental, useDirectComparison, useV3Comparison, usingLocalBackend } from "../../environment.js";
 import { LoadingScreen } from "../common/LoadingScreen.js";
 import { AppUiVisualizationHandler } from "./AppUi/AppUiVisualizationHandler.js";
 import { UIFramework } from "./AppUi/UiFramework.js";
+import { getSchemaContext } from "./AppUi/presentation/SchemaContextProvider.js";
 import { getUnifiedSelectionStorage } from "./AppUi/presentation/SelectionStorage.js";
 import { VersionCompareReducer } from "./AppUi/redux/VersionCompareStore.js";
 import { MockSavedFiltersManager } from "./MockSavedFiltersManager.js";
@@ -89,6 +92,12 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
               },
             }],
           },
+          leftPanelProps: {
+            resizable: true,
+            pinned: true,
+            defaultState: StagePanelState.Open,
+            size: 350,
+          },
           rightPanelProps: {
             resizable: true,
             pinned: true,
@@ -99,6 +108,14 @@ export function ITwinJsApp(props: ITwinJsAppProps): ReactElement | null {
         };
         UiFramework.frontstages.addFrontstage(FrontstageUtilities.createStandardFrontstage(mainFrontstageProps));
         UiItemsManager.register(new MainFrontstageItemsProvider());
+        UiItemsManager.register(
+          new StandardStatusbarUiItemsProvider({ messageCenter: true, tileLoadIndicator: true }),
+          { stageIds: ["MainFrontstageProvider"] },
+        );
+        UiItemsManager.register(
+          new StandardNavigationToolsUiItemsProvider({ horizontal: { fitView: true, rotateView: true, panView: true, windowArea: true, viewUndoRedo: true } }),
+          { stageIds: ["MainFrontstageProvider"] },
+        );
         await UiFramework.frontstages.setActiveFrontstage("MainFrontstageProvider");
       }
     })();
@@ -209,6 +226,7 @@ export async function initializeITwinJsApp(authorizationClient: AuthorizationCli
       selection: {selectionStorage: getUnifiedSelectionStorage()},
     }),
     UiFramework.initialize(undefined),
+    TreeWidget.initialize(IModelApp.localization),
   ]);
 
   // Example changes provider that uses ChangesRpcInterface to get changes from backend instead of service
@@ -336,17 +354,35 @@ class MainFrontstageItemsProvider implements UiItemsProvider {
     location: StagePanelLocation,
     section?: StagePanelSection,
   ): Widget[] {
-    if (
-      stageId !== "MainFrontstageProvider" ||
-      stageUsage !== StageUsage.General ||
-      location !== StagePanelLocation.Right ||
-      section !== StagePanelSection.Start
-    ) {
+    if (stageId !== "MainFrontstageProvider" || stageUsage !== StageUsage.General) {
       return [];
     }
 
     const iModel = UiFramework.getIModelConnection();
     if (!iModel) {
+      return [];
+    }
+
+    if (location === StagePanelLocation.Left && section === StagePanelSection.Start) {
+      return [{
+        id: "ModelsTree",
+        label: "Models",
+        content: (
+          <ModelsTreeComponent
+            getSchemaContext={getSchemaContext}
+            selectionStorage={getUnifiedSelectionStorage()}
+            selectionMode="extended"
+            headerButtons={[
+              (p) => <ModelsTreeComponent.ShowAllButton {...p} key="show-all" />,
+              (p) => <ModelsTreeComponent.HideAllButton {...p} key="hide-all" />,
+              (p) => <ModelsTreeComponent.InvertButton {...p} key="invert" />,
+            ]}
+          />
+        ),
+      }];
+    }
+
+    if (location !== StagePanelLocation.Right || section !== StagePanelSection.Start) {
       return [];
     }
 
