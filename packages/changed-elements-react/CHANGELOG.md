@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.4
+
+### Patch Changes
+
+#### [2.0.4](https://github.com/iTwin/changed-elements-react/tree/v2.0.4/packages/changed-elements-react) - 2026-10-30
+
+1. Enhance loading of blobs to be streamed for both V2 and V3
+2. If data is too big to reasonably use for property filtering, skip property lists and checksums (supported in both V2 and V3)
+3. Check content size to decide whether or not to use minimal representation of changes without property data (V2 Only)
+4. Add notification for user to know advanced filtering won't be available if a comparison is too big and property data was skipped
+
+#### [2.0.4](https://github.com/iTwin/changed-elements-react/tree/v2.0.4/packages/changed-elements-react) - 2026-10-30
+
+Audit fixes
+
 ## 2.0.3
 
 ### Patch Changes
