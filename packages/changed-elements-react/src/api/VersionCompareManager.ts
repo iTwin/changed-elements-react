@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { BeEvent, Logger } from "@itwin/core-bentley";
 import { IModelVersion, type ChangedElements } from "@itwin/core-common";
+import type { ChangedElementsResult } from "../clients/IComparisonJobClient.js";
 import {
   CheckpointConnection, FeatureSymbology, GeometricModel2dState, GeometricModel3dState, IModelApp, IModelConnection, NotifyMessageDetails,
   OutputMessagePriority
@@ -202,19 +203,20 @@ export class VersionCompareManager {
   public ignoredElementIds: Set<string> | undefined;
 
   /** Filter the data with the ignoredElementIds. */
-  private _filterIgnoredElementsFromChangeset = (changeset: ChangedElements): ChangedElements => {
+  private _filterIgnoredElementsFromChangeset = (changeset: ChangedElementsResult): ChangedElementsResult => {
     if (this.ignoredElementIds === undefined) {
       // Nothing to filter
       return changeset;
     }
 
-    const filtered: ChangedElements = {
+    const filtered: ChangedElementsResult = {
       elements: [],
       classIds: [],
       type: [],
       properties: changeset.properties !== undefined ? [] : undefined,
       opcodes: [],
       modelIds: changeset.modelIds !== undefined ? [] : undefined,
+      propertiesOmitted: changeset.propertiesOmitted,
     };
 
     for (let i = 0; i < changeset.elements.length; ++i) {
@@ -240,8 +242,8 @@ export class VersionCompareManager {
   };
 
   /** Filter the data array using the ignoredElementIds */
-  private _filterIgnoredElementsFromChangesets = (changesets: ChangedElements[]): ChangedElements[] => {
-    const filteredResults: ChangedElements[] = [];
+  private _filterIgnoredElementsFromChangesets = (changesets: ChangedElementsResult[]): ChangedElementsResult[] => {
+    const filteredResults: ChangedElementsResult[] = [];
     for (const cs of changesets) {
       filteredResults.push(this._filterIgnoredElementsFromChangeset(cs));
     }
@@ -593,7 +595,7 @@ export class VersionCompareManager {
     currentIModel: IModelConnection,
     currentVersion: NamedVersion,
     targetVersion: NamedVersion,
-    changedElements: ChangedElements[],
+    changedElements: ChangedElementsResult[],
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
     let success = true;
@@ -659,8 +661,9 @@ export class VersionCompareManager {
       );
       // We have type of change available if any of the entries has a valid type of change value
       this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
-      // We have property filtering available if any of the entries has a valid array of changed properties
-      this._hasPropertiesForFiltering = changedElementEntries.some(
+      // We have property filtering available if any of the entries has a valid array of changed properties.
+      // Filtering by property is unreliable when any result had its property data omitted for size reasons.
+      this._hasPropertiesForFiltering = !changedElements.some((cs) => cs.propertiesOmitted) && changedElementEntries.some(
         (entry) => entry.properties !== undefined && entry.properties.size !== 0,
       );
 

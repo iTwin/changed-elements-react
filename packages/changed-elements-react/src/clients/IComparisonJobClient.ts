@@ -87,8 +87,14 @@ export interface GetComparisonJobResultParams extends BodilessRequest {
 }
 
 export interface ChangedElementsPayload {
-  changedElements: ChangedElements;
+  changedElements: ChangedElementsResult;
 }
+
+/**
+ * `propertiesOmitted` is set when the result was too large to load in full: `properties` and checksums
+ * are dropped, but `type` still carries the Property bit so elements with property changes stay visible.
+ */
+export type ChangedElementsResult = ChangedElements & { propertiesOmitted?: boolean; };
 
 interface PostComparisonJobParamsBase extends BodilessRequest {
   iTwinId: string;
