@@ -68,6 +68,27 @@ export class ChangedElementEntryCache {
     return this._changedElementEntries;
   }
 
+  /** Element ids grouped by modelId; kept in sync with `_changedElementEntries` so per-model lookups avoid full scans. */
+  private _idsByModel = new Map<string, Set<string>>();
+
+  private _setEntry(entry: ChangedElementEntry): void {
+    const previous = this._changedElementEntries.get(entry.id);
+    if (previous?.modelId !== entry.modelId) {
+      if (previous?.modelId !== undefined) {
+        this._idsByModel.get(previous.modelId)?.delete(entry.id);
+      }
+      if (entry.modelId !== undefined) {
+        let ids = this._idsByModel.get(entry.modelId);
+        if (ids === undefined) {
+          ids = new Set<string>();
+          this._idsByModel.set(entry.modelId, ids);
+        }
+        ids.add(entry.id);
+      }
+    }
+    this._changedElementEntries.set(entry.id, entry);
+  }
+
   private _labels: ChangedElementsLabelsCache | undefined;
   public get labels(): ChangedElementsLabelsCache | undefined {
     return this._labels;
@@ -151,7 +172,7 @@ export class ChangedElementEntryCache {
         parentClassId: element.parentClassId,
         loaded: false,
       };
-      this._changedElementEntries.set(elementId, entry);
+      this._setEntry(entry);
     });
 
     this._currentIModel = currentIModel;
@@ -172,6 +193,7 @@ export class ChangedElementEntryCache {
     this._childrenCache = undefined;
     this._uiDataProvider = undefined;
     this._changedElementEntries.clear();
+    this._idsByModel.clear();
   }
 
   /**
@@ -237,12 +259,9 @@ export class ChangedElementEntryCache {
           loaded: markLoaded ? true : false,
         };
 
-        this._changedElementEntries.set(id, updatedEntry);
+        this._setEntry(updatedEntry);
       } else {
-        this._changedElementEntries.set(
-          id,
-          markLoaded ? { ...entry, loaded: true } : entry,
-        );
+        this._setEntry(markLoaded ? { ...entry, loaded: true } : entry);
       }
     });
   }
@@ -432,35 +451,30 @@ export class ChangedElementEntryCache {
     elementIds: Set<string>,
     wantChildren?: boolean,
   ): ChangedElementEntry[] {
-    const all = this.getAll();
-    const entries: ChangedElementEntry[] = [];
+    const entries = this.getCached([...elementIds]);
+    if (!wantChildren) {
+      return entries;
+    }
+
     const childElementIds = new Set<string>();
-    for (const elem of all) {
-      if (elementIds.has(elem.id)) {
-        entries.push(elem);
-        if (wantChildren && elem.children) {
-          for (const child of elem.children) {
-            childElementIds.add(child);
-          }
-        }
-      }
+    for (const entry of entries) {
+      entry.children?.forEach((child) => childElementIds.add(child));
     }
-    if (wantChildren) {
-      for (const elem of all) {
-        if (childElementIds.has(elem.id)) {
-          entries.push(elem);
-        }
-      }
-    }
-    return entries;
+    return entries.concat(this.getCached([...childElementIds]));
+  }
+
+  /** Returns the cached entries whose modelId matches, without scanning the whole cache. */
+  public getEntriesWithModel(modelId: string): ChangedElementEntry[] {
+    const ids = this._idsByModel.get(modelId);
+    return ids === undefined ? [] : this.getCached([...ids]);
   }
 
   /**
    * Returns a set of element Ids that are children of given model Id
    * @param modelId Id of model to get changed elements from
    */
-  public getChangeElementIdsFromModelId(modelId: string):Set<string> {
-    return new Set(this.getAll().filter((entry) => entry.modelId === modelId).map((entry) => entry.id));
+  public getChangeElementIdsFromModelId(modelId: string): Set<string> {
+    return new Set(this._idsByModel.get(modelId));
   }
 
   /**

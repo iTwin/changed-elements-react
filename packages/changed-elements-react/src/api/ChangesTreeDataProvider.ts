@@ -845,8 +845,8 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
 
   private _getChangedModelChildrenById(modelId: string): TreeNodeItem[] {
     const output = [];
-    for (const entry of this.getRootEntries()) {
-      if (entry.modelId !== undefined && entry.modelId === modelId) {
+    for (const entry of this._manager.changedElementsManager.entryCache.getEntriesWithModel(modelId)) {
+      if (this._rootElements.has(entry.id)) {
         output.push(this._getNode(entry));
       }
     }
@@ -1073,13 +1073,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   };
 
   public getModelElementEntries(modelId: string): ChangedElementEntry[] {
-    const entries: ChangedElementEntry[] = [];
-    for (const pair of this._elements) {
-      if (pair[1].modelId !== undefined && pair[1].modelId === modelId) {
-        entries.push(pair[1]);
-      }
-    }
-    return entries;
+    return this._manager.changedElementsManager.entryCache.getEntriesWithModel(modelId);
   }
 
   /** Get entries with model ids based on a filter function.
@@ -1109,16 +1103,9 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   }
 
   public getModelAllChildElementEntries(modelId: string): ChangedElementEntry[] {
-    const entries: ChangedElementEntry[] = [];
-    for (const pair of this._elements) {
-      // NOTE: If we ever move to delayed loading again w.r.t. children elements, we will need changes
-      // for this to work properly
-      if (pair[1].modelId !== undefined && pair[1].modelId === modelId) {
-        entries.push(pair[1]);
-      }
-    }
-
-    return entries;
+    // NOTE: If we ever move to delayed loading again w.r.t. children elements, we will need changes
+    // for this to work properly
+    return this._manager.changedElementsManager.entryCache.getEntriesWithModel(modelId);
   }
 
   public async getNodes(parent?: TreeNodeItem | undefined): Promise<DelayLoadedTreeNodeItem[]> {

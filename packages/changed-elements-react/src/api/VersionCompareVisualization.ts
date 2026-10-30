@@ -250,14 +250,23 @@ export class VersionCompareVisualizationManager {
   }
 
   /** Get entries with the given model Id */
+  private _entriesByModel: Map<string, ChangedElementEntry[]> | undefined;
   private _getEntriesWithModel = (modelId: string) => {
-    const entries: ChangedElementEntry[] = [];
-    for (const elem of this._changedElements) {
-      if (elem.modelId === modelId) {
-        entries.push(elem);
+    if (this._entriesByModel === undefined) {
+      this._entriesByModel = new Map();
+      for (const elem of this._changedElements) {
+        if (elem.modelId === undefined) {
+          continue;
+        }
+        const entries = this._entriesByModel.get(elem.modelId);
+        if (entries === undefined) {
+          this._entriesByModel.set(elem.modelId, [elem]);
+        } else {
+          entries.push(elem);
+        }
       }
     }
-    return entries;
+    return this._entriesByModel.get(modelId) ?? [];
   };
 
   /** Toggles visibility of the deleted elements with the given model id */
