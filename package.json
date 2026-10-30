@@ -47,6 +47,7 @@
       "protobufjs"
     ],
     "overrides": {
+      "@itwin/core-geometry": "5.12.4",
       "happy-dom@<=20.8.9": ">=20.8.9",
       "@remix-run/router@<=1.23.1": ">=1.23.2",
       "tmp@<0.2.6": ">=0.2.6",
