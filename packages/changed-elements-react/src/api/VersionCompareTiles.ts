@@ -10,7 +10,7 @@ import {
   type TiledGraphicsProvider
 } from "@itwin/core-frontend";
 
-import type { ChangedElement, ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import { ModelsCategoryCache } from "./ModelsCategoryCache.js";
 import { SpatialModelTileTrees } from "./SpatialModelTileTrees.js";
 import { VersionCompareVisualizationManager } from "./VersionCompareVisualization.js";
@@ -116,8 +116,40 @@ export class Provider
   private readonly _trees: SpatialModelTileTrees | undefined;
   private _treeRef2d: Reference | undefined;
   public readonly iModel: IModelConnection;
-  public secondaryIModelOverrides: FeatureSymbology.Overrides;
-  public visibleChangedElems: ChangedElementEntry[];
+  /** Rebuilt lazily on first read after any invalidation, so back-to-back option/entry changes cost one build. */
+  private _secondaryIModelOverrides: FeatureSymbology.Overrides | undefined;
+  public get secondaryIModelOverrides(): FeatureSymbology.Overrides {
+    if (this._secondaryIModelOverrides === undefined) {
+      this._secondaryIModelOverrides = this.initOverrides();
+    }
+    return this._secondaryIModelOverrides;
+  }
+  private _visibleChangedElems: ChangedElementEntry[] = [];
+  private _insertedElems: ChangedElementEntry[] = [];
+  private _updatedElems: ChangedElementEntry[] = [];
+  private _deletedElems: ChangedElementEntry[] = [];
+  /** Unfiltered id sets of the partitions above, built on demand and dropped when the entries change. */
+  private _deletedIds: Set<string> | undefined;
+  private _updatedIds: Set<string> | undefined;
+  public get visibleChangedElems(): ChangedElementEntry[] {
+    return this._visibleChangedElems;
+  }
+  public set visibleChangedElems(elems: ChangedElementEntry[]) {
+    this._visibleChangedElems = elems;
+    this._insertedElems = [];
+    this._updatedElems = [];
+    this._deletedElems = [];
+    this._deletedIds = undefined;
+    this._updatedIds = undefined;
+    for (const elem of elems) {
+      switch (elem.opcode) {
+        case DbOpcode.Insert: this._insertedElems.push(elem); break;
+        case DbOpcode.Update: this._updatedElems.push(elem); break;
+        case DbOpcode.Delete: this._deletedElems.push(elem); break;
+      }
+    }
+    this._secondaryIModelOverrides = undefined;
+  }
   public hiddenChangedElems: ChangedElementEntry[];
   public readonly viewport: Viewport;
   private readonly _removals: Array<() => void> = [];
@@ -158,7 +190,7 @@ export class Provider
         );
       }
     }
-    this.secondaryIModelOverrides = this.initOverrides();
+    this._secondaryIModelOverrides = undefined;
 
     this._removals.push(
       vp.onViewportChanged.addListener((_vp, flags) => this.handleViewportChanged(flags)),
@@ -202,7 +234,7 @@ export class Provider
    */
   public updateOptions(options?: VersionDisplayOptions) {
     this._options = options;
-    this.secondaryIModelOverrides = this.initOverrides();
+    this._secondaryIModelOverrides = undefined;
 
     if (
       this._options &&
@@ -247,6 +279,7 @@ export class Provider
   public setTransparency(current: number, target: number) {
     this._currentTransparency = current;
     this._targetTransparency = target;
+    this._secondaryIModelOverrides = undefined;
     this.viewport.invalidateScene();
     this.viewport.setFeatureOverrideProviderChanged();
     refreshEvent.raiseEvent();
@@ -356,8 +389,8 @@ export class Provider
       this._wantHideUnchanged() ? hiddenAppearance : unchangedAppearance,
     );
 
-    const insertedElems = this.visibleChangedElems.filter((entry: ChangedElement) => entry.opcode === DbOpcode.Insert);
-    const updatedElems = this.visibleChangedElems.filter((entry: ChangedElement) => entry.opcode === DbOpcode.Update);
+    const insertedElems = this._insertedElems;
+    const updatedElems = this._updatedElems;
 
     const inserted = FeatureAppearance.fromJSON({
       rgb: VersionCompareVisualizationManager.colorInsertedRgb(),
@@ -482,16 +515,18 @@ export class Provider
 
     // Handle removed elements that are in secondary iModel
     if (!this._wantHideRemoved()) {
-      const deletedElemIds = new Set(
-        this.visibleChangedElems
-          .filter(
-            (entry: ChangedElement) =>
-              entry.opcode === DbOpcode.Delete &&
-              !neverDrawn.has(entry.id) &&
-              !hiddenDeletedElements.has(entry.id),
-          )
-          .map((entry: ChangedElement) => entry.id),
-      );
+      let deletedElemIds: Set<string>;
+      if (neverDrawn.size === 0 && hiddenDeletedElements.size === 0) {
+        this._deletedIds ??= new Set(this._deletedElems.map((entry) => entry.id));
+        deletedElemIds = this._deletedIds;
+      } else {
+        deletedElemIds = new Set<string>();
+        for (const entry of this._deletedElems) {
+          if (!neverDrawn.has(entry.id) && !hiddenDeletedElements.has(entry.id)) {
+            deletedElemIds.add(entry.id);
+          }
+        }
+      }
       // Set override for the deleted element ids with the given color
       this._overrideSecondaryIModelElements(
         ovrs,
@@ -502,14 +537,18 @@ export class Provider
 
     // Handle modified elements that are in secondary iModel
     if (this._options?.wantModified && !this._wantHideModified()) {
-      const modifiedElemIds = new Set(
-        this.visibleChangedElems
-          .filter(
-            (entry: ChangedElement) =>
-              entry.opcode === DbOpcode.Update && !neverDrawn.has(entry.id),
-          )
-          .map((entry: ChangedElement) => entry.id),
-      );
+      let modifiedElemIds: Set<string>;
+      if (neverDrawn.size === 0) {
+        this._updatedIds ??= new Set(this._updatedElems.map((entry) => entry.id));
+        modifiedElemIds = this._updatedIds;
+      } else {
+        modifiedElemIds = new Set<string>();
+        for (const entry of this._updatedElems) {
+          if (!neverDrawn.has(entry.id)) {
+            modifiedElemIds.add(entry.id);
+          }
+        }
+      }
       // Set override for the modified element ids with the given color
       this._overrideSecondaryIModelElements(
         ovrs,
@@ -533,7 +572,7 @@ export class Provider
     }
 
     if (flags.areFeatureOverridesDirty) {
-      this.secondaryIModelOverrides = this.initOverrides();
+      this._secondaryIModelOverrides = undefined;
       this.viewport.invalidateScene();
     }
 
