@@ -21,17 +21,22 @@ export type HalLinks<T extends Array<string | undefined>> = {
 export const largePayloadThresholdBytes = 256 * 1024 * 1024;
 const largePayloadOmittedKeys = new Set(["properties", "oldChecksums", "newChecksums"]);
 
+/** Whether a result response is too large to load with property data, judged by its `Content-Length`. */
+export function isLargePayload(response: Response): boolean {
+  return Number(response.headers.get("Content-Length")) > largePayloadThresholdBytes;
+}
+
 /**
  * Parses a Changed Elements result body. Payloads whose `Content-Length` exceeds
  * {@link largePayloadThresholdBytes} are parsed without property data and flagged via
  * `changedElements.propertiesOmitted`.
+ * @param propertiesOmitted Force the omitted flag, e.g. when `response` is already a property-less minimal blob.
  */
 export async function readChangedElementsPayload(
   response: Response,
   isPayload: (value: unknown) => value is ChangedElementsPayload,
+  propertiesOmitted = isLargePayload(response),
 ): Promise<ChangedElementsPayload> {
-  const contentLength = Number(response.headers.get("Content-Length"));
-  const propertiesOmitted = contentLength > largePayloadThresholdBytes;
   const body = await parseJsonResponse(response, propertiesOmitted ? largePayloadOmittedKeys : undefined);
   if (!isPayload(body)) {
     throw new Error(`Changed Elements request to ${response.url} returned an unexpected response shape.`);
