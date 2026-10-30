@@ -53,14 +53,23 @@ export async function readChangedElementsPayload(
 }
 
 /**
- * Parses a JSON response body incrementally. Unlike `response.json()`, the full body text is never
- * materialized, so payloads larger than V8's ~512 MiB string limit (which otherwise fail with
- * "Unexpected end of JSON input") can be parsed. Falls back to `response.json()` when no body stream
- * is available (e.g. test mocks).
- * @param omitKeys Object keys whose values are discarded without being materialized.
+ * Bodies below this `Content-Length` are parsed with native `JSON.parse`, which is several times
+ * faster than the incremental parser. V8 strings cap at ~512 MiB; UTF-8 bytes >= UTF-16 code units,
+ * so a body under this byte count always fits.
+ */
+const nativeParseMaxBytes = 480 * 1024 * 1024;
+
+/**
+ * Parses a JSON response body. Bodies whose `Content-Length` is known and under
+ * {@link nativeParseMaxBytes} use `response.json()`; larger or unsized bodies are parsed
+ * incrementally so the full body text is never materialized and payloads beyond V8's string limit
+ * (which otherwise fail with "Unexpected end of JSON input") still load. Also falls back to
+ * `response.json()` when no body stream is available (e.g. test mocks).
+ * @param omitKeys Object keys whose values are discarded; on the native path they are deleted by the caller.
  */
 export async function parseJsonResponse(response: Response, omitKeys?: Set<string>): Promise<unknown> {
-  if (!response.body) {
+  const contentLength = Number(response.headers.get("Content-Length"));
+  if (!response.body || (contentLength > 0 && contentLength < nativeParseMaxBytes)) {
     return response.json();
   }
 

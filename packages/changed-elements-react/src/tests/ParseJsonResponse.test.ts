@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { DbOpcode } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { accumulateChanges } from "../api/ChangedElementsManager.js";
 import { largePayloadThresholdBytes, parseJsonResponse, readChangedElementsPayload } from "../clients/common.js";
@@ -65,6 +65,18 @@ describe("parseJsonResponse", () => {
 
   it("rejects mismatched closing brackets", async () => {
     await expect(parseJsonResponse(streamed("{\"a\":[1,2}}", 3))).rejects.toThrow("Unexpected token }");
+  });
+
+  it("uses native parsing when Content-Length fits in a string, incremental otherwise", async () => {
+    const sized = streamed(text, 5, { "Content-Length": String(text.length) });
+    const json = vi.spyOn(sized, "json");
+    expect(await parseJsonResponse(sized)).toEqual(payload);
+    expect(json).toHaveBeenCalledTimes(1);
+
+    const huge = streamed(text, 5, { "Content-Length": String(600 * 1024 * 1024) });
+    const hugeJson = vi.spyOn(huge, "json");
+    expect(await parseJsonResponse(huge)).toEqual(payload);
+    expect(hugeJson).not.toHaveBeenCalled();
   });
 });
 
