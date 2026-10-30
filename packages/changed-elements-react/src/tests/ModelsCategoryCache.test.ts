@@ -7,7 +7,7 @@ import { BlankConnection, IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { ModelsCategoryCache } from "../api/ModelsCategoryCache.js";
-import { mockChangedElementEntries } from "./TestUtilities.js";
+import { mockChangedElementEntries, mockChangedElementEntry } from "./TestUtilities.js";
 
 const queryMockGenerator = (bindingPostfix = "") => {
   const func = async function* (
@@ -131,5 +131,25 @@ describe("Models Category Cache Tests", () => {
     // Since we are returning the binding array for entries,
     // we should have 1 model id
     expect(data2?.updatedElementsModels.size).toBe(mockEntries1.length);
+  });
+
+  it("Should not query models of updated elements that already carry a modelId", async () => {
+    const currentIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
+    (currentIModel.changeset.id as unknown as string) = "changesetD";
+    const targetIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
+    (targetIModel.changeset.id as unknown as string) = "changesetE";
+    const querySpy = vi.spyOn(targetIModel, "createQueryReader");
+
+    const entries = mockChangedElementEntries(5);
+    entries.forEach((entry, i) => (entry.modelId = `0xm${i % 2}`));
+    entries.push({ ...mockChangedElementEntry("0xnomodel"), modelId: undefined });
+
+    await ModelsCategoryCache.load(currentIModel, targetIModel, entries);
+
+    const data = ModelsCategoryCache.getModelsCategoryData();
+    // Two distinct model ids taken from change data plus the one queried for the modelId-less element
+    expect(data?.updatedElementsModels).toEqual(new Set(["0xm0", "0xm1", "0xnomodel_mocked"]));
+    const modelQueries = querySpy.mock.calls.filter(([ecsql]) => ecsql.includes("SELECT DISTINCT Model"));
+    expect(modelQueries).toHaveLength(1);
   });
 });

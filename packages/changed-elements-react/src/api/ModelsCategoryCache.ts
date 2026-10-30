@@ -146,21 +146,25 @@ export class ModelsCategoryCache {
       ModelsCategoryCache._cache === undefined ||
       ModelsCategoryCache._isDirty(currentIModel, targetIModel)
     ) {
-      // Find ids for deleted and modified elements
+      // Find ids for deleted and modified elements. Only query the model of elements lacking a modelId in the
+      // change data; for deleted elements that modelId is the appropriate old-version model Id.
       const deletedElementIds: string[] = [];
       const deletedElementModelIds: string[] = [];
       const updatedElementIds: string[] = [];
+      const updatedElementModelIds: string[] = [];
       for (const changedElement of changedElements) {
         if (changedElement.opcode === DbOpcode.Delete) {
-          // Only load the ones that we don't have model Ids for, as these model Ids will be the appropriate old version
-          // model Id.
           if (!changedElement.modelId) {
             deletedElementIds.push(changedElement.id);
           } else {
             deletedElementModelIds.push(changedElement.modelId);
           }
         } else if (changedElement.opcode === DbOpcode.Update) {
-          updatedElementIds.push(changedElement.id);
+          if (!changedElement.modelId) {
+            updatedElementIds.push(changedElement.id);
+          } else {
+            updatedElementModelIds.push(changedElement.modelId);
+          }
         }
       }
       // Get model ids for deleted elements
@@ -181,6 +185,9 @@ export class ModelsCategoryCache {
         targetIModel,
         updatedElementIds,
       );
+      for (const modelId of updatedElementModelIds) {
+        updatedElementsModels.add(modelId);
+      }
       // Load the models so that visualization can occur
       await targetIModel.models.load(deletedElementsModels);
       await targetIModel.models.load(updatedElementsModels);
