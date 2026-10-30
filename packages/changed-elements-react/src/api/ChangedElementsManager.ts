@@ -371,7 +371,10 @@ export const accumulateChanges = (
  * Maintains the changed elements of a comparison
  */
 export class ChangedElementsManager {
-  /** Computed entries of changed elements for given comparison */
+  /**
+   * Raw accumulated changes. Only populated while {@link initialize} runs; once entries are
+   * generated it is cleared to free memory and {@link entryCache} becomes the source of truth.
+   */
   private _changedElements: Map<string, ChangedElement> = new Map<
     string,
     ChangedElement
@@ -446,7 +449,7 @@ export class ChangedElementsManager {
    */
   public getAllChangedPropertyNames(): Set<string> {
     const allProps = new Set<string>();
-    this.changedElements.forEach((element: ChangedElement) => {
+    this._entryCache.changedElementEntries.forEach((element: ChangedElement) => {
       if (element.properties !== undefined) {
         for (const prop of element.properties) {
           allProps.add(prop[0]);
@@ -1266,6 +1269,8 @@ export class ChangedElementsManager {
     }
 
     await this.generateEntries(currentIModel, targetIModel, progressCoordinator);
+    // Entries now carry everything the UI needs; drop the raw change objects (a full second copy of the data)
+    this._changedElements.clear();
   }
 }
 

@@ -178,10 +178,11 @@ export class ChangedElementEntryCache {
     this._currentIModel = currentIModel;
     this._targetIModel = targetIModel;
     this._labels = new ChangedElementsLabelsCache(currentIModel, targetIModel);
+    // Share the entry map rather than the raw change Map so the latter can be released after initialization
     this._childrenCache = new ChangedElementsChildrenCache(
       currentIModel,
       targetIModel,
-      elements,
+      this._changedElementEntries,
     );
   }
 

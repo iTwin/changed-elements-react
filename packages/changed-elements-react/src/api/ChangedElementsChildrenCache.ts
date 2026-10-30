@@ -24,7 +24,7 @@ export class ChangedElementsChildrenCache extends ChangedElementDataCache {
   constructor(
     private _currentIModel: IModelConnection,
     private _targetIModel: IModelConnection,
-    private _changedElements: Map<string, ChangedElement>,
+    private _changedElements: ReadonlyMap<string, ChangedElement>,
   ) {
     super();
   }
