@@ -595,7 +595,7 @@ export class VersionCompareManager {
     currentIModel: IModelConnection,
     currentVersion: NamedVersion,
     targetVersion: NamedVersion,
-    changedElements: ChangedElements[],
+    changedElements: ChangedElementsResult[],
   ): Promise<boolean> {
     this._currentIModel = currentIModel;
     let success = true;
@@ -661,8 +661,9 @@ export class VersionCompareManager {
       );
       // We have type of change available if any of the entries has a valid type of change value
       this._hasTypeOfChange = changedElementEntries.some((entry) => entry.type !== 0);
-      // We have property filtering available if any of the entries has a valid array of changed properties
-      this._hasPropertiesForFiltering = changedElementEntries.some(
+      // We have property filtering available if any of the entries has a valid array of changed properties.
+      // Filtering by property is unreliable when any result had its property data omitted for size reasons.
+      this._hasPropertiesForFiltering = !changedElements.some((cs) => cs.propertiesOmitted) && changedElementEntries.some(
         (entry) => entry.properties !== undefined && entry.properties.size !== 0,
       );
 
