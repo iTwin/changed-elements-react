@@ -59,17 +59,28 @@ export async function readChangedElementsPayload(
  */
 const nativeParseMaxBytes = 480 * 1024 * 1024;
 
+function canParseNatively(response: Response): boolean {
+  const encoding = response.headers.get("Content-Encoding");
+  if (encoding !== null && encoding !== "identity") {
+    return false;
+  }
+
+  const contentLength = Number(response.headers.get("Content-Length"));
+  return contentLength > 0 && contentLength < nativeParseMaxBytes;
+}
+
 /**
- * Parses a JSON response body. Bodies whose `Content-Length` is known and under
- * {@link nativeParseMaxBytes} use `response.json()`; larger or unsized bodies are parsed
+ * Parses a JSON response body. Uses native `response.json()` when it is safe and nothing needs to
+ * be discarded: no `omitKeys` (otherwise the omitted data would be fully materialized before being
+ * dropped), an identity-encoded body (a `Content-Length` of compressed bytes says nothing about the
+ * decoded size) and a `Content-Length` under {@link nativeParseMaxBytes}. Everything else is parsed
  * incrementally so the full body text is never materialized and payloads beyond V8's string limit
  * (which otherwise fail with "Unexpected end of JSON input") still load. Also falls back to
  * `response.json()` when no body stream is available (e.g. test mocks).
- * @param omitKeys Object keys whose values are discarded; on the native path they are deleted by the caller.
+ * @param omitKeys Object keys whose values are discarded without being materialized.
  */
 export async function parseJsonResponse(response: Response, omitKeys?: Set<string>): Promise<unknown> {
-  const contentLength = Number(response.headers.get("Content-Length"));
-  if (!response.body || (contentLength > 0 && contentLength < nativeParseMaxBytes)) {
+  if (!response.body || (omitKeys === undefined && canParseNatively(response))) {
     return response.json();
   }
 

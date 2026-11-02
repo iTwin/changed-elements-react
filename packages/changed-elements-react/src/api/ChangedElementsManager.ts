@@ -379,8 +379,13 @@ export class ChangedElementsManager {
     string,
     ChangedElement
   >();
-  public get changedElements() {
-    return this._changedElements;
+  /**
+   * Changed elements of the comparison keyed by element id. While {@link initialize} is accumulating
+   * data this is the raw change Map; once entries are generated it is the entry cache's Map, whose
+   * values extend `ChangedElement`.
+   */
+  public get changedElements(): Map<string, ChangedElement> {
+    return this._changedElements.size !== 0 ? this._changedElements : this._entryCache.changedElementEntries;
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;
