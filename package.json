@@ -59,7 +59,11 @@
       "linkify-it@<=5.0.0": ">=5.0.1",
       "js-yaml@<3.15.0": ">=3.15.0",
       "read-yaml-file>js-yaml": "^3.14.1",
-      "i18next-http-backend@<4.0.2": ">=4.0.2"
+      "i18next-http-backend@<4.0.2": ">=4.0.2",
+      "follow-redirects@>=1.16.0 <=1.16.1": ">=1.16.2",
+      "@typescript-eslint/typescript-estree>minimatch": ">=11.0.1",
+      "cpx2>minimatch": ">=11.0.1",
+      "glob@>=9.0.0 <=14.0.1": ">=14.0.2"
     }
   },
   "devDependencies": {
