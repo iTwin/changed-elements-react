@@ -128,24 +128,39 @@ export class Provider
     this._secondaryIModelOverrides = overrides;
   }
   private _visibleChangedElems: ChangedElementEntry[] = [];
-  private _insertedElems: ChangedElementEntry[] = [];
-  private _updatedElems: ChangedElementEntry[] = [];
-  private _deletedElems: ChangedElementEntry[] = [];
+  /**
+   * Opcode partition of `_visibleChangedElems`, rebuilt when the array is reassigned or its length changes.
+   * ponytail: same-length in-place replacement is not detected; assign a new array for that.
+   */
+  private _partition: {
+    source: ChangedElementEntry[];
+    length: number;
+    inserted: ChangedElementEntry[];
+    updated: ChangedElementEntry[];
+    deleted: ChangedElementEntry[];
+  } | undefined;
+  private get _partitions() {
+    const source = this._visibleChangedElems;
+    if (this._partition?.source !== source || this._partition.length !== source.length) {
+      const inserted: ChangedElementEntry[] = [];
+      const updated: ChangedElementEntry[] = [];
+      const deleted: ChangedElementEntry[] = [];
+      for (const elem of source) {
+        switch (elem.opcode) {
+          case DbOpcode.Insert: inserted.push(elem); break;
+          case DbOpcode.Update: updated.push(elem); break;
+          case DbOpcode.Delete: deleted.push(elem); break;
+        }
+      }
+      this._partition = { source, length: source.length, inserted, updated, deleted };
+    }
+    return this._partition;
+  }
   public get visibleChangedElems(): ChangedElementEntry[] {
     return this._visibleChangedElems;
   }
   public set visibleChangedElems(elems: ChangedElementEntry[]) {
     this._visibleChangedElems = elems;
-    this._insertedElems = [];
-    this._updatedElems = [];
-    this._deletedElems = [];
-    for (const elem of elems) {
-      switch (elem.opcode) {
-        case DbOpcode.Insert: this._insertedElems.push(elem); break;
-        case DbOpcode.Update: this._updatedElems.push(elem); break;
-        case DbOpcode.Delete: this._deletedElems.push(elem); break;
-      }
-    }
     this._secondaryIModelOverrides = undefined;
   }
   public hiddenChangedElems: ChangedElementEntry[];
@@ -398,7 +413,7 @@ export class Provider
           : undefined,
     });
 
-    for (const elem of this._insertedElems) {
+    for (const elem of this._partitions.inserted) {
       // Check if user is emphasizing some elements, and if so, override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         overrides.override({ elementId: elem.id, appearance: inserted });
@@ -426,7 +441,7 @@ export class Provider
           ? true
           : undefined,
     });
-    for (const elem of this._updatedElems) {
+    for (const elem of this._partitions.updated) {
       // Check if user is emphasizing some elements, and if so, only override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         // TODO: Appropriate type of change enum
@@ -511,7 +526,7 @@ export class Provider
     // Handle removed elements that are in secondary iModel
     if (!this._wantHideRemoved()) {
       const deletedElemIds = new Set(
-        this._deletedElems
+        this._partitions.deleted
           .filter((e) => !neverDrawn.has(e.id) && !hiddenDeletedElements.has(e.id))
           .map((e) => e.id),
       );
@@ -526,7 +541,7 @@ export class Provider
     // Handle modified elements that are in secondary iModel
     if (this._options?.wantModified && !this._wantHideModified()) {
       const modifiedElemIds = new Set(
-        this._updatedElems.filter((e) => !neverDrawn.has(e.id)).map((e) => e.id),
+        this._partitions.updated.filter((e) => !neverDrawn.has(e.id)).map((e) => e.id),
       );
       // Set override for the modified element ids with the given color
       this._overrideSecondaryIModelElements(

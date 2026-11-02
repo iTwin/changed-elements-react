@@ -83,4 +83,15 @@ describe("VersionCompareTiles Provider", () => {
     provider.secondaryIModelOverrides = custom;
     expect(provider.secondaryIModelOverrides).toBe(custom);
   });
+
+  it("reflects in-place mutations of visibleChangedElems", () => {
+    const provider = makeProvider();
+    provider.visibleChangedElems = [...entries];
+    provider.visibleChangedElems.push(mockChangedElementEntry("0x8", DbOpcode.Insert));
+    provider.visibleChangedElems.splice(0, 1); // drops 0x1
+    const overrides = new FeatureSymbology.Overrides();
+    provider.addFeatureOverrides(overrides);
+    expect(overrides.getElementOverridesById("0x8")).toBeDefined();
+    expect(overrides.getElementOverridesById("0x1")).toBeUndefined();
+  });
 });

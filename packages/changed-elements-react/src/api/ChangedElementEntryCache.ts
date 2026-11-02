@@ -73,16 +73,20 @@ export class ChangedElementEntryCache {
 
   private _setEntry(entry: ChangedElementEntry): void {
     const previousModelId = this._changedElementEntries.get(entry.id)?.modelId;
-    if (previousModelId !== undefined) {
-      this._idsByModel.get(previousModelId)?.delete(entry.id);
-    }
-    if (entry.modelId !== undefined) {
-      let ids = this._idsByModel.get(entry.modelId);
-      if (ids === undefined) {
-        ids = new Set<string>();
-        this._idsByModel.set(entry.modelId, ids);
+    // Only touch the index on a model change: Set order is insertion order and drives per-model
+    // tree node order, so a delete/re-add on reload would shuffle a model's children.
+    if (previousModelId !== entry.modelId) {
+      if (previousModelId !== undefined) {
+        this._idsByModel.get(previousModelId)?.delete(entry.id);
       }
-      ids.add(entry.id);
+      if (entry.modelId !== undefined) {
+        let ids = this._idsByModel.get(entry.modelId);
+        if (ids === undefined) {
+          ids = new Set<string>();
+          this._idsByModel.set(entry.modelId, ids);
+        }
+        ids.add(entry.id);
+      }
     }
     this._changedElementEntries.set(entry.id, entry);
   }

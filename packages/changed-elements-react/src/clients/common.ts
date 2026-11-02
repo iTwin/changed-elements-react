@@ -93,7 +93,11 @@ export async function parseJsonResponse(
     chars += text.length;
     if (chars >= maxChars) {
       const incremental = new IncrementalJsonParser();
-      parts.forEach((part) => incremental.write(part));
+      // Release each buffered chunk as it is replayed so the buffer and the parser's state never coexist in full
+      for (let i = 0; i < parts.length; i++) {
+        incremental.write(parts[i]);
+        parts[i] = "";
+      }
       parts.length = 0;
       parser = incremental;
     }
@@ -109,7 +113,13 @@ export async function parseJsonResponse(
   }
 
   write(decoder.decode());
-  return parser !== undefined ? parser.end() : JSON.parse(parts.join(""));
+  if (parser !== undefined) {
+    return parser.end();
+  }
+
+  const text = parts.join("");
+  parts.length = 0;
+  return JSON.parse(text);
 }
 
 /** Number/literal token: runs until a JSON delimiter; the token itself is validated by `JSON.parse`. */

@@ -2,10 +2,12 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { describe, expect, it } from "vitest";
+import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
+import { describe, expect, it, vi } from "vitest";
 
-import { ChangedElementEntryCache, type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { ChangedElementEntryCache, ChangeElementType, type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ChangedElementsManager } from "../api/ChangedElementsManager.js";
+import { ChangesTreeDataProvider } from "../api/ChangesTreeDataProvider.js";
 import { mockChangedElementEntry } from "./TestUtilities.js";
 
 describe("ChangedElementEntryCache", () => {
@@ -54,6 +56,32 @@ describe("ChangedElementEntryCache", () => {
 
     cache.cleanup();
     expect(cache.getChangeElementIdsFromModelId("0xm1")).toEqual(new Set());
+  });
+
+  it("keeps per-model order stable when an entry is reloaded without changing model", () => {
+    const cache = makeCache([withModel("0x1", "0xm1"), withModel("0x2", "0xm1")]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (cache as any)._overrideEntriesInCache([withModel("0x1", "0xm1")], true);
+    expect(cache.getEntriesWithModel("0xm1").map((e) => e.id)).toEqual(["0x1", "0x2"]);
+  });
+
+  it("resolves a model's root tree nodes without touching its non-root entries", async () => {
+    await NoRenderApp.startup();
+    try {
+      const cache = makeCache([
+        { ...withModel("0x1", "0xm1", ["0x2"]), elementType: ChangeElementType.TopAssembly },
+        { ...withModel("0x2", "0xm1"), elementType: ChangeElementType.Element },
+        { ...withModel("0x3", "0xm2"), elementType: ChangeElementType.TopAssembly },
+      ]);
+      const perModel = vi.spyOn(cache, "getEntriesWithModel");
+      const provider = new ChangesTreeDataProvider({ changedElementsManager: { entryCache: cache } } as never);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nodes = (provider as any)._getChangedModelChildrenById("0xm1");
+      expect(nodes.map((n: { id: string; }) => n.id)).toEqual(["0x1"]);
+      expect(perModel).not.toHaveBeenCalled();
+    } finally {
+      await IModelApp.shutdown();
+    }
   });
 
   it("exposes only real changes through ChangedElementsManager.changedElements", () => {
