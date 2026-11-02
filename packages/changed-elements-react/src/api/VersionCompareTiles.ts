@@ -128,9 +128,6 @@ export class Provider
   private _insertedElems: ChangedElementEntry[] = [];
   private _updatedElems: ChangedElementEntry[] = [];
   private _deletedElems: ChangedElementEntry[] = [];
-  /** Unfiltered id sets of the partitions above, built on demand and dropped when the entries change. */
-  private _deletedIds: Set<string> | undefined;
-  private _updatedIds: Set<string> | undefined;
   public get visibleChangedElems(): ChangedElementEntry[] {
     return this._visibleChangedElems;
   }
@@ -139,8 +136,6 @@ export class Provider
     this._insertedElems = [];
     this._updatedElems = [];
     this._deletedElems = [];
-    this._deletedIds = undefined;
-    this._updatedIds = undefined;
     for (const elem of elems) {
       switch (elem.opcode) {
         case DbOpcode.Insert: this._insertedElems.push(elem); break;
@@ -389,9 +384,6 @@ export class Provider
       this._wantHideUnchanged() ? hiddenAppearance : unchangedAppearance,
     );
 
-    const insertedElems = this._insertedElems;
-    const updatedElems = this._updatedElems;
-
     const inserted = FeatureAppearance.fromJSON({
       rgb: VersionCompareVisualizationManager.colorInsertedRgb(),
       transparency: this._currentTransparency,
@@ -403,7 +395,7 @@ export class Provider
           : undefined,
     });
 
-    for (const elem of insertedElems) {
+    for (const elem of this._insertedElems) {
       // Check if user is emphasizing some elements, and if so, override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         overrides.override({ elementId: elem.id, appearance: inserted });
@@ -431,7 +423,7 @@ export class Provider
           ? true
           : undefined,
     });
-    for (const elem of updatedElems) {
+    for (const elem of this._updatedElems) {
       // Check if user is emphasizing some elements, and if so, only override said elements
       if (this._internalAlwaysDrawn.size === 0 || this._internalAlwaysDrawn.has(elem.id)) {
         // TODO: Appropriate type of change enum
@@ -515,18 +507,11 @@ export class Provider
 
     // Handle removed elements that are in secondary iModel
     if (!this._wantHideRemoved()) {
-      let deletedElemIds: Set<string>;
-      if (neverDrawn.size === 0 && hiddenDeletedElements.size === 0) {
-        this._deletedIds ??= new Set(this._deletedElems.map((entry) => entry.id));
-        deletedElemIds = this._deletedIds;
-      } else {
-        deletedElemIds = new Set<string>();
-        for (const entry of this._deletedElems) {
-          if (!neverDrawn.has(entry.id) && !hiddenDeletedElements.has(entry.id)) {
-            deletedElemIds.add(entry.id);
-          }
-        }
-      }
+      const deletedElemIds = new Set(
+        this._deletedElems
+          .filter((e) => !neverDrawn.has(e.id) && !hiddenDeletedElements.has(e.id))
+          .map((e) => e.id),
+      );
       // Set override for the deleted element ids with the given color
       this._overrideSecondaryIModelElements(
         ovrs,
@@ -537,18 +522,9 @@ export class Provider
 
     // Handle modified elements that are in secondary iModel
     if (this._options?.wantModified && !this._wantHideModified()) {
-      let modifiedElemIds: Set<string>;
-      if (neverDrawn.size === 0) {
-        this._updatedIds ??= new Set(this._updatedElems.map((entry) => entry.id));
-        modifiedElemIds = this._updatedIds;
-      } else {
-        modifiedElemIds = new Set<string>();
-        for (const entry of this._updatedElems) {
-          if (!neverDrawn.has(entry.id)) {
-            modifiedElemIds.add(entry.id);
-          }
-        }
-      }
+      const modifiedElemIds = new Set(
+        this._updatedElems.filter((e) => !neverDrawn.has(e.id)).map((e) => e.id),
+      );
       // Set override for the modified element ids with the given color
       this._overrideSecondaryIModelElements(
         ovrs,

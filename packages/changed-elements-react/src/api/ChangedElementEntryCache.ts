@@ -72,19 +72,17 @@ export class ChangedElementEntryCache {
   private _idsByModel = new Map<string, Set<string>>();
 
   private _setEntry(entry: ChangedElementEntry): void {
-    const previous = this._changedElementEntries.get(entry.id);
-    if (previous?.modelId !== entry.modelId) {
-      if (previous?.modelId !== undefined) {
-        this._idsByModel.get(previous.modelId)?.delete(entry.id);
+    const previousModelId = this._changedElementEntries.get(entry.id)?.modelId;
+    if (previousModelId !== undefined) {
+      this._idsByModel.get(previousModelId)?.delete(entry.id);
+    }
+    if (entry.modelId !== undefined) {
+      let ids = this._idsByModel.get(entry.modelId);
+      if (ids === undefined) {
+        ids = new Set<string>();
+        this._idsByModel.set(entry.modelId, ids);
       }
-      if (entry.modelId !== undefined) {
-        let ids = this._idsByModel.get(entry.modelId);
-        if (ids === undefined) {
-          ids = new Set<string>();
-          this._idsByModel.set(entry.modelId, ids);
-        }
-        ids.add(entry.id);
-      }
+      ids.add(entry.id);
     }
     this._changedElementEntries.set(entry.id, entry);
   }
@@ -399,7 +397,7 @@ export class ChangedElementEntryCache {
     return this._changedElementEntries.get(id);
   }
 
-  public getCached(ids: string[]): ChangedElementEntry[] {
+  public getCached(ids: Iterable<string>): ChangedElementEntry[] {
     const entries: ChangedElementEntry[] = [];
     for (const id of ids) {
       const entry = this._changedElementEntries.get(id);
@@ -452,7 +450,7 @@ export class ChangedElementEntryCache {
     elementIds: Set<string>,
     wantChildren?: boolean,
   ): ChangedElementEntry[] {
-    const entries = this.getCached([...elementIds]);
+    const entries = this.getCached(elementIds);
     if (!wantChildren) {
       return entries;
     }
@@ -461,13 +459,12 @@ export class ChangedElementEntryCache {
     for (const entry of entries) {
       entry.children?.forEach((child) => childElementIds.add(child));
     }
-    return entries.concat(this.getCached([...childElementIds]));
+    return entries.concat(this.getCached(childElementIds));
   }
 
   /** Returns the cached entries whose modelId matches, without scanning the whole cache. */
   public getEntriesWithModel(modelId: string): ChangedElementEntry[] {
-    const ids = this._idsByModel.get(modelId);
-    return ids === undefined ? [] : this.getCached([...ids]);
+    return this.getCached(this._idsByModel.get(modelId) ?? []);
   }
 
   /**

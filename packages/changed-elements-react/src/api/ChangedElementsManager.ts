@@ -449,7 +449,7 @@ export class ChangedElementsManager {
    */
   public getAllChangedPropertyNames(): Set<string> {
     const allProps = new Set<string>();
-    this._entryCache.changedElementEntries.forEach((element: ChangedElement) => {
+    this._entryCache.changedElementEntries.forEach((element) => {
       if (element.properties !== undefined) {
         for (const prop of element.properties) {
           allProps.add(prop[0]);

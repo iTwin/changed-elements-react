@@ -1105,7 +1105,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   public getModelAllChildElementEntries(modelId: string): ChangedElementEntry[] {
     // NOTE: If we ever move to delayed loading again w.r.t. children elements, we will need changes
     // for this to work properly
-    return this._manager.changedElementsManager.entryCache.getEntriesWithModel(modelId);
+    return this.getModelElementEntries(modelId);
   }
 
   public async getNodes(parent?: TreeNodeItem | undefined): Promise<DelayLoadedTreeNodeItem[]> {
