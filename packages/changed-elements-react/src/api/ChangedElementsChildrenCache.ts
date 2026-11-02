@@ -7,7 +7,7 @@ import { QueryBinder, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
 import { ChangedElementDataCache } from "./ChangedElementDataCache.js";
-import { ChangeElementType, type ChangedElement, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
+import { ChangeElementType, type ChangedElementEntry } from "./ChangedElementEntryCache.js";
 import type { ChangedElementQueryData } from "./ElementQueries.js";
 import { VersionCompare } from "./VersionCompare.js";
 
@@ -24,7 +24,8 @@ export class ChangedElementsChildrenCache extends ChangedElementDataCache {
   constructor(
     private _currentIModel: IModelConnection,
     private _targetIModel: IModelConnection,
-    private _changedElements: ReadonlyMap<string, ChangedElement>,
+    /** Entry cache map; entries flagged `indirect` are manufactured unchanged ancestors, not changes. */
+    private _changedElements: ReadonlyMap<string, ChangedElementEntry>,
   ) {
     super();
   }
@@ -205,14 +206,17 @@ export class ChangedElementsChildrenCache extends ChangedElementDataCache {
     };
   };
 
+  private _isChanged = (id: string) => {
+    const entry = this._changedElements.get(id);
+    return entry !== undefined && !entry.indirect;
+  };
+
   private _hasChangedChildren = (children: string[]) => {
-    return children.some((id: string) => {
-      return this._changedElements.has(id);
-    });
+    return children.some(this._isChanged);
   };
 
   private _hasChangedChildrenFromData = (children: ChangedElementQueryData[]) => {
-    return children.some((data: ChangedElementQueryData) => this._changedElements.has(data.id));
+    return children.some((data: ChangedElementQueryData) => this._isChanged(data.id));
   };
 
   /** Request children, parents, top parents */

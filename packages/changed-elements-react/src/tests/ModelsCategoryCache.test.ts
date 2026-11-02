@@ -2,12 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Cartographic, QueryBinder, type QueryOptions } from "@itwin/core-common";
+import { CompressedId64Set } from "@itwin/core-bentley";
+import { Cartographic, QueryBinder, QueryParamType, type QueryOptions } from "@itwin/core-common";
 import { BlankConnection, IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { ModelsCategoryCache } from "../api/ModelsCategoryCache.js";
-import { mockChangedElementEntries, mockChangedElementEntry } from "./TestUtilities.js";
+import { mockChangedElementEntries } from "./TestUtilities.js";
 
 const queryMockGenerator = (bindingPostfix = "") => {
   const func = async function* (
@@ -19,7 +20,9 @@ const queryMockGenerator = (bindingPostfix = "") => {
     const bindings = params?.serialize();
     if (bindings) {
       for (const val of Object.values(bindings)) {
-        if (val?.value) {
+        if (val?.type === QueryParamType.IdSet) {
+          array.push(...CompressedId64Set.decompressSet(val.value));
+        } else if (val?.value) {
           array.push(val.value);
         }
       }
@@ -29,9 +32,7 @@ const queryMockGenerator = (bindingPostfix = "") => {
     for (const value of array) {
       yield {
         catId: value + bindingPostfix,
-        model: {
-          id: value + bindingPostfix,
-        },
+        model: value + bindingPostfix,
       };
     }
   };
@@ -133,22 +134,21 @@ describe("Models Category Cache Tests", () => {
     expect(data2?.updatedElementsModels.size).toBe(mockEntries1.length);
   });
 
-  it("Should not query models of updated elements that already carry a modelId", async () => {
+  it("Should query target-side models of all updated elements in a single query", async () => {
     const currentIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
     (currentIModel.changeset.id as unknown as string) = "changesetD";
     const targetIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
     (targetIModel.changeset.id as unknown as string) = "changesetE";
     const querySpy = vi.spyOn(targetIModel, "createQueryReader");
 
-    const entries = mockChangedElementEntries(5);
-    entries.forEach((entry, i) => (entry.modelId = `0xm${i % 2}`));
-    entries.push({ ...mockChangedElementEntry("0xnomodel"), modelId: undefined });
+    const entries = mockChangedElementEntries(3);
+    // Change-data modelIds are current-side and must not stand in for the target-side model
+    entries.forEach((entry, i) => (entry.modelId = `0xm${i}`));
 
     await ModelsCategoryCache.load(currentIModel, targetIModel, entries);
 
     const data = ModelsCategoryCache.getModelsCategoryData();
-    // Two distinct model ids taken from change data plus the one queried for the modelId-less element
-    expect(data?.updatedElementsModels).toEqual(new Set(["0xm0", "0xm1", "0xnomodel_mocked"]));
+    expect(data?.updatedElementsModels).toEqual(new Set(entries.map((e) => `${e.id}_mocked`)));
     const modelQueries = querySpy.mock.calls.filter(([ecsql]) => ecsql.includes("SELECT DISTINCT Model"));
     expect(modelQueries).toHaveLength(1);
   });

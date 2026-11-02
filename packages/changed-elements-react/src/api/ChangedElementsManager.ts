@@ -381,11 +381,20 @@ export class ChangedElementsManager {
   >();
   /**
    * Changed elements of the comparison keyed by element id. While {@link initialize} is accumulating
-   * data this is the raw change Map; once entries are generated it is the entry cache's Map, whose
-   * values extend `ChangedElement`.
+   * data this is the raw change Map; afterwards it is a snapshot built from {@link entryCache} that
+   * excludes manufactured unchanged (indirect) hierarchy entries. Mutating the snapshot has no effect.
    */
   public get changedElements(): Map<string, ChangedElement> {
-    return this._changedElements.size !== 0 ? this._changedElements : this._entryCache.changedElementEntries;
+    if (this._changedElements.size !== 0) {
+      return this._changedElements;
+    }
+    const changed = new Map<string, ChangedElement>();
+    for (const [id, entry] of this._entryCache.changedElementEntries) {
+      if (!entry.indirect) {
+        changed.set(id, entry);
+      }
+    }
+    return changed;
   }
 
   public modelToParentModelMap: Map<string, string> | undefined;

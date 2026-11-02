@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ChangedElementEntryCache, type ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
+import { ChangedElementsManager } from "../api/ChangedElementsManager.js";
 import { mockChangedElementEntry } from "./TestUtilities.js";
 
 describe("ChangedElementEntryCache", () => {
@@ -53,5 +54,21 @@ describe("ChangedElementEntryCache", () => {
 
     cache.cleanup();
     expect(cache.getChangeElementIdsFromModelId("0xm1")).toEqual(new Set());
+  });
+
+  it("exposes only real changes through ChangedElementsManager.changedElements", () => {
+    const manager = new ChangedElementsManager({} as never);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager.entryCache as any)._overrideEntriesInCache([
+      withModel("0x1", "0xm1"),
+      { ...withModel("0x2", "0xm1"), indirect: true },
+    ]);
+
+    const changed = manager.changedElements;
+    expect([...changed.keys()]).toEqual(["0x1"]);
+    // Mutating the returned map must not reach the cache or its per-model index
+    changed.set("0x9", withModel("0x9", "0xm1"));
+    expect(manager.entryCache.has("0x9")).toBe(false);
+    expect(manager.entryCache.getChangeElementIdsFromModelId("0xm1")).toEqual(new Set(["0x1", "0x2"]));
   });
 });

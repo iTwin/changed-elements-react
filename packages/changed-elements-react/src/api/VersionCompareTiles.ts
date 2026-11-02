@@ -124,6 +124,9 @@ export class Provider
     }
     return this._secondaryIModelOverrides;
   }
+  public set secondaryIModelOverrides(overrides: FeatureSymbology.Overrides) {
+    this._secondaryIModelOverrides = overrides;
+  }
   private _visibleChangedElems: ChangedElementEntry[] = [];
   private _insertedElems: ChangedElementEntry[] = [];
   private _updatedElems: ChangedElementEntry[] = [];

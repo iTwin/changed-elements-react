@@ -53,51 +53,63 @@ export async function readChangedElementsPayload(
 }
 
 /**
- * Bodies below this `Content-Length` are parsed with native `JSON.parse`, which is several times
- * faster than the incremental parser. V8 strings cap at ~512 MiB; UTF-8 bytes >= UTF-16 code units,
- * so a body under this byte count always fits.
+ * Bodies decoding to fewer UTF-16 code units than this are parsed with native `JSON.parse`, which
+ * is several times faster than the incremental parser. V8 strings cap at ~512 Mi code units.
  */
-const nativeParseMaxBytes = 480 * 1024 * 1024;
-
-function canParseNatively(response: Response): boolean {
-  const encoding = response.headers.get("Content-Encoding");
-  if (encoding !== null && encoding !== "identity") {
-    return false;
-  }
-
-  const contentLength = Number(response.headers.get("Content-Length"));
-  return contentLength > 0 && contentLength < nativeParseMaxBytes;
-}
+const nativeParseMaxChars = 480 * 1024 * 1024;
 
 /**
- * Parses a JSON response body. Uses native `response.json()` when it is safe and nothing needs to
- * be discarded: no `omitKeys` (otherwise the omitted data would be fully materialized before being
- * dropped), an identity-encoded body (a `Content-Length` of compressed bytes says nothing about the
- * decoded size) and a `Content-Length` under {@link nativeParseMaxBytes}. Everything else is parsed
- * incrementally so the full body text is never materialized and payloads beyond V8's string limit
- * (which otherwise fail with "Unexpected end of JSON input") still load. Also falls back to
- * `response.json()` when no body stream is available (e.g. test mocks).
+ * Parses a JSON response body. The body is streamed and decoded; while nothing needs to be
+ * discarded and the decoded text stays under `maxChars` it is buffered and handed to native
+ * `JSON.parse`. Once it grows past that limit (or when `omitKeys` is given, so the omitted data is
+ * never materialized) the buffered text and the rest of the stream go through the incremental
+ * parser, so payloads beyond V8's string limit still load. Response headers are deliberately not
+ * consulted: `Content-Length` counts compressed bytes and CORS hides `Content-Encoding`. Falls back
+ * to `response.json()` when no body stream is available (e.g. test mocks).
  * @param omitKeys Object keys whose values are discarded without being materialized.
+ * @param maxChars Decoded size at which parsing switches to incremental; exposed for tests.
  */
-export async function parseJsonResponse(response: Response, omitKeys?: Set<string>): Promise<unknown> {
-  if (!response.body || (omitKeys === undefined && canParseNatively(response))) {
+export async function parseJsonResponse(
+  response: Response,
+  omitKeys?: Set<string>,
+  maxChars = nativeParseMaxChars,
+): Promise<unknown> {
+  if (!response.body) {
     return response.json();
   }
 
   const decoder = new TextDecoder();
   const reader = response.body.getReader();
-  const parser = new IncrementalJsonParser(omitKeys);
+  let parser = omitKeys === undefined ? undefined : new IncrementalJsonParser(omitKeys);
+  const parts: string[] = [];
+  let chars = 0;
+  const write = (text: string) => {
+    if (parser !== undefined) {
+      parser.write(text);
+      return;
+    }
+
+    parts.push(text);
+    chars += text.length;
+    if (chars >= maxChars) {
+      const incremental = new IncrementalJsonParser();
+      parts.forEach((part) => incremental.write(part));
+      parts.length = 0;
+      parser = incremental;
+    }
+  };
+
   for (;;) {
     const { done, value } = await reader.read();
     if (done) {
       break;
     }
 
-    parser.write(decoder.decode(value, { stream: true }));
+    write(decoder.decode(value, { stream: true }));
   }
 
-  parser.write(decoder.decode());
-  return parser.end();
+  write(decoder.decode());
+  return parser !== undefined ? parser.end() : JSON.parse(parts.join(""));
 }
 
 /** Number/literal token: runs until a JSON delimiter; the token itself is validated by `JSON.parse`. */

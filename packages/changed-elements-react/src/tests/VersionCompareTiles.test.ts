@@ -76,4 +76,11 @@ describe("VersionCompareTiles Provider", () => {
     expect(rebuilt.getElementOverridesById("0x2")).toBeUndefined();
     expect(initSpy).toHaveBeenCalledTimes(2);
   });
+
+  it("honors externally assigned secondary iModel overrides", () => {
+    const provider = makeProvider();
+    const custom = new FeatureSymbology.Overrides();
+    provider.secondaryIModelOverrides = custom;
+    expect(provider.secondaryIModelOverrides).toBe(custom);
+  });
 });
