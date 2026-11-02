@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.5
+
+### Patch Changes
+
+#### [2.0.5](https://github.com/iTwin/changed-elements-react/tree/v2.0.5/packages/changed-elements-react) - 2026-11-02
+
+Patch audit vulnerabilities
+
 ## 2.0.4
 
 ### Patch Changes
