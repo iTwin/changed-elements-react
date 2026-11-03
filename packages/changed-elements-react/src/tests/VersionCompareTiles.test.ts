@@ -84,14 +84,16 @@ describe("VersionCompareTiles Provider", () => {
     expect(provider.secondaryIModelOverrides).toBe(custom);
   });
 
-  it("reflects in-place mutations of visibleChangedElems", () => {
+  it("snapshots visibleChangedElems on assignment so later edits to the source array have no effect", () => {
     const provider = makeProvider();
-    provider.visibleChangedElems = [...entries];
-    provider.visibleChangedElems.push(mockChangedElementEntry("0x8", DbOpcode.Insert));
-    provider.visibleChangedElems.splice(0, 1); // drops 0x1
+    const source = [...entries];
+    provider.visibleChangedElems = source;
+    source.push(mockChangedElementEntry("0x8", DbOpcode.Insert));
+    source.splice(0, 1);
     const overrides = new FeatureSymbology.Overrides();
     provider.addFeatureOverrides(overrides);
-    expect(overrides.getElementOverridesById("0x8")).toBeDefined();
-    expect(overrides.getElementOverridesById("0x1")).toBeUndefined();
+    expect(overrides.getElementOverridesById("0x8")).toBeUndefined();
+    expect(overrides.getElementOverridesById("0x1")).toBeDefined();
+    expect(provider.visibleChangedElems.map((e: { id: string; }) => e.id)).toEqual(["0x1", "0x2", "0x3"]);
   });
 });
