@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0
+
+### Minor Changes
+
+#### [2.1.0](https://github.com/iTwin/changed-elements-react/tree/v2.1.0/packages/changed-elements-react) - 2026-11-04
+
+Performance enhancements for big comparison jobs. Improved startup performance. Improved visualization / filtering performance.
+
+API notes: `Provider.visibleChangedElems` is now a `readonly` array; use `setChangedElems()` to replace it. `ChangedElementsManager.changedElements` now returns a snapshot map of the loaded changes rather than the live internal map.
+
 ## 2.0.5
 
 ### Patch Changes
