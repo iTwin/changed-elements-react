@@ -13,8 +13,8 @@ export const mockChangedElementEntries = (
   loaded = false,
 ): ChangedElementEntry[] => {
   const entries: ChangedElementEntry[] = [];
-  for (let i = 0; i < size; ++i) {
-    const id: string = "0x" + i;
+  for (let i = 1; i <= size; ++i) {
+    const id: string = "0x" + i.toString(16);
     entries.push(mockChangedElementEntry(id, opcode, loaded));
   }
   return entries;

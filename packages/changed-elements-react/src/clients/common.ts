@@ -53,31 +53,73 @@ export async function readChangedElementsPayload(
 }
 
 /**
- * Parses a JSON response body incrementally. Unlike `response.json()`, the full body text is never
- * materialized, so payloads larger than V8's ~512 MiB string limit (which otherwise fail with
- * "Unexpected end of JSON input") can be parsed. Falls back to `response.json()` when no body stream
- * is available (e.g. test mocks).
- * @param omitKeys Object keys whose values are discarded without being materialized.
+ * Bodies decoding to fewer UTF-16 code units than this are parsed with native `JSON.parse`, which
+ * is several times faster than the incremental parser. V8 strings cap at ~512 Mi code units.
  */
-export async function parseJsonResponse(response: Response, omitKeys?: Set<string>): Promise<unknown> {
+const nativeParseMaxChars = 480 * 1024 * 1024;
+
+/**
+ * Parses a JSON response body. The body is streamed and decoded; while nothing needs to be
+ * discarded and the decoded text stays under `maxChars` it is buffered and handed to native
+ * `JSON.parse`. Once it grows past that limit (or when `omitKeys` is given, so the omitted data is
+ * never materialized) the buffered text and the rest of the stream go through the incremental
+ * parser, so payloads beyond V8's string limit still load. Response headers are deliberately not
+ * consulted: `Content-Length` counts compressed bytes and CORS hides `Content-Encoding`. Falls back
+ * to `response.json()` when no body stream is available (e.g. test mocks).
+ * @param omitKeys Object keys whose values are discarded without being materialized.
+ * @param maxChars Decoded size at which parsing switches to incremental; exposed for tests.
+ */
+export async function parseJsonResponse(
+  response: Response,
+  omitKeys?: Set<string>,
+  maxChars = nativeParseMaxChars,
+): Promise<unknown> {
   if (!response.body) {
     return response.json();
   }
 
   const decoder = new TextDecoder();
   const reader = response.body.getReader();
-  const parser = new IncrementalJsonParser(omitKeys);
+  let parser = omitKeys === undefined ? undefined : new IncrementalJsonParser(omitKeys);
+  const parts: string[] = [];
+  let chars = 0;
+  const write = (text: string) => {
+    if (parser !== undefined) {
+      parser.write(text);
+      return;
+    }
+
+    parts.push(text);
+    chars += text.length;
+    if (chars >= maxChars) {
+      const incremental = new IncrementalJsonParser();
+      // Release each buffered chunk as it is replayed so the buffer and the parser's state never coexist in full
+      for (let i = 0; i < parts.length; i++) {
+        incremental.write(parts[i]);
+        parts[i] = "";
+      }
+      parts.length = 0;
+      parser = incremental;
+    }
+  };
+
   for (;;) {
     const { done, value } = await reader.read();
     if (done) {
       break;
     }
 
-    parser.write(decoder.decode(value, { stream: true }));
+    write(decoder.decode(value, { stream: true }));
   }
 
-  parser.write(decoder.decode());
-  return parser.end();
+  write(decoder.decode());
+  if (parser !== undefined) {
+    return parser.end();
+  }
+
+  const text = parts.join("");
+  parts.length = 0;
+  return JSON.parse(text);
 }
 
 /** Number/literal token: runs until a JSON delimiter; the token itself is validated by `JSON.parse`. */

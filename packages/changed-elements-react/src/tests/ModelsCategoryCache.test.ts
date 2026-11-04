@@ -2,7 +2,8 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Cartographic, QueryBinder, type QueryOptions } from "@itwin/core-common";
+import { CompressedId64Set } from "@itwin/core-bentley";
+import { Cartographic, QueryBinder, QueryParamType, type QueryOptions } from "@itwin/core-common";
 import { BlankConnection, IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -19,7 +20,9 @@ const queryMockGenerator = (bindingPostfix = "") => {
     const bindings = params?.serialize();
     if (bindings) {
       for (const val of Object.values(bindings)) {
-        if (val?.value) {
+        if (val?.type === QueryParamType.IdSet) {
+          array.push(...CompressedId64Set.decompressSet(val.value));
+        } else if (val?.value) {
           array.push(val.value);
         }
       }
@@ -29,9 +32,7 @@ const queryMockGenerator = (bindingPostfix = "") => {
     for (const value of array) {
       yield {
         catId: value + bindingPostfix,
-        model: {
-          id: value + bindingPostfix,
-        },
+        model: value + bindingPostfix,
       };
     }
   };
@@ -131,5 +132,24 @@ describe("Models Category Cache Tests", () => {
     // Since we are returning the binding array for entries,
     // we should have 1 model id
     expect(data2?.updatedElementsModels.size).toBe(mockEntries1.length);
+  });
+
+  it("Should query target-side models of all updated elements in a single query", async () => {
+    const currentIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
+    (currentIModel.changeset.id as unknown as string) = "changesetD";
+    const targetIModel = BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] });
+    (targetIModel.changeset.id as unknown as string) = "changesetE";
+    const querySpy = vi.spyOn(targetIModel, "createQueryReader");
+
+    const entries = mockChangedElementEntries(3);
+    // Change-data modelIds are current-side and must not stand in for the target-side model
+    entries.forEach((entry, i) => (entry.modelId = `0xm${i}`));
+
+    await ModelsCategoryCache.load(currentIModel, targetIModel, entries);
+
+    const data = ModelsCategoryCache.getModelsCategoryData();
+    expect(data?.updatedElementsModels).toEqual(new Set(entries.map((e) => `${e.id}_mocked`)));
+    const modelQueries = querySpy.mock.calls.filter(([ecsql]) => ecsql.includes("SELECT DISTINCT Model"));
+    expect(modelQueries).toHaveLength(1);
   });
 });

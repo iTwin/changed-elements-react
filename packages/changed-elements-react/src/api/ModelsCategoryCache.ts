@@ -9,44 +9,27 @@ import { IModelConnection } from "@itwin/core-frontend";
 import type { ChangedElementEntry } from "./ChangedElementEntryCache.js";
 
 /**
- * Queries for the model Ids of the deleted elements passed
- * @param targetConnection Target IModel where deleted elements exist
- * @param deletedElementIds Deleted Element Ids
+ * Queries the model Ids of the given elements in a single round trip
+ * @param targetConnection Target IModel where the elements exist
+ * @param elementIds Element Ids
  */
 const getElementModelsByIds = async (
   targetConnection: IModelConnection,
   elementIds: string[],
 ): Promise<Set<string>> => {
+  const modelIds = new Set<string>();
   // Don't try to query if we have an empty array
   if (elementIds.length === 0) {
-    return new Set();
+    return modelIds;
   }
 
-  const modelIds = new Set<string>();
-  const chunkSize = 800;
-  // TODO: Check if distinct works properly here
-  let ecsql =
-    "SELECT DISTINCT Model as model FROM BisCore.Element WHERE ECInstanceId IN (";
-  for (let i = 0; i < chunkSize; i++) {
-    ecsql += "?,";
-  }
-  ecsql = ecsql.substr(0, ecsql.length - 1);
-  ecsql += ")";
-  for (let i = 0; i < elementIds.length; i += chunkSize) {
-    let max = i + chunkSize;
-    if (max > elementIds.length) {
-      max = elementIds.length;
-    }
-    const current = elementIds.slice(i, max);
-    for await (const row of targetConnection.createQueryReader(
-      ecsql,
-      QueryBinder.from(current),
-      {
-        rowFormat: QueryRowFormat.UseJsPropertyNames,
-      },
-    )) {
-      modelIds.add(row.model.id);
-    }
+  const ecsql = "SELECT DISTINCT Model.Id as model FROM BisCore.Element WHERE InVirtualSet(?, ECInstanceId)";
+  const binder = new QueryBinder();
+  binder.bindIdSet(1, elementIds);
+  for await (const row of targetConnection.createQueryReader(ecsql, binder, {
+    rowFormat: QueryRowFormat.UseECSqlPropertyNames,
+  })) {
+    modelIds.add(row.model);
   }
   return modelIds;
 };
@@ -146,14 +129,14 @@ export class ModelsCategoryCache {
       ModelsCategoryCache._cache === undefined ||
       ModelsCategoryCache._isDirty(currentIModel, targetIModel)
     ) {
-      // Find ids for deleted and modified elements
+      // Deleted elements only exist in the target iModel, where the change data's modelId already names
+      // their model. Updated elements may have moved models between versions, so their target-side model
+      // is queried rather than taken from the (current-side) change data.
       const deletedElementIds: string[] = [];
       const deletedElementModelIds: string[] = [];
       const updatedElementIds: string[] = [];
       for (const changedElement of changedElements) {
         if (changedElement.opcode === DbOpcode.Delete) {
-          // Only load the ones that we don't have model Ids for, as these model Ids will be the appropriate old version
-          // model Id.
           if (!changedElement.modelId) {
             deletedElementIds.push(changedElement.id);
           } else {

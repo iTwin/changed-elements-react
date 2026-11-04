@@ -6,7 +6,7 @@ import { Cartographic } from "@itwin/core-common";
 import { BlankConnection, IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import type { ChangedElement } from "../api/ChangedElementEntryCache.js";
+import type { ChangedElementEntry } from "../api/ChangedElementEntryCache.js";
 import { ChangedElementsChildrenCache } from "../api/ChangedElementsChildrenCache.js";
 import { iModelMocks, mockChangedElementEntry, QueryStatementMocker } from "./TestUtilities.js";
 
@@ -67,7 +67,7 @@ describe("Test ChangedElementsChildrenCache", () => {
 
   it("Should be able to find children and fill entries with cache data", async () => {
     // Mock some entries
-    const map = new Map<string, ChangedElement>();
+    const map = new Map<string, ChangedElementEntry>();
     for (const entry of mockEntries) {
       map.set(entry.id, entry);
     }
@@ -180,5 +180,23 @@ describe("Test ChangedElementsChildrenCache", () => {
     const directChildrenOf0x12Set = new Set(directChildrenOf0x12);
     expect(directChildrenOf0x12Set.has("0x121")).toBe(true);
     expect(directChildrenOf0x12Set.has("0x122")).toBe(true);
+  });
+
+  it("Should not count manufactured unchanged (indirect) entries as changed children", async () => {
+    const parent = mockChangedElementEntry("0x3");
+    const unchangedChild: ChangedElementEntry = { ...mockChangedElementEntry("0x31"), indirect: true };
+    const map = new Map<string, ChangedElementEntry>([
+      [parent.id, parent],
+      [unchangedChild.id, unchangedChild],
+    ]);
+    const cache = new ChangedElementsChildrenCache(
+      BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] }),
+      BlankConnection.create({ name: "", location: Cartographic.createZero(), extents: [] }),
+      map,
+    );
+
+    const [filledParent] = await cache.populateEntries([parent, unchangedChild]);
+    expect(filledParent.children).toEqual(["0x31"]);
+    expect(filledParent.hasChangedChildren).toBe(false);
   });
 });

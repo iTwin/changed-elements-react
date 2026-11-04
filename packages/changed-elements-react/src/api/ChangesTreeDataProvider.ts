@@ -51,6 +51,8 @@ export function isModelElementChanges(input: unknown): input is ModelElementChan
  */
 export class ChangesTreeDataProvider implements ITreeDataProvider {
   private _rootElements: Set<string>;
+  /** Root (top assembly) ids grouped by modelId so expanding a model node only visits its roots. */
+  private _rootElementsByModel = new Map<string, Set<string>>();
   private _loadingLabel: string;
   private _rootEntries: ChangedElementEntry[] | undefined;
   private _models: TreeNodeItem[] | undefined;
@@ -67,17 +69,21 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   public nodesUpdated = new BeEvent<() => void>();
 
   constructor(private _manager: VersionCompareManager) {
-    this._rootElements = new Set(
-      this._manager.changedElementsManager.entryCache
-        .getAll()
-        .filter((value: ChangedElementEntry) => {
-          return (
-            value.elementType !== undefined &&
-            value.elementType === ChangeElementType.TopAssembly
-          );
-        })
-        .map((value: ChangedElementEntry) => value.id),
-    );
+    this._rootElements = new Set<string>();
+    for (const value of this._manager.changedElementsManager.entryCache.getAll()) {
+      if (value.elementType !== ChangeElementType.TopAssembly) {
+        continue;
+      }
+      this._rootElements.add(value.id);
+      if (value.modelId !== undefined) {
+        let roots = this._rootElementsByModel.get(value.modelId);
+        if (roots === undefined) {
+          roots = new Set<string>();
+          this._rootElementsByModel.set(value.modelId, roots);
+        }
+        roots.add(value.id);
+      }
+    }
     if (this._manager.currentIModel) {
       this._currentLabelProvider = new PresentationLabelsProvider({
         imodel: this._manager.currentIModel,
@@ -844,14 +850,8 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   }
 
   private _getChangedModelChildrenById(modelId: string): TreeNodeItem[] {
-    const output = [];
-    for (const entry of this.getRootEntries()) {
-      if (entry.modelId !== undefined && entry.modelId === modelId) {
-        output.push(this._getNode(entry));
-      }
-    }
-
-    return output;
+    const roots = this._rootElementsByModel.get(modelId);
+    return roots === undefined ? [] : this.getEntriesFromIds(roots).map(this._getNode);
   }
 
   private _getChangedModelChildrenCount(modelNode: TreeNodeItem): number {
@@ -1073,13 +1073,7 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   };
 
   public getModelElementEntries(modelId: string): ChangedElementEntry[] {
-    const entries: ChangedElementEntry[] = [];
-    for (const pair of this._elements) {
-      if (pair[1].modelId !== undefined && pair[1].modelId === modelId) {
-        entries.push(pair[1]);
-      }
-    }
-    return entries;
+    return this._manager.changedElementsManager.entryCache.getEntriesWithModel(modelId);
   }
 
   /** Get entries with model ids based on a filter function.
@@ -1109,16 +1103,9 @@ export class ChangesTreeDataProvider implements ITreeDataProvider {
   }
 
   public getModelAllChildElementEntries(modelId: string): ChangedElementEntry[] {
-    const entries: ChangedElementEntry[] = [];
-    for (const pair of this._elements) {
-      // NOTE: If we ever move to delayed loading again w.r.t. children elements, we will need changes
-      // for this to work properly
-      if (pair[1].modelId !== undefined && pair[1].modelId === modelId) {
-        entries.push(pair[1]);
-      }
-    }
-
-    return entries;
+    // NOTE: If we ever move to delayed loading again w.r.t. children elements, we will need changes
+    // for this to work properly
+    return this.getModelElementEntries(modelId);
   }
 
   public async getNodes(parent?: TreeNodeItem | undefined): Promise<DelayLoadedTreeNodeItem[]> {

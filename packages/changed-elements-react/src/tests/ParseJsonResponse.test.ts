@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { DbOpcode } from "@itwin/core-bentley";
 import { TypeOfChange } from "@itwin/core-common";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { accumulateChanges } from "../api/ChangedElementsManager.js";
 import { largePayloadThresholdBytes, parseJsonResponse, readChangedElementsPayload } from "../clients/common.js";
@@ -49,6 +49,7 @@ describe("parseJsonResponse", () => {
   it("reassembles tokens split across arbitrary chunk boundaries", async () => {
     for (const chunkSize of [1, 3, 7, text.length]) {
       expect(await parseJsonResponse(streamed(text, chunkSize))).toEqual(payload);
+      expect(await parseJsonResponse(streamed(text, chunkSize), undefined, 1)).toEqual(payload);
     }
   });
 
@@ -60,11 +61,31 @@ describe("parseJsonResponse", () => {
   });
 
   it("rejects truncated input", async () => {
-    await expect(parseJsonResponse(streamed(text.slice(0, -3), 4))).rejects.toThrow("Unexpected end of JSON input");
+    await expect(parseJsonResponse(streamed(text.slice(0, -3), 4), undefined, 1))
+      .rejects.toThrow("Unexpected end of JSON input");
   });
 
   it("rejects mismatched closing brackets", async () => {
-    await expect(parseJsonResponse(streamed("{\"a\":[1,2}}", 3))).rejects.toThrow("Unexpected token }");
+    await expect(parseJsonResponse(streamed("{\"a\":[1,2}}", 3), undefined, 1)).rejects.toThrow("Unexpected token }");
+  });
+
+  it("picks native or incremental parsing by decoded size, ignoring headers", async () => {
+    const parse = vi.spyOn(JSON, "parse");
+    const fullTextParsed = () => parse.mock.calls.some(([s]) => s.length === text.length);
+
+    // Headers are untrustworthy (CORS hides Content-Encoding, Content-Length counts compressed bytes)
+    const gzipped = streamed(text, 5, { "Content-Length": "12", "Content-Encoding": "gzip" });
+    expect(await parseJsonResponse(gzipped)).toEqual(payload);
+    expect(fullTextParsed()).toBe(true);
+
+    parse.mockClear();
+    expect(await parseJsonResponse(streamed(text, 5), undefined, 10)).toEqual(payload);
+    expect(fullTextParsed()).toBe(false);
+
+    parse.mockClear();
+    await parseJsonResponse(streamed(text, 5), new Set(["properties"]));
+    expect(fullTextParsed()).toBe(false);
+    parse.mockRestore();
   });
 });
 
